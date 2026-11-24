@@ -66,17 +66,55 @@ describe('the runner (P238), with a stand-in for the assistant', () => {
     assert.equal(run.done, true);
     assert.equal(run.model, 'stand-in-model');
     const estimate = JSON.parse(readFileSync(join(pilot, 'estimate.json'), 'utf8'));
-    assert.equal(estimate.sessions, 30 * 3 * 4);
-    assert.equal(estimate.tokens, 360 * 1600);
+    assert.equal(estimate.sessions, 42 * 3 * 4);
+    assert.equal(estimate.tokens, 504 * 1600);
+    // Where the turns went, from each transcript (P392): one turn of calls, the graph's call the question's own.
+    assert.ok(sessions.every((session) => session.extraTurns === 0 && session.turnKinds !== undefined && session.failedCalls === 0));
+    assert.ok(graph.every((session) => session.turnKinds['start-here'] === 1 && session.turnKinds.read === 1));
   }));
 
   it('refuses a full run without --yes, and starts one after the pilot with it', quiet(async () => {
     assert.equal(await main(['--full', ...common], io), undefined);
     const full = await main(['--full', '--yes', '--reps', '1', '--arms', 'C', ...common], io);
     assert.equal(full.done, true);
-    assert.equal(readSessions(full.dir).length, 30);
+    assert.equal(readSessions(full.dir).length, 42);
     assert.ok(!readFileSync(join(full.dir, 'run.json'), 'utf8').includes(tmpdir()));
     assert.equal(JSON.parse(readFileSync(join(full.dir, 'run.json'), 'utf8')).pilot, pilot.split(/[\\/]/).pop());
+  }));
+
+  it('runs the terminal, prompt-card and four-upfront arms, each against a graph of its own (P392)', quiet(async () => {
+    const run = await main(['--pilot', '--arms', 'E,F,G', '--kinds', 'find-the-bug', ...common], io);
+    assert.equal(run.done, true);
+    const sessions = readSessions(run.dir);
+    // A pilot of a kind with no pilot question asks its first question.
+    assert.deepEqual([...new Set(sessions.map((session) => session.question))], ['bug-renamed-route']);
+    assert.deepEqual(sessions.map((session) => session.arm).sort(), ['E', 'F', 'G']);
+    assert.ok(sessions.every((session) => session.outcome === 'answered' && session.correct && session.tp === 1 && session.fp === 0 && session.context === 'across'));
+    // The terminal arm has no server and ran its command; the others asked theirs.
+    const terminal = sessions.find((session) => session.arm === 'E');
+    assert.equal(terminal.flowatlasCalls, 1);
+    assert.equal(terminal.failedCalls, 0);
+    assert.equal(terminal.tools.Bash, 1);
+    assert.ok(sessions.filter((session) => session.arm !== 'E').every((session) => session.flowatlasCalls === 1));
+    const guide = (variant, file) => readFileSync(join(work, variant, 'gateway', file), 'utf8');
+    assert.match(guide('graph-terminal', 'AGENTS.md'), /flowatlas impact <symbol>/);
+    assert.doesNotMatch(guide('graph-terminal', 'AGENTS.md'), /ToolSearch/);
+    assert.match(guide('graph-terminal', '.claude/settings.local.json'), /--terminal/);
+    assert.match(guide('graph-cards', '.claude/settings.local.json'), /prompt-hook/);
+    // The base graph, which the first pilot prepared, keeps no prompt hook.
+    if (existsSync(join(work, 'graph'))) assert.doesNotMatch(guide('graph', '.claude/settings.local.json'), /prompt-hook/);
+    assert.match(guide('graph-upfront', 'AGENTS.md'), /who_calls, impact, search and get_flow are loaded already/);
+    const recorded = JSON.parse(readFileSync(join(run.dir, 'run.json'), 'utf8'));
+    assert.deepEqual(recorded.kinds, ['find-the-bug']);
+    assert.equal(recorded.armSetups.E.graph, 'terminal');
+    // The report's find-the-bug table, the cost of a right answer and where the turns went, per new arm.
+    const report = renderReport({ run: recorded, sessions, claims: readClaims(readFileSync(join(HERE, 'expectations.md'), 'utf8')), notes: {}, dir: run.dir }).text;
+    assert.match(report, /## Find the bug[\s\S]*\| E \| 1\.00 \| 1 \| 0 \| 0 \| — \| 1\.00 \|/);
+    assert.match(report, /## What a right answer cost[\s\S]*\| F \| 2k \| 2k \| 0\.0 \| 0\.0% \|/);
+    assert.match(report, /## Where the turns went[\s\S]*\| G \| find-the-bug \| 1 \| 0 \|/);
+    assert.match(report, /`find-the-bug: C > B` not measured in this run/);
+    // A full run of arms its pilot did not ask is refused.
+    await assert.rejects(main(['--full', '--yes', '--arms', 'A,E', ...common], io), /no finished pilot/);
   }));
 
   it('refuses a full run with no pilot of the same seed', quiet(async () => {

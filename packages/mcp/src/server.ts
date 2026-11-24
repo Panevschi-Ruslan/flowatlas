@@ -116,6 +116,11 @@ export interface ServerOptions extends DbHandleOptions {
    * `mcp.alwaysLoad` is `false`.
    */
   alwaysLoad?: boolean;
+  /**
+   * The core tools to mark upfront, in place of all of them (`flowatlas mcp
+   * --upfront`, P392); before the configuration's `mcp.upfront`.
+   */
+  upfront?: readonly string[];
   /** How often, in ms, a connected server looks for a graph, observed file or diff that changed; 0 never. */
   toolsPollMs?: number;
   /**
@@ -160,6 +165,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
   const settings = listingSettingsOf(handle.config?.mcp, {
     ...(options.allTools === undefined ? {} : { allTools: options.allTools }),
     ...(options.alwaysLoad === undefined ? {} : { alwaysLoad: options.alwaysLoad }),
+    ...(options.upfront === undefined ? {} : { upfront: options.upfront }),
     ...(handle.configPath === undefined ? {} : { configPath: handle.configPath }),
   });
 

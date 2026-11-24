@@ -61,6 +61,12 @@ export interface AgentsOptions {
   shared?: boolean;
   /** Replace an owned file edited by hand, or one that is not flowatlas's. */
   force?: boolean;
+  /**
+   * The guide and the hooks for an assistant that asks the graph in a
+   * terminal, with no server (P392): each question's command with
+   * `--format json`, where the server's tools are named otherwise.
+   */
+  terminal?: boolean;
 }
 
 export type AgentFileState =
@@ -114,6 +120,19 @@ export const serverKeyIn = (repoDir: string): string => registeredServer(repoDir
 
 type ServerEntry = { command?: unknown; args?: unknown; alwaysLoad?: unknown };
 
+/** The core tools an entry's `--upfront` names (P392), or undefined where it names none. */
+const upfrontArg = (args: unknown): string[] | undefined => {
+  if (!Array.isArray(args)) return undefined;
+  const at = args.indexOf('--upfront');
+  const given: unknown = at === -1 ? args.find((arg) => typeof arg === 'string' && arg.startsWith('--upfront=')) : args[at + 1];
+  if (typeof given !== 'string') return undefined;
+  return given
+    .replace(/^--upfront=/, '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name !== '');
+};
+
 /**
  * The graph server's entry in a repository's `.mcp.json` (P380): its key, and
  * whether it leaves the core tools upfront - not when the entry says
@@ -122,14 +141,18 @@ type ServerEntry = { command?: unknown; args?: unknown; alwaysLoad?: unknown };
  * all (`registered`, P382), where Claude Code then reads the server's
  * instructions in every session.
  */
-export const registeredServer = (repoDir: string): { key: string; alwaysLoad: boolean; registered: boolean } => {
+export const registeredServer = (repoDir: string): { key: string; alwaysLoad: boolean; registered: boolean; upfront?: string[] } => {
   const text = read(join(repoDir, MCP_FILE));
   if (text === undefined) return { key: SERVER_KEY, alwaysLoad: true, registered: false };
-  const said = (key: string, entry: ServerEntry | undefined) => ({
-    key,
-    registered: true,
-    alwaysLoad: entry?.alwaysLoad !== false && !(Array.isArray(entry?.args) && entry.args.includes('--no-always-load')),
-  });
+  const said = (key: string, entry: ServerEntry | undefined) => {
+    const upfront = upfrontArg(entry?.args);
+    return {
+      key,
+      registered: true,
+      alwaysLoad: entry?.alwaysLoad !== false && !(Array.isArray(entry?.args) && entry.args.includes('--no-always-load')),
+      ...(upfront === undefined ? {} : { upfront }),
+    };
+  };
   try {
     const servers = (JSON.parse(text) as { mcpServers?: Record<string, ServerEntry> }).mcpServers ?? {};
     if (SERVER_KEY in servers) return said(SERVER_KEY, servers[SERVER_KEY]);
@@ -143,14 +166,18 @@ export const registeredServer = (repoDir: string): { key: string; alwaysLoad: bo
   return { key: SERVER_KEY, alwaysLoad: true, registered: false };
 };
 
-const guideFor = (loaded: LoadedConfig, repo: Repo): AgentGuide => {
+const guideFor = (loaded: LoadedConfig, repo: Repo, options: AgentsOptions = {}): AgentGuide => {
   const server = registeredServer(repo.dir);
+  // The entry's `--upfront` before the configuration's, as the server reads them (P392).
+  const upfront = server.upfront ?? loaded.config.mcp?.upfront;
   return {
     services: loaded.config.services.map((service) => ({ name: service.name, type: service.type })),
     here: repo.services,
     server: server.key,
     alwaysLoad: server.alwaysLoad && loaded.config.mcp?.alwaysLoad !== false,
+    ...(upfront === undefined ? {} : { upfront }),
     registered: server.registered,
+    ...(options.terminal === true ? { via: 'terminal' as const } : {}),
   };
 };
 
@@ -221,15 +248,19 @@ const EDIT_HOOK_MARK = 'edit-hook';
  * starts fastest (D6); settings a team commits cannot, so they name the
  * command and an index path relative to the repository.
  */
-export const searchHookCommand = (repoDir: string, namesPath: string, shared: boolean | undefined): string => hookCommand(HOOK_MARK, '--names', repoDir, namesPath, shared);
+export const searchHookCommand = (repoDir: string, namesPath: string, shared: boolean | undefined, terminal?: boolean): string =>
+  hookCommand(HOOK_MARK, '--names', repoDir, namesPath, shared, terminal);
 
 /** How the edit hook is started (P387), the same way: this machine's files, or the command for settings a team commits. */
-export const editHookCommand = (repoDir: string, editsPath: string, shared: boolean | undefined): string => hookCommand(EDIT_HOOK_MARK, '--edits', repoDir, editsPath, shared);
+export const editHookCommand = (repoDir: string, editsPath: string, shared: boolean | undefined, terminal?: boolean): string =>
+  hookCommand(EDIT_HOOK_MARK, '--edits', repoDir, editsPath, shared, terminal);
 
-const hookCommand = (mark: string, flag: string, repoDir: string, indexPath: string, shared: boolean | undefined): string => {
-  if (shared === true) return `flowatlas agents ${mark} ${flag} ${JSON.stringify(toPosixPath(relative(repoDir, indexPath)))}`;
+/** `--terminal` (P392): the hook names the command that prints the answer, not the server's tool. */
+const hookCommand = (mark: string, flag: string, repoDir: string, indexPath: string, shared: boolean | undefined, terminal?: boolean): string => {
+  const asked = terminal === true ? ' --terminal' : '';
+  if (shared === true) return `flowatlas agents ${mark} ${flag} ${JSON.stringify(toPosixPath(relative(repoDir, indexPath)))}${asked}`;
   const script = join(dirname(ownBin(import.meta.url)), '..', 'dist', `${mark}.js`);
-  return `${JSON.stringify(process.execPath)} ${JSON.stringify(script)} ${flag} ${JSON.stringify(indexPath)}`;
+  return `${JSON.stringify(process.execPath)} ${JSON.stringify(script)} ${flag} ${JSON.stringify(indexPath)}${asked}`;
 };
 
 /** The prompt hook's command marker (P386). */
@@ -322,7 +353,7 @@ export const installAgents = (options: AgentsOptions = {}): AgentsRun => {
   const run: AgentsRun = { changes: [] };
   const say = (repo: Repo, file: string, state: AgentFileState): void => void run.changes.push({ services: repo.services, file, state });
   for (const repo of reposOf(loaded, options.repo)) {
-    const guide = guideFor(loaded, repo);
+    const guide = guideFor(loaded, repo, options);
     for (const target of OWNED_TARGETS) {
       const path = join(repo.dir, TARGET_PATH[target]);
       const existing = read(path);
@@ -362,8 +393,8 @@ export const installAgents = (options: AgentsOptions = {}): AgentsRun => {
       const settings = parseSettings(path, existing);
       const searching = withSearchHook(
         settings,
-        searchHookCommand(repo.dir, join(loaded.outputDir, NAMES_FILE), options.shared),
-        editHookCommand(repo.dir, join(loaded.outputDir, EDITS_FILE), options.shared),
+        searchHookCommand(repo.dir, join(loaded.outputDir, NAMES_FILE), options.shared, options.terminal),
+        editHookCommand(repo.dir, join(loaded.outputDir, EDITS_FILE), options.shared, options.terminal),
       );
       const next = json(
         options.promptCards === false
@@ -385,7 +416,7 @@ export const agentsStatus = (options: AgentsOptions = {}): AgentsRun => {
   const loaded = loadForAgents(options);
   const run: AgentsRun = { changes: [] };
   for (const repo of reposOf(loaded, options.repo)) {
-    const guide = guideFor(loaded, repo);
+    const guide = guideFor(loaded, repo, options);
     for (const target of [...OWNED_TARGETS, ...SHARED_TARGETS]) {
       const path = join(repo.dir, TARGET_PATH[target]);
       const existing = read(path);
@@ -473,7 +504,8 @@ export const registerAgents = (program: Command): void => {
     command
       .option('--config <path>', 'configuration file (default: found from the working directory)')
       .option('--repo <name>', 'only this service')
-      .option('--dry-run', 'say what would change and write nothing');
+      .option('--dry-run', 'say what would change and write nothing')
+      .option('--terminal', 'the guide for an assistant that asks in a terminal, with no graph server: each question’s command, with --format json');
   common(agents.command('install').description('write the guide for each assistant into every repository'))
     .option('--instructions', 'also add the guide, as a marked block, to AGENTS.md, CLAUDE.md and Copilot instructions')
     .option('--hook', 'also add the Claude Code hooks: what a search could not see, who uses a name an edit took out, and the graph’s answer for what a prompt names')
@@ -493,8 +525,9 @@ export const registerAgents = (program: Command): void => {
       .description('the search hook: reads a Claude Code hook call on stdin')
       .allowUnknownOption()
       .option('--names <path>', 'the name index')
-      .action(async (options: { names?: string }) => {
-        await runSearchHook(options.names === undefined ? [] : ['--names', options.names]);
+      .option('--terminal', 'name the command, not the graph server’s tool')
+      .action(async (options: { names?: string; terminal?: boolean }) => {
+        await runSearchHook([...(options.names === undefined ? [] : ['--names', options.names]), ...(options.terminal === true ? ['--terminal'] : [])]);
       }),
     { hidden: true },
   );
@@ -516,8 +549,9 @@ export const registerAgents = (program: Command): void => {
       .description('the edit hook: reads a Claude Code hook call on stdin')
       .allowUnknownOption()
       .option('--edits <path>', 'the edit index')
-      .action(async (options: { edits?: string }) => {
-        await runEditHook(options.edits === undefined ? [] : ['--edits', options.edits]);
+      .option('--terminal', 'name the command, not the graph server’s tool')
+      .action(async (options: { edits?: string; terminal?: boolean }) => {
+        await runEditHook([...(options.edits === undefined ? [] : ['--edits', options.edits]), ...(options.terminal === true ? ['--terminal'] : [])]);
       }),
     { hidden: true },
   );

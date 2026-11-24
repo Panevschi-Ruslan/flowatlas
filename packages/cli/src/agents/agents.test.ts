@@ -140,6 +140,33 @@ describe('the guide every assistant is given (P227)', () => {
     expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true, registered: true });
   });
 
+  it('names the core tools loaded upfront where fewer than all are, from mcp.upfront or the entry’s --upfront (P392)', () => {
+    const four = { ...GUIDE, upfront: ['who_calls', 'impact', 'search', 'get_flow'] };
+    expect(sharedBlock(four)).toContain('In Claude Code who_calls, impact, search and get_flow are loaded already; load any other graph tool in ONE ToolSearch call');
+    expect(guideBody(four)).toContain(`Before Claude Code ${ALWAYS_LOAD_SINCE}: \`${toolSearchQuery()}\``);
+    expect(sharedBlock({ ...GUIDE, upfront: [...CORE_TOOLS] })).toContain('the core graph tools are loaded already');
+    expect(sharedBlock({ ...GUIDE, upfront: [] })).toContain(`load the tools in ONE ToolSearch call: \`${toolSearchQuery()}\``);
+    const dir = join(scratch, 'upfront-entry');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, '.mcp.json'), JSON.stringify({ mcpServers: { flowatlas: { command: 'flowatlas', args: ['mcp', '--upfront', 'impact,search'] } } }));
+    expect(registeredServer(dir)).toEqual({ key: 'flowatlas', alwaysLoad: true, registered: true, upfront: ['impact', 'search'] });
+  });
+
+  it('spells the commands, and no tool, ToolSearch or server, for an assistant that asks in a terminal (P392)', () => {
+    const terminal = { ...GUIDE, via: 'terminal' as const };
+    const block = sharedBlock(terminal);
+    expect(block.length).toBeLessThanOrEqual(SHARED_MAX_CHARS);
+    for (const question of AGENT_QUESTIONS) expect(block).toContain(`- ${question.short}: \`${question.command}\``);
+    expect(block).toContain('`--format json`');
+    for (const tool of ['ToolSearch', 'who_calls', 'verbose: true', '.mcp.json']) expect(block).not.toContain(tool);
+    // A CLAUDE.md beside a registered server still gets the commands: no server's instructions are read in a terminal.
+    expect(sharedBlock({ ...terminal, registered: true }, 'claude-md')).toBe(sharedBlock(terminal, 'claude-md'));
+    const body = guideBody(terminal);
+    expect(body.split('\n').length).toBeLessThanOrEqual(GUIDE_MAX_LINES);
+    expect(body).toContain('| Question | Terminal |');
+    for (const tool of ['ToolSearch', 'Graph server (MCP)', 'who_calls(']) expect(body).not.toContain(tool);
+  });
+
   it('writes the ToolSearch line with the name the server is registered under', () => {
     expect(toolSearchQuery('graph.map')).toMatch(new RegExp(`^select:mcp__graph_map__${CORE_TOOLS[0]},mcp__graph_map__${CORE_TOOLS[1]},`));
     const dir = join(scratch, 'registered');
@@ -260,6 +287,18 @@ describe('flowatlas agents install, status and remove', () => {
     expect(existsSync(join(dir('web'), '.claude', 'settings.json'))).toBe(false);
   });
 
+  it('with --terminal writes the commands’ guide and hooks that name commands, and status reads it as installed (P392)', () => {
+    const { config, dir } = project('terminal');
+    installAgents({ config, instructions: true, hook: true, terminal: true });
+    expect(readFileSync(join(dir('gateway'), 'AGENTS.md'), 'utf8')).toContain('- who calls this: `flowatlas impact <symbol>`');
+    expect(readFileSync(join(dir('gateway'), '.claude', 'skills', 'flowatlas', 'SKILL.md'), 'utf8')).toContain('| Question | Terminal |');
+    const hooks = JSON.parse(readFileSync(join(dir('web'), '.claude', 'settings.local.json'), 'utf8')).hooks.PostToolUse;
+    expect(hooks[0].hooks[0].command).toMatch(/search-hook\.js" --names ".*names\.json" --terminal$/);
+    expect(hooks[1].hooks[0].command).toMatch(/edit-hook\.js" --edits ".*edits\.json" --terminal$/);
+    expect(agentsStatus({ config, terminal: true }).changes.every((change) => change.state === 'installed')).toBe(true);
+    expect(agentsStatus({ config }).changes.some((change) => change.state === 'out of date')).toBe(true);
+  });
+
   it('refuses to write into a project found from a git repository that is none of its own, and writes from its root or a repository of it (P366)', () => {
     const { config, dir } = project('scope');
     const root = join(dir('web'), '..');
@@ -331,6 +370,11 @@ describe('the names a search hook can say something about', () => {
     expect(grep('/orders/', '/p/gateway')).toBeUndefined();
     expect(grep('TODO', '/p/orders')).toBeUndefined();
     expect(grep('/orders/', '/elsewhere')).toBeUndefined();
+    // In a terminal (P392), the command that prints the same answer.
+    const terminal = contextFor({ tool_name: 'Grep', tool_input: { pattern: '/orders/' }, cwd: '/p/orders/src' }, index, 'linux', true);
+    expect(terminal).toContain('`flowatlas impact "entry:orders:http:GET:/orders/:param" --format json` lists them');
+    expect(terminal).not.toContain('who_calls');
+    expect(contextFor({ tool_name: 'Grep', tool_input: { pattern: 'order.created' }, cwd: '/p/billing' }, index, 'linux', true)).toContain('`flowatlas channel "order.created" --format json` lists them');
   });
 
   it('finds the service on Windows terms: a drive, either slash, either case, the index as configured', () => {

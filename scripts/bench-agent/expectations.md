@@ -59,6 +59,40 @@ code-text: D = A
 explain: C = B
 explain: D = A
 tokens single-repo: C > B
+find-the-bug: C > B
+find-the-bug: D >= A
+change-files: C > B
+change-files: D >= A
+navigation: C > B
+navigation: D >= A
+cross-repo-callers: E >= D
+tokens single-repo: E < D
+tokens cross-repo-callers: F < D
+calls cross-repo-callers: F < D
+cross-repo-callers: G >= D
+tokens single-repo: G < D
 ```
 
-Added 2026-11-05, before any run.
+Added 2026-11-05, before any run. The lines from `find-the-bug: C > B` on
+added 2026-11-24 (P392), before any run that asks them.
+
+## Added 2026-11-24 (P392), before any run of these kinds or arms
+
+- **Find the bug.** Six planted defects, each beside a right twin. The
+  graph's findings name most of them where both sides are read; a search
+  sees a defect only by reading both sides itself. We expect the graph
+  arms at least as right as search with everything open, and well above
+  one repository alone, for the defects across repositories.
+- **Change files and navigation.** A rename touches the callers in other
+  repositories; one repository alone cannot list them. "Where are coupons
+  exported?" names nothing in the code; search finds the word, the graph's
+  search takes the sentence. We expect C above B, and D at least as right
+  as A.
+- **The terminal arm (E).** The same answers through the commands, with no
+  listing and no ToolSearch: as right as D, and fewer tokens on questions
+  the graph does not help with, where the server's listing is paid for
+  nothing.
+- **Prompt cards (F).** The answer for what a prompt names, before the first
+  turn: fewer calls and tokens than D on the questions that name a route.
+- **Four tools upfront (G).** As right as D, and fewer tokens where the
+  graph is not asked.

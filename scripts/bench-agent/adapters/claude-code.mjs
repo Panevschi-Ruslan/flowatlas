@@ -20,6 +20,7 @@
  * reads or passes a key.
  */
 import { spawn } from 'node:child_process';
+import { delimiter } from 'node:path';
 
 export const name = 'claude-code';
 
@@ -48,7 +49,7 @@ export const READING_TOOLS = ['Read(./**)', 'Grep(./**)', 'Glob(./**)', 'LS(./**
 /** A usage limit says so in the result; the run stops there and resumes later. */
 const LIMIT = /usage limit|limit reached|rate limit|out of (?:usage|credits)|try again (?:at|in)\b/i;
 
-export const argsFor = ({ prompt, model, mcpConfig, graph }) => [
+export const argsFor = ({ prompt, model, mcpConfig, graph, terminalBin }) => [
   '-p',
   prompt,
   '--output-format',
@@ -64,7 +65,8 @@ export const argsFor = ({ prompt, model, mcpConfig, graph }) => [
   '--permission-mode',
   'dontAsk',
   '--allowedTools',
-  [...READING_TOOLS, ...(graph ? ['mcp__flowatlas'] : [])].join(','),
+  // The terminal arm (P392) may run `flowatlas` and nothing else beyond reading.
+  [...READING_TOOLS, ...(graph ? ['mcp__flowatlas'] : []), ...(terminalBin === undefined ? [] : ['Bash(flowatlas:*)'])].join(','),
   '--no-session-persistence',
 ];
 
@@ -114,11 +116,17 @@ export const version = () =>
  * `keep` as it comes, so the transcript is on disk even when the session is
  * killed.
  */
-export const runSession = ({ cwd, prompt, model, mcpConfig, graph, timeoutMs, keep }) =>
+export const runSession = ({ cwd, prompt, model, mcpConfig, graph, terminalBin, timeoutMs, keep }) =>
   new Promise((done) => {
     const started = Date.now();
     const { file, prefix } = command();
-    const child = spawn(file, [...prefix, ...argsFor({ prompt, model, mcpConfig, graph })], { cwd, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, FLOWATLAS_LOG_QUESTIONS: '1' } });
+    // The terminal arm's `flowatlas` first on the PATH, run against its graph (P392).
+    const path = terminalBin === undefined ? process.env['PATH'] : `${terminalBin}${delimiter}${process.env['PATH'] ?? ''}`;
+    const child = spawn(file, [...prefix, ...argsFor({ prompt, model, mcpConfig, graph, terminalBin })], {
+      cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, FLOWATLAS_LOG_QUESTIONS: '1', ...(path === undefined ? {} : { PATH: path }) },
+    });
     const lines = [];
     let pending = '';
     let stderr = '';

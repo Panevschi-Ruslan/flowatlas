@@ -1648,6 +1648,7 @@ runs; you rarely type it yourself.
 | `--dry-run` | off | with `--install`, say what would change and write nothing |
 | `--all-tools` | off | list every tool, not only those the project can answer, whatever the configuration's `mcp` block says |
 | `--no-always-load` | off | list no tool to load upfront: Claude Code defers every tool, the core ones too ([the core tools, loaded upfront](mcp.md#the-core-tools-loaded-upfront)) |
+| `--upfront <tools>` | the nine core tools | only these core tools load upfront, comma-separated (`who_calls,impact,search,get_flow`), before the configuration's `mcp.upfront`; a name that is no core tool stops the command at start (P392) |
 
 Without `--all-tools` the server lists the tools the project can answer and
 tells the client when that changes: the run-time tools appear after
@@ -2025,6 +2026,7 @@ the hooks and what each says are in the
 | `--hook` | also the search hook, the edit hook and the prompt hook (prompt cards, P386), in `.claude/settings.local.json` |
 | `--no-prompt-cards` | with `--hook`, leave the prompt hook out, and take out one written before |
 | `--shared` | the hooks in `.claude/settings.json`, committed, instead |
+| `--terminal` | the guide and hooks for an assistant that asks the graph in a terminal, with no graph server: each question's command with `--format json`, no tool names and no ToolSearch (P392); `status --terminal` compares with it |
 | `--force` | replace a guide edited by hand, or a file of that name that is not flowatlas's |
 | `--repo <name>` | only this service's repository |
 | `--dry-run` | say what would change and write nothing |
@@ -2040,7 +2042,19 @@ one call for any other tool a question needs; where the configuration says
 `mcp.alwaysLoad: false`, or the repository's `.mcp.json` entry says
 `"alwaysLoad": false` or starts the server with `--no-always-load`, it writes
 the one ToolSearch call that loads them, under the name the server is
-registered as.
+registered as. Where the configuration's `mcp.upfront` or the entry's
+`--upfront` names fewer core tools (P392), it says which are loaded already and
+that any other loads in one ToolSearch call.
+
+With `--terminal` (P392) the guide is for an assistant that has no graph
+server and a shell: the block lists each question with its command (`who calls
+this: flowatlas impact <symbol>`), the skill's table has the terminal column
+only, and the search and edit hooks name the command that prints the answer
+(`flowatlas impact "<id>" --format json`) instead of the server's tool. Every
+command answers with `--format json` what the server's tool of the same
+question answers, so `complete` and `reach` read the same. It suits an
+assistant whose MCP listing costs more than a shell call, and is the public
+benchmark's arm E.
 
 Without `--config` the configuration is the nearest above the working
 directory. Run inside a git repository that is neither the project's root, one
@@ -5852,6 +5866,7 @@ worked example of a document that declares routes.
 | `mcp.tools` | `"auto"` or `"all"` | `"auto"` | which tools the MCP server lists: `auto` those the project can answer (the run-time tools once an observed file is beside the graph, `check_rules` once `rules` holds one, …; see [which tools appear when](mcp.md#which-tools-appear-when)), `all` every tool |
 | `mcp.include` | string[] | `[]` | tools listed whatever they need; each then answers for itself |
 | `mcp.exclude` | string[] | `[]` | tools never listed; a call of one says it is turned off. A name in either list that is no tool, or a tool in both, stops `flowatlas mcp` at start with a configuration error naming it |
+| `mcp.upfront` | string[] | the nine core tools | which core tools load upfront while `alwaysLoad` is on (P392): only these are marked, the rest load by ToolSearch. Only core tools, each once; `flowatlas mcp --upfront` says the same and comes first. `agents install` writes the list into the guide |
 | `mcp.alwaysLoad` | boolean | `true` | whether the MCP server lists its nine core tools to load upfront in Claude Code (`_meta` `anthropic/alwaysLoad`), so a session needs no ToolSearch call for them; `false` leaves every tool deferred, as `flowatlas mcp --no-always-load` does, and `agents install` then writes the ToolSearch call into the guide ([the core tools, loaded upfront](mcp.md#the-core-tools-loaded-upfront)) |
 
 **A path segment written as a closed set.** A segment whose type is a union of

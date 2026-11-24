@@ -16,7 +16,7 @@ import { serviceNamed, type ServiceNamed } from './query/service-name.js';
 import { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS, type Need, type ToolFacts, type ToolName } from './tool-needs.js';
 import { changeDocumentsBeside } from './tools/changes.js';
 import { pluralAsked, respond, verboseInput } from './tools/common.js';
-import { isCoreTool, withAlwaysLoad } from './upfront.js';
+import { CORE_TOOLS, isCoreTool, withAlwaysLoad } from './upfront.js';
 
 /**
  * The tools a session is offered follow the project (P201).
@@ -42,6 +42,12 @@ export interface ListingSettings {
    * in the configuration, off with `flowatlas mcp --no-always-load`.
    */
   alwaysLoad: boolean;
+  /**
+   * The core tools marked to load upfront while `alwaysLoad` is on (P392):
+   * every core tool unless `mcp.upfront` or `flowatlas mcp --upfront` names
+   * fewer.
+   */
+  upfront: ReadonlySet<ToolName>;
 }
 
 /** How often a connected server looks for a graph, an observed file or a diff that changed. */
@@ -54,7 +60,7 @@ export const LISTING_POLL_MS = 2000;
  */
 export const listingSettingsOf = (
   settings: McpSettings | undefined,
-  options: { allTools?: boolean; alwaysLoad?: boolean; configPath?: string } = {},
+  options: { allTools?: boolean; alwaysLoad?: boolean; upfront?: readonly string[]; configPath?: string } = {},
 ): ListingSettings => {
   const issues: string[] = [];
   const named = (key: 'include' | 'exclude'): Set<ToolName> => {
@@ -70,13 +76,23 @@ export const listingSettingsOf = (
   };
   const include = named('include');
   const exclude = named('exclude');
+  // The command line's list before the configuration's: each name a core tool, each once (P392).
+  const from = options.upfront === undefined ? 'mcp.upfront' : '--upfront';
+  const upfront = new Set<ToolName>();
+  (options.upfront ?? settings?.upfront ?? CORE_TOOLS).forEach((name, index) => {
+    if (!isCoreTool(name)) {
+      const near = nearWords(CORE_TOOLS, name, 1)[0];
+      issues.push(`${from}.${index}: ${JSON.stringify(name)} is not one of the core tools, the ones that can load upfront (${CORE_TOOLS.join(', ')})${near === undefined ? '' : `; did you mean ${near}?`}`);
+    } else if (upfront.has(name as ToolName)) issues.push(`${from}.${index}: ${JSON.stringify(name)} is named twice`);
+    else upfront.add(name as ToolName);
+  });
   if (issues.length > 0) {
     throw new ConfigInvalidError(options.configPath ?? 'flowatlas.config.json', issues, `The tools are: ${TOOL_NAMES.join(', ')}.`);
   }
   // Off when either says so: the command line cannot turn on what the configuration turned off.
   const alwaysLoad = options.alwaysLoad !== false && settings?.alwaysLoad !== false;
-  if (options.allTools === true) return { tools: 'all', include: new Set(), exclude: new Set(), alwaysLoad };
-  return { tools: settings?.tools ?? 'auto', include, exclude, alwaysLoad };
+  if (options.allTools === true) return { tools: 'all', include: new Set(), exclude: new Set(), alwaysLoad, upfront };
+  return { tools: settings?.tools ?? 'auto', include, exclude, alwaysLoad, upfront };
 };
 
 type Handler = (request: never, extra: never) => unknown;
@@ -343,10 +359,11 @@ export class ToolListing {
   /**
    * A core tool's configuration marked to load upfront (P380), unless the
    * settings turned that off: `tools/list` then carries
-   * `_meta: {"anthropic/alwaysLoad": true}` on exactly the core tools listed.
+   * `_meta: {"anthropic/alwaysLoad": true}` on exactly the core tools listed,
+   * or the ones `mcp.upfront` names (P392).
    */
   #upfront<T extends object>(name: string, config: T): T {
-    if (!this.#settings.alwaysLoad || !isCoreTool(name)) return config;
+    if (!this.#settings.alwaysLoad || !isCoreTool(name) || !this.#settings.upfront.has(name as ToolName)) return config;
     return { ...config, _meta: withAlwaysLoad((config as { _meta?: Record<string, unknown> })._meta) };
   }
 

@@ -1,7 +1,7 @@
 {
   "seed": 5,
   "resources": 3,
-  "keyRoutes": 133,
+  "keyRoutes": 151,
   "answers": [
     {
       "question": "callers-backend-1",
@@ -598,6 +598,222 @@
       }
     },
     {
+      "question": "bug-renamed-route",
+      "text": "Found them.\nANSWER: [\"GatewayOrdersTicketsClient.close\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-renamed-route",
+      "text": "ANSWER: [\"GatewayOrdersTicketsClient.close\",\"GatewayOrdersTicketsClient.reopen\"]",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-renamed-field",
+      "text": "Found them.\nANSWER: [\"GatewayShippingClaimsClient.create\",\"GatewayShippingManifestsClient.create\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-renamed-field",
+      "text": "ANSWER: [\"GatewayShippingClaimsClient.create\",\"GatewayShippingManifestsClient.create\",\"GatewayShippingClaimsClient.addNote\"]",
+      "expect": {
+        "score": 0.5,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-renamed-message",
+      "text": "Found them.\nANSWER: [\"ShippingTicketEvents.onTicketClosed\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-renamed-message",
+      "text": "ANSWER: [\"ShippingTicketEvents.onTicketClosed\",\"ShippingTicketEvents.onTicketReopened\"]",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-shadowed-route",
+      "text": "Found them.\nANSWER: [\"GET /tickets/overdue\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-shadowed-route",
+      "text": "ANSWER: [\"GET /tickets/overdue\",\"GET /tickets/summary\"]",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-env-renamed",
+      "text": "Found them.\nANSWER: [\"LEDGER_REGION\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-env-renamed",
+      "text": "ANSWER: [\"LEDGER_REGION\",\"PAYMENT_PROVIDER\"]",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-unguarded-write",
+      "text": "Found them.\nANSWER: [\"DELETE /claims/:id\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-unguarded-write",
+      "text": "ANSWER: [\"DELETE /claims/:id\",\"DELETE /claim-refunds/:id\"]",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "change-route-nest",
+      "text": "Found them.\nANSWER: [\"catalog/src/collections/collections.controller.ts\",\"gateway/src/clients/catalog-collections.client.ts\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "change-route-nest",
+      "text": "ANSWER: [\"catalog/src/collections/collections.controller.ts\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "change-route-express",
+      "text": "Found them.\nANSWER: [\"billing/src/receipts/receipts.routes.ts\",\"gateway/src/clients/billing-receipts.client.ts\",\"orders/src/clients/billing.client.ts\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "change-route-express",
+      "text": "ANSWER: [\"billing/src/receipts/receipts.routes.ts\",\"gateway/src/clients/billing-receipts.client.ts\"]",
+      "expect": {
+        "score": 0.8,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "change-event",
+      "text": "Found them.\nANSWER: [\"catalog/src/categories/categories.service.ts\",\"shipping/src/events/category.events.ts\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "change-event",
+      "text": "ANSWER: [\"catalog/src/categories/categories.service.ts\"]",
+      "expect": {
+        "score": 0.667,
+        "correct": false,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "navigate-1",
+      "text": "Found them.\nANSWER: [\"CatalogAttributesService.lock\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "navigate-1",
+      "text": "ANSWER: [\"CatalogAttributesService.lock\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "navigate-2",
+      "text": "Found them.\nANSWER: [\"OrdersCouponsService.export\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "navigate-2",
+      "text": "ANSWER: [\"OrdersCouponsService.export\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "navigate-3",
+      "text": "Found them.\nANSWER: [\"ShippingManifestsService.merge\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "navigate-3",
+      "text": "ANSWER: [\"ShippingManifestsService.merge\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
       "question": "dead-nest",
       "text": "I could not tell from here.",
       "expect": {
@@ -613,6 +829,33 @@
         "score": 1,
         "correct": true,
         "by": "patterns"
+      }
+    },
+    {
+      "question": "change-route-nest",
+      "text": "ANSWER: [\"src/collections/collections.controller.ts\",\"src/clients/catalog-collections.client.ts\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "bug-env-renamed",
+      "text": "It reads process.env.LEDGER_REGION.\nANSWER: [\"process.env.LEDGER_REGION\"]",
+      "expect": {
+        "score": 1,
+        "correct": true,
+        "by": "answer-line"
+      }
+    },
+    {
+      "question": "navigate-1",
+      "text": "ANSWER: [\"CatalogAttributesController.lock\"]",
+      "expect": {
+        "score": 0,
+        "correct": false,
+        "by": "answer-line"
       }
     }
   ]

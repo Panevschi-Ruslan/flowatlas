@@ -313,4 +313,21 @@ describe('the core tools, listed to load upfront (P380)', () => {
     expect(listingSettingsOf(undefined).alwaysLoad).toBe(true);
     expect(() => createFlowatlasServer({ configPath: configWith({ alwaysLoad: 'yes' }) })).toThrow(/mcp\.alwaysLoad/);
   });
+
+  it('marks only the core tools mcp.upfront or --upfront names (P392), the command line first, and refuses any other', async () => {
+    const four = ['who_calls', 'impact', 'search', 'get_flow'];
+    const configPath = configWith({ upfront: four });
+    const fromConfig = await listedUpfront({ configPath, dbPath: fixtureCopy('upfront-four'), allTools: true });
+    expect(fromConfig.marked).toEqual([...four].sort());
+    // Fewer schemas on every turn than the nine.
+    const nine = await listedUpfront({ configPath: CONFIG, allTools: true });
+    expect(fromConfig.read.length).toBeLessThan(nine.read.length);
+    expect((await listedUpfront({ configPath, dbPath: fixtureCopy('upfront-cli'), allTools: true, upfront: ['dead'] })).marked).toEqual(['dead']);
+    // Off is off, whatever the list says.
+    expect((await listedUpfront({ configPath, dbPath: fixtureCopy('upfront-off'), allTools: true, alwaysLoad: false })).marked).toEqual([]);
+    expect([...listingSettingsOf(undefined).upfront].sort()).toEqual([...CORE_TOOLS].sort());
+    expect(() => createFlowatlasServer({ configPath: configWith({ upfront: ['get_source'] }) })).toThrow(/mcp\.upfront\.0: "get_source" is not one of the core tools/);
+    expect(() => createFlowatlasServer({ configPath: CONFIG, upfront: ['impact', 'impact'] })).toThrow(/--upfront\.1: "impact" is named twice/);
+    expect(() => createFlowatlasServer({ configPath: CONFIG, upfront: ['who_call'] })).toThrow(/did you mean who_calls/);
+  });
 });

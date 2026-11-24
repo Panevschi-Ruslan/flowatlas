@@ -65,12 +65,47 @@ describe('the benchmark project (P238)', () => {
     assert.match(client[1], /qty: body\.quantity/);
   });
 
+  it('plants each find-the-bug defect beside its twin, in the code and in the key (P392)', () => {
+    const dir = fresh();
+    const { key } = writeProject(dir, { seed: 3, resources: 4 });
+    const read = (path) => readFileSync(join(dir, path), 'utf8');
+    assert.deepEqual(key.defects.map((defect) => defect.id), ['renamed-route', 'renamed-field', 'renamed-message', 'shadowed-route', 'env-renamed', 'unguarded-write']);
+    // The renamed route: the gateway posts to close, orders serves resolve; the twin matches.
+    assert.match(read('gateway/src/clients/orders-tickets.client.ts'), /tickets\/\$\{id\}\/close/);
+    const tickets = read('orders/src/tickets/tickets.controller.ts');
+    assert.match(tickets, /@Post\(':id\/resolve'\)/);
+    assert.ok(!tickets.includes("'close'") && !tickets.includes(':id/close'));
+    // The literal after `:id`, and its twin before it.
+    assert.ok(tickets.indexOf("@Get('summary')") < tickets.indexOf("@Get(':id')"));
+    assert.ok(tickets.indexOf("@Get(':id')") < tickets.indexOf("@Get('overdue')"));
+    // The event renamed on the publishing side.
+    assert.match(read('orders/src/tickets/tickets.service.ts'), /emit\('ticket\.resolved'/);
+    assert.match(read('shipping/src/events/ticket.events.ts'), /@EventPattern\('ticket\.closed'\)/);
+    // The body field sent as cause and read as reason; the note's text matches.
+    assert.match(read('gateway/src/clients/shipping-claims.client.ts'), /cause: body\.reason/);
+    assert.match(read('shipping/src/claims/claims.controller.ts'), /reason: body\.reason/);
+    // The one write of its controller with no guard, and a controller guarded as a whole.
+    const claims = read('shipping/src/claims/claims.controller.ts');
+    assert.equal((claims.match(/@UseGuards\(StaffGuard\)/g) ?? []).length, 2);
+    assert.match(read('shipping/src/claims/claim-refunds.controller.ts'), /@UseGuards\(StaffGuard\)\n@Controller/);
+    // The setting renamed in the deployment only.
+    assert.match(read('billing/src/settings.ts'), /process\.env\.LEDGER_REGION as string/);
+    assert.match(read('billing/docker-compose.yml'), /LEDGER_ZONE/);
+    assert.ok(!read('billing/docker-compose.yml').includes('LEDGER_REGION'));
+    // Every class the defects name is registered where its module is.
+    assert.match(read('orders/src/app.module.ts'), /OrdersTicketsController/);
+    assert.match(read('gateway/src/app.module.ts'), /GatewayShippingClaimsClient/);
+    assert.equal((read('shipping/src/app.module.ts').match(/import \{ ShippingTicketEvents \}/g) ?? []).length, 1);
+    // The planted routes are marked, so the earlier questions keep their subjects.
+    assert.ok(key.routes.filter((route) => route.path.startsWith('/tickets')).every((route) => route.planted === true));
+  });
+
   it('answers every question from the key, and the pilot is two of each group', () => {
     const key = buildModel({ seed: 1 });
     const { key: written } = writeProject(fresh(), { seed: 1 });
     const questions = questionsFor(written);
     assert.equal(questions.length, readTemplates().length);
-    assert.ok(questions.length >= 30);
+    assert.ok(questions.length >= 42);
     assert.equal(new Set(questions.map((question) => question.id)).size, questions.length);
     const pilot = questions.filter((question) => question.pilot);
     assert.equal(pilot.length, 8);
@@ -80,8 +115,16 @@ describe('the benchmark project (P238)', () => {
     // Every kind the ticket names is asked, including the ones the graph should not help with.
     assert.deepEqual(
       [...new Set(questions.map((question) => question.kind))].sort(),
-      ['blast-radius', 'code-text', 'contract', 'cross-repo-callers', 'dead', 'event-handlers', 'explain', 'settings', 'single-repo'],
+      ['blast-radius', 'change-files', 'code-text', 'contract', 'cross-repo-callers', 'dead', 'event-handlers', 'explain', 'find-the-bug', 'navigation', 'settings', 'single-repo'],
     );
+    // Every find-the-bug question has its twins and says what it takes to see the defect (P392).
+    for (const question of questions.filter((each) => each.kind === 'find-the-bug')) {
+      assert.ok(question.decoys.length > 0, question.id);
+      assert.ok(['repository', 'across'].includes(question.context), question.id);
+      assert.ok(question.decoys.every((decoy) => !question.expected.includes(decoy)), question.id);
+    }
+    // A change task's files are named with their repository, and touch more than one.
+    for (const question of questions.filter((each) => each.kind === 'change-files')) assert.ok(new Set(question.expected.map((path) => path.split('/')[0])).size > 1, question.id);
     assert.equal(key.seed, 1);
   });
 });

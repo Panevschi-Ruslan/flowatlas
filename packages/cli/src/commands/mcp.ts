@@ -227,6 +227,7 @@ export const registerMcp = (program: Command): void => {
     .option('--dry-run', 'with --install, say what would change and write nothing')
     .option('--all-tools', 'list every tool, not only those the project can answer')
     .option('--no-always-load', 'list no tool to load upfront: Claude Code defers every tool, the core ones too')
+    .option('--upfront <tools>', 'only these core tools load upfront, comma-separated (who_calls,impact,search,get_flow); the rest load by ToolSearch')
     .action(
       async (options: {
         config?: string;
@@ -236,6 +237,7 @@ export const registerMcp = (program: Command): void => {
         dryRun?: boolean;
         allTools?: boolean;
         alwaysLoad?: boolean;
+        upfront?: string;
       }) => {
         if (options.install === true) {
           installMcp({
@@ -291,10 +293,18 @@ export const registerMcp = (program: Command): void => {
           ...(options.allTools === true ? { allTools: true } : {}),
           // Commander reads `--no-always-load` as `alwaysLoad: false`, and true otherwise.
           ...(options.alwaysLoad === false ? { alwaysLoad: false } : {}),
+          ...(options.upfront === undefined ? {} : { upfront: upfrontList(options.upfront) }),
         });
       },
     );
 };
+
+/** `--upfront who_calls,impact`: the names, as the server checks them (P392). */
+export const upfrontList = (text: string): string[] =>
+  text
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name !== '');
 
 /**
  * `mcp.pull: on-start` (P236): the team's graph, pulled before the server

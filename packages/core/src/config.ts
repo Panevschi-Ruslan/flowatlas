@@ -1256,6 +1256,15 @@ export const mcpSettingsSchema = z.strictObject({
    * writes says to load them in one ToolSearch call.
    */
   alwaysLoad: z.boolean().default(true),
+  /**
+   * Which of the core tools load upfront (P392), where all nine do unless
+   * said: every upfront schema rides every turn of every session, asked or
+   * not, so a team whose sessions rarely ask the graph can list fewer
+   * (who_calls, impact, search, get_flow) and load the rest by ToolSearch
+   * when a question needs them. Only core tools, each once; `flowatlas mcp
+   * --upfront` says the same on the command line. Read while `alwaysLoad` is on.
+   */
+  upfront: z.array(toolNameSchema).optional(),
 });
 
 /**

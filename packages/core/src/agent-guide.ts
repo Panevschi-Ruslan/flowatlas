@@ -56,6 +56,26 @@ export const AGENT_HABITS: readonly string[] = Object.freeze([
   'Answers are compact: `verbose: true` gives every field.',
 ]);
 
+/**
+ * The same habits for an assistant that asks the graph in a terminal, with no
+ * server (`flowatlas agents install --terminal`, P392): each command prints
+ * the server's answer to the same question with `--format json`, so what an
+ * answer says (`complete`, `reach`) reads the same, and only how to ask
+ * differs.
+ */
+export const AGENT_TERMINAL_HABITS: readonly string[] = Object.freeze([
+  'Before changing a route, handler, body type or message payload: `flowatlas impact <symbol>` first.',
+  'An answer with `complete: true` is the whole answer: check only what it lists as unread or unsure; keep `reach: "maybe"` rows when asked what breaks.',
+  'Answers are compact: `--verbose` gives every field; run independent commands in one turn.',
+]);
+
+/** The rules the terminal guide states after its habits (P392). */
+export const AGENT_TERMINAL_RULES: readonly string[] = Object.freeze([
+  'One command per question: each takes the name as you have it (an id, `Class.method`, a route said aloud) and `--service` picks among same-named ones.',
+  'Where an answer says the graph could not read something (`unresolvedOnPath`, `cant_follow`), search those files yourself.',
+  'An answer with `stale` was built before the files it cites changed: run `flowatlas build` and ask again.',
+]);
+
 /** The rules the full guide states after the habits, loaded when the guide is. */
 export const AGENT_RULES: readonly string[] = Object.freeze([
   // P382: one call per question, where "find the id first" taught a find_symbol call before the question's own tool.

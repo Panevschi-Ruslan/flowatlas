@@ -7,6 +7,8 @@
  *   node scripts/bench-agent/run.mjs --resume <dir>     # go on where a usage limit stopped a run (with the same --work, if one was given)
  *   node scripts/bench-agent/run.mjs --dry              # no assistant: generator, key, scorers
  *   ... --pilot --prompt-cards                          # the graph arms with prompt cards too (P386)
+ *   ... --pilot --arms A,D,E,F,G                        # the terminal, prompt-card and four-upfront arms too (P392)
+ *   ... --pilot --kinds find-the-bug,change-files       # only the questions of these kinds (P392)
  *
  * This is not part of `pnpm check` (its `--dry` is). It asks an assistant
  * questions, which spends the usage of whoever is signed in, so it is started
@@ -23,6 +25,10 @@
  * | C | that repository | the graph of all of them, over MCP, and the guide |
  * | D | every repository | the graph, over MCP, and the guide |
  *
+ * | E | every repository | the graph through the terminal only: no server, the guide spells the commands (P392) |
+ * | F | every repository | D, and prompt cards: the graph's answer for what a prompt names, before the first turn (P392) |
+ * | G | every repository | D, with four core tools upfront (who_calls, impact, search, get_flow) instead of nine (P392) |
+ *
  * A gets search's best case, B its usual one. C is what a person in one
  * repository gets from the tool; D what the graph adds when search can see
  * everything too. C's server is handed the database alone, so it can say
@@ -36,6 +42,15 @@
  * Every arm gets the same prompt, the same model and the same tools for
  * reading, in a fresh copy of its workspace.
  *
+ * E, F and G are run only when asked (`--arms`), each against D, which they
+ * change one thing of (P392): E asks the graph with the commands through
+ * the shell (`flowatlas agents install --terminal`; the only shell command
+ * it is granted beyond reading is `flowatlas`, run against its graph), F
+ * installs the prompt hook, G lists four tools upfront (`mcp.upfront`). Each
+ * has a graph of its own, built and guided once per work directory, so D
+ * stays exactly what it was. What every session's turns went on is
+ * classified from its transcript (`turns.mjs`) and kept with its measures.
+ *
  * ## What is kept
  *
  * `results/<date>-<kind>/run.json` (versions, model, seed, arms, questions)
@@ -44,7 +59,7 @@
  * directory and never committed; the report quotes only measures.
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,14 +68,38 @@ import { runDry } from './dry.mjs';
 import { writeProject } from './generate.mjs';
 import { questionsFor } from './questions.mjs';
 import { score } from './score.mjs';
+import { classify, graphTool, readTranscript } from './turns.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
 const CLI = join(ROOT, 'packages', 'cli', 'bin', 'flowatlas.js');
 const RESULTS_DIR = join(HERE, 'results');
+/** The kinds of question, in the order the report lists them (P392 added the last three). */
+export const KINDS = ['cross-repo-callers', 'blast-radius', 'event-handlers', 'dead', 'contract', 'settings', 'single-repo', 'code-text', 'explain', 'find-the-bug', 'change-files', 'navigation'];
 export const EXPECTATIONS = join(HERE, 'expectations.md');
-export const ARMS = ['A', 'B', 'C', 'D'];
-export const RUN_FORMAT_VERSION = 1;
+export const ARMS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+/** The arms a run asks unless `--arms` says others: the four every report has compared. */
+export const DEFAULT_ARMS = ['A', 'B', 'C', 'D'];
+export const RUN_FORMAT_VERSION = 2;
+
+/**
+ * What each arm is (P392): the workspace it sees (every repository, or the
+ * one the question is asked from), how it asks the graph (not at all, the
+ * server, or the commands in a terminal), and which graph it asks - each a
+ * copy of the project built and guided its own way.
+ */
+export const ARM_SETUPS = {
+  A: { whole: true, graph: 'none' },
+  B: { whole: false, graph: 'none' },
+  C: { whole: false, graph: 'mcp', variant: 'graph' },
+  D: { whole: true, graph: 'mcp', variant: 'graph' },
+  E: { whole: true, graph: 'terminal', variant: 'graph-terminal' },
+  F: { whole: true, graph: 'mcp', variant: 'graph-cards' },
+  G: { whole: true, graph: 'mcp', variant: 'graph-upfront' },
+};
+
+/** The core tools arm G lists upfront (P-1 b of the research: the few most questions take). */
+export const UPFRONT_FOUR = ['who_calls', 'impact', 'search', 'get_flow'];
 
 const DEFAULTS = { seed: 1, resources: 10, reps: 3, model: 'sonnet', pauseSeconds: 30, timeoutSeconds: 600 };
 
@@ -70,7 +109,7 @@ class UsageError extends Error {}
 let say = (text) => process.stdout.write(text);
 
 const parseArgs = (argv) => {
-  const options = { ...DEFAULTS, arms: ARMS };
+  const options = { ...DEFAULTS, arms: DEFAULT_ARMS };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     const value = () => {
@@ -89,6 +128,7 @@ const parseArgs = (argv) => {
     else if (flag === '--reps') options.reps = Number(value());
     else if (flag === '--model') options.model = value();
     else if (flag === '--arms') options.arms = value().split(',');
+    else if (flag === '--kinds') options.kinds = value().split(',');
     else if (flag === '--pause') options.pauseSeconds = Number(value());
     else if (flag === '--timeout') options.timeoutSeconds = Number(value());
     else if (flag === '--work') options.work = resolve(value());
@@ -96,6 +136,7 @@ const parseArgs = (argv) => {
     else throw new UsageError(`unknown flag ${flag}`);
   }
   for (const arm of options.arms) if (!ARMS.includes(arm)) throw new UsageError(`--arms takes ${ARMS.join(', ')}, not ${arm}`);
+  for (const kind of options.kinds ?? []) if (!KINDS.includes(kind)) throw new UsageError(`--kinds takes ${KINDS.join(', ')}, not ${kind}`);
   return options;
 };
 
@@ -152,31 +193,63 @@ const GRAPH_ONLY = new Set(['.flowatlas', 'key.json', 'flowatlas.config.json']);
 const GUIDE = new Set(['.claude', 'CLAUDE.md', 'AGENTS.md', '.cursor', '.github', '.mcp.json']);
 
 /**
- * The project twice: as generated, for the arms without the graph, and with
- * the graph built and the guide installed, for the arms with it.
+ * How each graph is guided (P392): the base one as every report had it, with
+ * prompt cards only when the run says `--prompt-cards` (P386); the others
+ * each change one thing of it.
  */
-const prepare = (work, options) => {
+const guideArgs = (variant, options) =>
+  ({
+    graph: options.promptCards === true ? [] : ['--no-prompt-cards'],
+    'graph-cards': [],
+    'graph-terminal': ['--terminal', '--no-prompt-cards'],
+    'graph-upfront': ['--no-prompt-cards'],
+  })[variant];
+
+/**
+ * The project as generated, for the arms without the graph, and once for
+ * each graph the run's arms ask (P392): copied, built and guided, the
+ * configuration of `graph-upfront` listing four tools upfront.
+ */
+const prepare = (work, options, arms = DEFAULT_ARMS) => {
   const plain = join(work, 'project');
-  const graph = join(work, 'graph');
   if (!existsSync(join(plain, 'key.json'))) writeProject(plain, { seed: options.seed, resources: options.resources });
-  if (!existsSync(join(graph, '.flowatlas', 'graph.db'))) {
-    rmSync(graph, { recursive: true, force: true });
-    cpSync(plain, graph, { recursive: true });
-    flowatlas(['build', '--config', join(graph, 'flowatlas.config.json')], graph);
+  const graphs = {};
+  for (const variant of new Set(arms.map((arm) => ARM_SETUPS[arm].variant).filter(Boolean))) {
+    const dir = join(work, variant);
+    const configPath = join(dir, 'flowatlas.config.json');
+    if (!existsSync(join(dir, '.flowatlas', 'graph.db'))) {
+      rmSync(dir, { recursive: true, force: true });
+      cpSync(plain, dir, { recursive: true });
+      if (variant === 'graph-upfront') {
+        const config = JSON.parse(readFileSync(configPath, 'utf8'));
+        writeFileSync(configPath, `${JSON.stringify({ ...config, mcp: { upfront: UPFRONT_FOUR } }, null, 2)}\n`);
+      }
+      flowatlas(['build', '--config', configPath], dir);
+    }
+    // Every time, so a graph prepared for a run with prompt cards does not keep them for one without (P386).
+    flowatlas(['agents', 'install', '--config', configPath, '--instructions', '--hook', ...guideArgs(variant, options)], dir);
+    graphs[variant] = dir;
   }
-  // Every time, so a graph prepared for a run with prompt cards does not keep them for one without (P386).
-  const cards = options.promptCards === true ? [] : ['--no-prompt-cards'];
-  flowatlas(['agents', 'install', '--config', join(graph, 'flowatlas.config.json'), '--instructions', '--hook', ...cards], graph);
+  // The terminal arm's `flowatlas`: the command, run where its graph is, found first on the session's PATH.
+  let terminalBin;
+  if (graphs['graph-terminal'] !== undefined) {
+    terminalBin = join(work, 'terminal-bin');
+    mkdirSync(terminalBin, { recursive: true });
+    const shim = join(terminalBin, 'flowatlas');
+    writeFileSync(shim, `#!/bin/sh\ncd ${JSON.stringify(graphs['graph-terminal'])} && exec ${JSON.stringify(process.execPath)} ${JSON.stringify(CLI)} "$@"\n`);
+    chmodSync(shim, 0o755);
+  }
   const key = JSON.parse(readFileSync(join(plain, 'key.json'), 'utf8'));
-  return { plain, graph, key };
+  return { plain, graph: graphs.graph, graphs, terminalBin, key };
 };
 
 /** A fresh copy of what one arm sees, and the MCP configuration it is handed. */
 const workspaceFor = (prepared, question, arm, at) => {
   rmSync(at, { recursive: true, force: true });
-  const withGraph = arm === 'C' || arm === 'D';
-  const whole = arm === 'A' || arm === 'D';
-  const from = withGraph ? prepared.graph : prepared.plain;
+  const setup = ARM_SETUPS[arm];
+  const withGraph = setup.graph !== 'none';
+  const whole = setup.whole;
+  const from = withGraph ? prepared.graphs[setup.variant] : prepared.plain;
   const source = whole ? from : join(from, question.from);
   cpSync(source, at, {
     recursive: true,
@@ -186,29 +259,34 @@ const workspaceFor = (prepared, question, arm, at) => {
       return withGraph || !GUIDE.has(name);
     },
   });
-  if (arm === 'D') {
+  if (withGraph && whole) {
     // The guide at the top of the workspace too, where the session starts: the gateway's is every repository's.
     for (const name of ['CLAUDE.md', '.claude']) {
-      const guide = join(prepared.graph, 'gateway', name);
+      const guide = join(from, 'gateway', name);
       if (existsSync(guide)) cpSync(guide, join(at, name), { recursive: true });
     }
   }
-  const server = withGraph
-    ? {
-        flowatlas: {
-          command: process.execPath,
-          args: [CLI, 'mcp', ...(arm === 'C' ? ['--db', join(prepared.graph, '.flowatlas', 'graph.db')] : ['--config', join(prepared.graph, 'flowatlas.config.json')])],
-          env: { FLOWATLAS_LOG_QUESTIONS: '1' },
-        },
-      }
-    : {};
+  const server =
+    setup.graph === 'mcp'
+      ? {
+          flowatlas: {
+            command: process.execPath,
+            args: [CLI, 'mcp', ...(whole ? ['--config', join(from, 'flowatlas.config.json')] : ['--db', join(from, '.flowatlas', 'graph.db')])],
+            env: { FLOWATLAS_LOG_QUESTIONS: '1' },
+          },
+        }
+      : {};
   const mcpConfig = `${at}.mcp-config.json`;
   writeFileSync(mcpConfig, JSON.stringify({ mcpServers: server }));
-  return { cwd: at, mcpConfig, graph: withGraph };
+  return { cwd: at, mcpConfig, graph: setup.graph === 'mcp', ...(setup.graph === 'terminal' ? { terminalBin: prepared.terminalBin } : {}) };
 };
 
-const questionLog = (prepared) => join(prepared.graph, '.flowatlas', 'questions.jsonl');
-const logLines = (path) => (existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(Boolean) : []);
+/** The question log of the graph an arm asks; none for the arms without one. */
+const questionLog = (prepared, arm) => {
+  const variant = ARM_SETUPS[arm].variant;
+  return variant === undefined ? undefined : join(prepared.graphs[variant], '.flowatlas', 'questions.jsonl');
+};
+const logLines = (path) => (path !== undefined && existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(Boolean) : []);
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -276,7 +354,17 @@ const sayEstimate = (estimate) => {
 
 /** The full run's gate: a pilot of the same build and model, its estimate shown, and `--yes`. */
 const pilotFor = (results, run) => {
-  const pilots = readRuns(results).filter(({ run: other }) => other.kind === 'pilot' && other.flowatlas.commit === run.flowatlas.commit && other.modelRequested === run.modelRequested && other.seed === run.seed && (other.promptCards === true) === (run.promptCards === true) && other.done === true);
+  const pilots = readRuns(results).filter(
+    ({ run: other }) =>
+      other.kind === 'pilot' &&
+      other.flowatlas.commit === run.flowatlas.commit &&
+      other.modelRequested === run.modelRequested &&
+      other.seed === run.seed &&
+      (other.promptCards === true) === (run.promptCards === true) &&
+      // Every arm the full run asks, estimated from the pilot's own sessions of it (P392).
+      run.arms.every((arm) => (other.arms ?? DEFAULT_ARMS).includes(arm)) &&
+      other.done === true,
+  );
   return pilots[pilots.length - 1];
 };
 
@@ -293,13 +381,14 @@ const runSessions = async (dir, run, workDir, prepared, questions) => {
     const space = workspaceFor(prepared, step.question, step.arm, join(work, id));
     const transcript = join(work, `${id}.jsonl`);
     rmSync(transcript, { force: true });
-    const before = logLines(questionLog(prepared)).length;
+    const before = logLines(questionLog(prepared, step.arm)).length;
     const result = await claude.runSession({
       cwd: space.cwd,
       prompt: step.question.prompt,
       model: run.modelRequested,
       mcpConfig: space.mcpConfig,
       graph: space.graph,
+      ...(space.terminalBin === undefined ? {} : { terminalBin: space.terminalBin }),
       timeoutMs: run.timeoutSeconds * 1000,
       keep: (text) => appendFileSync(transcript, text),
     });
@@ -315,11 +404,14 @@ const runSessions = async (dir, run, workDir, prepared, questions) => {
       writeFileSync(join(dir, 'run.json'), `${JSON.stringify(run, null, 2)}\n`);
       throw new UsageError(`${run.refused}. Start a new run.`);
     }
-    const asked = logLines(questionLog(prepared)).slice(before).map((line) => JSON.parse(line));
+    const asked = logLines(questionLog(prepared, step.arm)).slice(before).map((line) => JSON.parse(line));
     const tools = result.tools ?? {};
-    const flowatlasCalls = Object.entries(tools).filter(([tool]) => tool.startsWith('mcp__flowatlas__')).reduce((sum, [, count]) => sum + count, 0);
     const mcpUp = !space.graph || result.mcp.some((server) => server.name === 'flowatlas' && server.status === 'connected');
     const marked = result.outcome === 'answered' && mcpUp ? score(step.question, result.answer) : { score: 0, correct: false, by: 'unscored' };
+    // Where the turns went (P392), from the transcript: a graph call is a tool of the server or, in the terminal arm, the command.
+    const read = readTranscript(existsSync(transcript) ? readFileSync(transcript, 'utf8').split('\n') : []);
+    const turns = classify(read, marked.given);
+    const flowatlasCalls = read.calls.filter((call) => graphTool(call) !== undefined).length;
     const line = {
       question: step.question.id,
       kind: step.question.kind,
@@ -333,6 +425,8 @@ const runSessions = async (dir, run, workDir, prepared, questions) => {
       correct: marked.correct,
       by: marked.by,
       ...(marked.precision === undefined ? {} : { precision: marked.precision, recall: marked.recall }),
+      ...(marked.tp === undefined ? {} : { tp: marked.tp, fp: marked.fp, decoyHits: marked.decoyHits, context: step.question.context }),
+      ...(marked.given === undefined ? {} : { given: marked.given }),
       answerLine: (result.answer.match(/^\s*\**ANSWER:?\**.*$/gim) ?? []).pop()?.slice(0, 2000) ?? null,
       tools,
       toolCalls: Object.values(tools).reduce((sum, count) => sum + count, 0),
@@ -340,6 +434,11 @@ const runSessions = async (dir, run, workDir, prepared, questions) => {
       flowatlasAnswerChars: asked.reduce((sum, entry) => sum + (entry.chars ?? 0), 0),
       tokens: tokensOf(result.usage),
       turns: result.turns,
+      calls: turns.calls,
+      extraTurns: turns.extraTurns,
+      turnKinds: turns.kinds,
+      failedCalls: turns.failedCalls,
+      wastedCalls: turns.wastedCalls,
       ms: result.durationMs ?? result.ms,
       costUsd: result.costUsd ?? null,
       ...(result.error === undefined ? {} : { error: result.error }),
@@ -384,6 +483,8 @@ export const main = async (argv = process.argv.slice(2), io = {}) => {
       resources: options.resources,
       reps: options.kind === 'pilot' ? 1 : options.reps,
       arms: options.arms,
+      armSetups: Object.fromEntries(options.arms.map((arm) => [arm, ARM_SETUPS[arm]])),
+      ...(options.kinds === undefined ? {} : { kinds: options.kinds }),
       pauseSeconds: options.pauseSeconds,
       timeoutSeconds: options.timeoutSeconds,
       promptCards: options.promptCards === true,
@@ -391,6 +492,15 @@ export const main = async (argv = process.argv.slice(2), io = {}) => {
         options.promptCards === true
           ? 'skill + instructions + search hook + prompt cards (flowatlas agents install --instructions --hook)'
           : 'skill + instructions + search hook (flowatlas agents install --instructions --hook --no-prompt-cards)',
+      ...(options.arms.some((arm) => ['E', 'F', 'G'].includes(arm))
+        ? {
+            guides: {
+              E: 'the terminal guide and hooks, no server (flowatlas agents install --instructions --hook --terminal --no-prompt-cards)',
+              F: 'D with prompt cards (flowatlas agents install --instructions --hook)',
+              G: `D with mcp.upfront ${UPFRONT_FOUR.join(', ')}`,
+            },
+          }
+        : {}),
     };
     if (run.assistant.version === undefined) throw new UsageError('the `claude` command was not found; the benchmark drives Claude Code in print mode');
     if (options.kind === 'full') {
@@ -409,9 +519,12 @@ export const main = async (argv = process.argv.slice(2), io = {}) => {
   // Not kept in run.json, which is committed: a path on this machine says nothing about the run.
   const workDir = options.work ?? join(tmpdir(), 'flowatlas-bench-agent', `seed-${run.seed}-r${run.resources}`);
   mkdirSync(workDir, { recursive: true });
-  const prepared = prepare(workDir, run);
-  const all = questionsFor(prepared.key);
-  const questions = run.kind === 'pilot' ? all.filter((question) => question.pilot) : all;
+  const prepared = prepare(workDir, run, run.arms);
+  // `--kinds` (P392): only the questions of those kinds, the pilot's too.
+  const all = questionsFor(prepared.key).filter((question) => run.kinds === undefined || run.kinds.includes(question.kind));
+  const pilotQuestions = all.filter((question) => question.pilot);
+  // A pilot of kinds no pilot question has asks the first question of each instead.
+  const questions = run.kind === 'pilot' ? (pilotQuestions.length > 0 ? pilotQuestions : all.filter((question, index) => all.findIndex((other) => other.kind === question.kind) === index)) : all;
   run.questions ??= questions.map((question) => question.id);
   writeFileSync(join(dir, 'run.json'), `${JSON.stringify(run, null, 2)}\n`);
   const finished = await runSessions(dir, run, workDir, prepared, questions.filter((question) => run.questions.includes(question.id)));

@@ -8,6 +8,43 @@ only one of them moved.
 
 ### Added
 
+- **The benchmark measures finding a defect, a change across repositories and
+  a question in words, and three more ways to hand an assistant the graph
+  (P392).** The generated project gains six planted defects, each beside a
+  twin that looks like it and is right: a route renamed on the server with its
+  old caller left, a body field renamed on one side, an event renamed on one
+  side, a literal route declared after a `:id` route that answers first, a
+  setting renamed in the deployment only, and a write route left without the
+  guard its siblings carry. The *find the bug* questions are marked as true
+  positives minus false positives over the defects planted (a twin named
+  costs as much as a defect missed), with recall by what an answer needs to
+  see (one repository, or across). *Change files* asks for every file in
+  every repository a rename of a route or an event touches, *navigation* asks
+  "where are coupons exported?". The earlier 30 questions keep their subjects
+  and answers for every seed. New arms, run when asked with `--arms`: E asks
+  the graph through the terminal only (no server, the guide spells the
+  commands), F adds prompt cards, G lists four core tools upfront; `--kinds`
+  runs only some kinds. Every session's turns are classified from its
+  transcript (`scripts/bench-agent/turns.mjs`: ToolSearch, a skill read,
+  `start_here`, a lookup before the question's call, a failed call, a second
+  graph call, a read after a complete answer), and the report says tokens per
+  fully right answer, the tool error rate, wasted calls and pass^k.
+- **`mcp.upfront` and `flowatlas mcp --upfront`: fewer core tools loaded
+  upfront (P392).** Only the core tools named are marked
+  `anthropic/alwaysLoad` (`["who_calls", "impact", "search", "get_flow"]`, say);
+  the rest load by ToolSearch. Any other name stops the server at start,
+  naming the nearest core tool. `agents install` writes into the guide which
+  tools are loaded already.
+- **`flowatlas agents install --terminal` (P392).** The guide and the hooks for
+  an assistant that asks the graph in a terminal, with no graph server: the
+  block lists each question with its command, the skill has the terminal
+  column only, and the search and edit hooks name `flowatlas impact "<id>"
+  --format json` instead of the server's tool.
+- **The answer budget holds the instructions in every variant a server can be
+  started in (P392):** from a configuration, a database alone or one that
+  turns code off, with or without the pattern tester and the change checker,
+  every tool or the project's, each under `INSTRUCTIONS_MAX`.
+
 - **Findings say where the two sides of a protocol, a setting, a status or
   CORS disagree (P388).** Where flowatlas reads both sides, `findings` lists
   twelve more kinds, each gated on the fact that makes it a defect, with

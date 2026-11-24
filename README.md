@@ -507,8 +507,11 @@ after a search naming a route another repository calls, says which repositories
 call it ([the graph server](docs/mcp.md#tell-the-assistant-when-to-ask)).
 In Claude Code the nine core tools load upfront, so a session spends no turn on
 a ToolSearch call for them; `"mcp": { "alwaysLoad": false }` or
-`flowatlas mcp --no-always-load` keeps every tool deferred
+`flowatlas mcp --no-always-load` keeps every tool deferred, and
+`"mcp": { "upfront": [...] }` (or `--upfront`) loads fewer of them
 ([the core tools, loaded upfront](docs/mcp.md#the-core-tools-loaded-upfront)).
+An assistant with a shell and no graph server gets the commands instead with
+`flowatlas agents install --terminal`.
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`

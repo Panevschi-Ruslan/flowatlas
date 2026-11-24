@@ -113,6 +113,9 @@ describe('the edit hook', () => {
     );
     // A verb changed is the declaration changed too.
     expect(said('src/items.controller.ts', "@Patch(':id/archive')", "@Post(':id/archive')")).toMatch(/took out `PATCH \/items\/:id\/archive`/);
+    // In a terminal (P392), the command that prints the same answer.
+    const made = edit('src/items.controller.ts', "@Patch(':id/archive')", "@Patch(':id/retire')");
+    expect(editContextFor(made.call, index, made.now, 'linux', true)).toContain('Change them too; `flowatlas impact "entry:catalog:http:PATCH:/items/:param/archive" --format json` lists every use.');
   });
 
   it('names who reads a field sent under another key, and the type and channel where they go', () => {

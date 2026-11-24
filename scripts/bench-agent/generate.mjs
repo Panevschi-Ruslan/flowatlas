@@ -15,6 +15,7 @@ import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'no
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildModel, pascal, singular } from './model.mjs';
+import { importPathOf, plantedFiles } from './planted.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -70,6 +71,14 @@ export const writeProject = (out, options = {}) => {
   };
   const service = (name) => model.services.find((each) => each.name === name);
   const backends = model.services.filter((each) => each.env !== undefined);
+  // The find-the-bug defects and their twins (P392), by repository: each file written, and its class registered.
+  const planted = plantedFiles(model);
+  const plant = (repo, modules) => {
+    for (const file of planted[repo] ?? []) {
+      write(`${repo}/${file.path}`, file.text);
+      if (file.register !== undefined) modules.push({ planted: { ...file.register, path: importPathOf(file.path) } });
+    }
+  };
   const nestTsconfig = lines(
     '{',
     '  "compilerOptions": {',
@@ -354,7 +363,8 @@ export const writeProject = (out, options = {}) => {
     }
     // The handlers of other services' events, one file per resource they are about.
     const handled = new Map();
-    for (const event of model.events) {
+    // The planted events (P392) are written with their defect, by planted.mjs.
+    for (const event of model.events.filter((one) => one.planted !== true)) {
       for (const consumer of event.consumers.filter((one) => one.service === each.name)) {
         handled.set(consumer.file, [...(handled.get(consumer.file) ?? []), { event, consumer }]);
       }
@@ -418,6 +428,7 @@ export const writeProject = (out, options = {}) => {
       );
       modules.push({ client: { className: list[0].clientClass, file } });
     }
+    plant(repo, modules);
     write(
       `${repo}/src/app.module.ts`,
       lines(
@@ -426,7 +437,9 @@ export const writeProject = (out, options = {}) => {
         `import { ConfigModule } from '@nestjs/config';`,
         '',
         ...modules.flatMap((one) =>
-          one.resource !== undefined
+          one.planted !== undefined
+            ? [`import { ${one.planted.className} } from '${one.planted.path}';`]
+            : one.resource !== undefined
             ? [
                 `import { ${one.resource.className}Controller } from './${one.resource.name}/${one.resource.name}.controller';`,
                 `import { ${one.resource.className}Service } from './${one.resource.name}/${one.resource.name}.service';`,
@@ -438,8 +451,8 @@ export const writeProject = (out, options = {}) => {
         '',
         '@Module({',
         '  imports: [HttpModule, ConfigModule.forRoot()],',
-        `  controllers: [${modules.flatMap((one) => (one.resource !== undefined ? [`${one.resource.className}Controller`] : one.handler !== undefined ? [one.handler.className] : [])).join(', ')}],`,
-        `  providers: [${modules.flatMap((one) => (one.resource !== undefined ? [`${one.resource.className}Service`] : one.client !== undefined ? [one.client.className] : [])).join(', ')}],`,
+        `  controllers: [${modules.flatMap((one) => (one.planted !== undefined ? (one.planted.kind === 'controller' ? [one.planted.className] : []) : one.resource !== undefined ? [`${one.resource.className}Controller`] : one.handler !== undefined ? [one.handler.className] : [])).join(', ')}],`,
+        `  providers: [${modules.flatMap((one) => (one.planted !== undefined ? (one.planted.kind === 'provider' ? [one.planted.className] : []) : one.resource !== undefined ? [`${one.resource.className}Service`] : one.client !== undefined ? [one.client.className] : [])).join(', ')}],`,
         '})',
         `export class ${pascal(each.name)}Module {}`,
       ),
@@ -550,15 +563,20 @@ export const writeProject = (out, options = {}) => {
         ),
       );
     }
+    const settled = [];
+    plant(repo, settled);
+    const reads = (planted[repo] ?? []).some((file) => file.path === 'src/settings.ts');
     write(
       `${repo}/src/app.ts`,
       lines(
         `import express from 'express';`,
         '',
         ...mounts.map((one) => `import { ${one.routesConst} } from './${one.resource.name}/${one.resource.name}.routes';`),
+        ...(reads ? [`import { settings } from './settings';`] : []),
         '',
         'export const app = express();',
         'app.use(express.json());',
+        ...(reads ? ["app.locals['ledgerRegion'] = settings.ledgerRegion;", "app.locals['paymentProvider'] = settings.paymentProvider;"] : []),
         ...mounts.map((one) => `app.use('/${one.resource.name}', ${one.routesConst});`),
         'app.listen(Number(process.env.PORT ?? 3000));',
       ),
@@ -768,6 +786,8 @@ export const writeProject = (out, options = {}) => {
       );
       modules.push(proxy);
     }
+    const extra = [];
+    plant(repo, extra);
     write(
       `${repo}/src/app.module.ts`,
       lines(
@@ -779,11 +799,12 @@ export const writeProject = (out, options = {}) => {
           `import { ${proxy.clientClass} } from './clients/${proxy.service}-${proxy.resource}.client';`,
           `import { ${proxy.controllerClass} } from './${proxy.service}/${proxy.service}-${proxy.resource}.controller';`,
         ]),
+        ...extra.map((one) => `import { ${one.planted.className} } from '${one.planted.path}';`),
         '',
         '@Module({',
         '  imports: [HttpModule, ConfigModule.forRoot()],',
-        `  controllers: [${modules.map((proxy) => proxy.controllerClass).join(', ')}],`,
-        `  providers: [${modules.map((proxy) => proxy.clientClass).join(', ')}],`,
+        `  controllers: [${[...modules.map((proxy) => proxy.controllerClass), ...extra.filter((one) => one.planted.kind === 'controller').map((one) => one.planted.className)].join(', ')}],`,
+        `  providers: [${[...modules.map((proxy) => proxy.clientClass), ...extra.filter((one) => one.planted.kind === 'provider').map((one) => one.planted.className)].join(', ')}],`,
         '})',
         'export class GatewayModule {}',
       ),
@@ -924,7 +945,7 @@ export const writeProject = (out, options = {}) => {
  * are asked of it (`questions.mjs`); it is never read by an arm.
  */
 export const keyOf = (model) => ({
-  keyFormatVersion: 1,
+  keyFormatVersion: 2,
   seed: model.seed,
   resources: model.resources,
   services: model.services.map((each) => ({ name: each.name, kind: each.kind, repo: each.repo })),
@@ -933,10 +954,12 @@ export const keyOf = (model) => ({
     service: route.service,
     method: route.method,
     path: route.path,
+    file: route.file,
     handler: route.handler,
     writes: route.writes,
     callers: route.callers,
     ...(route.backend === undefined ? {} : { backend: route.backend }),
+    ...(route.planted === true ? { planted: true } : {}),
   })),
   events: model.events,
   constants: model.constants,
@@ -944,6 +967,8 @@ export const keyOf = (model) => ({
   fields: model.fields,
   calls: model.calls,
   traps: model.traps,
+  defects: model.defects ?? [],
+  planted: model.planted ?? {},
 });
 
 const argument = (argv, name, fallback) => {

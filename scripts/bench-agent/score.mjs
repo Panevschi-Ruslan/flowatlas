@@ -10,6 +10,16 @@
  * Sets are marked by precision and recall; `score` is their F1, and `correct`
  * means the set was exactly right. An expected empty set is right only when
  * the answer is empty too: "nothing handles it" is an answer.
+ *
+ * A find-the-bug question (P392, one with `decoys`) is marked as true
+ * positives minus false positives, OWASP's way: `score` is (TP - FP) over the
+ * defects planted, from -1 to 1, so an answer that names everything odd is
+ * marked down for every twin and every other row it names, and `decoyHits`
+ * says how many of the false positives were the planted twins.
+ *
+ * A file of a change task (`paths`) is its repository's folder and its path
+ * there. One named without its repository counts where exactly one expected
+ * file ends with it, since two repositories can hold files of one name.
  */
 
 /** The last `ANSWER:` line, parsed as JSON when it is, else as its text. */
@@ -28,6 +38,8 @@ const PATTERNS = {
   symbols: /\b[A-Z][A-Za-z0-9]+\.[a-z][A-Za-z0-9]*\b|\b[a-z][a-z0-9]*[A-Z][A-Za-z0-9]*\b/g,
   routes: /\b(?:GET|POST|PUT|PATCH|DELETE)\s+\/[^\s`'",)\]]*/g,
   files: /[\w./-]+\.(?:tsx?|tf)\b/g,
+  paths: /[\w.-]+(?:\/[\w.-]+)+\.(?:tsx?|tf|ya?ml)\b/g,
+  names: /\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/g,
 };
 
 /** `GET /a/:id`, `get /a/{id}/` and `GET /a/:param` are one route. */
@@ -53,7 +65,31 @@ export const fileOf = (text) => {
   return match === null ? undefined : match[1];
 };
 
-const NORMAL = { symbols: symbolOf, routes: routeOf, files: fileOf };
+/** A file with its repository, as written: no leading `./`, quotes or trailing punctuation (P392). */
+export const pathOf = (text) => {
+  const match = /([\w.-]+(?:\/[\w.-]+)*\.(?:tsx?|tf|ya?ml))\b/.exec(String(text).replace(/\\/g, '/'));
+  return match === null ? undefined : match[1].replace(/^(\.\/)+/, '');
+};
+
+/** An environment variable's name, wherever it is written (`process.env.X`, `$X`, `X`). */
+export const nameOf = (text) => {
+  const found = String(text).match(/[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*/g);
+  return found === null ? undefined : found[found.length - 1];
+};
+
+const NORMAL = { symbols: symbolOf, routes: routeOf, files: fileOf, paths: pathOf, names: nameOf };
+
+/**
+ * The given files resolved against the expected ones: as written where one
+ * is expected, else the one expected file that ends with it, where only one
+ * does (a path given from inside its repository).
+ */
+const resolvePaths = (given, expected) =>
+  given.map((item) => {
+    if (expected.has(item)) return item;
+    const ending = [...expected].filter((path) => path.endsWith(`/${item}`));
+    return ending.length === 1 ? ending[0] : item;
+  });
 
 const exactOf = (value) =>
   String(value)
@@ -82,7 +118,21 @@ export const extract = (scorer, text) => {
   return { by: 'patterns', items: found.map((item) => NORMAL[scorer](item)).filter((item) => item !== undefined) };
 };
 
-/** One answer marked: `score` from 0 to 1, `correct` when fully right, and how it was read. */
+/**
+ * A find-the-bug answer (P392): true positives minus false positives, over
+ * the defects planted; every name not a planted defect is a false positive,
+ * and the planted twins among them are counted apart.
+ */
+const defects = (question, expected, given, by) => {
+  const decoys = new Set(question.decoys.map((item) => NORMAL[question.scorer](item)));
+  const tp = [...given].filter((item) => expected.has(item)).length;
+  const fp = given.size - tp;
+  const decoyHits = [...given].filter((item) => decoys.has(item)).length;
+  const score = Math.round(((tp - fp) / Math.max(expected.size, 1)) * 1000) / 1000;
+  return { score: Math.max(-1, Math.min(1, score)), correct: tp === expected.size && fp === 0, by, tp, fp, decoyHits, precision: given.size === 0 ? 0 : tp / given.size, recall: tp / Math.max(expected.size, 1), given: [...given] };
+};
+
+/** One answer marked: `score` from 0 to 1 (from -1 for find the bug), `correct` when fully right, and how it was read. */
 export const score = (question, text) => {
   const read = extract(question.scorer, text);
   if (read.by === 'none') return { score: 0, correct: false, by: 'unscored' };
@@ -93,7 +143,8 @@ export const score = (question, text) => {
     return { score: same ? 1 : 0, correct: same, by: read.by, value };
   }
   const expected = new Set(question.expected.map((item) => NORMAL[question.scorer](item)));
-  const given = new Set(read.items);
+  const given = new Set(question.scorer === 'paths' ? resolvePaths(read.items, expected) : read.items);
+  if (question.decoys !== undefined) return defects(question, expected, given, read.by);
   if (expected.size === 0) {
     const right = given.size === 0;
     return { score: right ? 1 : 0, correct: right, by: read.by, precision: right ? 1 : 0, recall: 1, given: [...given] };

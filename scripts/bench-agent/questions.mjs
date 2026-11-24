@@ -25,6 +25,9 @@ export const ANSWER_FORMATS = {
   routes: 'End your answer with one line of the form ANSWER: ["GET /path/:id", ...], with an empty list if there are none.',
   exact: 'End your answer with one line of the form ANSWER: "<value>".',
   yesno: 'End your answer with one line: ANSWER: "yes" or ANSWER: "no".',
+  // P392: a file named with its repository, as the workspace lays the repositories side by side.
+  paths: 'End your answer with one line of the form ANSWER: ["repository/path/to/file.ts", ...], each path starting with its repository\'s folder, with an empty list if there are none.',
+  names: 'End your answer with one line of the form ANSWER: ["NAME", ...], with an empty list if there are none.',
 };
 
 export const readTemplates = (path = QUESTIONS_FILE) => parse(readFileSync(path, 'utf8')).questions;
@@ -41,6 +44,28 @@ const spread = (items, serviceOf) => {
 };
 
 const declared = (route) => `${route.method} ${route.path}`;
+
+/** How an action is said once done: `approve` -> `approved` (P392). */
+const DONE = { archive: 'archived', approve: 'approved', publish: 'published', lock: 'locked', restore: 'restored', verify: 'verified', export: 'exported', merge: 'merged' };
+
+/**
+ * A route's new name for a change task (P392), changed where its own
+ * declaration says it, so the controller's or router's prefix stays: an
+ * action becomes its noun, a create gains `/new`.
+ */
+const NOUN = { archive: 'archival', approve: 'approval', publish: 'publication', lock: 'locking', restore: 'restoration', verify: 'verification', export: 'exportation', merge: 'merging' };
+const renamedPath = (route) => (NOUN[verbOf(route)] === undefined ? `${route.path}/new` : route.path.replace(new RegExp(`${verbOf(route)}$`), NOUN[verbOf(route)]));
+
+/** A route's verb, its handler's method: `findOne`, `create`, an action. */
+const verbOf = (route) => route.handler.split('.')[1];
+/** The class that does a route's work: `OrdersNotesController` -> `OrdersNotesService`. */
+const workerOf = (route) => `${route.handler.split('.')[0].replace(/(Controller|Routes)$/, '')}Service`;
+
+/** A file as an answer names it: its repository, then its path there. */
+const inRepo = (key, service, file) => `${key.services.find((each) => each.name === service)?.repo ?? service}/${file}`;
+
+/** What a rename touches, for a change task: the declaring file and every caller's (P392). */
+const routeFiles = (key, route) => [...new Set([inRepo(key, route.service, route.file), ...route.callers.map((caller) => inRepo(key, caller.service, caller.file))])].sort();
 
 /** Each subject: its candidates, what fills the prompt, the expected answer, and where it is asked from. */
 const SUBJECTS = {
@@ -122,7 +147,50 @@ const SUBJECTS = {
       key.methods.filter((method) => hasClasses(key, method.service) && method.writes && method.retries === template.retries),
       (method) => method.service,
     ).map((method) => ({ fill: { method: `${method.className}.${method.method}`, service: method.service }, from: method.service, expected: template.retries ? 'yes' : 'no' })),
+  // P392, find the bug: a defect the model planted, the twins an answer is marked down for, and what it takes to see it.
+  'planted-defect': (key, template) =>
+    key.defects
+      .filter((defect) => defect.id === template.defect)
+      .map((defect) => ({ fill: { service: defect.service ?? defect.from }, from: defect.from, expected: defect.expected, decoys: defect.decoys, context: defect.context })),
+  // P392, a change task: every file a rename of a route touches, in every repository, called from two places first.
+  'renamed-route-files': (key, template) => {
+    const candidates = key.routes.filter(
+      (route) => route.method === 'POST' && route.service !== 'gateway' && key.services.find((each) => each.name === route.service)?.kind === template.of && route.callers.length > 0,
+    );
+    const ranked = [...candidates.filter((route) => new Set(route.callers.map((caller) => caller.service)).size > 1), ...candidates.filter((route) => new Set(route.callers.map((caller) => caller.service)).size === 1)];
+    return ranked.map((route) => ({
+      fill: { route: declared(route), renamed: `${route.method} ${renamedPath(route)}`, service: route.service },
+      from: route.service,
+      expected: routeFiles(key, route),
+    }));
+  },
+  // P392, a change task: every file a rename of an event touches, the publisher's and each handler's, heard twice first.
+  'renamed-event-files': (key) => {
+    const heard = key.events.filter((event) => event.consumers.length > 0 && event.publisher.file !== undefined);
+    const ranked = [...heard.filter((event) => event.consumers.length > 1), ...heard.filter((event) => event.consumers.length === 1)];
+    return spread(ranked, (event) => event.publisher.service).map((event) => ({
+      fill: { event: event.name, renamed: `${event.name}.v2`, service: event.publisher.service },
+      from: event.publisher.service,
+      expected: [...new Set([inRepo(key, event.publisher.service, event.publisher.file), ...event.consumers.map((consumer) => inRepo(key, consumer.service, consumer.file))])].sort(),
+    }));
+  },
+  // P392, fuzzy navigation: where a record is changed by an action, said as it is done, with no service named.
+  'action-method': (key) => {
+    const actions = key.routes.filter((route) => DONE[verbOf(route)] !== undefined && hasClasses(key, route.service) && route.service !== 'gateway');
+    const writing = actions.filter((route) => key.methods.some((method) => method.service === route.service && method.className === workerOf(route) && method.method === verbOf(route) && method.writes));
+    return spread(writing, (route) => route.service).map((route) => {
+      return {
+        fill: { records: route.path.split('/')[1], done: DONE[verbOf(route)] },
+        from: 'gateway',
+        expected: [`${workerOf(route)}.${verbOf(route)}`],
+      };
+    });
+  },
 };
+
+/** The subjects the questions had before P392, asked of the key without the planted pieces, so each keeps its subject and its answer. */
+const BEFORE = new Set(['called-backend-route', 'called-gateway-route', 'route-with-screens', 'heard-event', 'unheard-event', 'backend-of-kind', 'renamed-field', 'kept-field', 'client-via', 'service-class', 'constant', 'write-method', 'action-method', 'renamed-route-files', 'renamed-event-files']);
+const withoutPlanted = (key) => ({ ...key, routes: key.routes.filter((route) => route.planted !== true), events: key.events.filter((event) => event.planted !== true) });
 
 /** Services whose code has the classes the methods are on: the Lambda functions have none. */
 const hasClasses = (key, service) => ['nestjs', 'express'].includes(key.services.find((each) => each.name === service)?.kind);
@@ -136,9 +204,10 @@ const fieldSubjects = (key, keep, answer) =>
 const filled = (prompt, fill) => prompt.replace(/\{(\w+)\}/g, (whole, name) => (fill[name] === undefined ? whole : fill[name]));
 
 /** Every question of the templates, made concrete against one key. A template with no such subject is an error: the key cannot answer it. */
-export const questionsFor = (key, templates = readTemplates()) =>
-  templates.map((template) => {
-    const subjects = SUBJECTS[template.subject]?.(key, template);
+export const questionsFor = (key, templates = readTemplates()) => {
+  const plain = withoutPlanted(key);
+  return templates.map((template) => {
+    const subjects = SUBJECTS[template.subject]?.(BEFORE.has(template.subject) ? plain : key, template);
     if (subjects === undefined) throw new Error(`${template.id}: no subject named ${template.subject}`);
     const subject = subjects[template.index];
     if (subject === undefined) throw new Error(`${template.id}: ${template.subject} has ${subjects.length} candidates, none at index ${template.index}`);
@@ -152,5 +221,9 @@ export const questionsFor = (key, templates = readTemplates()) =>
       from: repo,
       prompt: `${filled(template.prompt, subject.fill)}\n\n${ANSWER_FORMATS[template.scorer]}`,
       expected: subject.expected,
+      // Find the bug (P392): the twins, marked as false positives when named, and what it takes to see the defect.
+      ...(subject.decoys === undefined ? {} : { decoys: subject.decoys }),
+      ...(subject.context === undefined ? {} : { context: subject.context }),
     };
   });
+};

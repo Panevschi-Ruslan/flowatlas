@@ -120,25 +120,27 @@ const placeOfFile = (index: EditIndex, file: string, platform: NodeJS.Platform):
 };
 
 /** The one call that lists every use of a name. */
-const callFor = (name: EditName): string => {
+const callFor = (name: EditName, terminal = false): string => {
   const id = JSON.stringify(name.id);
+  // In a terminal (P392), the command that prints the same answer.
+  if (terminal) return name.kind === 'route' || name.kind === 'function' ? `\`flowatlas impact ${id} --format json\`` : '`flowatlas contracts --format json`';
   const field = name.kind === 'field' ? `, field: ${JSON.stringify(name.text)}` : '';
   if (name.kind === 'route' || name.kind === 'function') return `impact({symbol: ${id}})`;
   return name.id.startsWith('entry:') ? `check_contract({edge: ${id}${field}})` : `check_contract({channel: ${id}${field}})`;
 };
 
 /** One name in one line: what went, where, who uses it, and the call that lists them all. */
-const lineFor = (name: EditName): string => {
+const lineFor = (name: EditName, terminal = false): string => {
   const users = `${name.users.join(', ')}${name.more === undefined ? '' : ` and ${name.more} more`}`;
   const said = name.kind === 'route' ? `\`${name.said}\` (declared at line ${name.line})` : `\`${name.said}\``;
-  return `flowatlas: this edit took out ${said}, ${name.role} ${users}. Change them too; ${callFor(name)} lists every use.`;
+  return `flowatlas: this edit took out ${said}, ${name.role} ${users}. Change them too; ${callFor(name, terminal)} lists every use.`;
 };
 
 /**
  * The context to add after an edit, or undefined for none. Pure: the call,
  * the index and the file as it is now; `platform` says how paths compare.
  */
-export const editContextFor = (call: EditCall, index: EditIndex | undefined, now: string | undefined, platform: NodeJS.Platform = process.platform): string | undefined => {
+export const editContextFor = (call: EditCall, index: EditIndex | undefined, now: string | undefined, platform: NodeJS.Platform = process.platform, terminal = false): string | undefined => {
   if (index === undefined || index.editsFormatVersion !== EDITS_FORMAT_VERSION || now === undefined) return undefined;
   const file = call.tool_input?.file_path;
   if (typeof file !== 'string' || file === '') return undefined;
@@ -155,11 +157,11 @@ export const editContextFor = (call: EditCall, index: EditIndex | undefined, now
     const key = `${name.kind}\n${name.said}\n${name.role}`;
     if (seen.has(key) || !takenOut(name, replacements, now)) continue;
     seen.add(key);
-    if (lines.length < MAX_EDIT_LINES) lines.push(lineFor(name));
+    if (lines.length < MAX_EDIT_LINES) lines.push(lineFor(name, terminal));
     else more += 1;
   }
   if (lines.length === 0) return undefined;
-  if (more > 0) lines.push(`flowatlas: and ${more} more names other repositories use; check_change lists every break.`);
+  if (more > 0) lines.push(`flowatlas: and ${more} more names other repositories use; ${terminal ? '`flowatlas check-change --format json`' : 'check_change'} lists every break.`);
   return lines.join('\n');
 };
 
@@ -221,7 +223,7 @@ export const runEditHook = async (
       ? index
       : { ...index, services: Object.fromEntries(Object.entries(index.services).map(([service, dir]) => [service, realOf(dir)])) };
     const absolute = isAbsolute(file) ? file : resolve(typeof call.cwd === 'string' ? call.cwd : process.cwd(), file);
-    const context = editContextFor({ ...call, tool_input: { ...call.tool_input, file_path: realOf(absolute) } }, real, readText(absolute));
+    const context = editContextFor({ ...call, tool_input: { ...call.tool_input, file_path: realOf(absolute) } }, real, readText(absolute), process.platform, argv.includes('--terminal'));
     if (context !== undefined) (io.write ?? ((text: string) => void process.stdout.write(text)))(editHookOutput(context));
   } catch {
     // Silence: a hook that failed an edit would be worse than none.

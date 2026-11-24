@@ -201,13 +201,17 @@ const counted = (across: Record<string, number>, leave: string | undefined): str
  * them, and no more (P366), since what a hook adds is read again on every
  * later turn.
  */
-const sentenceFor = (name: IndexedName, here: string | undefined): string | undefined => {
+const sentenceFor = (name: IndexedName, here: string | undefined, terminal = false): string | undefined => {
   const far = counted(name.across, here);
   if (far.length === 0) return undefined;
   const what = name.label ?? name.text;
   const owner = name.service === null ? '' : `, in ${name.service}`;
-  const call =
-    name.kind === 'channel'
+  // In a terminal (P392), the command that prints the same answer.
+  const call = terminal
+    ? name.kind === 'channel'
+      ? `\`flowatlas channel ${JSON.stringify(name.text)} --format json\` lists them`
+      : `\`flowatlas impact ${JSON.stringify(name.id)} --format json\` lists them`
+    : name.kind === 'channel'
       ? `who_emits and who_consumes({channel: ${JSON.stringify(name.text)}}) list them`
       : `who_calls({symbol: ${JSON.stringify(name.id)}}) lists them`;
   return `\`${what}\`${owner}: ${name.role} in ${far.join(', ')}. ${call}.`;
@@ -217,7 +221,7 @@ const sentenceFor = (name: IndexedName, here: string | undefined): string | unde
  * The context to add after a search, or undefined for none. Pure: the call,
  * the index, and nothing read; `platform` says how their paths compare.
  */
-export const contextFor = (call: HookCall, index: NamesIndex | undefined, platform: NodeJS.Platform = process.platform): string | undefined => {
+export const contextFor = (call: HookCall, index: NamesIndex | undefined, platform: NodeJS.Platform = process.platform, terminal = false): string | undefined => {
   if (index === undefined || index.namesFormatVersion !== NAMES_FORMAT_VERSION) return undefined;
   const here = typeof call.cwd === 'string' ? serviceAt(index, call.cwd, platform) : undefined;
   if (here === undefined) return undefined;
@@ -228,7 +232,7 @@ export const contextFor = (call: HookCall, index: NamesIndex | undefined, platfo
   let more = 0;
   for (const name of index.names) {
     if (seen.has(name.id) || !literals.some((literal) => matches(name, literal))) continue;
-    const sentence = sentenceFor(name, here);
+    const sentence = sentenceFor(name, here, terminal);
     if (sentence === undefined) continue;
     seen.add(name.id);
     if (said.length < MAX_MATCHES) said.push(sentence);
@@ -238,7 +242,7 @@ export const contextFor = (call: HookCall, index: NamesIndex | undefined, platfo
   return [
     `flowatlas: this search saw the ${here} checkout only; the graph also sees the other repositories.`,
     ...said.map((line) => `- ${line}`),
-    ...(more === 0 ? [] : [`- and ${more} more names this pattern matches (search({query}) lists them).`]),
+    ...(more === 0 ? [] : [terminal ? `- and ${more} more names this pattern matches.` : `- and ${more} more names this pattern matches (search({query}) lists them).`]),
   ].join('\n');
 };
 
@@ -303,7 +307,7 @@ export const runSearchHook = async (
     const path = namesPathOf(argv, env['CLAUDE_PROJECT_DIR'] ?? (typeof call.cwd === 'string' ? call.cwd : undefined));
     if (path === undefined) return;
     const real = withRealPlaces(call, readIndex(path));
-    const context = contextFor(real.call, real.index);
+    const context = contextFor(real.call, real.index, process.platform, argv.includes('--terminal'));
     if (context !== undefined) (io.write ?? ((text: string) => void process.stdout.write(text)))(hookOutput(context));
   } catch {
     // Silence: a hook that fails a search would be the one thing worse than none.

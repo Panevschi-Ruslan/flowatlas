@@ -78,6 +78,7 @@ and let it talk on stdin and stdout.
 | `--dry-run` | with `--install`, say what would change and write nothing |
 | `--all-tools` | list every tool, not only those the project can answer, whatever the configuration's `mcp` block says |
 | `--no-always-load` | list no tool to load upfront: Claude Code defers every tool, the core ones too (see [The core tools, loaded upfront](#the-core-tools-loaded-upfront)) |
+| `--upfront <tools>` | only these core tools load upfront, comma-separated (`who_calls,impact,search,get_flow`); the rest load by ToolSearch (P392) |
 
 The server answers `initialize` as `flowatlas`, with the version of the command
 you installed as `serverInfo.version` (`flowatlas --version` prints the same).
@@ -366,6 +367,19 @@ that say nothing (`minItems: 1`, `minLength: 1`, `minimum: 0` or `1`, still
 checked on every call), and the instructions leave out what the core tools'
 descriptions say. Each upfront description stays under the 4,096 characters
 Claude Code keeps of one.
+
+To load fewer of them upfront (P392), `"mcp": { "upfront": ["who_calls",
+"impact", "search", "get_flow"] }` in `flowatlas.config.json`, or `flowatlas
+mcp --upfront who_calls,impact,search,get_flow` in the server's command (the
+command line first): only those are marked, the others load by ToolSearch
+with every other tool a question needs. Four schemas instead of nine ride
+every turn, including the turns of a session that never asks the graph,
+against a ToolSearch turn the first time a fifth tool is needed; the public
+benchmark's arm G measures which pays (`scripts/bench-agent`). Only core
+tools can be named, each once; any other name stops the server at start with
+a configuration error naming the nearest core tool. `agents install` reads
+the list from the configuration or the `.mcp.json` entry's `--upfront` and
+writes into the guide which tools are loaded already.
 
 To keep every tool deferred:
 

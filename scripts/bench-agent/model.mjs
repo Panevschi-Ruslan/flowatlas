@@ -17,6 +17,12 @@
  * - a base address read from a settings object instead of the environment;
  * - a field renamed across a boundary: the caller sends one name, the
  *   handler reads another.
+ *
+ * Beside them, the defects the find-the-bug questions plant (P392), each
+ * with a safe twin that looks like it and is not one (`plantDefects`): they
+ * are added after everything above is drawn, from no random draw, so a seed
+ * gives the same project as before with these pieces beside it, and every
+ * earlier question the same subject and the same answer.
  */
 
 /** A small fast generator, so a seed is a project (mulberry32). */
@@ -111,6 +117,8 @@ export const buildModel = ({ seed = 1, resources = 10 } = {}) => {
           service: backend.name,
           method: shape.method,
           path: shape.path,
+          // The file that declares it: what a rename of the route changes on the serving side (P392).
+          file: backend.kind === 'nestjs' ? `src/${resource}/${resource}.controller.ts` : backend.kind === 'express' ? `src/${resource}/${resource}.routes.ts` : 'infra/api.tf',
           resource,
           verb: shape.verb,
           handler: `${own.className}${backend.kind === 'nestjs' ? 'Controller' : 'Routes'}.${shape.verb}`,
@@ -157,6 +165,7 @@ export const buildModel = ({ seed = 1, resources = 10 } = {}) => {
           service: 'gateway',
           method: route.method,
           path: `/api/${service.name}${route.path}`,
+          file: proxy.controllerFile,
           resource: resource.name,
           verb: route.verb,
           handler: `${controllerClass}.${route.verb}`,
@@ -264,7 +273,7 @@ export const buildModel = ({ seed = 1, resources = 10 } = {}) => {
           file: `src/events/${resource.one}.events.ts`,
           method: `on${pascal(resource.one)}${verb === 'create' ? 'Created' : 'Updated'}`,
         }));
-        events.push({ name, publisher: { service: service.name, className: `${resource.className}Service`, method: verb }, consumers });
+        events.push({ name, publisher: { service: service.name, className: `${resource.className}Service`, method: verb, file: `src/${resource.name}/${resource.name}.service.ts` }, consumers });
       }
     }
   }
@@ -273,5 +282,93 @@ export const buildModel = ({ seed = 1, resources = 10 } = {}) => {
   unheard.consumers = [];
   unheard.unheard = true;
 
-  return { seed, resources, services, routes, calls, events, constants, methods, fields, traps: { helper: helperProxy.clientFile, settings: settingsProxy.clientFile, renamed: renamed.route.id, unheard: unheard.name } };
+  const model = { seed, resources, services, routes, calls, events, constants, methods, fields, traps: { helper: helperProxy.clientFile, settings: settingsProxy.clientFile, renamed: renamed.route.id, unheard: unheard.name } };
+  plantDefects(model);
+  return model;
+};
+
+/**
+ * The defects the find-the-bug questions ask about (P392), each beside a twin
+ * that looks like it and is right, so an answer that lists everything that
+ * looks odd is marked down for the twins: a score is true positives minus
+ * false positives. Written into the model, the generator writes their code
+ * from `model.planted` and the key says what is a defect and what a twin.
+ *
+ * - orders' support tickets (`tickets`): the route that closed one was
+ *   renamed `resolve` on the server and the gateway still posts to `close`
+ *   (the twin, `reopen`, matches); a literal `GET /tickets/overdue` declared
+ *   after `GET /tickets/:id`, which answers its requests first (the twin,
+ *   `GET /tickets/summary`, is declared before it); and resolving publishes
+ *   `ticket.resolved` where shipping still listens for `ticket.closed` (the
+ *   twin, `ticket.reopened`, is heard).
+ * - shipping's claims: the gateway sends a claim's reason as `cause`, read as
+ *   `reason` (the twin, a note's `text`, matches); and `DELETE /claims/:id`
+ *   is the one write of its controller without the guard its siblings carry
+ *   (the twins: `GET /claims`, a read left open, and the delete of a
+ *   controller guarded as a whole).
+ * - billing reads `LEDGER_REGION` with no default, and its deployment sets
+ *   `LEDGER_ZONE` (the twin, `PAYMENT_PROVIDER`, is set).
+ *
+ * Every route here is marked `planted`, so the earlier questions pick their
+ * subjects from the routes they always had.
+ */
+export const plantDefects = (model) => {
+  const route = (service, method, path, handler, file, callers = []) => {
+    const made = { id: `${service}:${routeKey(method, path)}`, service, method, path, file, resource: path.split('/')[1], verb: handler.split('.')[1], handler, writes: method !== 'GET', callers, planted: true };
+    model.routes.push(made);
+    return made;
+  };
+  const ticketsClient = { service: 'gateway', file: 'src/clients/orders-tickets.client.ts' };
+  const claimsClient = { service: 'gateway', file: 'src/clients/shipping-claims.client.ts' };
+  const caller = (client, symbol) => ({ ...client, symbol });
+  // orders: the tickets controller, in its declaration order.
+  const tickets = 'src/tickets/tickets.controller.ts';
+  route('orders', 'GET', '/tickets', 'OrdersTicketsController.list', tickets);
+  route('orders', 'GET', '/tickets/summary', 'OrdersTicketsController.summary', tickets, [caller(ticketsClient, 'GatewayOrdersTicketsClient.summary')]);
+  // The literal declared after `:id` is never reached: its request lands on findOne.
+  route('orders', 'GET', '/tickets/:id', 'OrdersTicketsController.findOne', tickets, [caller(ticketsClient, 'GatewayOrdersTicketsClient.overdue')]);
+  route('orders', 'GET', '/tickets/overdue', 'OrdersTicketsController.overdue', tickets);
+  route('orders', 'POST', '/tickets/:id/resolve', 'OrdersTicketsController.resolve', tickets);
+  route('orders', 'POST', '/tickets/:id/reopen', 'OrdersTicketsController.reopen', tickets, [caller(ticketsClient, 'GatewayOrdersTicketsClient.reopen')]);
+  // The gateway's own routes in front of them, which no screen calls.
+  const ticketsFront = 'src/orders/orders-tickets.controller.ts';
+  route('gateway', 'GET', '/api/orders/tickets/summary', 'GatewayOrdersTicketsController.summary', ticketsFront);
+  route('gateway', 'GET', '/api/orders/tickets/overdue', 'GatewayOrdersTicketsController.overdue', ticketsFront);
+  route('gateway', 'POST', '/api/orders/tickets/:id/close', 'GatewayOrdersTicketsController.close', ticketsFront);
+  route('gateway', 'POST', '/api/orders/tickets/:id/reopen', 'GatewayOrdersTicketsController.reopen', ticketsFront);
+  // shipping: the claims, one write left unguarded, and the refunds, guarded as a whole.
+  const claims = 'src/claims/claims.controller.ts';
+  route('shipping', 'GET', '/claims', 'ShippingClaimsController.list', claims);
+  route('shipping', 'POST', '/claims', 'ShippingClaimsController.create', claims, [caller(claimsClient, 'GatewayShippingClaimsClient.create')]);
+  route('shipping', 'POST', '/claims/:id/notes', 'ShippingClaimsController.addNote', claims, [caller(claimsClient, 'GatewayShippingClaimsClient.addNote')]);
+  route('shipping', 'DELETE', '/claims/:id', 'ShippingClaimsController.remove', claims);
+  const refunds = 'src/claims/claim-refunds.controller.ts';
+  route('shipping', 'POST', '/claim-refunds', 'ShippingClaimRefundsController.create', refunds);
+  route('shipping', 'DELETE', '/claim-refunds/:id', 'ShippingClaimRefundsController.remove', refunds);
+  const claimsFront = 'src/shipping/shipping-claims.controller.ts';
+  route('gateway', 'POST', '/api/shipping/claims', 'GatewayShippingClaimsController.create', claimsFront);
+  route('gateway', 'POST', '/api/shipping/claims/:id/notes', 'GatewayShippingClaimsController.addNote', claimsFront);
+  // The events: resolved is published and heard by no one; reopened is heard.
+  const publisher = (method) => ({ service: 'orders', className: 'OrdersTicketsService', method, file: 'src/tickets/tickets.service.ts' });
+  const handler = (method) => ({ service: 'shipping', className: 'ShippingTicketEvents', file: 'src/events/ticket.events.ts', method });
+  model.events.push({ name: 'ticket.resolved', publisher: publisher('resolve'), consumers: [], planted: true });
+  model.events.push({ name: 'ticket.reopened', publisher: publisher('reopen'), consumers: [handler('onTicketReopened')], planted: true });
+  const renamedCaller = model.fields.find((field) => field.route === model.traps.renamed).caller;
+  model.planted = {
+    tickets: { client: ticketsClient.file, front: ticketsFront },
+    claims: { client: claimsClient.file, front: claimsFront },
+    staleHandler: { ...handler('onTicketClosed'), event: 'ticket.closed' },
+    settings: { service: 'billing', read: ['LEDGER_REGION', 'PAYMENT_PROVIDER'], set: ['PAYMENT_PROVIDER', 'LEDGER_ZONE'] },
+  };
+  // What each find-the-bug question expects, and the twins an answer is marked down for. `context`: what an
+  // answer needs to see, the repository the question is asked from or the repositories across a boundary.
+  model.defects = [
+    { id: 'renamed-route', context: 'across', from: 'gateway', scorer: 'symbols', expected: ['GatewayOrdersTicketsClient.close'], decoys: ['GatewayOrdersTicketsClient.reopen', 'GatewayOrdersTicketsClient.summary'] },
+    // The gateway's own renamed field (the contract trap) is one too: an answer is right with both.
+    { id: 'renamed-field', context: 'across', from: 'gateway', scorer: 'symbols', expected: ['GatewayShippingClaimsClient.create', renamedCaller].sort(), decoys: ['GatewayShippingClaimsClient.addNote'] },
+    { id: 'renamed-message', context: 'across', from: 'shipping', scorer: 'symbols', expected: ['ShippingTicketEvents.onTicketClosed'], decoys: ['ShippingTicketEvents.onTicketReopened'] },
+    { id: 'shadowed-route', context: 'repository', from: 'orders', service: 'orders', scorer: 'routes', expected: ['GET /tickets/overdue'], decoys: ['GET /tickets/summary'] },
+    { id: 'env-renamed', context: 'repository', from: 'billing', service: 'billing', scorer: 'names', expected: ['LEDGER_REGION'], decoys: ['PAYMENT_PROVIDER'] },
+    { id: 'unguarded-write', context: 'repository', from: 'shipping', service: 'shipping', scorer: 'routes', expected: ['DELETE /claims/:id'], decoys: ['DELETE /claim-refunds/:id', 'GET /claims'] },
+  ];
 };

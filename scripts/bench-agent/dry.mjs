@@ -41,8 +41,10 @@ const answersFor = (questions) =>
       question.scorer === 'yesno' || question.scorer === 'exact'
         ? `It is in the code.\nANSWER: ${JSON.stringify(question.expected)}`
         : `Found them.\nANSWER: ${JSON.stringify(question.expected)}`;
-    const wrong =
-      question.scorer === 'yesno'
+    // Find the bug (P392): every defect, and a twin named beside them.
+    const wrong = question.decoys !== undefined
+      ? `ANSWER: ${JSON.stringify([...question.expected, question.decoys[0]])}`
+      : question.scorer === 'yesno'
         ? `ANSWER: "${question.expected === 'yes' ? 'no' : 'yes'}"`
         : question.scorer === 'exact'
           ? 'ANSWER: "unknown"'
@@ -103,6 +105,16 @@ export const runDry = async ({ record = false } = {}) => {
       const first = questions.find((question) => question.scorer === 'routes');
       answers.push({ question: first.id, text: 'I could not tell from here.', expect: { score: 0, correct: false, by: 'unscored' } });
       answers.push({ question: first.id, text: `The ones nothing calls: ${first.expected.join(', ')}.`, expect: { ...pick(score(first, `The ones nothing calls: ${first.expected.join(', ')}.`)) } });
+      // P392: a change task's files named from inside their repositories, a setting named as the code reads it,
+      // and a navigation answered with the controller that forwards, not the method that changes the record.
+      const extra = [];
+      const files = questions.find((question) => question.scorer === 'paths');
+      extra.push({ question: files.id, text: `ANSWER: ${JSON.stringify(files.expected.map((path) => path.split('/').slice(1).join('/')))}` });
+      const names = questions.find((question) => question.scorer === 'names');
+      extra.push({ question: names.id, text: `It reads process.env.${names.expected[0]}.\nANSWER: ["process.env.${names.expected[0]}"]` });
+      const navigation = questions.find((question) => question.kind === 'navigation');
+      extra.push({ question: navigation.id, text: `ANSWER: ${JSON.stringify(navigation.expected.map((symbol) => symbol.replace('Service.', 'Controller.')))}` });
+      for (const answer of extra) answers.push({ ...answer, expect: pick(score(byId.get(answer.question), answer.text)) });
       writeFileSync(RECORDED, `${JSON.stringify({ ...DRY, keyRoutes: project.key.routes.length, answers }, null, 2)}\n`);
       lines.push(`recorded ${answers.length} answers in ${RECORDED}`);
     }

@@ -1193,7 +1193,7 @@ export {
   staleOf,
 } from './freshness.js';
 export type { Checkout, CheckoutMoved, CitedFile, Freshness, FreshnessService, Stale } from './freshness.js';
-export { AGENT_HABITS, AGENT_QUESTIONS, AGENT_RULES, agentQuestionsLine } from './agent-guide.js';
+export { AGENT_HABITS, AGENT_QUESTIONS, AGENT_RULES, AGENT_TERMINAL_HABITS, AGENT_TERMINAL_RULES, agentQuestionsLine } from './agent-guide.js';
 export type { AgentQuestion } from './agent-guide.js';
 export { attachNotes, DEFAULT_NOTE_TAGS, leadingNotes, MAX_NOTE_CHARS, MAX_NOTES, NOTES_META, projectText } from './notes.js';
 export type { SourceText } from './notes.js';

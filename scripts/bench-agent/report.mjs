@@ -18,7 +18,8 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ARMS, EXPECTATIONS, median, readSessions } from './run.mjs';
+import { ARMS, EXPECTATIONS, KINDS, median, readSessions } from './run.mjs';
+import { renderTurns, turnTable } from './turns.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
@@ -27,7 +28,6 @@ const README = join(ROOT, 'README.md');
 const START = '<!-- benchmark:start -->';
 const END = '<!-- benchmark:end -->';
 
-export const KINDS = ['cross-repo-callers', 'blast-radius', 'event-handlers', 'dead', 'contract', 'settings', 'single-repo', 'code-text', 'explain'];
 const ACROSS = new Set(['cross-repo-callers', 'blast-radius', 'event-handlers', 'dead']);
 const MEASURES = { score: (session) => session.score, calls: (session) => session.toolCalls, tokens: (session) => session.tokens.total, time: (session) => session.ms };
 
@@ -40,7 +40,7 @@ export const readClaims = (text) => {
     .map((line) => line.trim())
     .filter((line) => line !== '' && !line.startsWith('#'))
     .map((line) => {
-      const match = /^(?:(calls|tokens|time)\s+)?([\w-]+):\s*([A-D])\s*(>=|<=|>|<|=)\s*([A-D])$/.exec(line);
+      const match = /^(?:(calls|tokens|time)\s+)?([\w-]+):\s*([A-G])\s*(>=|<=|>|<|=)\s*([A-G])$/.exec(line);
       if (match === null) throw new Error(`expectations.md: cannot read ${JSON.stringify(line)}`);
       return { line, measure: match[1] ?? 'score', kind: match[2], left: match[3], op: match[4], right: match[5] };
     });
@@ -74,12 +74,24 @@ const METHOD = `## How it is measured
 A generated project of eight TypeScript repositories - a NestJS gateway, three
 NestJS services, an Express service, Lambda functions declared in Terraform, a
 React storefront and an Angular back office, and a package of shared types -
-is asked 30 fixed questions (\`scripts/bench-agent/questions.yaml\`). The
+is asked 42 fixed questions (\`scripts/bench-agent/questions.yaml\`). The
 answers are marked against a key the generator writes from its own model of
 what it generated, never from flowatlas's reading of it. The project has
 traps: routes nothing calls, an event nobody handles, a call made through a
 helper, an address read from a settings object, a field renamed across a
 boundary.
+
+Beside the questions that name what to look at, three kinds ask what a
+change needs or where something is: *find the bug*, six planted defects (a
+route renamed on the server with its old caller left, a body field renamed
+on one side, an event renamed on one side, a literal route declared after a
+\`:id\` route that answers first, a setting renamed in the deployment only, a
+write route left without the guard its siblings carry), each beside a twin
+that looks like it and is right, marked as true positives minus false
+positives over the defects planted, so naming every odd thing costs as much
+as missing one; *change files*, every file in every repository a rename of a
+route or an event touches; and *navigation*, a question in words ("where are
+coupons exported?") with no name from the code.
 
 | Arm | Workspace | flowatlas |
 |---|---|---|
@@ -87,10 +99,17 @@ boundary.
 | B | the repository the question is asked from | none |
 | C | that repository | the graph of all of them over MCP, and the guide |
 | D | every repository | the graph over MCP, and the guide |
+| E | every repository | the graph through the terminal only: no server, the guide spells the commands |
+| F | every repository | D, and prompt cards: the graph's answer for what a prompt names, before the first turn |
+| G | every repository | D, with four core tools upfront instead of nine |
 
 A is search's best case and B its usual one; C is what one person in one
 repository gets; D isolates what the graph adds when search sees everything
-too. Every arm has the same model, the same prompt and the same tools for
+too. E, F and G each change one thing of D, and run when asked
+(\`--arms\`): what a server's listing costs against the commands, what an
+answer handed over before the first turn saves, and what four upfront
+schemas save on every turn against the ToolSearch a fifth tool needs.
+Every arm has the same model, the same prompt and the same tools for
 reading and searching, in a fresh copy of its workspace; the person's own
 settings, hooks and MCP servers are left out. Each question runs at least
 three times an arm, and the tables give the median and the range. The kinds
@@ -106,13 +125,23 @@ pnpm install && pnpm -r build
 node scripts/bench-agent/run.mjs --pilot        # 32 sessions; prints what a full run would take
 node scripts/bench-agent/run.mjs --full --yes   # after the pilot
 node scripts/bench-agent/report.mjs scripts/bench-agent/results/<the run>
+node scripts/bench-agent/run.mjs --pilot --arms A,D,E,F,G   # the terminal, prompt-card and four-upfront arms beside A and D
+node scripts/bench-agent/run.mjs --pilot --kinds find-the-bug,change-files,navigation
+node scripts/bench-agent/turns.mjs scripts/bench-agent/results/<the run>   # where every turn went
 \`\`\`
 
 It drives Claude Code in print mode on the account you are signed in with,
 so it spends that account's usage. A run stopped by a usage limit goes on
 with \`--resume <the run>\`. \`node scripts/bench-agent/run.mjs --dry\` checks the
 generator, the key and the scorers with no assistant at all, and is part of
-\`pnpm check\`.
+\`pnpm check\`. The graph arms run without prompt cards unless the run is started
+with \`--prompt-cards\` (P386), which installs the prompt hook too and says so in
+\`run.json\`; a full run then needs a pilot started the same way.
+
+Each session's transcript stays in the work directory; what its turns went
+on - a ToolSearch, a skill read, \`start_here\`, a lookup before the question's
+own call, a failed call, a second graph call, a read after a complete answer -
+is classified from it (\`turns.mjs\`) and kept with the session's measures.
 `;
 
 export const renderReport = ({ run, sessions, claims, notes, dir }) => {
@@ -128,6 +157,7 @@ export const renderReport = ({ run, sessions, claims, notes, dir }) => {
     if (mine.length === 0) continue;
     lines.push(`| ${kind} | ${run.arms.map((arm) => cell(mine.filter((session) => session.arm === arm))).join(' | ')} |`);
   }
+  lines.push(...findTheBug(run, sessions), ...costs(run, sessions), ...turnsSection(sessions));
   lines.push('', '## What was expected', '');
   const judged = claims.map((claim) => judge(claim, sessions));
   for (const claim of judged) {
@@ -140,7 +170,7 @@ export const renderReport = ({ run, sessions, claims, notes, dir }) => {
     const of = (arm) => sessions.filter((session) => session.question === question && session.arm === arm).map((session) => session.score);
     const a = of('A');
     if (a.length === 0) continue;
-    for (const arm of ['C', 'D']) {
+    for (const arm of ['C', 'D', 'E', 'F', 'G']) {
       const mine = of(arm);
       if (mine.length > 0 && median(mine) < median(a)) worse.push({ question, arm, a: median(a), b: median(mine) });
     }
@@ -154,6 +184,74 @@ export const renderReport = ({ run, sessions, claims, notes, dir }) => {
   }
   lines.push('', '## Every session', '', ...[...outcomes].sort().map(([outcome, count]) => `- ${outcome}: ${count}`), '');
   return { text: `${lines.join('\n')}\n`, judged, worse };
+};
+
+/**
+ * Find the bug (P392): per arm, the defects named and the false positives,
+ * the twins among them, and recall by what an answer needs to see.
+ */
+const findTheBug = (run, sessions) => {
+  const mine = sessions.filter((session) => session.kind === 'find-the-bug' && session.tp !== undefined);
+  if (mine.length === 0) return [];
+  const lines = ['', '## Find the bug', '', 'True positives minus false positives over the defects planted, from -1 to 1; recall by what an answer needs to see.', ''];
+  lines.push('| Arm | Score (median) | True positives | False positives | Twins named | Recall, one repository | Recall, across repositories |', '|---|---|---|---|---|---|---|');
+  for (const arm of run.arms) {
+    const of = mine.filter((session) => session.arm === arm);
+    if (of.length === 0) continue;
+    const sum = (pick) => of.reduce((total, session) => total + pick(session), 0);
+    const recall = (context) => {
+      const at = of.filter((session) => session.context === context);
+      return at.length === 0 ? '—' : (at.reduce((total, session) => total + (session.recall ?? 0), 0) / at.length).toFixed(2);
+    };
+    lines.push(`| ${arm} | ${median(of.map((session) => session.score)).toFixed(2)} | ${sum((session) => session.tp)} | ${sum((session) => session.fp)} | ${sum((session) => session.decoyHits ?? 0)} | ${recall('repository')} | ${recall('across')} |`);
+  }
+  return lines;
+};
+
+/** All of a set of sessions' tokens over the ones fully right, rounded to thousands; `—` with none right. */
+const perRight = (sessions) => {
+  const right = sessions.filter((session) => session.correct).length;
+  return right === 0 ? '—' : `${Math.round(sessions.reduce((sum, session) => sum + session.tokens.total, 0) / right / 1000)}k`;
+};
+
+/**
+ * What a right answer cost (P392): tokens per fully right answer beside per
+ * question, the tool error rate, wasted calls, and pass^k - every one of a
+ * question's k runs right - where a question ran more than once.
+ */
+const costs = (run, sessions) => {
+  if (sessions.length === 0) return [];
+  const lines = ['', '## What a right answer cost', ''];
+  lines.push(
+    'Tokens per fully right answer are every token of an arm over its answers fully right. A wasted call is one whose answer holds none of what the final answer names (judged only where it names items). pass^k: the share of questions all k runs got fully right.',
+    '',
+    '| Arm | Tokens a question | Tokens per right answer | Extra turns | Tool errors | Wasted calls | pass^k |',
+    '|---|---|---|---|---|---|---|',
+  );
+  for (const arm of run.arms) {
+    const of = sessions.filter((session) => session.arm === arm);
+    if (of.length === 0) continue;
+    const classified = of.filter((session) => session.turnKinds !== undefined);
+    const calls = classified.reduce((sum, session) => sum + (session.calls ?? 0), 0);
+    const failed = classified.reduce((sum, session) => sum + (session.failedCalls ?? 0), 0);
+    const judged = classified.filter((session) => typeof session.wastedCalls === 'number');
+    const byQuestion = new Map();
+    for (const session of of) byQuestion.set(session.question, [...(byQuestion.get(session.question) ?? []), session]);
+    const repeated = [...byQuestion.values()].filter((runs) => runs.length > 1);
+    const k = repeated.length === 0 ? 0 : Math.min(...repeated.map((runs) => runs.length));
+    const passK = repeated.length === 0 ? '—' : `${repeated.filter((runs) => runs.every((session) => session.correct)).length}/${repeated.length} (k=${k})`;
+    lines.push(
+      `| ${arm} | ${Math.round(median(of.map((session) => session.tokens.total)) / 1000)}k | ${perRight(of)} | ${classified.length === 0 ? '—' : (classified.reduce((sum, session) => sum + (session.extraTurns ?? 0), 0) / classified.length).toFixed(1)} | ${classified.length === 0 ? '—' : `${((calls === 0 ? 0 : failed / calls) * 100).toFixed(1)}%`} | ${judged.length === 0 ? '—' : (judged.reduce((sum, session) => sum + session.wastedCalls, 0) / judged.length).toFixed(1)} | ${passK} |`,
+    );
+  }
+  return lines;
+};
+
+/** Where the turns went (P392): every class of call, a session's mean, per arm and kind. */
+const turnsSection = (sessions) => {
+  const rows = turnTable(sessions);
+  if (rows.length === 0) return [];
+  return ['', '## Where the turns went', '', 'Calls of each class, a session\'s mean; extra turns are the turns beyond the one that calls and the one that answers (`scripts/bench-agent/turns.mjs`).', '', renderTurns(rows).trimEnd()];
 };
 
 /** The README's lines, quoted from the report: the questions across repositories, then the ones about one. */
@@ -220,4 +318,4 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
 }
 
-export { ARMS };
+export { ARMS, KINDS };

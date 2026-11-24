@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { answerLine, routeOf, score, symbolOf } from './score.mjs';
+import { answerLine, nameOf, pathOf, routeOf, score, symbolOf } from './score.mjs';
 
 const symbols = { scorer: 'symbols', expected: ['GatewayCatalogImagesClient.create', 'OrdersBillingClient.createInvoice'] };
 const routes = { scorer: 'routes', expected: ['GET /images/:id', 'DELETE /images/:id', 'POST /images'] };
@@ -60,6 +60,37 @@ describe('the scorers (P238)', () => {
   it('count an answer nothing can be read from as unscored', () => {
     assert.deepEqual(score({ scorer: 'exact', expected: '46' }, 'I could not find it.'), { score: 0, correct: false, by: 'unscored' });
     assert.equal(score(routes, 'I could not tell.').by, 'unscored');
+  });
+
+  it('mark find the bug as true positives minus false positives over the defects planted, the twins counted apart (P392)', () => {
+    const bug = { scorer: 'routes', expected: ['GET /tickets/overdue'], decoys: ['GET /tickets/summary'] };
+    assert.deepEqual(score(bug, 'ANSWER: ["GET /tickets/overdue"]'), { score: 1, correct: true, by: 'answer-line', tp: 1, fp: 0, decoyHits: 0, precision: 1, recall: 1, given: ['GET /tickets/overdue'] });
+    // Naming the twin beside the defect cancels it; naming only the twin is below nothing.
+    const both = score(bug, 'ANSWER: ["GET /tickets/overdue", "GET /tickets/summary"]');
+    assert.equal(both.score, 0);
+    assert.equal(both.decoyHits, 1);
+    assert.equal(both.correct, false);
+    assert.equal(score(bug, 'ANSWER: ["GET /tickets/summary"]').score, -1);
+    // Another wrong row costs as a twin does, without being one.
+    const other = score({ scorer: 'symbols', expected: ['A.b', 'C.d'], decoys: ['E.f'] }, 'ANSWER: ["A.b", "C.d", "X.y"]');
+    assert.deepEqual([other.tp, other.fp, other.decoyHits, other.score], [2, 1, 0, 0.5]);
+    assert.equal(score(bug, 'ANSWER: []').score, 0);
+  });
+
+  it('read a change task’s files with their repository, or from inside it where only one expected file ends so (P392)', () => {
+    const files = { scorer: 'paths', expected: ['orders/src/clients/notify.client.ts', 'shipping/src/clients/notify.client.ts', 'notify/infra/api.tf'] };
+    assert.equal(pathOf('`./orders/src/clients/notify.client.ts`'), 'orders/src/clients/notify.client.ts');
+    assert.equal(score(files, 'ANSWER: ["orders/src/clients/notify.client.ts", "shipping/src/clients/notify.client.ts", "infra/api.tf"]').correct, true);
+    // Two repositories hold a file of that name: without its repository it is neither.
+    const vague = score(files, 'ANSWER: ["src/clients/notify.client.ts", "notify/infra/api.tf"]');
+    assert.equal(vague.recall, 1 / 3);
+    assert.equal(vague.precision, 0.5);
+  });
+
+  it('read a setting’s name however the answer writes it (P392)', () => {
+    assert.equal(nameOf('process.env.LEDGER_REGION'), 'LEDGER_REGION');
+    assert.equal(nameOf('`$PAYMENT_PROVIDER`'), 'PAYMENT_PROVIDER');
+    assert.equal(score({ scorer: 'names', expected: ['LEDGER_REGION'] }, 'It reads LEDGER_REGION, set as LEDGER_ZONE.').recall, 1);
   });
 
   it('read a symbol out of the ways answers write one', () => {

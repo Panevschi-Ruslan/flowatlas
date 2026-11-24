@@ -124,6 +124,51 @@ const measureFixed = async () => {
   }
 };
 
+/**
+ * The instructions in every variant a server can be started in (P392): from
+ * a configuration or a database alone, with or without the pattern tester
+ * and the change checker, every tool listed or the project's, and code
+ * turned off by `mcp.exclude` - each chain the instructions keep or drop
+ * depends on these alone. Each is held to `INSTRUCTIONS_MAX`; the longest
+ * is printed with the table.
+ */
+const instructionVariants = async () => {
+  const fixture = join(root, 'fixtures', budget.fixedOn);
+  const configPath = join(fixture, 'flowatlas.config.json');
+  const dbPath = join(fixture, '.flowatlas', 'graph.db');
+  // A configuration that turns code off, written beside the fixture's for the time it takes and then removed.
+  const excluded = join(fixture, '.answer-budget-exclude.config.json');
+  const written = JSON.parse(readFileSync(configPath, 'utf8'));
+  writeFileSync(excluded, JSON.stringify({ ...written, mcp: { ...(written.mcp ?? {}), exclude: ['get_source'] } }));
+  const variants = [];
+  try {
+    for (const where of [{ configPath }, { dbPath }, { configPath: excluded }]) {
+      for (const tester of [false, true]) {
+        for (const changer of [false, true]) {
+          for (const allTools of [false, true]) {
+            const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+            await createFlowatlasServer({
+              ...where,
+              toolsPollMs: 0,
+              ...(tester ? { patternTester: async () => ({ rules: [] }) } : {}),
+              ...(changer ? { changeChecker: async () => ({ breaks: [] }) } : {}),
+              ...(allTools ? { allTools: true } : {}),
+            }).connect(serverSide);
+            const client = new Client({ name: 'answer-budget', version: '0' });
+            await client.connect(clientSide);
+            const name = [where.dbPath !== undefined ? 'database' : where.configPath === excluded ? 'configuration, code excluded' : 'configuration', tester ? 'tester' : '', changer ? 'change checker' : '', allTools ? 'all tools' : ''].filter(Boolean).join(', ');
+            variants.push({ name, chars: client.getInstructions()?.length ?? 0 });
+            await client.close();
+          }
+        }
+      }
+    }
+  } finally {
+    rmSync(excluded, { force: true });
+  }
+  return variants;
+};
+
 /** Asks one question, following the paging its answer names, and measures what came back. */
 const ask = async (client, question) => {
   const answers = [];
@@ -185,6 +230,10 @@ const { upfront, ...fixed } = await measureFixed();
 if ([...upfront].sort().join() !== [...CORE_TOOLS].sort().join()) problems.push(`the tools listed to load upfront (${upfront.join(', ')}) are not the core tools (${CORE_TOOLS.join(', ')})`);
 // Every variant of the instructions within their ceiling (P382): a server on a database alone sent 2,535.
 for (const part of ['instructions', 'instructionsDb']) if (fixed[part] > INSTRUCTIONS_MAX) problems.push(`fixed ${part}: ${fixed[part]} characters, past INSTRUCTIONS_MAX (${INSTRUCTIONS_MAX})`);
+// And every way a server can be started (P392), not only the two the budget records.
+const variants = await instructionVariants();
+for (const variant of variants) if (variant.chars > INSTRUCTIONS_MAX) problems.push(`instructions started from a ${variant.name}: ${variant.chars} characters, past INSTRUCTIONS_MAX (${INSTRUCTIONS_MAX})`);
+const longest = variants.reduce((most, variant) => (variant.chars > most.chars ? variant : most), variants[0]);
 if (fixed.listingCore > UPFRONT_LISTING_MAX) problems.push(`fixed listingCore: ${fixed.listingCore} characters, past UPFRONT_LISTING_MAX (${UPFRONT_LISTING_MAX}): the upfront tools are sent on every turn`);
 for (const [part, chars] of Object.entries(fixed)) {
   const was = fixedBefore[part];
@@ -248,6 +297,7 @@ const printTable = () => {
   for (const [part, chars] of Object.entries(fixed)) console.log(`  ${part.padEnd(20)}${pad(chars, 7)}${pad(tokensOf(chars), 7)}${delta(chars, fixedBefore[part])}`);
   const perTurn = fixed.instructions + fixed.guideBlock + fixed.skillDescription + fixed.listingCore;
   console.log(`  ${'every turn'.padEnd(20)}${pad(perTurn, 7)}${pad(tokensOf(perTurn), 7)}  instructions + guide block + skill description + core tools, upfront`);
+  console.log(`  ${'longest instructions'.padEnd(20)}${pad(longest.chars, 7)}${pad(tokensOf(longest.chars), 7)}  of ${variants.length} variants: from a ${longest.name} (at most ${INSTRUCTIONS_MAX})`);
   console.log('');
   console.log(`${'Per question'.padEnd(34)}${pad('chars', 7)}${pad('tokens', 7)}${pad('rows', 6)}  complete  calls`);
   let total = 0;

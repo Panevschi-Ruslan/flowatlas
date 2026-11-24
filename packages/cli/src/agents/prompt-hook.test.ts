@@ -221,7 +221,8 @@ describe('installing the prompt hook (P386)', () => {
     installAgents({ config, hook: true });
     const written = JSON.parse(readFileSync(settings, 'utf8'));
     expect(written.hooks.UserPromptSubmit[0].hooks[0].command).toMatch(/prompt-hook\.js" --cards ".*card-names\.json"$/);
-    expect(written.hooks.PostToolUse).toHaveLength(1);
+    // The search hook and the edit hook (P387) after a tool call, the prompt hook before a turn.
+    expect(written.hooks.PostToolUse).toHaveLength(2);
     installAgents({ config, hook: true, promptCards: false });
     expect(JSON.parse(readFileSync(settings, 'utf8')).hooks.UserPromptSubmit).toBeUndefined();
     installAgents({ config, hook: true });
