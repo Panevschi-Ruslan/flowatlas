@@ -2417,7 +2417,10 @@
         "complete": true,
         "exact": [
           "vanishedTargets"
-        ]
+        ],
+        "lists": {
+          "vanishedTargets": []
+        }
       },
       "note": "P387: only the alerts bot read again, where nothing changed: no lost join, the catalog's edits are not this question's."
     },
