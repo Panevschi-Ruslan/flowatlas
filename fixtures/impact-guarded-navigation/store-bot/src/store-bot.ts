@@ -7,7 +7,8 @@ import { ApiClient } from './api.client';
 
 /**
  * `/items` lists the shop's items; a change of any order, relayed on
- * `shop:*:orders`, makes the bot fetch the list again through the same route.
+ * `shop:*:orders`, `shop:*:paid` or `shop:*:closed`, makes the bot fetch the
+ * list again through the same route.
  */
 @Injectable()
 export class StoreBot implements OnModuleInit {
@@ -19,6 +20,8 @@ export class StoreBot implements OnModuleInit {
   onModuleInit(): void {
     this.bot.command('items', (ctx) => this.showItems(ctx as { reply(text: string): void }));
     void this.listener.pSubscribe('shop:*:orders', (message) => this.onStatusEvent(message));
+    void this.listener.pSubscribe('shop:*:paid', (message) => this.onStatusEvent(message));
+    void this.listener.pSubscribe('shop:*:closed', (message) => this.onStatusEvent(message));
     this.bot.launch();
   }
 

@@ -275,6 +275,10 @@ describe('the tools a session is offered', () => {
    * file judges each way in it declares, and that `in` lists a class's own:
    * 13,312 read, 36,070 in all, 32,334 for the nineteen tools; the ceilings moved to them,
    * rounded up to the next 50.
+   *
+   * P378 let `impact`'s `channel` name a consumer of `throughChannels` too, for
+   * all of its channels, and said so on the input: 13,344 read, 36,102 in all,
+   * 32,366 for the nineteen tools; the last two ceilings moved to the next 50.
    */
   /**
    * The instructions are re-sent on every turn (P366): 6,435 characters
@@ -291,7 +295,7 @@ describe('the tools a session is offered', () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     expect(read.length).toBeLessThan(13350);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(36100);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(36150);
   });
 
   /**
@@ -329,7 +333,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(99999);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(32350);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(32400);
     } finally {
       await plain.close();
     }
@@ -648,7 +652,7 @@ describe('working backwards', () => {
     // `POST /orders` publishes `order.created`, which billing's consumer takes before it reads the order back: it
     // calls none of the code, so it is counted beyond the channel, one call listing it (P372).
     expect(answer.throughChannels).toEqual([
-      { channel: 'order.created', consumer: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated', ways: 1, sample: [{ id: 'entry:orders:http:POST:/orders', by: 'orders#src/orders/orders.controller.ts:OrdersController.create' }] },
+      { consumer: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated', channels: ['order.created'], ways: 1, sample: [{ id: 'entry:orders:http:POST:/orders', by: 'orders#src/orders/orders.controller.ts:OrdersController.create' }] },
     ]);
     const across = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', channel: 'order.created' });
     expect(across.entries.map((entry: { id: string; via?: string }) => [entry.id, entry.via])).toEqual([['entry:orders:http:POST:/orders', 'channel order.created']]);

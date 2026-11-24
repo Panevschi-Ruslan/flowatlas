@@ -17,13 +17,13 @@
       "kind": "http",
       "reach": "alive",
       "by": "store-api#src/items.controller.ts:ItemsController.list",
-      "rowsVia": 4
+      "rowsVia": 6
     },
     {
       "id": "entry:store-bot:bot_command:items",
       "type": "entry",
       "label": "bot_command items",
-      "loc": "src/store-bot.ts:20",
+      "loc": "src/store-bot.ts:21",
       "service": "store-bot",
       "kind": "bot_command",
       "reach": "outside",
@@ -31,13 +31,35 @@
       "by": "store-bot#src/store-bot.ts:StoreBot.showItems"
     },
     {
+      "id": "entry:store-bot:event:shop:*:closed",
+      "type": "entry",
+      "label": "event shop:*:closed",
+      "loc": "src/store-bot.ts:24",
+      "service": "store-bot",
+      "kind": "event",
+      "reach": "outside",
+      "via": "GET /api/shops/items (store-api)",
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
       "id": "entry:store-bot:event:shop:*:orders",
       "type": "entry",
       "label": "event shop:*:orders",
-      "loc": "src/store-bot.ts:21",
+      "loc": "src/store-bot.ts:22",
       "service": "store-bot",
       "kind": "event",
       "reach": "alive",
+      "via": "GET /api/shops/items (store-api)",
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:paid",
+      "type": "entry",
+      "label": "event shop:*:paid",
+      "loc": "src/store-bot.ts:23",
+      "service": "store-bot",
+      "kind": "event",
+      "reach": "outside",
       "via": "GET /api/shops/items (store-api)",
       "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
     },
@@ -64,18 +86,22 @@
       "by": "store-web#src/app/order-history.component.ts:OrderHistoryComponent"
     }
   ],
-  "total": 5,
-  "reached": 43,
+  "total": 7,
+  "reached": 54,
   "entriesByService": {
     "store-api": 1,
-    "store-bot": 2,
+    "store-bot": 4,
     "store-web": 2
   },
   "throughChannels": [
     {
-      "channel": "shop:*:orders",
       "consumer": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
-      "ways": 4,
+      "channels": [
+        "shop:*:closed",
+        "shop:*:orders",
+        "shop:*:paid"
+      ],
+      "ways": 5,
       "sample": [
         {
           "id": "entry:store-api:http:DELETE:/api/orders/:param",
@@ -93,17 +119,19 @@
     }
   ],
   "reachedByService": {
-    "store-api": 14,
+    "store-api": 23,
     "store-web": 22,
-    "store-bot": 7
+    "store-bot": 9
   },
   "servicesWithoutEntry": [],
   "channels": [
-    "channel:shop:*:orders"
+    "channel:shop:*:closed",
+    "channel:shop:*:orders",
+    "channel:shop:*:paid"
   ],
   "complete": true,
   "next": [
-    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\", channel: \"shop:*:orders\"})",
+    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\", channel: \"consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent\"})",
     "get_flow({entry: \"entry:store-api:http:GET:/api/shops/items\"})",
     "describe_for_prompt({id: \"entry:store-api:http:GET:/api/shops/items\"})",
     "impact({symbol: \"entry:store-api:http:GET:/api/shops/items\"})"

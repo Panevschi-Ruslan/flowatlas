@@ -1031,19 +1031,146 @@
         ]
       },
       "note": "P375: exactly the two routes the reports screen never requests."
+    },
+    {
+      "id": "impact.channels-once",
+      "ask": "which ways in could break if ItemsService.listByShop changes, where a bot re-fetching it takes messages from three channels",
+      "fixture": "impact-guarded-navigation",
+      "tool": "impact",
+      "args": {
+        "symbol": "store-api#src/items.service.ts:ItemsService.listByShop"
+      },
+      "lists": [
+        "entries",
+        "throughChannels"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:store-api:http:GET:/api/shops/items",
+            "entry:store-bot:bot_command:items",
+            "entry:store-web:screen:/dashboard",
+            "entry:store-web:screen:/history"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:store-api:http:DELETE:/api/orders/:param",
+            "entry:store-api:http:PATCH:/api/orders/:param/status",
+            "entry:store-api:http:POST:/api/orders",
+            "entry:store-api:http:POST:/api/orders/:param/pay",
+            "entry:store-web:screen:/orders"
+          ]
+        },
+        "exact": [
+          "throughChannels"
+        ],
+        "rowsSay": {
+          "throughChannels": {
+            "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent": {
+              "channels": [
+                "shop:*:closed",
+                "shop:*:orders",
+                "shop:*:paid"
+              ],
+              "ways": 5
+            }
+          }
+        }
+      },
+      "note": "P378: the bot's consumer takes messages from three channels; what lies beyond them is said once, one row with its three channels and the five distinct ways in, where it was three rows repeating the routes and their samples (4, 1 and 3 ways)."
+    },
+    {
+      "id": "who_calls.channels-counted",
+      "ask": "who calls ItemsService.listByShop, up to the ways in",
+      "fixture": "impact-guarded-navigation",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "store-api#src/items.service.ts:ItemsService.listByShop"
+      },
+      "lists": [
+        "waysIn",
+        "throughChannels"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:store-api:http:GET:/api/shops/items",
+            "entry:store-bot:bot_command:items",
+            "entry:store-web:screen:/dashboard",
+            "entry:store-web:screen:/history"
+          ]
+        },
+        "notListed": {
+          "waysIn": [
+            "entry:store-api:http:DELETE:/api/orders/:param",
+            "entry:store-api:http:PATCH:/api/orders/:param/status",
+            "entry:store-api:http:POST:/api/orders",
+            "entry:store-api:http:POST:/api/orders/:param/pay",
+            "entry:store-web:screen:/orders"
+          ]
+        },
+        "exact": [
+          "throughChannels"
+        ],
+        "rowsSay": {
+          "throughChannels": {
+            "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent": {
+              "channels": [
+                "shop:*:closed",
+                "shop:*:orders",
+                "shop:*:paid"
+              ],
+              "ways": 5
+            }
+          }
+        }
+      },
+      "note": "P378: who calls the code is the question, so what lies past the bot's three channels is one row counting the five ways in, no sample; next names the impact call listing them."
+    },
+    {
+      "id": "impact.across-consumer",
+      "ask": "which ways in lie beyond every channel the bot's consumer takes messages from",
+      "fixture": "impact-guarded-navigation",
+      "tool": "impact",
+      "args": {
+        "symbol": "store-api#src/items.service.ts:ItemsService.listByShop",
+        "channel": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:store-api:http:DELETE:/api/orders/:param",
+            "entry:store-api:http:PATCH:/api/orders/:param/status",
+            "entry:store-api:http:POST:/api/orders",
+            "entry:store-api:http:POST:/api/orders/:param/pay",
+            "entry:store-web:screen:/orders"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P378: impact's channel input given a row's consumer lists the ways in beyond all of its channels, each once."
     }
   ],
   "fixed": {
     "instructions": 2493,
     "guideBlock": 1205,
     "skillDescription": 268,
-    "listingCore": 5844,
-    "listingDefault": 10641,
-    "listingAll": 13320
+    "listingCore": 5868,
+    "listingDefault": 10665,
+    "listingAll": 13344
   },
   "recorded": {
     "impact.multi-repo": {
-      "chars": 1901,
+      "chars": 1904,
       "tokens": 476,
       "rows": 6,
       "complete": true,
@@ -1078,8 +1205,8 @@
       "calls": 1
     },
     "who_calls.multi-repo": {
-      "chars": 2004,
-      "tokens": 501,
+      "chars": 1886,
+      "tokens": 472,
       "rows": 8,
       "complete": true,
       "calls": 1
@@ -1270,6 +1397,27 @@
       "chars": 475,
       "tokens": 119,
       "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.channels-once": {
+      "chars": 2387,
+      "tokens": 597,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.channels-counted": {
+      "chars": 1961,
+      "tokens": 491,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.across-consumer": {
+      "chars": 1440,
+      "tokens": 360,
+      "rows": 5,
       "complete": true,
       "calls": 1
     }

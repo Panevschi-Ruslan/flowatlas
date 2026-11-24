@@ -62,6 +62,22 @@ test('fails an answer that lists what it must not, misses what it must, or says 
   assert.deepEqual(wrongIn({ lists: { missing: ['deskId'] } }, { first: field, lists: rowsByList([field], ['missing']), measured: { complete: false, calls: 1 } }), []);
 });
 
+test('matches a row of throughChannels by its consumer, and holds it to one row per consumer (P378)', () => {
+  const expect = { exact: ['throughChannels'], rowsSay: { throughChannels: { 'consumer:bot': { channels: ['a', 'b'], ways: 2 } } } };
+  const once = { first: { complete: true }, lists: new Map([['throughChannels', [{ consumer: 'consumer:bot', channels: ['a', 'b'], ways: 2 }]]]), measured: { complete: true, calls: 1 } };
+  assert.deepEqual(wrongIn(expect, once), []);
+  const twice = {
+    ...once,
+    lists: new Map([['throughChannels', [{ consumer: 'consumer:bot', channels: ['a', 'b'], ways: 2 }, { consumer: 'consumer:other', channels: ['b'], ways: 2 }]]]),
+  };
+  assert.deepEqual(wrongIn(expect, twice), ['throughChannels lists consumer:other, past the 1 it must hold exactly']);
+  const repeated = {
+    ...once,
+    lists: new Map([['throughChannels', [{ consumer: 'consumer:bot', channels: ['a'], ways: 2 }, { consumer: 'consumer:bot', channels: ['b'], ways: 1 }]]]),
+  };
+  assert.deepEqual(wrongIn(expect, repeated), ['throughChannels says channels: ["a"] on consumer:bot, where it is ["a","b"]', 'throughChannels lists consumer:bot more than once']);
+});
+
 test('an answer that says it is complete takes one call', () => {
   const answer = { entries: [{ id: 'a' }], complete: true };
   assert.deepEqual(wrongIn({}, { first: answer, lists: rowsByList([answer], ['entries']), measured: { complete: true, calls: 2 } }), ['answered complete, yet took 2 calls']);

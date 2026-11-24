@@ -54,13 +54,20 @@ describe('flowatlas impact (P370)', () => {
     const out = { out: (chunk: string) => void (text += chunk), err: () => {} };
     runImpact('store-api#src/items.service.ts:ItemsService.listByShop', guarded, out);
     expect(text).toContain('Only beyond a channel, calling none of it');
-    expect(text).toContain('shop:*:orders  4 ways in, taken by StoreBot.onStatusEvent (store-bot): DELETE /api/orders/:param (store-api)');
+    // One line for the bot, its three channels together, each way in counted once (P378).
+    expect(text).toContain('shop:*:closed, shop:*:orders, shop:*:paid  5 ways in, taken by StoreBot.onStatusEvent (store-bot): DELETE /api/orders/:param (store-api)');
+    expect(text.match(/taken by StoreBot\.onStatusEvent/g)).toHaveLength(1);
     expect(text).not.toContain('LoginComponent');
     expect(text).not.toContain('/analytics');
     text = '';
     runImpact('store-api#src/items.service.ts:ItemsService.listByShop', { ...guarded, channel: 'shop:*:orders' }, out);
     expect(text).toContain('OrdersAdminComponent');
     expect(text).toContain('/orders (store-web)  outside, via channel shop:*:orders');
+    text = '';
+    runImpact('store-api#src/items.service.ts:ItemsService.listByShop', { ...guarded, channel: 'StoreBot.onStatusEvent' }, out);
+    expect(text).toContain('Beyond the channels StoreBot.onStatusEvent takes messages from (shop:*:closed, shop:*:orders, shop:*:paid), calling none of it:');
+    expect(text).toContain('POST /api/orders/:param/pay (store-api)');
+    expect(text).toContain('DELETE /api/orders/:param (store-api)  alive, via channel shop:*:closed');
   });
 
   it('says the code that handles each way in, with where it is written (P374)', () => {

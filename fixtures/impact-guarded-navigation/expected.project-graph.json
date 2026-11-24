@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T17:26:15.697Z",
+  "builtAt": "2026-11-24T08:28:30.859Z",
   "services": [
     {
       "name": "store-api",
@@ -37,17 +37,106 @@
       }
     },
     {
-      "id": "cache_op:store-bot#src/store-bot.ts:21:10",
+      "id": "cache_op:store-api#src/events.service.ts:15:11",
+      "type": "cache_op",
+      "label": "other shop:*:paid",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:paid",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:store-api#src/events.service.ts:19:11",
+      "type": "cache_op",
+      "label": "other shop:*:closed",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 19,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:closed",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:store-bot#src/store-bot.ts:22:10",
       "type": "cache_op",
       "label": "other shop:*:orders",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 21,
+      "line": 22,
       "meta": {
         "op": "other",
         "keyPattern": "shop:*:orders",
         "package": "redis",
         "method": "pSubscribe"
+      }
+    },
+    {
+      "id": "cache_op:store-bot#src/store-bot.ts:23:10",
+      "type": "cache_op",
+      "label": "other shop:*:paid",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 23,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:paid",
+        "package": "redis",
+        "method": "pSubscribe"
+      }
+    },
+    {
+      "id": "cache_op:store-bot#src/store-bot.ts:24:10",
+      "type": "cache_op",
+      "label": "other shop:*:closed",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 24,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:closed",
+        "package": "redis",
+        "method": "pSubscribe"
+      }
+    },
+    {
+      "id": "channel:shop:*:closed",
+      "type": "channel",
+      "label": "shop:*:closed",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 19,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:closed#ORDER_CLOSED",
+      "type": "channel",
+      "label": "shop:*:closed#ORDER_CLOSED",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 19,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:closed",
+        "messageType": "ORDER_CLOSED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
       }
     },
     {
@@ -84,6 +173,39 @@
       }
     },
     {
+      "id": "channel:shop:*:paid",
+      "type": "channel",
+      "label": "shop:*:paid",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:paid#ORDER_PAID",
+      "type": "channel",
+      "label": "shop:*:paid#ORDER_PAID",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:paid",
+        "messageType": "ORDER_PAID",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
       "id": "config_key:store-bot#STORE_API_URL",
       "type": "config_key",
       "label": "STORE_API_URL",
@@ -101,7 +223,7 @@
       "label": "StoreBot.onStatusEvent",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 21,
+      "line": 22,
       "kind": "message",
       "meta": {
         "kind": "message",
@@ -116,7 +238,7 @@
       "label": "DELETE /api/orders/:param",
       "repo": "store-api",
       "file": "src/orders.controller.ts",
-      "line": 19,
+      "line": 24,
       "kind": "http",
       "meta": {
         "method": "DELETE",
@@ -191,6 +313,22 @@
       }
     },
     {
+      "id": "entry:store-api:http:POST:/api/orders/:param/pay",
+      "type": "entry",
+      "label": "POST /api/orders/:param/pay",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders/:param/pay",
+        "rawPath": "/api/orders/:orderId/pay",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:store-api:http:POST:/api/tickets/:param/ack",
       "type": "entry",
       "label": "POST /api/tickets/:param/ack",
@@ -212,7 +350,7 @@
       "label": "bot_command items",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 20,
+      "line": 21,
       "kind": "bot_command",
       "meta": {
         "key": "items",
@@ -224,15 +362,41 @@
       }
     },
     {
+      "id": "entry:store-bot:event:shop:*:closed",
+      "type": "entry",
+      "label": "event shop:*:closed",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "pattern": "shop:*:closed",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
       "id": "entry:store-bot:event:shop:*:orders",
       "type": "entry",
       "label": "event shop:*:orders",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 21,
+      "line": 22,
       "kind": "event",
       "meta": {
         "pattern": "shop:*:orders",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:paid",
+      "type": "entry",
+      "label": "event shop:*:paid",
+      "repo": "store-bot",
+      "file": "src/store-bot.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "pattern": "shop:*:paid",
         "adapter": "redis-pubsub"
       }
     },
@@ -486,6 +650,44 @@
       }
     },
     {
+      "id": "producer:store-api#src/events.service.ts:15:11",
+      "type": "producer",
+      "label": "message shop:*:paid",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_PAID"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:store-api#src/events.service.ts:19:11",
+      "type": "producer",
+      "label": "message shop:*:closed",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_CLOSED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
       "id": "repo:store-api",
       "type": "repo",
       "label": "store-api",
@@ -497,7 +699,7 @@
           "filesUnreadable": 0,
           "classes": 9,
           "skippedExternalCalls": {
-            "redis": 1
+            "redis": 3
           }
         },
         "bootstrap": "src/main.ts",
@@ -530,7 +732,7 @@
             "@nestjs/axios": 1,
             "@nestjs/config": 1,
             "telegraf": 2,
-            "redis": 1
+            "redis": 3
           }
         },
         "bootstrap": "src/main.ts",
@@ -611,6 +813,44 @@
       "repo": "store-api",
       "file": "src/events.service.ts",
       "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/events.service.ts:EventsService.orderClosed",
+      "type": "method",
+      "label": "EventsService.orderClosed",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "store-api#src/events.service.ts:EventsService.orderPaid",
+      "type": "method",
+      "label": "EventsService.orderPaid",
+      "repo": "store-api",
+      "file": "src/events.service.ts",
+      "line": 14,
       "meta": {
         "signature": {
           "params": [
@@ -761,12 +1001,36 @@
       }
     },
     {
+      "id": "store-api#src/orders.controller.ts:OrdersController.pay",
+      "type": "method",
+      "label": "OrdersController.pay",
+      "repo": "store-api",
+      "file": "src/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
       "id": "store-api#src/orders.controller.ts:OrdersController.remove",
       "type": "method",
       "label": "OrdersController.remove",
       "repo": "store-api",
       "file": "src/orders.controller.ts",
-      "line": 19,
+      "line": 24,
       "meta": {
         "signature": {
           "params": [
@@ -840,12 +1104,35 @@
       }
     },
     {
+      "id": "store-api#src/orders.service.ts:OrdersService.pay",
+      "type": "method",
+      "label": "OrdersService.pay",
+      "repo": "store-api",
+      "file": "src/orders.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "store-api#src/orders.service.ts:OrdersService.remove",
       "type": "method",
       "label": "OrdersService.remove",
       "repo": "store-api",
       "file": "src/orders.service.ts",
-      "line": 18,
+      "line": 25,
       "meta": {
         "signature": {
           "params": [
@@ -1026,7 +1313,7 @@
       "label": "StoreBot",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 12,
+      "line": 13,
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
@@ -1038,7 +1325,7 @@
       "label": "StoreBot.onModuleInit",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 19,
+      "line": 20,
       "meta": {
         "signature": {
           "params": [],
@@ -1052,7 +1339,7 @@
       "label": "StoreBot.onStatusEvent",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 29,
+      "line": 32,
       "meta": {
         "signature": {
           "params": [
@@ -1072,7 +1359,7 @@
       "label": "StoreBot.showItems",
       "repo": "store-bot",
       "file": "src/store-bot.ts",
-      "line": 25,
+      "line": 28,
       "meta": {
         "signature": {
           "params": [
@@ -1886,12 +2173,28 @@
   ],
   "edges": [
     {
+      "from": "channel:shop:*:closed",
+      "to": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/store-bot.ts",
+      "line": 24
+    },
+    {
       "from": "channel:shop:*:orders",
       "to": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
       "type": "consumes",
       "confidence": "static",
       "file": "src/store-bot.ts",
-      "line": 21
+      "line": 22
+    },
+    {
+      "from": "channel:shop:*:paid",
+      "to": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/store-bot.ts",
+      "line": 23
     },
     {
       "from": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
@@ -1903,7 +2206,7 @@
       ],
       "returns": "void",
       "file": "src/store-bot.ts",
-      "line": 21
+      "line": 22
     },
     {
       "from": "entry:store-api:http:DELETE:/api/orders/:param",
@@ -1916,7 +2219,7 @@
       ],
       "returns": "void",
       "file": "src/orders.controller.ts",
-      "line": 19,
+      "line": 24,
       "meta": {
         "query": "{shopId:string}",
         "params": "{orderId:string}"
@@ -1985,6 +2288,23 @@
       }
     },
     {
+      "from": "entry:store-api:http:POST:/api/orders/:param/pay",
+      "to": "store-api#src/orders.controller.ts:OrdersController.pay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "query": "{shopId:string}",
+        "params": "{orderId:string}"
+      }
+    },
+    {
       "from": "entry:store-api:http:POST:/api/tickets/:param/ack",
       "to": "store-api#src/tickets.controller.ts:TicketsController.ack",
       "type": "handles",
@@ -2009,7 +2329,19 @@
       ],
       "returns": "void",
       "file": "src/store-bot.ts",
-      "line": 25
+      "line": 28
+    },
+    {
+      "from": "entry:store-bot:event:shop:*:closed",
+      "to": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/store-bot.ts",
+      "line": 24
     },
     {
       "from": "entry:store-bot:event:shop:*:orders",
@@ -2021,7 +2353,19 @@
       ],
       "returns": "void",
       "file": "src/store-bot.ts",
-      "line": 21
+      "line": 22
+    },
+    {
+      "from": "entry:store-bot:event:shop:*:paid",
+      "to": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/store-bot.ts",
+      "line": 23
     },
     {
       "from": "entry:store-web:screen:/analytics",
@@ -2180,6 +2524,50 @@
       ]
     },
     {
+      "from": "producer:store-api#src/events.service.ts:15:11",
+      "to": "channel:shop:*:paid",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:store-api#src/events.service.ts:15:11",
+      "to": "channel:shop:*:paid#ORDER_PAID",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:store-api#src/events.service.ts:19:11",
+      "to": "channel:shop:*:closed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/events.service.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:store-api#src/events.service.ts:19:11",
+      "to": "channel:shop:*:closed#ORDER_CLOSED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ]
+    },
+    {
       "from": "store-api#src/events.service.ts:EventsService.orderChanged",
       "to": "cache_op:store-api#src/events.service.ts:11:11",
       "type": "caches",
@@ -2194,6 +2582,38 @@
       "confidence": "static",
       "file": "src/events.service.ts",
       "line": 11
+    },
+    {
+      "from": "store-api#src/events.service.ts:EventsService.orderClosed",
+      "to": "cache_op:store-api#src/events.service.ts:19:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 19
+    },
+    {
+      "from": "store-api#src/events.service.ts:EventsService.orderClosed",
+      "to": "producer:store-api#src/events.service.ts:19:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 19
+    },
+    {
+      "from": "store-api#src/events.service.ts:EventsService.orderPaid",
+      "to": "cache_op:store-api#src/events.service.ts:15:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "store-api#src/events.service.ts:EventsService.orderPaid",
+      "to": "producer:store-api#src/events.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 15
     },
     {
       "from": "store-api#src/hooks.controller.ts:HooksController",
@@ -2256,6 +2676,19 @@
       "line": 11
     },
     {
+      "from": "store-api#src/orders.controller.ts:OrdersController.pay",
+      "to": "store-api#src/orders.service.ts:OrdersService.pay",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 21
+    },
+    {
       "from": "store-api#src/orders.controller.ts:OrdersController.remove",
       "to": "store-api#src/orders.service.ts:OrdersService.remove",
       "type": "calls",
@@ -2266,7 +2699,7 @@
       ],
       "returns": "void",
       "file": "src/orders.controller.ts",
-      "line": 21
+      "line": 26
     },
     {
       "from": "store-api#src/orders.controller.ts:OrdersController.setStatus",
@@ -2302,7 +2735,7 @@
       "line": 10
     },
     {
-      "from": "store-api#src/orders.service.ts:OrdersService.remove",
+      "from": "store-api#src/orders.service.ts:OrdersService.pay",
       "to": "store-api#src/events.service.ts:EventsService.orderChanged",
       "type": "calls",
       "confidence": "static",
@@ -2311,7 +2744,31 @@
       ],
       "returns": "void",
       "file": "src/orders.service.ts",
-      "line": 20
+      "line": 22
+    },
+    {
+      "from": "store-api#src/orders.service.ts:OrdersService.pay",
+      "to": "store-api#src/events.service.ts:EventsService.orderPaid",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "store-api#src/orders.service.ts:OrdersService.remove",
+      "to": "store-api#src/events.service.ts:EventsService.orderClosed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.service.ts",
+      "line": 27
     },
     {
       "from": "store-api#src/orders.service.ts:OrdersService.setStatus",
@@ -2324,6 +2781,18 @@
       "returns": "void",
       "file": "src/orders.service.ts",
       "line": 15
+    },
+    {
+      "from": "store-api#src/orders.service.ts:OrdersService.setStatus",
+      "to": "store-api#src/events.service.ts:EventsService.orderClosed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.service.ts",
+      "line": 16
     },
     {
       "from": "store-api#src/tickets.controller.ts:TicketsController",
@@ -2383,15 +2852,31 @@
       "type": "injects",
       "confidence": "static",
       "file": "src/store-bot.ts",
-      "line": 17
+      "line": 18
     },
     {
       "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
-      "to": "cache_op:store-bot#src/store-bot.ts:21:10",
+      "to": "cache_op:store-bot#src/store-bot.ts:22:10",
       "type": "caches",
       "confidence": "static",
       "file": "src/store-bot.ts",
-      "line": 21
+      "line": 22
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
+      "to": "cache_op:store-bot#src/store-bot.ts:23:10",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/store-bot.ts",
+      "line": 23
+    },
+    {
+      "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
+      "to": "cache_op:store-bot#src/store-bot.ts:24:10",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/store-bot.ts",
+      "line": 24
     },
     {
       "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
@@ -2403,7 +2888,7 @@
       ],
       "returns": "void",
       "file": "src/store-bot.ts",
-      "line": 21
+      "line": 22
     },
     {
       "from": "store-bot#src/store-bot.ts:StoreBot.onModuleInit",
@@ -2415,7 +2900,7 @@
       ],
       "returns": "void",
       "file": "src/store-bot.ts",
-      "line": 20
+      "line": 21
     },
     {
       "from": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
@@ -2427,7 +2912,7 @@
       ],
       "returns": "string[]",
       "file": "src/store-bot.ts",
-      "line": 31
+      "line": 34
     },
     {
       "from": "store-bot#src/store-bot.ts:StoreBot.showItems",
@@ -2439,7 +2924,7 @@
       ],
       "returns": "string[]",
       "file": "src/store-bot.ts",
-      "line": 26
+      "line": 29
     },
     {
       "from": "store-web#src/app/analytics.component.ts:AnalyticsComponent",
@@ -3037,7 +3522,7 @@
   "unresolved": [
     {
       "file": "src/store-bot.ts",
-      "line": 26,
+      "line": 29,
       "reason": "call-dynamic-receiver",
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",

@@ -1,6 +1,16 @@
 import type { DetailLevel, GraphNode } from '@flowatlas/core';
 import type { Command } from 'commander';
-import { compactAnswer, impactOf, projectDetail, projectEdge, staleFor, type FlowNode, type ImpactOf, type ThroughChannel } from '@flowatlas/mcp';
+import {
+  compactAnswer,
+  impactOf,
+  projectDetail,
+  projectEdge,
+  staleFor,
+  throughByConsumer,
+  type FlowNode,
+  type ImpactOf,
+  type ThroughConsumer,
+} from '@flowatlas/mcp';
 import { handleFor, sourceRootsFor } from '../db.js';
 import { cannotRun } from '../exit.js';
 import { withQueryOptions, type QueryOptions } from '../options.js';
@@ -48,14 +58,28 @@ const rowLine = (row: AnswerRow, by: GraphNode | undefined): string => {
   return `  ${name}${said.length === 0 ? '' : `  ${said.join(', ')}`}`;
 };
 
-/** How many ways in a channel the walk did not cross leads to, the nearest few named, and the consumer taking its messages (P372). */
-const throughLine = (through: ThroughChannel): string => {
+/**
+ * How many ways in the channels the walk did not cross lead to, the nearest
+ * few named, and the consumer taking their messages (P372): one line per
+ * consumer, its channels together, each way in counted once (P378).
+ */
+const throughLine = (through: ThroughConsumer): string => {
   const named = through.ways
     .slice(0, 3)
     .map((way) => `${way.node.label}${way.node.repo === '' ? '' : ` (${way.node.repo})`}${way.by === undefined ? '' : ` ${bySaid(way.by)}`}`);
   const more = through.ways.length > named.length ? ', ...' : '';
   const count = `${through.cut ? 'at least ' : ''}${through.ways.length} way${through.ways.length === 1 ? '' : 's'} in`;
-  return `  ${through.channel}${through.type === undefined ? '' : ` ${through.type}`}  ${count}, taken by ${through.consumer.label} (${through.consumer.repo}): ${named.join(', ')}${more}`;
+  const channels = through.channels.map((said) => `${said.channel}${said.type === undefined ? '' : ` ${said.type}`}`).join(', ');
+  return `  ${channels}  ${count}, taken by ${through.consumer.label} (${through.consumer.repo}): ${named.join(', ')}${more}`;
+};
+
+/** The heading over the rows: what could break, or what lies beyond the channel or the consumer's channels asked. */
+const acrossSaid = (answer: { acrossChannel?: string; acrossConsumer?: string }, of: ImpactOf): string => {
+  if (answer.acrossChannel !== undefined) return `Beyond channel ${answer.acrossChannel}, calling none of it:`;
+  if (answer.acrossConsumer === undefined) return 'Could break:';
+  const channels = [...new Set((of.throughChannels ?? []).map((through) => through.channel))].join(', ');
+  const consumer = of.throughChannels?.[0]?.consumer.label ?? answer.acrossConsumer;
+  return `Beyond the channels ${consumer} takes messages from (${channels}), calling none of it:`;
 };
 
 /**
@@ -70,6 +94,7 @@ const footerOf = (of: ImpactOf): string[] => {
     left?: string[];
     unreached?: number;
     acrossChannel?: string;
+    acrossConsumer?: string;
   };
   const unreached = answer.unreached ?? 0;
   const rows = answer.entries ?? [];
@@ -83,14 +108,14 @@ const footerOf = (of: ImpactOf): string[] => {
       (of.ways ?? []).map((way) => way.node),
       of.servicesWithoutEntry ?? [],
     ),
-    ...(ways.length === 0 ? [] : [answer.acrossChannel === undefined ? 'Could break:' : `Beyond channel ${answer.acrossChannel}, calling none of it:`, ...ways.map(line)]),
+    ...(ways.length === 0 ? [] : [acrossSaid(answer, of), ...ways.map(line)]),
     ...(maybes.length === 0 ? [] : ['Maybe, behind a call the reading could not follow:', ...maybes.map(line)]),
     ...(unreached === 0
       ? []
       : [`Unreached: ${unreached} chain${unreached === 1 ? ' ends' : 's end'} at code whose name its repository writes nowhere else, so nothing could break through ${unreached === 1 ? 'it' : 'them'}`]),
-    ...(answer.acrossChannel !== undefined || (of.throughChannels ?? []).length === 0
+    ...(answer.acrossChannel !== undefined || answer.acrossConsumer !== undefined || (of.throughChannels ?? []).length === 0
       ? []
-      : ['Only beyond a channel, calling none of it (--channel <name> lists them):', ...(of.throughChannels ?? []).map(throughLine)]),
+      : ['Only beyond a channel, calling none of it (--channel <name> lists them):', ...throughByConsumer(of.throughChannels ?? []).map(throughLine)]),
     ...(answer.entriesNone === undefined ? [] : [answer.entriesNone]),
     ...(answer.left ?? []).map((left) => `Left: ${left}`),
   ];
@@ -230,7 +255,7 @@ export const registerImpact = (program: Command): void => {
     .option('--entries-only', 'list the ways in under the target instead of the chains to them')
     .option('--offset <n>', 'the row to start the list at, as the answer\'s nextOffset says')
     .option('--verbose', 'with --format json, the whole answer, pretty-printed, instead of the compact one')
-    .option('--channel <name>', 'list the ways in beyond a channel the answer counts under throughChannels')
+    .option('--channel <name>', 'list the ways in beyond a channel the answer counts under throughChannels, or beyond every channel of a consumer it names')
     .action((symbol: string, options: ImpactOptions) => {
       runImpact(symbol, options);
     });

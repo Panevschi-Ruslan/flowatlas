@@ -1,7 +1,7 @@
 import { Controller, Delete, Param, Patch, Post, Query } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
-/** Three routes, each publishing on `shop:<id>:orders`. */
+/** Four routes, each publishing on one or two of the shop's channels. */
 @Controller('api/orders')
 export class OrdersController {
   constructor(private readonly orders: OrdersService) {}
@@ -14,6 +14,11 @@ export class OrdersController {
   @Patch(':orderId/status')
   setStatus(@Query('shopId') shopId: string, @Param('orderId') orderId: string): Promise<void> {
     return this.orders.setStatus(shopId, orderId);
+  }
+
+  @Post(':orderId/pay')
+  pay(@Query('shopId') shopId: string, @Param('orderId') orderId: string): Promise<void> {
+    return this.orders.pay(shopId, orderId);
   }
 
   @Delete(':orderId')

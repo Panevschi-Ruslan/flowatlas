@@ -371,9 +371,11 @@ the page `nextOffset` gives, or the same call asked further (a deeper
 Beside each question is its right answer, written by hand and never
 recorded: the ids a list must hold, the ids it must not (on `impact`, the ways
 in that do not call the changed code), a list that must hold exactly the ids
-given, what a row must say (`dead`'s verdict, a row's `reach`) and whether the
-answer is complete. The gate fails when an answer grows more than 10% past its
-recorded size, or 300 characters if that is more; lists an id it must not;
+given (each row once: a row of `throughChannels` is matched by its
+`consumer`), what a row must say (`dead`'s verdict, a row's `reach`) and
+whether the answer is complete. The gate fails when an answer grows more than
+10% past its recorded size, or 300 characters if that is more; lists an id it
+must not, or an id of an exact list twice;
 misses one it must; says `complete: false` where the right answer is
 complete; takes more calls than recorded; or answers complete and still took
 more than one. The fixed overhead is held the same way: the instructions, the
@@ -393,6 +395,13 @@ their failures and guards), the route row counting the rows reached through it
 (`rowsVia`), `dead` on a controller judging each of its four routes (1,025)
 and `list_entries` with `in` and `reach: "dead"`, exactly the two routes no
 code calls (475).
+
+P378 added three on `impact-guarded-navigation`, whose bot takes messages from
+three channels: `impact` on the list method says the bot once under
+`throughChannels`, its three channels and five distinct ways in (2,387
+characters, from 3,032 with three rows repeating the routes and samples),
+`who_calls` on it counts them with no sample (1,961, from 2,983), and `impact`
+with `channel` the bot's consumer lists the five (1,440; it answered none).
 
 On P373's tree a turn carries about 3,960 characters of instructions, guide
 block and skill description (about 990 tokens), 9,340 with the core tools
@@ -775,7 +784,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 |---|---|---|
 | `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required), `to`, `depth` (8, one more per workflow step), `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (unset: walk to the ways in; 16 at most: the tree alone), `service` |
-| `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels` | `symbol` (required), `channel` (list one of `throughChannels`), `service`, `offset` |
+| `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels`, one row per consumer | `symbol` (required), `channel` (list one of `throughChannels`: a channel, or a consumer for all of its), `service`, `offset` |
 
 Asked about a class, `who_calls` and `impact` answer for every method of it
 something calls (P95): calls point at methods, never at the class. Each
@@ -860,12 +869,21 @@ target by calls and requests. A consumer on the way that no screen holds (a
 back end's worker, a bot re-fetching on a relayed event) is not walked back
 onto its channel either: what publishes there calls none of the target, so the
 ways in beyond it - the publishers, and the screens and bots calling them - are
-counted apart, one row per channel (or message type a consumer chooses), in
-`throughChannels`: `{channel, type?, consumer, consumers?, ways, sample,
-walkCut?}`, `ways` how many lie beyond it, `sample` the nearest three, each
-`{id, by?}`. They are never complete-blocking. `impact({symbol, channel: "<name>"})` lists one
-channel's ways in as `entries`, each `via: "channel <name>"`, paged as usual,
-with `acrossChannel` naming it; `next` offers that call first. Each walk beyond
+counted apart in `throughChannels`, one row per consumer (P378):
+`{consumer, channels, consumers?, ways, sample, walkCut?}`, `channels` every
+channel it takes messages from on the way (a name, or `{channel, type}` where
+it chooses a message type), `ways` how many distinct ways in lie beyond any of
+them (a route publishing on two is one), `sample` the nearest three, each
+`{id, by?}`, and `consumers` how many consumers on the way take messages from
+those channels where more than one does. A bot taking messages from three
+channels of the same orders was three rows, each repeating the same ways in
+and the same three samples; it is one. They are never complete-blocking.
+`impact({symbol, channel: "<name>"})` lists one channel's ways in as
+`entries`, each `via: "channel <name>"`, paged as usual, with `acrossChannel`
+naming it; `channel` given a row's `consumer` (its id or name) lists the ways
+in beyond every channel of that row, each once, with `acrossConsumer` naming
+it. `next` offers that call first: by the channel where the first row has one,
+by the consumer where it has several. Each walk beyond
 a channel reads at most 1,000 nodes (`walkCut`, and with `channel` a `left`
 line, where it stopped). Each row (and each sample) says `by`, the id of the
 code that handles the way in on its chain to the target (P374): for a screen
@@ -910,8 +928,12 @@ impact says it). The walk is impact's (`waysIn`, P367 and P372): back past
 every way in to the callers beyond it (the gateway route that requests the
 route, the screen whose component requests that), never along a navigation
 or a guard's redirect, and never from a consumer back across its channel: the
-ways in only past a channel are counted under `throughChannels`, as impact
-counts them, and `impact({symbol, channel})` lists them. A chain that ends
+ways in only past a channel are counted under `throughChannels`, one row per
+consumer as impact says them but with no `sample` (`{consumer, channels,
+consumers?, ways, walkCut?}`, and `reaches` on a class or several symbols):
+who calls the code is the question, and what lies past a channel calls none of
+it, so it is a count, and `next` names the `impact({symbol, channel})` call
+that lists them (P378). A chain that ends
 before any way in where an unread call could reach it is a `maybe` row (with
 `gap` or `behind`), one no unread call could reach is counted in `unreached`,
 and with no way in at all `waysInNone` says why. The walk reads at most 4,000

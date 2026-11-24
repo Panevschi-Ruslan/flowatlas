@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventsService } from './events.service';
 
-/** Every change of an order is told on the shop's orders channel. */
+/** Every change of an order is told on the shop's channels: a new one, a status, a payment, a removal. */
 @Injectable()
 export class OrdersService {
   constructor(private readonly events: EventsService) {}
@@ -13,10 +13,17 @@ export class OrdersService {
   async setStatus(shopId: string, orderId: string): Promise<void> {
     void orderId;
     await this.events.orderChanged(shopId);
+    await this.events.orderClosed(shopId);
+  }
+
+  async pay(shopId: string, orderId: string): Promise<void> {
+    void orderId;
+    await this.events.orderPaid(shopId);
+    await this.events.orderChanged(shopId);
   }
 
   async remove(shopId: string, orderId: string): Promise<void> {
     void orderId;
-    await this.events.orderChanged(shopId);
+    await this.events.orderClosed(shopId);
   }
 }

@@ -58,8 +58,10 @@
   "unreached": 5,
   "throughChannels": [
     {
-      "channel": "order.created",
       "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "channels": [
+        "order.created"
+      ],
       "ways": 1,
       "sample": [
         {

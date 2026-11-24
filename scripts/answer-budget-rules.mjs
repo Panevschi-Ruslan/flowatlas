@@ -49,8 +49,8 @@ export const listsOf = (answer, names) => {
 export const rowsOf = (rows) =>
   rows.flatMap((row) => (row !== null && typeof row === 'object' ? [row, ...rowsOf(Array.isArray(row.children) ? row.children : [])] : []));
 
-/** What a row is matched by: its `id`, or on a field's row its `field`. */
-export const keysOf = (row) => [row.id, row.field].filter((key) => typeof key === 'string');
+/** What a row is matched by: its `id`, on a field's row its `field`, and on a row of `throughChannels` its `consumer` (P378). */
+export const keysOf = (row) => [row.id, row.field, row.consumer].filter((key) => typeof key === 'string');
 
 /** The rows of every list across the pages of one question's answers. */
 export const rowsByList = (answers, names) => {
@@ -117,7 +117,7 @@ export const asksFurther = (tool, args, answer) => {
 /**
  * What the hand-written right answer (`expect`) says an answer gets wrong:
  * an error, an id a list must hold and misses, one it must not hold and
- * does, a row past an exact list, a field a row must say otherwise,
+ * does, a row past an exact list or said twice in one, a field a row must say otherwise,
  * `complete: false` where the right answer is complete, and more than one
  * call for an answer that said it was complete.
  */
@@ -148,9 +148,13 @@ export const wrongIn = (expect, { first, lists, measured }) => {
   }
   for (const name of expect.exact ?? []) {
     const want = new Set([...(expect.lists?.[name] ?? []), ...Object.keys(expect.rowsSay?.[name] ?? {})]);
+    const seen = new Set();
     for (const row of lists.get(name) ?? []) {
       const keys = keysOf(row);
       if (!keys.some((key) => want.has(key))) wrong.push(`${name} lists ${keys[0] ?? JSON.stringify(row)}, past the ${want.size} it must hold exactly`);
+      // An exact list says each row once (P378): one consumer on three channels is one row of throughChannels.
+      else if (seen.has(keys[0])) wrong.push(`${name} lists ${keys[0]} more than once`);
+      seen.add(keys[0]);
     }
   }
   if (expect.complete === true && !measured.complete) wrong.push('says complete: false where the right answer is complete');

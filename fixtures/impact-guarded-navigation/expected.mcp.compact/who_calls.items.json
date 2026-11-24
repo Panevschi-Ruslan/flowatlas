@@ -1,0 +1,104 @@
+{
+  "target": {
+    "id": "store-api#src/items.service.ts:ItemsService.listByShop",
+    "line": 6,
+    "reach": "alive",
+    "from": "GET /api/shops/items"
+  },
+  "callers": [
+    {
+      "id": "store-api#src/items.controller.ts:ItemsController.list",
+      "line": 8,
+      "reach": "alive",
+      "from": "GET /api/shops/items",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "string[]"
+      },
+      "children": [
+        {
+          "id": "entry:store-api:http:GET:/api/shops/items",
+          "loc": "src/items.controller.ts:8",
+          "reach": "alive",
+          "edge": {
+            "type": "handles",
+            "params": [
+              "string"
+            ],
+            "returns": "string[]"
+          }
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:store-api:http:GET:/api/shops/items",
+      "line": 8,
+      "reach": "alive",
+      "hops": 2,
+      "by": "store-api#src/items.controller.ts:ItemsController.list"
+    },
+    {
+      "id": "entry:store-bot:bot_command:items",
+      "line": 21,
+      "reach": "outside",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.showItems"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:closed",
+      "line": 24,
+      "reach": "outside",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:orders",
+      "line": 22,
+      "reach": "alive",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:paid",
+      "line": 23,
+      "reach": "outside",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
+      "id": "entry:store-web:screen:/dashboard",
+      "loc": "src/app/app.routes.ts:17",
+      "reach": "outside",
+      "hops": 7,
+      "by": "store-web#src/app/dashboard.component.ts:DashboardComponent"
+    },
+    {
+      "id": "entry:store-web:screen:/history",
+      "loc": "src/app/app.routes.ts:18",
+      "reach": "outside",
+      "hops": 7,
+      "by": "store-web#src/app/order-history.component.ts:OrderHistoryComponent"
+    }
+  ],
+  "throughChannels": [
+    {
+      "consumer": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "channels": [
+        "shop:*:closed",
+        "shop:*:orders",
+        "shop:*:paid"
+      ],
+      "ways": 5
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\", channel: \"consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent\"})",
+    "get_flow({entry: \"entry:store-api:http:GET:/api/shops/items\"})"
+  ]
+}

@@ -11,16 +11,20 @@
               %  /history                   store-web/src/app/app.routes.ts:18
       => store-bot ^  GET /api/shops/items  store-bot/src/api.client.ts:15
         -> ApiClient.getItems               store-bot/src/api.client.ts:14
-          -> StoreBot.onStatusEvent         store-bot/src/store-bot.ts:29
-            ~  event shop:*:orders          store-bot/src/store-bot.ts:21
-          -> StoreBot.showItems             store-bot/src/store-bot.ts:25
-            &  bot_command items            store-bot/src/store-bot.ts:20
-Reachable from: 1 http entry (store-api), 1 bot command (store-bot), 1 consumer (store-bot), 2 screens (store-web)
+          -> StoreBot.onStatusEvent         store-bot/src/store-bot.ts:32
+            ~  event shop:*:closed          store-bot/src/store-bot.ts:24
+            ~  event shop:*:orders          store-bot/src/store-bot.ts:22
+            ~  event shop:*:paid            store-bot/src/store-bot.ts:23
+          -> StoreBot.showItems             store-bot/src/store-bot.ts:28
+            &  bot_command items            store-bot/src/store-bot.ts:21
+Reachable from: 1 http entry (store-api), 1 bot command (store-bot), 3 consumers (store-bot), 2 screens (store-web)
 Could break:
   GET /api/shops/items (store-api)  alive, by ItemsController.list src/items.controller.ts:8
-  bot_command items (store-bot)  outside, via GET /api/shops/items (store-api), by StoreBot.showItems src/store-bot.ts:25
-  event shop:*:orders (store-bot)  alive, via GET /api/shops/items (store-api), by StoreBot.onStatusEvent src/store-bot.ts:29
+  bot_command items (store-bot)  outside, via GET /api/shops/items (store-api), by StoreBot.showItems src/store-bot.ts:28
+  event shop:*:closed (store-bot)  outside, via GET /api/shops/items (store-api), by StoreBot.onStatusEvent src/store-bot.ts:32
+  event shop:*:orders (store-bot)  alive, via GET /api/shops/items (store-api), by StoreBot.onStatusEvent src/store-bot.ts:32
+  event shop:*:paid (store-bot)  outside, via GET /api/shops/items (store-api), by StoreBot.onStatusEvent src/store-bot.ts:32
   /dashboard (store-web)  outside, via GET /api/shops/items (store-api), by DashboardComponent src/app/dashboard.component.ts:6
   /history (store-web)  outside, via GET /api/shops/items (store-api), by OrderHistoryComponent src/app/order-history.component.ts:6
 Only beyond a channel, calling none of it (--channel <name> lists them):
-  shop:*:orders  4 ways in, taken by StoreBot.onStatusEvent (store-bot): DELETE /api/orders/:param (store-api) by OrdersController.remove src/orders.controller.ts:19, PATCH /api/orders/:param/status (store-api) by OrdersController.setStatus src/orders.controller.ts:14, POST /api/orders (store-api) by OrdersController.create src/orders.controller.ts:9, ...
+  shop:*:closed, shop:*:orders, shop:*:paid  5 ways in, taken by StoreBot.onStatusEvent (store-bot): DELETE /api/orders/:param (store-api) by OrdersController.remove src/orders.controller.ts:24, PATCH /api/orders/:param/status (store-api) by OrdersController.setStatus src/orders.controller.ts:14, POST /api/orders (store-api) by OrdersController.create src/orders.controller.ts:9, ...

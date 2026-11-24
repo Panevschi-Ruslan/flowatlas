@@ -299,18 +299,24 @@ const SHARED_CLIENT_COMPACT_CASES = [
  */
 const GUARDED_ITEMS = 'store-api#src/items.service.ts:ItemsService.listByShop';
 const GUARDED_TICKETS = 'store-api#src/tickets.service.ts:TicketsService.acknowledge';
+const GUARDED_BOT = 'consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent';
 const GUARDED_CASES = [
   ['impact.items', 'impact', { symbol: GUARDED_ITEMS }],
   ['impact.tickets', 'impact', { symbol: GUARDED_TICKETS }],
   ['impact.items-across-channel', 'impact', { symbol: GUARDED_ITEMS, channel: 'shop:*:orders' }],
   ['impact.guard-own-code', 'impact', { symbol: 'store-web#src/app/auth.service.ts:AuthService.role' }],
   ['find_symbol.navigated', 'find_symbol', { queries: ['DashboardComponent.loadData', 'TicketBoardComponent.routeAction', 'StoreBot.onStatusEvent'] }],
+  // The bot takes messages from three channels: one row of throughChannels, its ways in each once, listed by the consumer (P378).
+  ['impact.items-across-consumer', 'impact', { symbol: GUARDED_ITEMS, channel: GUARDED_BOT }],
+  ['who_calls.items', 'who_calls', { symbol: GUARDED_ITEMS }],
 ];
 /** The two impacts and the channel's list, compact: what an agent is handed. */
 const GUARDED_COMPACT_CASES = [
   ['impact.items', 'impact', { symbol: GUARDED_ITEMS, verbose: false }],
   ['impact.tickets', 'impact', { symbol: GUARDED_TICKETS, verbose: false }],
   ['impact.items-across-channel', 'impact', { symbol: GUARDED_ITEMS, channel: 'shop:*:orders', verbose: false }],
+  ['impact.items-across-consumer', 'impact', { symbol: GUARDED_ITEMS, channel: GUARDED_BOT, verbose: false }],
+  ['who_calls.items', 'who_calls', { symbol: GUARDED_ITEMS, verbose: false }],
 ];
 
 /**

@@ -8,6 +8,29 @@ only one of them moved.
 
 ### Added
 
+- **What lies past a channel, said once per consumer (P378).**
+  `throughChannels`, in `impact` and `who_calls` alike, is one row per
+  consumer: `{consumer, channels, consumers?, ways, sample?, walkCut?}`,
+  `channels` every channel it takes messages from on the way (a name, or
+  `{channel, type}` where it chooses a message type) and `ways` the distinct
+  ways in beyond any of them, a route publishing on two counted once. A bot on
+  three channels was three rows, each repeating the same ways in and the same
+  three samples. `impact` keeps the nearest three as `sample`; `who_calls`,
+  asked who calls the code, counts them only, and its `next` names the impact
+  call that lists them. `impact`'s `channel` input also takes a row's consumer
+  (its id or name), listing the ways in beyond every channel of its row, each
+  once, with `acrossConsumer`; `next` offers that call where the first row has
+  several channels. `flowatlas impact` prints one line per consumer under
+  `Only beyond a channel`, and `--channel` takes a consumer too. `entriesNone`
+  and `waysInNone` count the ways in beyond channels once each. The
+  `impact-guarded-navigation` fixture's bot now takes messages from three
+  channels four routes publish on, with three new answer-budget questions:
+  `impact` on the list method 2,387 characters (3,032 before, three rows),
+  `who_calls` 1,961 (2,983), and `impact` by the bot's consumer the five ways
+  in, 1,440 (it answered none). multi-repo's `who_calls` answers 1,886 where
+  it answered 2,004 (no sample) and its `impact` 1,904 from 1,901 (`channels`
+  is a list). The budget matches a `throughChannels` row by its `consumer` and
+  fails an exact list naming a row twice.
 - **who_calls reaches the ways in in one call (P376).** Asked without
   `depth`, `who_calls` draws the nearest callers (two hops; on a class or
   several `symbols`, each one's direct callers) and lists every way in the

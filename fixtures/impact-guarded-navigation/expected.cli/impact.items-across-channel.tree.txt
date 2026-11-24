@@ -3,8 +3,8 @@
     @  GET /api/shops/items                                   store-api/src/items.controller.ts:8
       => store-bot ^  GET /api/shops/items                    store-bot/src/api.client.ts:15
         -> ApiClient.getItems                                 store-bot/src/api.client.ts:14
-          -> StoreBot.onStatusEvent                           store-bot/src/store-bot.ts:29
-            ~  StoreBot.onStatusEvent                         store-bot/src/store-bot.ts:21
+          -> StoreBot.onStatusEvent                           store-bot/src/store-bot.ts:32
+            ~  StoreBot.onStatusEvent                         store-bot/src/store-bot.ts:22
               ~  shop:*:orders                                src/events.service.ts:11
                 => store-api ~  message shop:*:orders         store-api/src/events.service.ts:11
                   -> EventsService.orderChanged               store-api/src/events.service.ts:10
@@ -16,15 +16,15 @@
                               -> OrdersAdminComponent.create  store-web/src/app/orders-admin.component.ts:14
                                 %  OrdersAdminComponent       store-web/src/app/orders-admin.component.ts:6
                                   %  /orders                  store-web/src/app/app.routes.ts:22
-                    -> OrdersService.remove                   store-api/src/orders.service.ts:18
-                      -> OrdersController.remove              store-api/src/orders.controller.ts:19
-                        @  DELETE /api/orders/:param          store-api/src/orders.controller.ts:19
+                    -> OrdersService.pay                      store-api/src/orders.service.ts:19
+                      -> OrdersController.pay                 store-api/src/orders.controller.ts:19
+                        @  POST /api/orders/:param/pay        store-api/src/orders.controller.ts:19
                     -> OrdersService.setStatus                store-api/src/orders.service.ts:13
                       -> OrdersController.setStatus           store-api/src/orders.controller.ts:14
                         @  PATCH /api/orders/:param/status    store-api/src/orders.controller.ts:14
 Reachable from: 3 http entries (store-api), 1 screen (store-web)
 Beyond channel shop:*:orders, calling none of it:
-  DELETE /api/orders/:param (store-api)  alive, via channel shop:*:orders, by OrdersController.remove src/orders.controller.ts:19
   PATCH /api/orders/:param/status (store-api)  dead, via channel shop:*:orders, by OrdersController.setStatus src/orders.controller.ts:14
   POST /api/orders (store-api)  alive, via channel shop:*:orders, by OrdersController.create src/orders.controller.ts:9
+  POST /api/orders/:param/pay (store-api)  dead, via channel shop:*:orders, by OrdersController.pay src/orders.controller.ts:19
   /orders (store-web)  outside, via channel shop:*:orders, by OrdersAdminComponent src/app/orders-admin.component.ts:6

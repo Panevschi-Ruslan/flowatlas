@@ -470,6 +470,7 @@ const GUARDED_CASES = [
   ['impact.items.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree' }, io)],
   ['impact.tickets.tree.txt', (io) => runImpact('store-api#src/tickets.service.ts:TicketsService.acknowledge', { ...guardedPlain, format: 'tree' }, io)],
   ['impact.items-across-channel.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree', channel: 'shop:*:orders' }, io)],
+  ['impact.items-across-consumer.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree', channel: 'StoreBot.onStatusEvent' }, io)],
 ];
 
 /** impact's rows with the code that handles each way in (P374): a route's handler, the bot class behind a webhook, a screen's component. */

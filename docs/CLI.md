@@ -2259,12 +2259,14 @@ worker's webhook hands its update to; P374); `Maybe, behind a call the reading c
 follow:`, each chain that stops before any way in where an unread call could
 reach it, with its `gap`; `Unreached:`, how many chains end at code whose name
 its repository writes nowhere else; `Only beyond a channel, calling none of
-it:`, each channel a consumer on the way takes messages from with how many ways
-in lie beyond it and the nearest few (the tool's `throughChannels`, P372); and
+it:`, each consumer on the way taking messages from a channel, with its
+channels, how many distinct ways in lie beyond them and the nearest few, one
+line per consumer (the tool's `throughChannels`, P372 and P378); and
 what the answer left, each a `Left:` line. The walk never goes back along a
 navigation, nor from a guard to the screens it guards unless the guard's own
 code calls the symbol. `--channel <name>` lists the ways in beyond that channel
-instead, with the chains to them through it.
+instead, with the chains to them through it; given a consumer a line names, the
+ways in beyond every channel of its line.
 
 `--format json` prints the tool's answer, compact on one line as an agent is
 handed it; with `--verbose` the whole answer, pretty-printed. `--max-nodes` is
@@ -2282,7 +2284,7 @@ flowatlas impact "ItemsService.findOne" --format json --verbose
 | `--entries-only` | hang the rows under the symbol instead of the chains to them |
 | `--offset <n>` | the row to start the list at |
 | `--verbose` | with `--format json`, the whole answer, pretty-printed |
-| `--channel <name>` | list the ways in beyond a channel the answer counts under `throughChannels` |
+| `--channel <name>` | list the ways in beyond a channel the answer counts under `throughChannels`, or beyond every channel of a consumer it names |
 
 ### `flowatlas path <from> <to>`
 

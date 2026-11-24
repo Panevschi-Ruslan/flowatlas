@@ -81,15 +81,11 @@
   "unreached": 5,
   "throughChannels": [
     {
-      "channel": "order.created",
       "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-      "ways": 1,
-      "sample": [
-        {
-          "id": "entry:orders:http:POST:/orders",
-          "by": "orders#src/orders/orders.controller.ts:OrdersController.create"
-        }
-      ]
+      "channels": [
+        "order.created"
+      ],
+      "ways": 1
     }
   ],
   "complete": true,

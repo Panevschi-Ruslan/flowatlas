@@ -176,7 +176,7 @@ export {
   MAX_MENTIONS,
 } from './query/docs.js';
 export type { DocAsk, DocCheck, DocRef, DocSubject, DocTarget } from './query/docs.js';
-export { impactOf } from './tools/reach.js';
-export type { ImpactInput, ImpactOf, ThroughChannel } from './tools/reach.js';
+export { impactOf, throughByConsumer } from './tools/reach.js';
+export type { ImpactInput, ImpactOf, ThroughChannel, ThroughConsumer } from './tools/reach.js';
 export { viaSaid } from './query/ways-in.js';
 export type { Reach, Walked, WalkedFrom, WayInFound } from './query/ways-in.js';

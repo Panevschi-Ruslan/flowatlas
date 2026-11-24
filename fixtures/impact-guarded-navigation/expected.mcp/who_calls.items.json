@@ -1,0 +1,149 @@
+{
+  "target": {
+    "id": "store-api#src/items.service.ts:ItemsService.listByShop",
+    "type": "method",
+    "label": "ItemsService.listByShop",
+    "loc": "src/items.service.ts:6",
+    "service": "store-api",
+    "reach": "alive",
+    "from": "GET /api/shops/items"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "store-api#src/items.controller.ts:ItemsController.list",
+        "type": "method",
+        "label": "ItemsController.list",
+        "loc": "src/items.controller.ts:8",
+        "reach": "alive",
+        "from": "GET /api/shops/items"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "string[]"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:store-api:http:GET:/api/shops/items",
+            "type": "entry",
+            "label": "GET /api/shops/items",
+            "loc": "src/items.controller.ts:8",
+            "kind": "http",
+            "reach": "alive"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "string[]"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:store-api:http:GET:/api/shops/items",
+      "type": "entry",
+      "label": "GET /api/shops/items",
+      "loc": "src/items.controller.ts:8",
+      "service": "store-api",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 2,
+      "by": "store-api#src/items.controller.ts:ItemsController.list"
+    },
+    {
+      "id": "entry:store-bot:bot_command:items",
+      "type": "entry",
+      "label": "bot_command items",
+      "loc": "src/store-bot.ts:21",
+      "service": "store-bot",
+      "kind": "bot_command",
+      "reach": "outside",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.showItems"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:closed",
+      "type": "entry",
+      "label": "event shop:*:closed",
+      "loc": "src/store-bot.ts:24",
+      "service": "store-bot",
+      "kind": "event",
+      "reach": "outside",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:orders",
+      "type": "entry",
+      "label": "event shop:*:orders",
+      "loc": "src/store-bot.ts:22",
+      "service": "store-bot",
+      "kind": "event",
+      "reach": "alive",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
+      "id": "entry:store-bot:event:shop:*:paid",
+      "type": "entry",
+      "label": "event shop:*:paid",
+      "loc": "src/store-bot.ts:23",
+      "service": "store-bot",
+      "kind": "event",
+      "reach": "outside",
+      "hops": 6,
+      "by": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+    },
+    {
+      "id": "entry:store-web:screen:/dashboard",
+      "type": "entry",
+      "label": "/dashboard",
+      "loc": "src/app/app.routes.ts:17",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 7,
+      "by": "store-web#src/app/dashboard.component.ts:DashboardComponent"
+    },
+    {
+      "id": "entry:store-web:screen:/history",
+      "type": "entry",
+      "label": "/history",
+      "loc": "src/app/app.routes.ts:18",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 7,
+      "by": "store-web#src/app/order-history.component.ts:OrderHistoryComponent"
+    }
+  ],
+  "throughChannels": [
+    {
+      "consumer": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
+      "channels": [
+        "shop:*:closed",
+        "shop:*:orders",
+        "shop:*:paid"
+      ],
+      "ways": 5
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\", channel: \"consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent\"})",
+    "get_flow({entry: \"entry:store-api:http:GET:/api/shops/items\"})",
+    "describe_for_prompt({id: \"entry:store-api:http:GET:/api/shops/items\"})",
+    "impact({symbol: \"entry:store-api:http:GET:/api/shops/items\"})"
+  ]
+}

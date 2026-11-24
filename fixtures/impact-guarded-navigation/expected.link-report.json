@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:45:58.311Z",
+  "builtAt": "2026-11-24T08:28:30.859Z",
   "configHash": "5e0e3d578191",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./store-api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 31,
-      "edges": 23,
+      "nodes": 42,
+      "edges": 34,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2256,
+      "durationMs": 1588,
       "packages": {
         "name": "store-api",
         "runtime": [
@@ -29,11 +29,11 @@
       "repo": "./store-bot",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 17,
-      "edges": 14,
+      "nodes": 23,
+      "edges": 20,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2230,
+      "durationMs": 1598,
       "packages": {
         "name": "store-bot",
         "runtime": [
@@ -57,7 +57,7 @@
       "edges": 62,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1437,
+      "durationMs": 0,
       "packages": {
         "name": "store-web",
         "runtime": [
@@ -87,17 +87,18 @@
     "byReason": {}
   },
   "channels": {
-    "total": 1,
-    "linked": 1,
+    "total": 3,
+    "linked": 3,
     "noConsumers": [],
     "noProducers": []
   },
   "routes": {
-    "total": 6,
+    "total": 7,
     "called": 4,
     "uncalled": [
       "entry:store-api:http:PATCH:/api/orders/:param/status",
-      "entry:store-api:http:POST:/api/hooks/chat"
+      "entry:store-api:http:POST:/api/hooks/chat",
+      "entry:store-api:http:POST:/api/orders/:param/pay"
     ],
     "duplicated": []
   },
@@ -107,8 +108,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 108,
-    "edges": 105,
+    "nodes": 125,
+    "edges": 124,
     "types": 0,
     "missed": 1,
     "sites": 1,

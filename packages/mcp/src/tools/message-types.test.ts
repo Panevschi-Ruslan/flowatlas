@@ -134,7 +134,7 @@ describe('dead, per type', () => {
     const answer = await call('impact', { symbol });
     expect(answer.entries).toEqual([]);
     expect(answer.throughChannels).toEqual([
-      { channel: 'space:*:events', type: 'EXPORT_FINISHED', consumer: symbol, ways: 1, sample: [{ id: 'entry:docs-api:http:POST:/spaces/:param/exports/:param/done', by: 'docs-api#src/spaces/spaces.controller.ts:SpacesController.exportDone' }] },
+      { consumer: symbol, channels: [{ channel: 'space:*:events', type: 'EXPORT_FINISHED' }], ways: 1, sample: [{ id: 'entry:docs-api:http:POST:/spaces/:param/exports/:param/done', by: 'docs-api#src/spaces/spaces.controller.ts:SpacesController.exportDone' }] },
     ]);
     const across = await call('impact', { symbol, channel: 'space:*:events' });
     expect(across.entries.map((row: { id: string }) => row.id)).toEqual(['entry:docs-api:http:POST:/spaces/:param/exports/:param/done']);

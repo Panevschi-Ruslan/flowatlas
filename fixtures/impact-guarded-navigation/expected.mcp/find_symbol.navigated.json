@@ -39,20 +39,22 @@
           "id": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
           "type": "consumer",
           "label": "StoreBot.onStatusEvent",
-          "loc": "src/store-bot.ts:21",
+          "loc": "src/store-bot.ts:22",
           "service": "store-bot",
           "kind": "message",
           "reach": "alive",
-          "from": "event shop:*:orders"
+          "from": "event shop:*:closed",
+          "ways": 3
         },
         {
           "id": "store-bot#src/store-bot.ts:StoreBot.onStatusEvent",
           "type": "method",
           "label": "StoreBot.onStatusEvent",
-          "loc": "src/store-bot.ts:29",
+          "loc": "src/store-bot.ts:32",
           "service": "store-bot",
           "reach": "alive",
-          "from": "event shop:*:orders"
+          "from": "event shop:*:closed",
+          "ways": 3
         }
       ],
       "total": 2,
