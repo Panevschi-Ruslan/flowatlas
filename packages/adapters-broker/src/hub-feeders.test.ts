@@ -1,6 +1,6 @@
 import { Node, Project, SyntaxKind, type CallExpression, type Node as TsNode } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { channelsFrom, channelTestOf, fedChannels, keyTestOf, type FeedLookup } from './hub-feeders.js';
+import { channelsFrom, channelTestOf, fedChannels, fedFrom, keyTestOf, type FeedLookup } from './hub-feeders.js';
 
 /**
  * The channels a hub is handed by name through the project's own publish
@@ -11,7 +11,7 @@ import { channelsFrom, channelTestOf, fedChannels, keyTestOf, type FeedLookup } 
 const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false } });
 let count = 0;
 
-const read = (text: string) => {
+const lookupOf = (text: string): { write: CallExpression; lookup: FeedLookup } => {
   const file = project.createSourceFile(`feed-${(count += 1)}.ts`, text);
   const calls = file.getDescendantsOfKind(SyntaxKind.CallExpression);
   const write = calls.find((call) => call.getText().startsWith('stub.fetch')) as CallExpression;
@@ -38,6 +38,11 @@ const read = (text: string) => {
     nameOf,
     fileOf: () => 'bus.ts',
   };
+  return { write, lookup };
+};
+
+const read = (text: string) => {
+  const { write, lookup } = lookupOf(text);
   return fedChannels(write, lookup).map((each) => `${each.channel} ${each.confidence} ${each.through.join(' > ')}`);
 };
 
@@ -84,6 +89,22 @@ describe('the channels a write to a hub hands on (P362)', () => {
       export function ping(channel: string) { void stub.fetch('https://hub/ping'); }
       export function a() { ping('board:1:events'); }`),
     ).toEqual([]);
+  });
+});
+
+describe('a write to a hub whose channel is worked out when the code runs (P395)', () => {
+  it('counts the values on the way out that no reading names, beside the channels it does', () => {
+    const { write, lookup } = lookupOf(`
+      declare const stub: { fetch(url: string, init?: unknown): Promise<unknown> };
+      declare function channelFromSettings(id: string): string;
+      export function toHub(channel: string, message: unknown) {
+        void stub.fetch('https://hub/publish', { body: JSON.stringify({ channel, message }) });
+      }
+      export function named(id: string) { toHub(\`board:\${id}:events\`, {}); }
+      export function looked(id: string) { toHub(channelFromSettings(id), {}); }`);
+    const fed = fedFrom(write, lookup);
+    expect(fed.channels.map((each) => each.channel)).toEqual(['board:*:events']);
+    expect(fed.unread).toBe(1);
   });
 });
 

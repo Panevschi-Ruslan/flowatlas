@@ -21,6 +21,8 @@ import { VERSION } from '../version.js';
 export interface FindingsCommandOptions extends ReadOptions, SarifFlags {
   kind?: string;
   service?: string;
+  /** Only the rows at this severity; contract breaks at warning are otherwise counted, not listed (P395). */
+  severity?: string;
   /** Exit 1 when a finding at this precision or surer is listed. */
   failOn?: string;
 }
@@ -28,6 +30,8 @@ export interface FindingsCommandOptions extends ReadOptions, SarifFlags {
 export interface FindingsRun {
   rows: FindingRow[];
   heldBack: Record<string, { count: number; why: string }>;
+  /** The rows counted rather than listed, by kind: contract breaks at warning. */
+  warnings: Record<string, number>;
   lines: string[];
   /** The rows at or above `--fail-on`. */
   failing: number;
@@ -35,6 +39,15 @@ export interface FindingsRun {
 }
 
 const SURENESS: Readonly<Record<Precision, number>> = { high: 0, medium: 1, low: 2 };
+
+const SEVERITIES = ['error', 'warning'] as const;
+
+/** `--severity`, checked. */
+const severityOf = (value: string | undefined): string | undefined => {
+  if (value === undefined) return undefined;
+  if (!(SEVERITIES as readonly string[]).includes(value)) throw new FlowatlasError('bad-argument', `--severity must be one of ${SEVERITIES.join(', ')}, not ${JSON.stringify(value)}`);
+  return value;
+};
 
 /** `--fail-on`, checked. */
 const failOnOf = (value: string | undefined): Precision | undefined => {
@@ -53,6 +66,7 @@ const rowLines = (row: FindingRow): string[] => [
 
 export const runFindings = (options: FindingsCommandOptions): FindingsRun => {
   const failOn = failOnOf(options.failOn);
+  const severity = severityOf(options.severity);
   const sarifLevel = sarifLevelFlag(options.sarifLevel);
   const settings: DbHandleOptions = {};
   if (options.db !== undefined) settings.dbPath = options.db;
@@ -62,7 +76,7 @@ export const runFindings = (options: FindingsCommandOptions): FindingsRun => {
   const opened = handle.open();
   if ('error' in opened) throw new FlowatlasError('no-graph', opened.error, 'Run flowatlas build, then ask again.');
   try {
-    const found = findingsOf(opened.db, { handle }, options.service);
+    const found = findingsOf(opened.db, { handle }, options.service, severity);
     const rows = options.kind === undefined ? found.ranked : found.ranked.filter((row) => row.kind === options.kind);
     const kinds = [...new Set(rows.map((row) => row.kind))].sort(compareFindingKinds);
     const lines: string[] = [];
@@ -74,6 +88,10 @@ export const runFindings = (options: FindingsCommandOptions): FindingsRun => {
     for (const [kind, held] of Object.entries(found.heldBack)) {
       if (options.kind !== undefined && kind !== options.kind) continue;
       lines.push(`held back: ${held.count} ${kind}, the evidence not holding (${held.why})`);
+    }
+    for (const [kind, count] of Object.entries(found.warnings)) {
+      if (options.kind !== undefined && kind !== options.kind) continue;
+      lines.push(`counted, not listed: ${count} ${kind} at warning (flowatlas findings --kind ${kind} --severity warning)`);
     }
     const failing = failOn === undefined ? 0 : rows.filter((row) => SURENESS[row.precision] <= SURENESS[failOn]).length;
     const sarif =
@@ -87,7 +105,7 @@ export const runFindings = (options: FindingsCommandOptions): FindingsRun => {
             ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
           })
         : undefined;
-    return { rows, heldBack: found.heldBack, lines, failing, ...(sarif === undefined ? {} : { sarif }) };
+    return { rows, heldBack: found.heldBack, warnings: found.warnings, lines, failing, ...(sarif === undefined ? {} : { sarif }) };
   } finally {
     handle.close();
   }
@@ -101,12 +119,13 @@ export const registerFindings = (program: Command): void => {
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--kind <kind>', 'only this kind: call-to-missing-route, field-never-sent, type-never-published, contract-break, unguarded-among-guarded, ...')
     .option('--service <name>', 'only this service')
+    .option('--severity <level>', 'only the rows at this severity, error or warning; contract breaks at warning are otherwise counted, not listed')
     .option('--fail-on <precision>', `exit 1 when a finding at this precision or surer is listed: ${PRECISION_NAMES.join(', ')}`)
     .option('--format <kind>', 'json, table or sarif (default: table)');
   withSarifOptions(command).action((options: FindingsCommandOptions) => {
     const run = runFindings(options);
     if (run.sarif !== undefined) deliverSarif(run.sarif, options, processIo);
-    else print({ findings: run.rows, heldBack: run.heldBack }, run.lines, wantsJson(options));
+    else print({ findings: run.rows, heldBack: run.heldBack, ...(Object.keys(run.warnings).length === 0 ? {} : { warnings: run.warnings }) }, run.lines, wantsJson(options));
     if (run.failing > 0) throw new CliError(`${run.failing} finding${run.failing === 1 ? '' : 's'} at or above --fail-on ${options.failOn ?? ''}`, EXIT.failed);
   });
 };

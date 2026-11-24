@@ -153,6 +153,76 @@ describe('defects between the services', () => {
     unsure.close();
   });
 
+  it('checks a screen fed through a stream against every channel the stream relays, and holds it back where the relays are not all read (P395)', () => {
+    const screenId = 'consumer:web#src/audit.tsx:handleLive';
+    const screen = node(screenId, {
+      type: 'consumer',
+      repo: 'web',
+      file: 'src/audit.tsx',
+      line: 4,
+      label: 'handleLive',
+      meta: {
+        selects: [
+          { type: 'AUDIT_ENTRY_CREATED', consumer: screenId, via: 'switch', line: 6 },
+          { type: 'ORDER_PLACED', consumer: screenId, via: 'switch', line: 8 },
+          { type: 'ORDER_REFUNDED', consumer: screenId, via: 'switch', line: 10 },
+        ],
+      },
+    });
+    const orders = node('channel:shop:*:orders', { type: 'channel', label: 'shop:*:orders', repo: 'api' });
+    const events = node('channel:shop:*:events', { type: 'channel', label: 'shop:*:events', repo: 'api' });
+    const publish = (line: number, type: string) => node(`producer:api#src/bus.ts:${line}:3`, { type: 'producer', repo: 'api', meta: { messageTypes: [type] } });
+    const build = (routeMeta: Record<string, unknown>, extra: { nodes?: ReturnType<typeof node>[]; edges?: ReturnType<typeof edge>[] } = {}) =>
+      buildTestDb({
+        services: ['api', 'web'],
+        nodes: [
+          screen,
+          orders,
+          events,
+          publish(10, 'ORDER_PLACED'),
+          publish(20, 'AUDIT_ENTRY_CREATED'),
+          route('api', 'GET', '/shops/:param/stream', { meta: { method: 'GET', path: '/shops/:param/stream', ...routeMeta } }),
+          ...(extra.nodes ?? []),
+        ],
+        edges: [
+          edge('producer:api#src/bus.ts:10:3', orders.id, { type: 'emits' }),
+          edge('producer:api#src/bus.ts:20:3', events.id, { type: 'emits' }),
+          edge(orders.id, screenId, { type: 'consumes', meta: { via: 'sse', route: 'entry:api:http:GET:/shops/:param/stream' } }),
+          edge(events.id, screenId, { type: 'consumes', meta: { via: 'sse', route: 'entry:api:http:GET:/shops/:param/stream' } }),
+          ...(extra.edges ?? []),
+        ],
+      });
+
+    // Both relayed channels read: a type published on either is published; the refund, on neither, is a defect.
+    const whole = build({});
+    expect(typesNeverPublished(whole)).toMatchObject([
+      {
+        finding: {
+          id: 'channel:shop:*:events#ORDER_REFUNDED',
+          message:
+            'handleLive handles ORDER_REFUNDED, which nothing publishes on the 2 channels it receives (shop:*:events, shop:*:orders); their 2 publish(es) send AUDIT_ENTRY_CREATED, ORDER_PLACED',
+          precision: 'high',
+        },
+      },
+    ]);
+    whole.close();
+
+    // A subscription behind the stream names a channel not read: the refund may come through it.
+    const partial = build({ relaysUnread: '1 subscription(s) behind GET /shops/:param/stream name a channel not read' });
+    expect(typesNeverPublished(partial)).toEqual([
+      { held: { kind: 'type-never-published', id: 'channel:shop:*:events#ORDER_REFUNDED', why: '1 subscription(s) behind GET /shops/:param/stream name a channel not read' } },
+    ]);
+    partial.close();
+
+    // A hub written to with a channel not read, among the channels the screen receives.
+    const hub = node('channel:durable-object:ShopHub', { type: 'channel', label: 'durable-object:ShopHub', repo: 'api', meta: { forwards: [orders.id], forwardsUnread: 2 } });
+    const hubbed = build({}, { nodes: [hub, node('producer:api#src/hub.ts:5:3', { type: 'producer', repo: 'api' })], edges: [edge('producer:api#src/hub.ts:5:3', hub.id, { type: 'emits' }), edge(hub.id, screenId, { type: 'consumes' })] });
+    expect(typesNeverPublished(hubbed)).toEqual([
+      { held: { kind: 'type-never-published', id: 'channel:shop:*:events#ORDER_REFUNDED', why: '2 write(s) to durable-object:ShopHub hand it a channel not read' } },
+    ]);
+    hubbed.close();
+  });
+
   it('lists an unguarded route among guarded siblings as its own kind, ranked above a plain unguarded one', () => {
     const guard = node('items#src/staff.guard.ts:StaffGuard', { type: 'guard', repo: 'items', label: 'StaffGuard' });
     const unguarded = (method: string, path: string, line: number) => ({

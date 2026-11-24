@@ -1240,6 +1240,8 @@ export {
   recordStreamConsumer,
   STREAM_EVENTS_META,
   STREAM_EVENTS_UNREAD_META,
+  RELAYS_UNREAD_META,
+  FORWARDS_UNREAD_META,
   STREAM_KIND,
   streamConsumerId,
   streamHandlerUnreadRow,

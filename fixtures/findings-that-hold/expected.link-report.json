@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T23:38:23.712Z",
+  "configHash": "4e694d4df266",
+  "services": [
+    {
+      "name": "back-office",
+      "repo": "./back-office",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1079,
+      "packages": {
+        "name": "back-office",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 19,
+      "edges": 14,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 838,
+      "packages": {
+        "name": "shop-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stores-api",
+      "repo": "./stores-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 53,
+      "edges": 44,
+      "types": 3,
+      "unresolved": 8,
+      "durationMs": 1478,
+      "packages": {
+        "name": "stores-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "redis",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 4,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": [],
+    "unselectedTypes": [
+      "channel:shop:*:events#ALERT_RAISED",
+      "channel:shop:*:orders#ORDER_SHIPPED"
+    ]
+  },
+  "routes": {
+    "total": 10,
+    "called": 5,
+    "uncalled": [
+      "entry:back-office:http:POST:/admin/stores",
+      "entry:stores-api:http:POST:/shops/:param/alerts/:param",
+      "entry:stores-api:http:POST:/shops/:param/audit/:param",
+      "entry:stores-api:http:POST:/shops/:param/orders/:param",
+      "entry:stores-api:http:POST:/shops/:param/orders/:param/ship"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "file": "src/audit/audit.service.ts",
+      "line": 15,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ALERT_RAISED on shop:*:events: 1 consumer chooses other types (handleLive)",
+      "symbol": "producer:stores-api#src/audit/audit.service.ts:15:11",
+      "service": "stores-api",
+      "meta": {
+        "type": "channel:shop:*:events#ALERT_RAISED",
+        "channel": "channel:shop:*:events",
+        "messageType": "ALERT_RAISED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ORDER_SHIPPED on shop:*:orders: 2 consumers choose other types (handleFeed, handleLive)",
+      "symbol": "producer:stores-api#src/orders/orders.service.ts:15:11",
+      "service": "stores-api",
+      "meta": {
+        "type": "channel:shop:*:orders#ORDER_SHIPPED",
+        "channel": "channel:shop:*:orders",
+        "messageType": "ORDER_SHIPPED",
+        "sureness": "sure"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 87,
+    "edges": 79,
+    "types": 7,
+    "missed": 8,
+    "sites": 8,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 8
+  }
+}

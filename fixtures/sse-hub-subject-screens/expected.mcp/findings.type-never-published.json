@@ -1,0 +1,16 @@
+{
+  "kind": "type-never-published",
+  "rows": [],
+  "total": 0,
+  "heldBack": {
+    "type-never-published": {
+      "count": 1,
+      "why": "1 publish(es) on board:*:events send a type not read"
+    },
+    "sse-event-unhandled": {
+      "count": 3,
+      "why": "a frame of GET /api/boards/:param/crew/stream is named at run time, or written where it is not read"
+    }
+  },
+  "note": "no type-never-published findings; the kinds found are config-not-set, one-ended-channel, message-type-unselected"
+}

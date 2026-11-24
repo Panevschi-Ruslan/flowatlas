@@ -186,6 +186,8 @@ const HUB_SUBJECT_CASES = [
   // Published only by a direct call to the project's own bus, which no broker description names.
   ['who_consumes.helper-publish', 'who_consumes', { channel: 'board:*:orders', type: 'SCHEDULED_ALERT' }],
   ['who_emits.helper-publish', 'who_emits', { channel: 'board:*:orders', type: 'SCHEDULED_ALERT' }],
+  // The screens are joined to every channel the hub relays (P395): a type chosen is checked against all of them, held back where one is not read whole.
+  ['findings.type-never-published', 'findings', { kind: 'type-never-published' }],
 ];
 
 /**
@@ -583,6 +585,26 @@ const BETWEEN_COMPACT_CASES = [
   ['findings.type-never-published', 'findings', { kind: 'type-never-published', verbose: false }],
 ];
 
+/**
+ * Findings that hold on a real project (P395): a screen fed through a stream
+ * relaying two channels checked against both, one fed through a stream whose
+ * relays are not all read held back, an answer field read behind a presence
+ * check held back beside one read plainly, contract breaks at warning counted
+ * and the one error listed, and a route answering a type made of itself.
+ */
+const HOLD_CASES = [
+  ['findings.all', 'findings', {}],
+  ['findings.type-never-published', 'findings', { kind: 'type-never-published' }],
+  ['findings.contract-break', 'findings', { kind: 'contract-break' }],
+  ['findings.contract-break-warnings', 'findings', { kind: 'contract-break', severity: 'warning' }],
+  ['check_contract.answer-guarded', 'check_contract', { edge: 'GET /stores/:id' }],
+  ['check_contract.answer-made-of-itself', 'check_contract', { edge: 'GET /categories/tree' }],
+];
+/** The same, compact: what an agent is handed. */
+const HOLD_COMPACT_CASES = [
+  ['findings.all', 'findings', { verbose: false }],
+  ['check_contract.answer-guarded', 'check_contract', { edge: 'GET /stores/:id', verbose: false }],
+];
 /**
  * Protocol, validation, settings, status and CORS mismatches (P388): each
  * defect gated on its evidence beside a decoy, with its precision and fix.
@@ -1081,6 +1103,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'findings-between-services'),
     outDir: join(root, 'fixtures', 'findings-between-services', 'expected.mcp.compact'),
     cases: BETWEEN_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-that-hold'),
+    outDir: join(root, 'fixtures', 'findings-that-hold', 'expected.mcp'),
+    cases: HOLD_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-that-hold'),
+    outDir: join(root, 'fixtures', 'findings-that-hold', 'expected.mcp.compact'),
+    cases: HOLD_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'boundary-mismatches'),

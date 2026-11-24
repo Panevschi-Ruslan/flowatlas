@@ -1,12 +1,15 @@
 import {
   DEPLOYMENT_UNREAD_REASONS,
+  FORWARDS_UNREAD_META,
   gapFindingOf,
   isMessageTypeNode,
   makeMessageTypeId,
   MESSAGE_TYPE_UNREAD_META,
   messageTypesOf,
+  RELAYS_UNREAD_META,
   ROUTES_UNREAD_REASONS,
   selectionsOf,
+  STREAM_KIND,
   type GraphNode,
   type Precision,
 } from '@flowatlas/core';
@@ -319,17 +322,68 @@ export const closeSpelling = (a: string, b: string): boolean => {
 };
 
 /**
+ * What one channel a consumer receives carries, as far as its publishes say:
+ * the types they send, or why that is not known whole.
+ */
+interface ChannelCarries {
+  channel: GraphNode;
+  producers: number;
+  types: ReadonlySet<string>;
+  /** Why the types on it may not be all it carries. */
+  unknown?: string;
+}
+
+/** The types a channel's publishes say they send, and whether that is all it may carry. */
+const carriesOf = (db: GraphDb, channel: GraphNode): ChannelCarries => {
+  const producers = db.edgesTo(channel.id, ['emits']).flatMap((each) => db.node(each.from) ?? []);
+  const types = new Set(producers.flatMap((producer) => messageTypesOf(producer)));
+  const unread = producers.filter((producer) => typeof producer.meta?.[MESSAGE_TYPE_UNREAD_META] === 'string').length;
+  const base = { channel, producers: producers.length, types };
+  if (unread > 0) return { ...base, unknown: `${unread} publish(es) on ${channel.label} send a type not read` };
+  // A hub that stands for the channels it is handed by name carries what they carry, where every write to it names one.
+  const forwards = channel.meta?.['forwards'];
+  const forwardsUnread = channel.meta?.[FORWARDS_UNREAD_META];
+  if (typeof forwardsUnread === 'number' && forwardsUnread > 0) {
+    return { ...base, unknown: `${forwardsUnread} write(s) to ${channel.label} hand it a channel not read` };
+  }
+  if (Array.isArray(forwards) && forwards.length > 0) return base;
+  if (producers.length === 0) return { ...base, unknown: `nothing publishing on ${channel.label} was read` };
+  // A hub written to directly, its writes saying no type: what it hands its streams is not read.
+  if (typeof channel.meta?.['heldBy'] === 'string' && types.size === 0) return { ...base, unknown: `the ${producers.length} write(s) to ${channel.label} say no type` };
+  return base;
+};
+
+/** Why the channels a consumer receives may not be all of them: a stream route relaying channels not all read. */
+const channelsUnknown = (db: GraphDb, edges: readonly { meta?: Record<string, unknown> | undefined }[]): string | undefined => {
+  for (const edge of edges) {
+    if (edge.meta?.['via'] !== STREAM_KIND) continue;
+    const route = typeof edge.meta['route'] === 'string' ? db.node(edge.meta['route']) : undefined;
+    const why = route?.meta?.[RELAYS_UNREAD_META];
+    if (typeof why === 'string') return why;
+  }
+  return undefined;
+};
+
+/**
  * Consumers choosing a type of message nothing publishes (P384), the reverse
  * of `message-type-unselected`: a handler waiting for a message that never
  * comes, usually the type renamed or respelled on the publishing side. Read
  * off what each consumer records it selects, set against the types the
- * publishes on its channel say they send: the linker draws no type node for a
- * selection no publish sends, so the graph's type nodes alone cannot say it.
- * A defect where every publish on the channel says the type it sends; held
- * back where one sends a type not read, which may be this one. A channel no
- * publish says any type on, or with no publish at all (a one-ended channel,
- * listed under its own kind), and a subscriber to every channel of a bus, are
- * not judged.
+ * publishes say they send on every channel the consumer receives (P395): a
+ * screen fed through a stream route that relays several channels, or through
+ * a hub handed several, receives them all, and a type sent on any of them is
+ * published for it. The linker draws no type node for a selection no publish
+ * sends, so the graph's type nodes alone cannot say it.
+ *
+ * A defect only where the consumer's channels are known whole and every
+ * publish on each says the type it sends. Held back, with why, where one
+ * sends a type not read (which may be this one), where a stream route feeding
+ * the consumer relays a channel not read (a subscription whose channel is
+ * worked out when the code runs, an object whose class is not read), where a
+ * hub is written to with a channel not read, or where nothing publishing on
+ * one of several channels was read. A consumer none of whose channels has a
+ * publish saying a type (a one-ended channel is listed under its own kind),
+ * and a subscriber to every channel of a bus, are not judged.
  */
 export const typesNeverPublished = (db: GraphDb): Promoted[] => {
   const out: Promoted[] = [];
@@ -338,44 +392,60 @@ export const typesNeverPublished = (db: GraphDb): Promoted[] => {
   for (const consumer of consumers) {
     const selections = selectionsOf(consumer);
     if (selections.length === 0) continue;
-    for (const edge of db.edgesTo(consumer.id, ['consumes'])) {
-      if (edge.meta?.['via'] === EVERY_CHANNEL_VIA) continue;
-      const channel = db.node(edge.from);
-      if (channel === undefined || channel.type !== 'channel' || isMessageTypeNode(channel)) continue;
-      const producers = db.edgesTo(channel.id, ['emits']).flatMap((each) => db.node(each.from) ?? []);
-      const published = new Set(producers.flatMap((producer) => messageTypesOf(producer)));
-      if (published.size === 0) continue;
-      const unread = producers.filter((producer) => typeof producer.meta?.[MESSAGE_TYPE_UNREAD_META] === 'string').length;
-      for (const selection of selections) {
-        if (published.has(selection.type) || selection.heuristic === true) continue;
-        const handler = db.node(selection.consumer);
-        if (handler === undefined || unreachedHandler(db, handler) !== undefined) continue;
-        const id = makeMessageTypeId(channel.id, selection.type);
-        if (seen.has(`${id}|${handler.id}`)) continue;
-        seen.add(`${id}|${handler.id}`);
-        if (unread > 0) {
-          out.push({ held: { kind: 'type-never-published', id, why: `${unread} publish(es) on ${channel.label} send a type not read` } });
-          continue;
-        }
-        const types = [...published].sort(byText);
-        const renamed = likelyRenamed(selection.type, types);
-        const file = selection.file ?? handler.file;
-        const ways = waysInReaching(db, channel.id);
-        out.push({
-          finding: {
-            kind: 'type-never-published',
-            id,
-            service: handler.repo,
-            ...(file === undefined ? {} : { loc: `${file}:${selection.line}` }),
-            message: `${handler.label} handles ${selection.type} on ${channel.label}, which nothing publishes; its ${producers.length} publish(es) send ${types.join(', ')}`,
-            precision: 'high',
-            evidence: `every publish on ${channel.label} says the type it sends`,
-            ...(renamed === undefined ? {} : { fix: `likely renamed: ${renamed} is published, ${selection.type} is handled` }),
-            ...(ways.seenBy.length === 0 ? {} : { seenBy: ways.seenBy }),
-            to: channel.id,
-          },
-        });
+    const edges = db.edgesTo(consumer.id, ['consumes']).filter((edge) => edge.meta?.['via'] !== EVERY_CHANNEL_VIA);
+    const channels = [
+      ...new Map(
+        edges
+          .map((edge) => db.node(edge.from))
+          .filter((channel): channel is GraphNode => channel !== undefined && channel.type === 'channel' && !isMessageTypeNode(channel))
+          .map((channel) => [channel.id, channel] as const),
+      ).values(),
+    ].sort((a, b) => byText(a.id, b.id));
+    const carried = channels.map((channel) => carriesOf(db, channel));
+    const published = new Set(carried.flatMap((each) => [...each.types]));
+    if (published.size === 0) continue;
+    const unknown = channelsUnknown(db, edges) ?? carried.find((each) => each.unknown !== undefined)?.unknown;
+    // The channel a row is filed under: the first that says types, so the call it names shows what is published.
+    const said = carried.filter((each) => each.types.size > 0);
+    const home = said[0]!;
+    for (const selection of selections) {
+      if (published.has(selection.type) || selection.heuristic === true) continue;
+      const handler = db.node(selection.consumer);
+      if (handler === undefined || unreachedHandler(db, handler) !== undefined) continue;
+      const id = makeMessageTypeId(home.channel.id, selection.type);
+      if (seen.has(`${selection.type}|${handler.id}`)) continue;
+      seen.add(`${selection.type}|${handler.id}`);
+      if (unknown !== undefined) {
+        out.push({ held: { kind: 'type-never-published', id, why: unknown } });
+        continue;
       }
+      const types = [...published].sort(byText);
+      const renamed = likelyRenamed(selection.type, types);
+      const file = selection.file ?? handler.file;
+      // Who meets it: the ways in reaching the publishes on every channel it receives.
+      const reached = carried.map((each) => waysInReaching(db, each.channel.id));
+      const ways = { seenBy: [...new Set(reached.flatMap((each) => each.seenBy))].slice(0, SEEN_BY) };
+      const producers = carried.reduce((sum, each) => sum + each.producers, 0);
+      const one = carried.length === 1;
+      const labels = carried.map((each) => each.channel.label).join(', ');
+      out.push({
+        finding: {
+          kind: 'type-never-published',
+          id,
+          service: handler.repo,
+          ...(file === undefined ? {} : { loc: `${file}:${selection.line}` }),
+          message: one
+            ? `${handler.label} handles ${selection.type} on ${home.channel.label}, which nothing publishes; its ${producers} publish(es) send ${types.join(', ')}`
+            : `${handler.label} handles ${selection.type}, which nothing publishes on the ${carried.length} channels it receives (${labels}); their ${producers} publish(es) send ${types.join(', ')}`,
+          precision: 'high',
+          evidence: one
+            ? `every publish on ${home.channel.label} says the type it sends`
+            : `every channel it receives was read, and every publish on each says the type it sends`,
+          ...(renamed === undefined ? {} : { fix: `likely renamed: ${renamed} is published, ${selection.type} is handled` }),
+          ...(ways.seenBy.length === 0 ? {} : { seenBy: ways.seenBy }),
+          to: home.channel.id,
+        },
+      });
     }
   }
   return out;

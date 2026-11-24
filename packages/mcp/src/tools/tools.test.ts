@@ -369,12 +369,13 @@ describe('the tools a session is offered', () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     // P381 to P391 together (check_change, impact's symbols and callersIn, list_entries' called, answer fields): 13,626 read.
-    expect(read.length).toBeLessThan(13650);
+    // P395 gives findings `severity`, its contract warnings counted unless asked: 13,731.
+    expect(read.length).toBeLessThan(13750);
     const output = JSON.stringify(tools.map(({ name, outputSchema }) => ({ name, outputSchema })));
     // P384 findings, P387 check_change and P391 answer fields: 20,225 of output schemas, which the model never reads.
     // P393 says where a row's code ends (`endLine`), how to confirm a maybe (`confirm`, in every reached row) and one
-    // `requests` list: 21,457, which the model never reads either.
-    expect(output.length).toBeLessThan(21500);
+    // `requests` list: 21,457, which the model never reads either. P395's findings `warnings`: 21,561.
+    expect(output.length).toBeLessThan(21600);
   });
 
   /**
@@ -412,8 +413,8 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       // What the model reads of the nineteen (P382): 10,428, where this measured the output schemas too.
-      // With P381 to P391: 10,496 read.
-      expect(read.length).toBeLessThan(10500);
+      // With P381 to P391: 10,496 read; with findings' `severity` (P395), 10,601.
+      expect(read.length).toBeLessThan(10650);
     } finally {
       await plain.close();
     }

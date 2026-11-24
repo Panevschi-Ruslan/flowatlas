@@ -627,6 +627,8 @@ export interface HelperPublish {
 export interface Fed {
   readonly channels: readonly FedChannel[];
   readonly publishes: readonly HelperPublish[];
+  /** How many values on the way out, in the channel's place, were not read as a channel nor followed further (P395). */
+  readonly unread: number;
 }
 
 /**
@@ -646,6 +648,7 @@ export interface Fed {
 export const channelsFrom = (value: TsNode, at: TsNode, lookup: FeedLookup): Fed => {
   const out = new Map<string, FedChannel>();
   const publishes: HelperPublish[] = [];
+  let unread = 0;
   const record = (names: readonly string[], tests: readonly ChannelTest[], straight: boolean, site: TsNode, through: readonly string[], helper?: { fn: TsNode; index: number }): void => {
     const kept: string[] = [];
     let sureAll = true;
@@ -677,7 +680,10 @@ export const channelsFrom = (value: TsNode, at: TsNode, lookup: FeedLookup): Fed
     depth: number,
     helper?: { fn: TsNode; index: number },
   ): void => {
-    if (depth >= FEED_DEPTH * 2) return;
+    if (depth >= FEED_DEPTH * 2) {
+      unread += 1;
+      return;
+    }
     const bare = unwrap(value);
     if (Node.isObjectLiteralExpression(bare) || Node.isArrayLiteralExpression(bare)) return;
     const declaration = Node.isIdentifier(bare) ? declarationNamed(bare) : undefined;
@@ -705,17 +711,22 @@ export const channelsFrom = (value: TsNode, at: TsNode, lookup: FeedLookup): Fed
     // Held in a name of the function: followed to what it was given.
     if (declaration !== undefined && Node.isVariableDeclaration(declaration)) {
       const initializer = declaration.getInitializer();
-      if (initializer !== undefined) track(initializer, site, tests, through, straight, depth + 1, helper);
+      if (initializer !== undefined) {
+        track(initializer, site, tests, through, straight, depth + 1, helper);
+        return;
+      }
     }
+    // A value whose channel is worked out when the code runs, where no reading names it.
+    if (named === undefined) unread += 1;
   };
   track(value, at, [], [], true, 0);
-  return { channels: [...out.values()].sort((a, b) => (a.channel < b.channel ? -1 : a.channel > b.channel ? 1 : 0)), publishes };
+  return { channels: [...out.values()].sort((a, b) => (a.channel < b.channel ? -1 : a.channel > b.channel ? 1 : 0)), publishes, unread };
 };
 
 /** The channels a write through a stub, at `call`, hands on, and the calls that name them. */
 export const fedFrom = (call: CallExpression, lookup: FeedLookup): Fed => {
   const value = channelValueOf(call);
-  return value === undefined ? { channels: [], publishes: [] } : channelsFrom(value, call, lookup);
+  return value === undefined ? { channels: [], publishes: [], unread: 0 } : channelsFrom(value, call, lookup);
 };
 
 /** The channels a write through a stub, at `call`, hands on (P362). */

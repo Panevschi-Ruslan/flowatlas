@@ -2,7 +2,9 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { QueryIo } from '../query/answer.js';
 import { buildProject } from './build.js';
+import { runContracts } from './contracts.js';
 import { runFindings } from './findings.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
@@ -53,5 +55,31 @@ describe('flowatlas findings', () => {
     expect(result?.level).toBe('error');
     expect(result?.message.text).toContain('the nearest route: POST /products/:param/publish');
     expect(run?.results.find((each) => each.ruleId === 'finding/unguarded')?.level).toBe('note');
+  });
+});
+
+/** Contract breaks at warning counted, not listed (P395), on the fixture whose back office sends a draft of optional fields. */
+describe('flowatlas findings, contract warnings', () => {
+  const HOLD = join(ROOT, 'fixtures', 'findings-that-hold', 'flowatlas.config.json');
+  const holdScratch = mkdtempSync(join(tmpdir(), 'flowatlas-findings-hold-'));
+  let holdDb = '';
+  const silent: QueryIo = { out: () => undefined, err: () => undefined, tty: false };
+
+  beforeAll(async () => {
+    holdDb = (await buildProject({ config: HOLD, out: holdScratch, builtAt: '2026-01-01T00:00:00.000Z' })).dbPath;
+    runContracts({ db: holdDb, config: HOLD, format: 'json', out: holdScratch }, silent);
+  }, 180_000);
+
+  afterAll(() => rmSync(holdScratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
+
+  it('lists the error, counts the warnings with the command that lists them, and lists them when asked', () => {
+    const run = runFindings({ db: holdDb, config: HOLD });
+    expect(run.rows.filter((row) => row.kind === 'contract-break').map((row) => row.severity)).toEqual(['error']);
+    expect(run.warnings).toEqual({ 'contract-break': 7 });
+    expect(run.lines).toContain('counted, not listed: 7 contract-break at warning (flowatlas findings --kind contract-break --severity warning)');
+    const warnings = runFindings({ db: holdDb, config: HOLD, kind: 'contract-break', severity: 'warning' });
+    expect(warnings.rows).toHaveLength(7);
+    expect(warnings.warnings).toEqual({});
+    expect(() => runFindings({ db: holdDb, config: HOLD, severity: 'info' })).toThrow(/--severity must be one of error, warning/);
   });
 });

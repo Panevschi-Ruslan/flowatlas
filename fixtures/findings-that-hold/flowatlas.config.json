@@ -1,0 +1,19 @@
+{
+  "services": [
+    {
+      "name": "stores-api",
+      "repo": "./stores-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["STORES_API_URL"]
+    },
+    { "name": "back-office", "repo": "./back-office", "type": "nestjs" },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_STORES_URL"],
+      "apiTarget": { "VITE_STORES_URL": "stores-api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

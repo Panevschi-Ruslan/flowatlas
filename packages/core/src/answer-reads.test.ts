@@ -114,4 +114,37 @@ describe('answerFieldsRead', () => {
     expect(found.reads).toEqual([]);
     expect(found.unread.map((row) => row.why)).toEqual(['handed to JSON.stringify']);
   });
+
+  it('marks a read the code checks for presence first guarded, and leaves a plain read and a check on the answer itself unmarked (P395)', () => {
+    const found = read(
+      [
+        'type Store = { name: string; rating: number; distance?: number; address?: string; changes?: { added: string[] }; tags?: string[]; phone?: string; hours?: string };',
+        'declare function request(url: string): Promise<Store>;',
+        'function distanceLabel(v: Store): string {',
+        '  const m = v.distance;',
+        "  if (m == null) return v.address ?? '';",
+        '  return `${m} km`;',
+        '}',
+        'function changeSummary(row: Store): string {',
+        '  const d = row.changes;',
+        "  if (d) return d.added.join(', ');",
+        "  return '';",
+        '}',
+        'function extra(s: Store): string {',
+        "  const tags = s.tags?.join(',');",
+        "  const phone = 'phone' in s ? s.phone!.trim() : '';",
+        "  return `${tags}${phone}${s.hours ? s.hours : ''}`;",
+        '}',
+        'async function show(): Promise<string> {',
+        "  const store: Store | undefined = await request('/stores/1');",
+        '  return `${store?.name}${store!.rating.toFixed(1)}${distanceLabel(store!)}${changeSummary(store!)}${extra(store!)}`;',
+        '}',
+      ].join('\n'),
+      PAYLOAD,
+    );
+    const guarded = found.reads.filter((row) => row.guarded === true).map((row) => row.field).sort();
+    const plain = found.reads.filter((row) => row.guarded !== true).map((row) => row.field).sort();
+    expect(guarded).toEqual(['address', 'changes', 'changes.added', 'distance', 'hours', 'phone', 'tags']);
+    expect(plain).toEqual(['name', 'rating']);
+  });
 });

@@ -2141,6 +2141,74 @@
       "note": "P384: each defect gated on its evidence; the call to the legacy service, whose items controller was not read, and the type a publish of unread type may send are held back."
     },
     {
+      "id": "findings.that-hold",
+      "ask": "what looks broken between the shop's screens, the stores service and the back office",
+      "fixture": "findings-that-hold",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "type-never-published": [
+            "channel:shop:*:events#ORDER_REFUNDED"
+          ],
+          "answer-field-never-returned": [
+            "shop-web#src/screens/StorePage.tsx:StorePage"
+          ],
+          "contract-break": [
+            "http_out:back-office#src/stores.client.ts:28:34"
+          ]
+        },
+        "notListed": {
+          "type-never-published": [
+            "channel:shop:*:orders#AUDIT_ENTRY_CREATED",
+            "channel:shop:*:events#ORDER_PLACED",
+            "channel:shop:*:orders#ALERT_RAISED"
+          ],
+          "answer-field-never-returned": [
+            "shop-web#src/screens/StorePage.tsx:distanceLabel",
+            "shop-web#src/screens/StorePage.tsx:changeSummary"
+          ]
+        },
+        "exact": [
+          "type-never-published",
+          "answer-field-never-returned",
+          "contract-break"
+        ]
+      },
+      "note": "P395: a type published on the other channel a stream relays, a type on a stream relaying a channel not read, and fields read behind a presence check are not listed; the seven contract warnings are counted with the call that lists them."
+    },
+    {
+      "id": "findings.hub-screens-types",
+      "ask": "which types do the board screens handle that nothing publishes",
+      "fixture": "sse-hub-subject-screens",
+      "tool": "findings",
+      "args": {
+        "kind": "type-never-published"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": []
+        },
+        "notListed": {
+          "rows": [
+            "channel:crew:*:shifts#CARD_MOVED",
+            "channel:crew:*:shifts#CARD_ARCHIVED",
+            "channel:crew:*:shifts#CARD_ADDED"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P395: ten rows at high before, each a type checked against crew:*:shifts alone though the hub relays board:*:events too, which publishes most of them; the one published on neither is held back, since a publish on board:*:events sends a type not read."
+    },
+    {
       "id": "who_calls.shadowed-handler",
       "ask": "who calls OrdersController.latest, declared below a parameter route of its controller",
       "fixture": "route-order",
@@ -2834,8 +2902,8 @@
     "guideBlockClaude": 366,
     "skillDescription": 268,
     "listingCore": 5685,
-    "listingDefault": 10495,
-    "listingAll": 13625
+    "listingDefault": 10601,
+    "listingAll": 13731
   },
   "recorded": {
     "impact.multi-repo": {
@@ -3311,6 +3379,20 @@
       "chars": 5155,
       "tokens": 1289,
       "rows": 8,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.that-hold": {
+      "chars": 3390,
+      "tokens": 848,
+      "rows": 5,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.hub-screens-types": {
+      "chars": 424,
+      "tokens": 106,
+      "rows": 0,
       "complete": null,
       "calls": 1
     },

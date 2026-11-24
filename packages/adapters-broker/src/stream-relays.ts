@@ -15,6 +15,8 @@ import {
   STREAM_EVENTS_META,
   STREAM_EVENTS_UNREAD_META,
   STREAM_KIND,
+  RELAYS_UNREAD_META,
+  FORWARDS_UNREAD_META,
   type Confidence,
   type ExtractorPass,
   type GraphEdge,
@@ -908,6 +910,8 @@ export const extractStreamRelays = (ctx: PassContext): void => {
     hubs.set(hub.declaration, { held: new Set(hub.held), writers: new Set(), ...(hub.binding === undefined ? {} : { binding: hub.binding }) });
   }
   const fed = new Map<ClassDeclaration, number>();
+  /** How many writes to each hub hand it a channel not read (P395). */
+  const unreadFeeds = new Map<ClassDeclaration, number>();
   /** The channels each hub is handed by name through the writes to it, with how sure each is. */
   const forwarded = new Map<ClassDeclaration, Map<string, FedChannel & { writeConfidence: Confidence }>>();
   /**
@@ -994,6 +998,7 @@ export const extractStreamRelays = (ctx: PassContext): void => {
         const handed = forwarded.get(declaration) ?? new Map<string, FedChannel & { writeConfidence: Confidence }>();
         const fedHere = fedFrom(call, feedLookup);
         helperPublishes.push(...fedHere.publishes);
+        if (fedHere.unread > 0) unreadFeeds.set(declaration, (unreadFeeds.get(declaration) ?? 0) + 1);
         for (const each of fedHere.channels) {
           const known = handed.get(each.channel);
           const sure: Confidence = each.confidence === 'static' && confidence === 'static' ? 'static' : 'heuristic';
@@ -1111,11 +1116,21 @@ export const extractStreamRelays = (ctx: PassContext): void => {
       // The hub's own channel stands for the channels it is handed by name.
       const handed = [...(forwarded.get(declaration)?.keys() ?? [])].map((name) => makeChannelId(name)).sort();
       if (handed.length > 0) channel.meta = { ...channel.meta, forwards: handed };
+      const unreadFed = unreadFeeds.get(declaration) ?? 0;
+      if (unreadFed > 0) channel.meta = { ...channel.meta, [FORWARDS_UNREAD_META]: unreadFed };
     }
     for (const each of consumed) {
       ctx.builder.addEdge({ from: each.channel, to: consumerId, type: 'consumes', confidence: each.edge.confidence, file: each.edge.file ?? file, line: each.edge.line ?? line });
     }
     route.meta = { ...route.meta, relays: [...new Set([...relayed.map((each) => makeChannelId(each.name)), ...hubChannels, ...consumed.map((each) => each.channel)])].sort() };
+    const missedHop = hops.find((each) => !each.entered);
+    const relaysUnread =
+      unread > 0
+        ? `${unread} subscription(s) behind ${route.label} name a channel not read`
+        : missedHop !== undefined
+          ? `${route.label} hands its request to an object whose class is not read: ${missedHop.why}`
+          : undefined;
+    if (relaysUnread !== undefined) route.meta = { ...route.meta, [RELAYS_UNREAD_META]: relaysUnread };
   }
 };
 

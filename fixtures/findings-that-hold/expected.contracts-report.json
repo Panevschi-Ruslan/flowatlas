@@ -1,0 +1,822 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T23:38:24.262Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "address",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`address` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "city",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`city` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "email",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`email` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "name",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`name` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "openingHours",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`openingHours` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "phone",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`phone` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "warning",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "postcode",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`postcode` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "http_out:back-office#src/stores.client.ts:28:34",
+            "to": "entry:stores-api:http:POST:/stores",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+          "direction": "request",
+          "sender": {
+            "service": "back-office",
+            "typeId": "type:back-office#StoreDraft",
+            "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+          },
+          "receiver": {
+            "service": "stores-api",
+            "typeId": "type:stores-api#CreateStoreBody",
+            "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+          },
+          "typeId": "type:stores-api#CreateStoreBody",
+          "field": "priceTier",
+          "expected": "number",
+          "actual": "string",
+          "rule": null,
+          "message": "sender back-office sends `priceTier` as `string`; receiver stores-api declares it `number`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/audit/audit.service.ts:11:11",
+        "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/audit/audit.service.ts:11:11|emits|consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/audit/audit.service.ts:AuditService.record"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/live/live.controller.ts:LiveController.stream"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/audit/audit.service.ts:15:11",
+        "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/audit/audit.service.ts:15:11|emits|consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/audit/audit.service.ts:AuditService.alert"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/live/live.controller.ts:LiveController.stream"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:11:11",
+        "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.feed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:11:11|emits|consumer:stores-api#src/live/live.controller.ts:LiveController.feed",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/orders/orders.service.ts:OrdersService.place"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/live/live.controller.ts:LiveController.feed"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:11:11",
+        "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:11:11|emits|consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/orders/orders.service.ts:OrdersService.place"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/live/live.controller.ts:LiveController.stream"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:15:11",
+        "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.feed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:15:11|emits|consumer:stores-api#src/live/live.controller.ts:LiveController.feed",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/orders/orders.service.ts:OrdersService.ship"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/live/live.controller.ts:LiveController.feed"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:15:11",
+        "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:15:11|emits|consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/orders/orders.service.ts:OrdersService.ship"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "string",
+        "symbol": "stores-api#src/live/live.controller.ts:LiveController.stream"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "address",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`address` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "city",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`city` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "email",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`email` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "name",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`name` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "openingHours",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`openingHours` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "phone",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`phone` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "postcode",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`postcode` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "request",
+      "sender": {
+        "service": "back-office",
+        "typeId": "type:back-office#StoreDraft",
+        "symbol": "back-office#src/stores.client.ts:StoresClient.create"
+      },
+      "receiver": {
+        "service": "stores-api",
+        "typeId": "type:stores-api#CreateStoreBody",
+        "symbol": "stores-api#src/stores/stores.controller.ts:StoresController.create"
+      },
+      "typeId": "type:stores-api#CreateStoreBody",
+      "field": "priceTier",
+      "expected": "number",
+      "actual": "string",
+      "rule": null,
+      "message": "sender back-office sends `priceTier` as `string`; receiver stores-api declares it `number`",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:back-office#src/stores.client.ts:28:34|http_calls|entry:stores-api:http:POST:/stores",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "back-office#src/stores.client.ts:StoresClient.create declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/audit/audit.service.ts:11:11",
+        "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/audit/audit.service.ts:11:11|emits|consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/audit/audit.service.ts:15:11",
+        "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/audit/audit.service.ts:15:11|emits|consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:11:11",
+        "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:11:11|emits|consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:11:11",
+        "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:11:11|emits|consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:15:11",
+        "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:15:11|emits|consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/orders/orders.service.ts:15:11",
+        "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/orders/orders.service.ts:15:11|emits|consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20",
+        "to": "entry:stores-api:http:GET:/shops/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20|hits|entry:stores-api:http:GET:/shops/:param/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/live/useShopStream.ts:useShopStream declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20",
+        "to": "entry:stores-api:http:GET:/shops/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20|hits|entry:stores-api:http:GET:/shops/:param/stream",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-web#src/live/useShopStream.ts:useShopStream declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20",
+        "to": "entry:stores-api:http:GET:/shops/:param/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20|hits|entry:stores-api:http:GET:/shops/:param/feed",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/live/useShopStream.ts:useShopFeed declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20",
+        "to": "entry:stores-api:http:GET:/shops/:param/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20|hits|entry:stores-api:http:GET:/shops/:param/feed",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-web#src/live/useShopStream.ts:useShopFeed declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26",
+        "to": "entry:stores-api:http:GET:/categories/tree",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26|hits|entry:stores-api:http:GET:/categories/tree",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/screens/CategoryMenu.tsx:fetchCategories declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26",
+        "to": "entry:stores-api:http:GET:/categories/tree",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26|hits|entry:stores-api:http:GET:/categories/tree",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-web#src/screens/CategoryMenu.tsx:fetchCategories declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26",
+        "to": "entry:stores-api:http:GET:/stores/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26|hits|entry:stores-api:http:GET:/stores/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/screens/StorePage.tsx:fetchStore declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26",
+        "to": "entry:stores-api:http:GET:/stores/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26|hits|entry:stores-api:http:GET:/stores/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-web#src/screens/StorePage.tsx:fetchStore declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 7,
+    "shared": 0,
+    "identical": 6,
+    "hash_differs": 1,
+    "unchecked": 15,
+    "errors": 1,
+    "warnings": 7,
+    "infos": 0,
+    "ignored": 0
+  }
+}

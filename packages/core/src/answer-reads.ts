@@ -591,7 +591,7 @@ export const answerFieldsRead = (start: AnswerStart, options: AnswerReadOptions)
     return false;
   };
 
-  return walkFields({ ...options, followLists: true, escape }, (handle) => {
+  return walkFields({ ...options, followLists: true, guards: true, escape }, (handle) => {
     walk = handle;
     follow(start.call, start.comes, start.state, 0);
   });

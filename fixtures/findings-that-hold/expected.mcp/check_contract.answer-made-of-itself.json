@@ -1,0 +1,35 @@
+{
+  "entry": "entry:stores-api:http:GET:/categories/tree",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:stores-api#CategoryTree",
+    "reads": [
+      {
+        "field": "label",
+        "id": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+        "line": 22
+      },
+      {
+        "field": "children",
+        "id": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+        "line": 23
+      },
+      {
+        "field": "label",
+        "id": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+        "line": 23
+      }
+    ],
+    "missing": [],
+    "unused": []
+  },
+  "callers": 1,
+  "complete": false,
+  "left": [
+    "unsure: what GET /categories/tree answers is not a shape read, so no read was compared"
+  ],
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26\", to: \"entry:stores-api:http:GET:/categories/tree\"})"
+  ]
+}

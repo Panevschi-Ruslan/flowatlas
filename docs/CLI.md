@@ -2614,7 +2614,10 @@ the likely N+1 loops, unguarded routes and one-ended channels, each kind
 ranked, every row with its precision (`high`, `medium`, `low`), its evidence
 and the nearest fix (P384). It is the graph server's `findings` answer, from
 the same function, so the two rank alike; a candidate whose evidence did not
-hold is said under `held back`, with why.
+hold is said under `held back`, with why. Contract breaks at warning (an
+optional field one end may leave out) are counted on a line of their own,
+`counted, not listed: 7 contract-break at warning`, and listed with
+`--kind contract-break --severity warning` (P395).
 
 Beside them, where both sides are read (P388): a stream's frames sent under an
 event name no browser listener listens for, a bot button whose callback data
@@ -2636,6 +2639,7 @@ status-never-answered (1)
 |---|---|---|
 | `--kind <kind>` | every kind | only one kind (`call-to-missing-route`, `field-never-sent`, …, or a finding's reason) |
 | `--service <name>` | every service | narrow to one |
+| `--severity <level>` | errors listed, warnings counted | only the rows at `error` or `warning` |
 | `--fail-on <precision>` | never | exit 1 when a finding at this precision or surer is listed: `high`, `medium`, `low` |
 | `--format <kind>` | `table` | `json`, `table` or `sarif` |
 

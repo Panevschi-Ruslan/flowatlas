@@ -1,5 +1,6 @@
 import { Node, SyntaxKind, type CallExpression, type Node as TsNode, type ObjectBindingPattern } from 'ts-morph';
 import { isDiscriminatorField } from './message-types.js';
+import { presenceChecked } from './presence-guards.js';
 import { functionLikeOf, type FunctionLike } from './types/signatures.js';
 
 /**
@@ -53,6 +54,8 @@ export interface FieldRead {
   sureness?: FieldSureness;
   /** The file the read is written in, where it is not the function's: a component's template (P391). */
   file?: string;
+  /** The code checks the field is there before it counts on it (`?.`, `??`, `if (x)`, `== null`, `'k' in o`): it handles its absence (P395). */
+  guarded?: true;
 }
 
 /** How a read was settled where it is not plainly written: through a key held as a default (P374). */
@@ -146,6 +149,11 @@ export interface FieldReadOptions {
    * walk otherwise says it as it always has.
    */
   escape?: (use: FieldEscape, walk: FieldWalk) => boolean;
+  /**
+   * Mark a read the code checks for presence first `guarded` (P395): a
+   * client that handles a field's absence. Off for what a handler is handed.
+   */
+  guards?: boolean;
 }
 
 /** Where a value leaves what the walk follows on its own (P391). */
@@ -247,7 +255,11 @@ const inOf = (walk: Walk, node: TsNode): string | undefined => {
   return undefined;
 };
 
-const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readonly string[] | undefined, sureness?: FieldSureness): void => {
+/**
+ * Records a read at `node`; `value` is the expression holding the field's
+ * value, where `node` is a use one step past it (`evt.label.trim()`).
+ */
+const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readonly string[] | undefined, sureness?: FieldSureness, value: TsNode = node): void => {
   if (path.length === 0) return;
   const field = path.slice(0, 3).join('.');
   const at = inOf(walk, node);
@@ -264,6 +276,7 @@ const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readon
     line,
     ...(when === undefined || when.length === 0 ? {} : { when: [...when] }),
     ...(sureness === undefined ? {} : { sureness }),
+    ...(walk.options.guards === true && presenceChecked(value, path.length) ? { guarded: true as const } : {}),
   });
 };
 
@@ -582,11 +595,11 @@ const listUse = (
   // `name.length`, `name.trim()`: what is read off a string or a number is no field of it.
   const kept = node.getType().getNonNullableType();
   if (kept.isString() || kept.isNumber() || kept.isBoolean() || kept.isStringLiteral() || kept.isNumberLiteral()) {
-    if (fresh) addRead(walk, state.prefix, access, when, state.sureness);
+    if (fresh) addRead(walk, state.prefix, access, when, state.sureness, node);
     return 'stop';
   }
   if (!isList(node)) return undefined;
-  if (fresh) addRead(walk, state.prefix, access, when, state.sureness);
+  if (fresh) addRead(walk, state.prefix, access, when, state.sureness, node);
   if (!isCall) return 'stop';
   const at = ELEMENT_CALLBACKS.get(name);
   if (at !== undefined) intoCallback(walk, callbackOf(walk, call.getArguments()[0]), at, state, depth, when);
@@ -696,7 +709,7 @@ const followValue = (
         (current.kind === 'request' && isCall && bodyByArgument(call) ? ({ kind: 'payload', prefix: [] } as const) : undefined);
       if (next === undefined) {
         // A method called on a part of the payload reads that part: `evt.label.trim()`.
-        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness);
+        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness, node);
         return;
       }
       current = next;
@@ -726,7 +739,7 @@ const followValue = (
         continue;
       }
       if (current.kind === 'payload') {
-        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness);
+        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness, node);
         addUnread(walk, parent, `indexed by ${argument?.getText().slice(0, 40) ?? 'a value'}`, whenOf(parent, fn, bindings) ?? inherited);
       }
       return;

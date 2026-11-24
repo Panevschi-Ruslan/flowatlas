@@ -28,6 +28,8 @@ export interface AnswerRead {
   file?: string;
   /** The request whose answer it reads, where the route has more than one caller. */
   call?: string;
+  /** The code checks the field is there first: it handles its absence (P395). */
+  guarded?: true;
 }
 
 /**
@@ -35,21 +37,24 @@ export interface AnswerRead {
  * (`known: false`, a request no front-end reader followed); `files` keys a
  * read written in a template (`field|id|line`) to that template.
  */
-export const answerReadingOf = (db: GraphDb, call: string): Reading & { files: Map<string, string> } => {
+export const answerReadingOf = (db: GraphDb, call: string): Reading & { files: Map<string, string>; guarded: Set<string> } => {
   const meta = db.node(call)?.meta;
   const reads = meta?.[ANSWER_READ_META];
   const files = new Map<string, string>();
-  if (!Array.isArray(reads)) return { known: false, reads: [], unread: [], files };
+  const guarded = new Set<string>();
+  if (!Array.isArray(reads)) return { known: false, reads: [], unread: [], files, guarded };
   const unread = meta?.[ANSWER_UNREAD_META];
   return {
     known: true,
     reads: (reads as FieldRead[]).map((row) => {
       const id = row.in ?? call;
       if (row.file !== undefined) files.set(`${row.field}|${id}|${row.line}`, row.file);
+      if (row.guarded === true) guarded.add(`${row.field}|${id}|${row.line}`);
       return { field: row.field, id, line: row.line };
     }),
     unread: (Array.isArray(unread) ? (unread as FieldUnread[]) : []).map((row) => ({ id: row.in ?? call, line: row.line, why: row.why })),
     files,
+    guarded,
   };
 };
 
@@ -90,7 +95,8 @@ export interface AnswerSaid {
   /** What the route answers, as its handler declares it. */
   type?: string;
   reads: AnswerRead[];
-  missing: Array<{ field: string; id: string; line: number; file?: string }>;
+  /** `guarded`: every read of it there checks it is there first, so the client copes without it (P395). */
+  missing: Array<{ field: string; id: string; line: number; file?: string; guarded?: true }>;
   unused: Array<{ field: string }>;
 }
 
@@ -121,7 +127,15 @@ export const answerOf = (
     for (const site of reading.reads) {
       if (field !== undefined && !readsField(site.field, field)) continue;
       const file = reading.files.get(`${site.field}|${site.id}|${site.line}`);
-      reads.push({ field: site.field, id: site.id, line: site.line, ...(file === undefined ? {} : { file }), ...(callers.length > 1 ? { call: id } : {}) });
+      const guarded = reading.guarded.has(`${site.field}|${site.id}|${site.line}`);
+      reads.push({
+        field: site.field,
+        id: site.id,
+        line: site.line,
+        ...(file === undefined ? {} : { file }),
+        ...(callers.length > 1 ? { call: id } : {}),
+        ...(guarded ? { guarded: true as const } : {}),
+      });
     }
   }
   if (reads.length > MOST_READS) left.push(`page: ${reads.length - MOST_READS} more reads; ask with field`);
@@ -146,13 +160,20 @@ export const answerOf = (
     }
     return undefined;
   };
+  /** Every read of the field at that place checks it is there first. */
+  const guardedAt = (row: { field: string; id: string; line: number }): boolean => {
+    const sites = readings.flatMap(({ reading }) =>
+      reading.reads.filter((site) => topField(site.field) === row.field && site.id === row.id && site.line === row.line).map((site) => reading.guarded.has(`${site.field}|${site.id}|${site.line}`)),
+    );
+    return sites.length > 0 && sites.every(Boolean);
+  };
   return {
     answer: {
       ...(type === undefined ? {} : { type }),
       reads: reads.slice(0, MOST_READS),
       missing: compared.missing.map((row) => {
         const file = fileOf(row);
-        return { field: row.field, id: row.id, line: row.line, ...(file === undefined ? {} : { file }) };
+        return { field: row.field, id: row.id, line: row.line, ...(file === undefined ? {} : { file }), ...(guardedAt(row) ? { guarded: true as const } : {}) };
       }),
       unused: handedOn ? [] : compared.unused.map((row) => ({ field: row.field })),
     },

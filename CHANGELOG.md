@@ -3169,6 +3169,34 @@ only one of them moved.
 
 ### Fixed
 
+- **Findings that hold (P395).** `type-never-published` checked a type a
+  screen chooses against one channel at a time, though a screen fed through a
+  stream route (or a hub) receives every channel it relays: a type published
+  on the second channel was "published by nothing" on the first, at `high`. A
+  consumer's choices are now checked against every channel it receives, and
+  held back, with why, where those channels are not known whole: a stream
+  route relaying a channel not read (the route's `meta.relaysUnread`: a
+  subscription whose channel is worked out when the code runs, an object whose
+  class is not read), a hub written to with a channel not read
+  (`meta.forwardsUnread` on its channel), nothing publishing on one of several
+  channels read. A finding over several channels names them all.
+  `answer-field-never-returned` listed reads behind a presence check (`const m
+  = v.distance; if (m == null) return v.address ?? ''`): a read checked first
+  (`?.` past it, `??`, `||`, `&&`, `if (x)`, `!x`, a ternary on it, `== null`,
+  `typeof x === 'undefined'`, `'k' in o`, through a local holding it, or
+  anywhere in the functions around the read) is marked `guarded` where P391
+  records the answer's reads, said by `check_contract` per read and per
+  missing field, and held back from findings; the held-back `why` names each
+  reason with its count. `contract-break` listed every warning (an optional
+  field one end may leave out) ahead of the kinds after it: the errors are
+  listed, the warnings counted under `warnings` with the call that lists them,
+  `findings({kind: "contract-break", severity: "warning"})`, and `flowatlas
+  findings` says them on a line of its own and takes `--severity`. A route
+  answering a type made of itself (`type CategoryTree = string |
+  CategoryTree[]`) answers end to end. New fixture `findings-that-hold`; the
+  ten types `sse-hub-subject-screens`' screens choose, each published on
+  another channel the hub relays, are no longer listed.
+
 - **`impact` never walks back along a navigation, from a guard, or across a
   channel into a flood (P372).** A method that navigates to a screen
   (`router.navigate([...])`, `navigateByUrl`, a guard's redirect, a login

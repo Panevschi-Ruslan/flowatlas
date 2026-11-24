@@ -400,3 +400,16 @@ export const recordSubjectSubscribers = (builder: GraphBuilder, relay: SubjectRe
 export const STREAM_EVENTS_META = 'streamEvents';
 /** On such a route: some frame's name was not read, so `streamEvents` may not be all of them (P388). */
 export const STREAM_EVENTS_UNREAD_META = 'streamEventsUnread';
+
+/**
+ * On a route relaying channels onto a stream: why `relays` may not be every
+ * channel it relays (P395) - a subscription behind it names a channel not
+ * read, or it hands its request to an object whose class is not read. A type
+ * a screen fed by it chooses may come through a channel not listed.
+ */
+export const RELAYS_UNREAD_META = 'relaysUnread';
+/**
+ * On a hub's own channel: how many writes to the hub hand it a channel that
+ * is not read (P395), so `forwards` may not be every channel it carries.
+ */
+export const FORWARDS_UNREAD_META = 'forwardsUnread';

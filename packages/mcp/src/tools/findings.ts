@@ -214,11 +214,18 @@ const ANSWER_EVIDENCE = 'the route answers a shape read whole, and the field is 
  * handler's declared return holds. A defect only where that return is a
  * shape read whole (a type, an inline object, a list's or a promise's
  * element); where it is not, the route's reads were not compared and are
- * held back, one count per request, with why.
+ * held back, one count per request, with why. A field read only behind a
+ * check that it is there (`?.`, `??`, `if (x)`, `== null`, `'k' in o`, P395)
+ * is the client handling its absence: held back, one count per read.
  */
 export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: { count: number; why: string } | undefined } => {
   const rows: FindingRow[] = [];
-  let held: { count: number; why: string } | undefined;
+  /** Each reason a candidate was held back for, with the first such candidate's words: one row per reason in the answer's why. */
+  const held = new Map<'shape' | 'guarded', { count: number; why: string }>();
+  const hold = (reason: 'shape' | 'guarded', why: string): void => {
+    const known = held.get(reason);
+    held.set(reason, known === undefined ? { count: 1, why } : { ...known, count: known.count + 1 });
+  };
   const routes = db.nodesByType('entry', 'http').sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (const route of routes) {
     const callers = [...new Set(db.edgesTo(route.id, ['http_calls', 'hits']).map((edge) => edge.from))].sort();
@@ -230,12 +237,18 @@ export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: {
         // Only a request whose client reads a field by name is a candidate: one that hands the answer on reads none here.
         if (said.answer.reads.length === 0) continue;
         const why = `what ${route.label} answers is not a shape read, so the fields its clients read were not compared`;
-        held = held === undefined ? { count: 1, why } : { ...held, count: held.count + 1 };
+        hold('shape', why);
         continue;
       }
       const readTops = new Set(said.answer.reads.map((read) => topField(read.field)));
       const notRead = fields.filter((field) => !readTops.has(field));
       for (const row of said.answer.missing) {
+        // Read behind a check that it is there: the client copes without it, so nothing breaks (P395).
+        if (row.guarded === true) {
+          const why = `\`${row.field}\` is read behind a check that it is there (${db.node(row.id)?.label ?? row.id}, line ${row.line}): the client handles its absence`;
+          hold('guarded', why);
+          continue;
+        }
         const reading = db.node(row.id);
         const file = row.file ?? reading?.file;
         const renamed = likelyRenamed(row.field, notRead);
@@ -258,7 +271,12 @@ export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: {
       }
     }
   }
-  return { rows, heldBack: held };
+  const reasons = [...held.values()];
+  const heldBack =
+    reasons.length === 0
+      ? undefined
+      : { count: reasons.reduce((sum, each) => sum + each.count, 0), why: reasons.map((each) => (reasons.length === 1 ? each.why : `${each.count}: ${each.why}`)).join('; ') };
+  return { rows, heldBack };
 };
 
 /**
@@ -293,17 +311,34 @@ const collectedOf = (
   });
 
 /**
+ * The rows "what looks broken" counts rather than lists (P395): a contract
+ * break at warning, an optional field one end may leave out, which can run to
+ * more rows than every other kind together. Listed when asked
+ * for by severity; counted under `warnings` otherwise, with the call.
+ */
+export const countedNotListed = (row: FindingRow): boolean => row.kind === 'contract-break' && row.severity === 'warning';
+
+/**
  * Every finding of the project, ranked (P95): the rows nobody accepted, the
  * channels with one end, and the contract breaks the last `flowatlas
  * contracts` wrote beside the database. Ranked over the whole project, then
  * kept to the service asked for, so a row's rank is its place in its kind
  * across the project. `notes` and `accepted` count that service's rows.
+ * Contract breaks at warning are counted under `warnings`, not listed,
+ * unless a `severity` is asked for, which keeps the rows at that severity.
  */
 export const findingsOf = (
   db: GraphDb,
   ctx: ToolContext,
   service?: string,
-): { ranked: FindingRow[]; notes: Record<string, number>; accepted: number; heldBack: Record<string, { count: number; why: string }> } => {
+  severity?: string,
+): {
+  ranked: FindingRow[];
+  notes: Record<string, number>;
+  accepted: number;
+  heldBack: Record<string, { count: number; why: string }>;
+  warnings: Record<string, number>;
+} => {
   const split = acceptedSplitOf(db, db.allUnresolved(), readAccepted(ctx.handle.path));
   const rules = rulesReportOf(db, ctx)?.violations;
   const inService = <T extends { service: string | null }>(rows: readonly T[]): T[] =>
@@ -316,11 +351,17 @@ export const findingsOf = (
     ...(fields.heldBack === undefined ? {} : { 'field-never-sent': fields.heldBack }),
     ...(answers.heldBack === undefined ? {} : { 'answer-field-never-returned': answers.heldBack }),
   };
+  const ranked = inService(rankFindings(db, collected.findings));
+  const warnings: Record<string, number> = {};
+  if (severity === undefined) {
+    for (const row of ranked.filter(countedNotListed)) warnings[row.kind] = (warnings[row.kind] ?? 0) + 1;
+  }
   return {
-    ranked: inService(rankFindings(db, collected.findings)),
+    ranked: severity === undefined ? ranked.filter((row) => !countedNotListed(row)) : ranked.filter((row) => row.severity === severity),
     notes: collectFindings(db, { rows: inService(split.fresh) }).notes,
     accepted: collectFindings(db, { rows: inService(split.accepted), all: db.allUnresolved() }).findings.length,
     heldBack,
+    warnings,
   };
 };
 
@@ -353,6 +394,7 @@ export const findingsOutput = {
   top: z.record(z.string(), z.array(findingOutput)).optional(),
   notes: z.record(z.string(), z.number()).optional(),
   heldBack: z.record(z.string(), z.object({ count: z.number(), why: z.string() })).optional(),
+  warnings: z.record(z.string(), z.number()).optional(),
   accepted: z.number().optional(),
   note: z.string().optional(),
   next: nextOutput,
@@ -366,6 +408,7 @@ export const registerFindings = (server: McpServer, ctx: ToolContext): void => {
       description: 'What looks broken between the services first, each with its precision and nearest fix; then N+1 loops, unguarded routes.',
       inputSchema: {
         kind: z.string().optional().describe('a kind of finding, or a reason'),
+        severity: z.enum(['error', 'warning']).optional().describe('warnings are counted unless asked'),
         service: serviceInput,
         maxNodes: commonInput.maxNodes,
         ...pageInput,
@@ -375,13 +418,18 @@ export const registerFindings = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        const { ranked: scoped, notes, accepted, heldBack } = findingsOf(db, ctx, input.service);
+        const { ranked: scoped, notes, accepted, heldBack, warnings } = findingsOf(db, ctx, input.service, input.severity);
         const kinds = [...new Set(scoped.map((row) => row.kind))].sort(compareFindingKinds);
         const said = {
           ...(Object.keys(notes).length === 0 ? {} : { notes }),
           ...(Object.keys(heldBack).length === 0 ? {} : { heldBack }),
+          ...(Object.keys(warnings).length === 0 ? {} : { warnings }),
           ...(accepted === 0 ? {} : { accepted }),
         };
+        // The rows counted rather than listed, each kind's by the call that lists them.
+        const warningCalls = Object.keys(warnings)
+          .filter((kind) => input.kind === undefined || input.kind.trim() === kind)
+          .map((kind) => callOf('findings', { kind, severity: 'warning', service: input.service }));
 
         if (input.kind === undefined) {
           const counts = Object.fromEntries(kinds.map((kind) => [kind, scoped.filter((row) => row.kind === kind).length]));
@@ -390,16 +438,16 @@ export const registerFindings = (server: McpServer, ctx: ToolContext): void => {
           );
           return withNext(
             { counts, top, ...said },
-            kinds
-              .filter((kind) => (counts[kind] ?? 0) > FINDINGS_TOP)
-              .slice(0, MAX_NEXT)
-              .map((kind) => callOf('findings', { kind, service: input.service })),
+            [
+              ...kinds.filter((kind) => (counts[kind] ?? 0) > FINDINGS_TOP).map((kind) => callOf('findings', { kind, severity: input.severity, service: input.service })),
+              ...warningCalls,
+            ].slice(0, MAX_NEXT),
           );
         }
 
         const kind = input.kind.trim();
         const rows = scoped.filter((row) => row.kind === kind);
-        if (rows.length === 0 && notes[kind] === undefined) {
+        if (rows.length === 0 && notes[kind] === undefined && warnings[kind] === undefined) {
           const known = kinds;
           return withNext(
             {
@@ -409,11 +457,11 @@ export const registerFindings = (server: McpServer, ctx: ToolContext): void => {
               ...said,
               note: `no ${kind} findings${known.length === 0 ? '' : `; the kinds found are ${known.join(', ')}`}`,
             },
-            nearWords(known, kind, 2).map((near) => callOf('findings', { kind: near, service: input.service })),
+            nearWords(known, kind, 2).map((near) => callOf('findings', { kind: near, severity: input.severity, service: input.service })),
           );
         }
         const { items, total, truncated, nextOffset } = truncate(rows, input.maxNodes, input.offset);
-        const args = { kind, service: input.service, maxNodes: input.maxNodes };
+        const args = { kind, severity: input.severity, service: input.service, maxNodes: input.maxNodes };
         return withNext(
           {
             kind,
@@ -423,7 +471,7 @@ export const registerFindings = (server: McpServer, ctx: ToolContext): void => {
             ...(nextOffset === undefined ? {} : { nextOffset }),
             ...said,
           },
-          pagedNext({ tool: 'findings', args, nextOffset }, items.slice(0, 2).map(shownBy)),
+          pagedNext({ tool: 'findings', args, nextOffset }, [...warningCalls, ...items.slice(0, 2).map(shownBy)]),
         );
       }),
   );
