@@ -611,6 +611,16 @@ const LOOPS_CASES = [
   ['findings.n-plus-one', 'findings', { kind: 'n-plus-one' }],
 ];
 
+/** A deployment's settings against the code it runs (P389): every kind with its rows, and two kinds paged. */
+const SETTINGS_CASES = [
+  ['findings.all', 'findings', {}],
+  ['findings.batch-failures-unreported', 'findings', { kind: 'batch-failures-unreported' }],
+  ['findings.queue-visibility-short', 'findings', { kind: 'queue-visibility-short' }],
+  ['cant_follow.setting-unread', 'cant_follow', { cause: 'deployment-setting-unread' }],
+];
+/** The same, compact: what an agent is handed. */
+const SETTINGS_COMPACT_CASES = SETTINGS_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+
 /**
  * What the reader could not follow (P75), asked the ways that used to answer
  * nothing (P94): a method nothing calls, in a file with gaps that may hide its
@@ -1142,6 +1152,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),
     outDir: join(root, 'fixtures', 'loops-worth-fixing', 'expected.mcp'),
     cases: LOOPS_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'deployment-settings-terraform'),
+    outDir: join(root, 'fixtures', 'deployment-settings-terraform', 'expected.mcp'),
+    cases: SETTINGS_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'deployment-settings-terraform'),
+    outDir: join(root, 'fixtures', 'deployment-settings-terraform', 'expected.mcp.compact'),
+    cases: SETTINGS_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'cant-follow'),

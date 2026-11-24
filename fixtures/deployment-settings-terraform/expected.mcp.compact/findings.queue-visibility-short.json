@@ -1,0 +1,26 @@
+{
+  "kind": "queue-visibility-short",
+  "rows": [
+    {
+      "kind": "queue-visibility-short",
+      "id": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+      "line": 7,
+      "message": "shop-billing hides a message for 10s, under the 20s timeout of shop-bill-order itself, which the platform refuses when the mapping is created: a message can come back while it is still being processed, and be processed twice",
+      "rank": 1,
+      "next": "get_source({symbol: \"consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders\"})"
+    },
+    {
+      "kind": "queue-visibility-short",
+      "id": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "line": 1,
+      "message": "shop-shipments hides a message for 120s, under 6 times the 60s timeout of shop-ship-order (360s): a message can come back while it is still being processed, and be processed twice",
+      "rank": 2,
+      "next": "get_source({symbol: \"consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders\"})"
+    }
+  ],
+  "total": 2,
+  "next": [
+    "get_source({symbol: \"consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders\"})",
+    "get_source({symbol: \"consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders\"})"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:40:38.743Z",
+  "builtAt": "2026-11-24T19:24:35.874Z",
   "services": [
     {
       "name": "gateway",
@@ -1761,6 +1761,22 @@
     },
     {
       "file": "template.yaml",
+      "line": 79,
+      "reason": "deployment-setting-unread",
+      "level": "info",
+      "message": "Resources.Reorder.Events.Placed: not every setting it is held to is checked: the queue orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read",
+      "hint": "Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.",
+      "symbol": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+      "adapter": "aws-lambda",
+      "meta": {
+        "unmade": [
+          "the queue orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read"
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "template.yaml",
       "line": 91,
       "reason": "route-path-unread",
       "message": "Resources.Legacy.Events.Old is a route of an API another stack creates, which the transform does not take on an event: it requires an API the same template declares",
@@ -1780,6 +1796,22 @@
       "meta": {
         "key": "stack:billing-prod#AuditQueueUrl"
       }
+    },
+    {
+      "file": "serverless.yml",
+      "line": 31,
+      "reason": "deployment-setting-unread",
+      "level": "info",
+      "message": "functions.audit.events[0]: not every setting it is held to is checked: the queue orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read",
+      "hint": "Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.",
+      "symbol": "consumer:gateway#serverless.yml:functions.audit.events[0]",
+      "adapter": "aws-lambda",
+      "meta": {
+        "unmade": [
+          "the queue orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read"
+        ]
+      },
+      "service": "gateway"
     },
     {
       "file": "src/audit.ts",

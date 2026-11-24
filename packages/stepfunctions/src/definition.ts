@@ -90,6 +90,8 @@ export interface StateMachine {
   readonly startAt: string;
   readonly queryLanguage: QueryLanguage;
   readonly comment?: string;
+  /** The machine's own `TimeoutSeconds`, as written, which bounds every execution of it (P389). */
+  readonly timeoutSeconds?: unknown;
   readonly position?: Position;
   /** Every state, nested ones included, in the order the definition writes them. */
   readonly states: readonly State[];
@@ -325,6 +327,7 @@ export const readStateMachine = (document: PositionedDocument): StateMachine => 
     startAt: root.StartAt,
     queryLanguage,
     ...(comment === undefined ? {} : { comment }),
+    ...(root['TimeoutSeconds'] === undefined ? {} : { timeoutSeconds: root['TimeoutSeconds'] }),
     ...located,
     states,
     problems,

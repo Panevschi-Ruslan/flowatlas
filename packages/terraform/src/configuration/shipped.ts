@@ -24,6 +24,7 @@ const LAMBDA: InfraModuleDescription = {
     create_layer: 'false',
     package_type: '"Zip"',
     environment_variables: '{}',
+    timeout: '3',
   },
   resources: {
     'aws_lambda_function.this': {
@@ -34,6 +35,7 @@ const LAMBDA: InfraModuleDescription = {
       package_type: 'var.package_type',
       filename: 'data.archive_file.source.output_path',
       environment: '{ variables = var.environment_variables }',
+      timeout: 'var.timeout',
     },
     // `source_path` is a path, a list of paths, or a list of objects each with a
     // `path`; the first is the code the function runs.

@@ -10,4 +10,4 @@
     ~  message sns/shop-prod-alerts                                    audit/src/index-audit.ts:14
       ~  sns/shop-prod-alerts                                          infra/main.tf:66
         => platform ~  subscription aws_sns_topic_subscription.alerts  platform/infra/main.tf:66
-unresolved on this path: 1
+unresolved on this path: 2

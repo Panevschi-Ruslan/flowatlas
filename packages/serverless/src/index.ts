@@ -163,3 +163,4 @@ export const serverlessReader: DeploymentReader = {
   },
 };
 export { documentGrants, managedGrants, roleGrants, roleOf, serviceFunctionGrants, statementGrants } from './grants.js';
+export { receivesIn, secondsIn, serviceBatch, SERVICE_TIMEOUT_DEFAULT, templateBatch, templateQueue, templateTimeout } from './settings.js';

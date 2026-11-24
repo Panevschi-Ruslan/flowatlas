@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:11.677Z",
+  "builtAt": "2026-11-24T19:25:15.067Z",
   "services": [
     {
       "name": "library",
@@ -2450,6 +2450,20 @@
       "service": "library"
     },
     {
+      "file": "statemachine/renewals.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "Resources.RenewalsStateMachine: PlaceHold invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "library#statemachine/renewals.asl.json:Resources.RenewalsStateMachine/PlaceHold",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "library"
+    },
+    {
       "file": "template.yaml",
       "line": 48,
       "reason": "deployed-name-generated",
@@ -2459,6 +2473,19 @@
       "hint": "Give it a name of its own where other repositories reach it.",
       "symbol": "entry:library:invoke:${…}@Resources.LendFunction",
       "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 67,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@Resources.HoldsQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.HoldsQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@Resources.HoldsQueue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@Resources.HoldsQueue"
+      },
       "service": "library"
     },
     {
@@ -2552,12 +2579,39 @@
     },
     {
       "file": "template.yaml",
+      "line": 309,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "library-prod-overdue: Remind invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "library#template.yaml:library-prod-overdue/Remind",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
       "line": 330,
       "reason": "route-target-unread",
       "message": "Resources.OverdueStateMachine.Events.Check is a route that starts the workflow, and a route onto a workflow is not drawn",
       "hint": "The workflow is still drawn and joined by its name; this way of starting it is not.",
       "symbol": "Resources.OverdueStateMachine.Events.Check",
       "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 357,
+      "reason": "queue-redrive-missing",
+      "message": "library-prod-fiction-shelf is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.fictionShelfQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-prod-fiction-shelf",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-prod-fiction-shelf"
+      },
       "service": "library"
     },
     {

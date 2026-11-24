@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:37:20.663Z",
+  "builtAt": "2026-11-24T19:21:32.416Z",
   "services": [
     {
       "name": "scans",
@@ -1334,6 +1334,19 @@
     }
   },
   "unresolved": [
+    {
+      "file": "infra/main.tf",
+      "line": 76,
+      "reason": "queue-redrive-missing",
+      "message": "library-scan-imports is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.imports a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-scan-imports",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-scan-imports"
+      },
+      "service": "scans"
+    },
     {
       "service": "scans",
       "file": "src/pages/purge-version.ts",

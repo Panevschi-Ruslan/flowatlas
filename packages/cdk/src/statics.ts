@@ -64,7 +64,7 @@ export interface Duration {
   readonly unit: 'second' | 'minute' | 'hour' | 'day';
 }
 
-const durationOf = (value: Value): Duration | undefined => {
+export const durationOf = (value: Value): Duration | undefined => {
   if (!(value instanceof Built) || !value.what.startsWith('core.Duration.')) return undefined;
   const unit = value.what.slice('core.Duration.'.length).replace(/s$/, '') as Duration['unit'];
   const amount = value.args[0];

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:01.675Z",
+  "builtAt": "2026-11-24T19:24:58.895Z",
   "services": [
     {
       "name": "catalog",
@@ -470,6 +470,45 @@
         "entries": [
           "entry:catalog:invoke:${…}@Resources.Publish"
         ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "template.yaml",
+      "line": 11,
+      "reason": "queue-redrive-missing",
+      "message": "catalog-search is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.SearchQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/catalog-search",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "catalog-search"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "template.yaml",
+      "line": 15,
+      "reason": "queue-redrive-missing",
+      "message": "catalog-prices is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.PricesQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/catalog-prices",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "catalog-prices"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "template.yaml",
+      "line": 19,
+      "reason": "queue-redrive-missing",
+      "message": "catalog-feed is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.FeedQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/catalog-feed",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "catalog-feed"
       },
       "service": "catalog"
     },

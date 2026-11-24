@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:40:05.737Z",
+  "builtAt": "2026-11-24T19:24:27.356Z",
   "services": [
     {
       "name": "platform",
@@ -1630,6 +1630,48 @@
     }
   },
   "unresolved": [
+    {
+      "file": "lib/audit-stack.ts",
+      "line": 34,
+      "reason": "deployment-setting-unread",
+      "level": "info",
+      "message": "shop-audit/Index/SqsEventSource:shop-audit/Audit: not every setting it is held to is checked: the queue shop-prod-audit is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read",
+      "hint": "Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.",
+      "symbol": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/SqsEventSource:shop-audit/Audit",
+      "adapter": "aws-lambda",
+      "meta": {
+        "unmade": [
+          "the queue shop-prod-audit is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read"
+        ]
+      },
+      "service": "audit"
+    },
+    {
+      "file": "infra/billing.yaml",
+      "line": 23,
+      "reason": "queue-redrive-missing",
+      "message": "shop-prod-invoices is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give infra/billing.Resources.Invoices a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/shop-prod-invoices",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "shop-prod-invoices"
+      },
+      "service": "billing"
+    },
+    {
+      "file": "infra/main.tf",
+      "line": 32,
+      "reason": "queue-redrive-missing",
+      "message": "shop-prod-jobs is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.jobs a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/shop-prod-jobs",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "shop-prod-jobs"
+      },
+      "service": "platform"
+    },
     {
       "service": "platform",
       "file": "infra/main.tf",

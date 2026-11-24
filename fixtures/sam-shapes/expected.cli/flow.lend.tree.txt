@@ -7,4 +7,4 @@
         ~  mapping Resources.HoldFunction.Events.Holds  library/template.yaml:81
           @  library-prod-hold                          library/template.yaml:75
             -> handler                                  library/src/loans/hold.ts:2
-unresolved on this path: 0
+unresolved on this path: 1

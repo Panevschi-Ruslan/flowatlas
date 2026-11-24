@@ -494,7 +494,7 @@
                   "params": [
                     {
                       "name": "product",
-                      "type": "{…22 fields}"
+                      "type": "{\u202622 fields}"
                     }
                   ],
                   "returns": "string"
@@ -1864,9 +1864,9 @@
       ],
       "expect": {
         "says": [
-          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
-          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
-          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
           "whole: true"
         ],
         "saysNot": [
@@ -2496,6 +2496,77 @@
           "missing"
         ]
       }
+    },
+    {
+      "id": "findings.deployment-settings",
+      "ask": "what in this deployment contradicts the code it runs",
+      "fixture": "deployment-settings-terraform",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "batch-failures-unreported": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders"
+          ],
+          "batch-failures-ignored": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders"
+          ],
+          "queue-visibility-short": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders"
+          ],
+          "queue-redrive-missing": [
+            "channel:sqs/shop-billing"
+          ],
+          "queue-receives-few": [
+            "channel:sqs/shop-shipments"
+          ],
+          "workflow-task-untimed": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval"
+          ],
+          "workflow-callback-no-heartbeat": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval"
+          ],
+          "workflow-lambda-unretried": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard"
+          ]
+        },
+        "exact": [
+          "batch-failures-unreported",
+          "batch-failures-ignored",
+          "queue-visibility-short",
+          "queue-redrive-missing",
+          "queue-receives-few",
+          "workflow-task-untimed",
+          "workflow-callback-no-heartbeat",
+          "workflow-lambda-unretried"
+        ],
+        "notListed": {
+          "batch-failures-unreported": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices"
+          ],
+          "queue-visibility-short": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices"
+          ],
+          "queue-redrive-missing": [
+            "channel:sqs/shop-packing",
+            "channel:sqs/shop-notices"
+          ],
+          "workflow-lambda-unretried": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ReserveStock"
+          ],
+          "workflow-task-untimed": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ShipParcel",
+            "orders#statemachine/accept-return.asl.json:shop-accept-return/AwaitInspection"
+          ]
+        }
+      },
+      "note": "P389: the planted contradictions, each beside a right twin (the Powertools packer, a redrive policy of 5, a machine timeout, a .sync task with a timeout, a retried function task); the notices mapping, whose visibility timeout and handler answer are not read, is a note and no finding. Before P389 the answer held none of these."
     }
   ],
   "fixed": {
@@ -2822,6 +2893,13 @@
       "tokens": 103,
       "rows": 1,
       "complete": true,
+      "calls": 1
+    },
+    "findings.deployment-settings": {
+      "chars": 5272,
+      "tokens": 1318,
+      "rows": 12,
+      "complete": null,
       "calls": 1
     },
     "who_calls.service-picks": {

@@ -1,13 +1,19 @@
-unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 1 to act on · missed: 1 · notes: 1 · findings: 2
-  2 findings: 1 likely N+1, 1 stream nothing writes to
+unresolved: 2 to act on · missed: 1 · notes: 2 · findings: 3
+  3 findings: 1 likely N+1, 1 queue read with no redrive, 1 stream nothing writes to
   export-not-found: 1 row
     Add the repository whose deployment writes that parameter to the configuration, or check the name on both sides.
       catalog/stacks/catalog.yaml:69  import:parameter:/shop/flags
+  queue-redrive-missing (finding): 1 row
+    Give reports-storage/Jobs a dead-letter queue, with a maxReceiveCount of at least 5.
+      reports/lib/stacks.ts:18  reports-jobs is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
   deployed-name-generated (note): 1 row
     Give it a name of its own where other repositories reach it.
       catalog/stacks/catalog.yaml:27  stacks.catalog.Resources.RestockTopic
+  deployment-setting-unread (note): 1 row
+    Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.
+      reports/lib/stacks.ts:53  reports-worker/Tally/SqsEventSource:reports-worker/Placed: not every setting it is held to is checked: the queue shop-orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read
   query-in-loop (finding): 1 row
     Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
       reports/src/build.ts:8  A `for-of` loop runs 1 publish once per item: likely N+1.  (1 way in)
@@ -22,8 +28,10 @@ desync: none
 
 contracts: no errors, 0 excused, 4 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 1 now, +1)
+baseline: missing (0 accepted, 2 now, +2)
   no baseline at <root>/fixtures/multi-repo-parameters/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   export-not-found: 0 → 1 (+1)
-  new (1):
+  queue-redrive-missing: 0 → 1 (+1)
+  new (2):
     catalog|stacks/catalog.yaml|import:parameter:/shop/flags|export-not-found
+    reports|lib/stacks.ts|channel:sqs/reports-jobs|queue-redrive-missing

@@ -1,4 +1,4 @@
-import type { DeclaredStream, DeployedDelivery, DeployedImport, RouteTarget, Unresolved } from '@flowatlas/core';
+import type { DeclaredStream, DeployedDelivery, DeployedImport, DeployedQueue, RouteTarget, Unresolved } from '@flowatlas/core';
 import type { Because, Instance } from '../eval/values.js';
 import type { Integration } from './integrations.js';
 
@@ -55,6 +55,8 @@ export interface ResourceReading {
   readonly imports: DeployedImport[];
   /** The streams declared: a table's, or a stream of its own (P51). */
   readonly streams: DeclaredStream[];
+  /** The queues declared, with the settings their readers are held to (P389). */
+  readonly queues: DeployedQueue[];
   /** Every instance of one type, managed or looked up. */
   ofType(mode: 'managed' | 'data', type: string): readonly Instance[];
   /** The position among the deployment's functions of one it creates. */

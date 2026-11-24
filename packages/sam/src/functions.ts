@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { destinationOf } from '@flowatlas/aws';
 import type { DeployedFunction, DeployedHandler, DeployedKind, DeployedSetting, PathStep } from '@flowatlas/core';
-import { DESTINATION_KINDS, isRecord, pushFunctionUrl, textOf, Unread, type Resource } from '@flowatlas/serverless';
+import { DESTINATION_KINDS, isRecord, pushFunctionUrl, templateTimeout, textOf, Unread, type Resource } from '@flowatlas/serverless';
 import type { DeclaredFunction, TemplateReading } from './reading.js';
 import { functionGrants } from './policies.js';
 
@@ -155,6 +155,8 @@ export const readFunction = (reading: TemplateReading, site: FunctionSite): void
   if (isRecord(variables)) for (const name of Object.keys(variables).sort()) environment[name] = reading.file.settingOf(variables[name], [...path, 'Properties', 'Environment', 'Variables', name], `the value of ${name} ${resource.address} is deployed with`);
   // What its policies or its role let it send to (P272).
   const grants = functionGrants(reading, path, properties, resource.type === 'AWS::Serverless::Function');
+  // How long one run may take, Globals merged in (P389).
+  const timeout = templateTimeout(properties, resource.address);
   const deployed: DeployedFunction = {
     ...reading.file.siteOf(path),
     // A name a parameter gives is the parameter's stand-in, which is what it is invoked by (P268).
@@ -164,6 +166,7 @@ export const readFunction = (reading: TemplateReading, site: FunctionSite): void
     ...(runtime === undefined ? {} : { runtime }),
     environment,
     ...(grants.length === 0 ? {} : { grants }),
+    ...(timeout === undefined ? {} : { timeout }),
     meta: {
       declaredAs: resource.address,
       logicalId: resource.logicalId,

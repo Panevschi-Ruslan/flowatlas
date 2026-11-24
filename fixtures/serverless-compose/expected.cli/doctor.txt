@@ -1,9 +1,16 @@
-unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 1 to act on · missed: 1 · notes: 0 · findings: 0
+unresolved: 3 to act on · missed: 1 · notes: 0 · findings: 2
+  2 findings: 1 queue read with no redrive, 1 queue hiding a message too briefly
   compose-service-unread: 1 row
     Point path at a folder of the repository holding a service file; a service in another repository is read where that repository is.
       jobs/serverless-compose.yml:15  serverless-compose.yml#services.ghost
+  queue-redrive-missing (finding): 1 row
+    Give resources.Resources.JobsQueue a dead-letter queue, with a maxReceiveCount of at least 5.
+      jobs/shared/serverless.yml:23  jobs-queue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+  queue-visibility-short (finding): 1 row
+    Raise the visibility timeout of jobs-queue to at least 36s, or lower the function's timeout.
+      jobs/shared/serverless.yml:18  jobs-queue hides a message for 30s (the default), under 6 times the 6s timeout of jobs-shared-dev-work (36s): a message can come back while it is still being processed, and be processed twice
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
@@ -12,8 +19,12 @@ desync: none
 
 contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 1 now, +1)
+baseline: missing (0 accepted, 3 now, +3)
   no baseline at <root>/fixtures/serverless-compose/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   compose-service-unread: 0 → 1 (+1)
-  new (1):
+  queue-redrive-missing: 0 → 1 (+1)
+  queue-visibility-short: 0 → 1 (+1)
+  new (3):
     jobs|serverless-compose.yml|serverless-compose.yml#services.ghost|compose-service-unread
+    jobs|shared/serverless.yml|channel:sqs/jobs-queue|queue-redrive-missing
+    jobs|shared/serverless.yml|consumer:jobs#shared/serverless.yml:functions.work.events[0]|queue-visibility-short

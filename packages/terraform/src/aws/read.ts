@@ -9,6 +9,7 @@ import {
   type DeployedExport,
   type DeployedImport,
   type DeployedFunction,
+  type DeployedQueue,
   type DeployedHandler,
   type DeployedRoute,
   type DeployedWorkflow,
@@ -33,6 +34,7 @@ import { integrationOfRoute, integrationType, resourceIntegration, sentBy, type 
 import { OPENAPI_BODY_READERS } from './openapi-body.js';
 import { PIPE_READERS } from './pipes.js';
 import { QUEUE_READERS } from './queues.js';
+import { functionTimeout } from './settings.js';
 import { BUCKET_READERS } from './buckets.js';
 import type { ResourceReading, RouteDraft, RouteGuard, RoutePath } from './reading.js';
 import { SOCKET_READERS } from './websocket.js';
@@ -71,6 +73,7 @@ export class DeploymentReading implements ResourceReading {
   readonly workflows: DeployedWorkflow[] = [];
   readonly deliveries: DeployedDelivery[] = [];
   readonly streams: DeclaredStream[] = [];
+  readonly queues: DeployedQueue[] = [];
   readonly exports: DeployedExport[] = [];
   readonly imports: DeployedImport[] = [];
   readonly rows: Unresolved[] = [];
@@ -137,6 +140,7 @@ export class DeploymentReading implements ResourceReading {
       workflows: this.workflows,
       deliveries: this.deliveries,
       streams: this.streams,
+      ...(this.queues.length === 0 ? {} : { queues: this.queues }),
       ...(this.exports.length === 0 ? {} : { exports: this.exports }),
       ...(this.imports.length === 0 ? {} : { imports: this.imports }),
       rows: [...this.configuration.rows, ...this.rows],
@@ -184,6 +188,8 @@ export class DeploymentReading implements ResourceReading {
     const environment = environmentOf(instance, this);
     // What its role lets it send to (P272).
     const grants = functionGrants(instance, this);
+    // How long one run may take (P389).
+    const timeout = functionTimeout(instance);
     this.functions.push({
       ...at,
       ...(name === undefined ? {} : { name }),
@@ -192,6 +198,7 @@ export class DeploymentReading implements ResourceReading {
       ...(runtime === undefined ? {} : { runtime }),
       ...(environment === undefined ? {} : { environment }),
       ...(grants.length === 0 ? {} : { grants }),
+      ...(timeout === undefined ? {} : { timeout }),
       meta: {
         declaredAs: instance.address,
         ...(name === undefined ? { nameUnread: whyNot(nameValue, 'function_name').text } : {}),

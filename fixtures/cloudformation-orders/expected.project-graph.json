@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:53.513Z",
+  "builtAt": "2026-11-24T19:19:53.179Z",
   "services": [
     {
       "name": "orders",
@@ -2539,5 +2539,48 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "stacks/storage.json",
+      "line": 22,
+      "reason": "queue-receives-few",
+      "message": "stacks/storage.Resources.PlacedQueue hands a message of orders-dev-placed to its dead-letter queue after 3 receives, under the 5 the platform recommends: a throttled or briefly failing function gets too few retries",
+      "hint": "Set maxReceiveCount to at least 5.",
+      "symbol": "channel:sqs/orders-dev-placed",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "orders-dev-placed",
+        "maxReceiveCount": 3
+      },
+      "service": "orders"
+    },
+    {
+      "file": "statemachine/shipping.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "orders-dev-shipping: ReserveStock invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "orders#statemachine/shipping.asl.json:orders-dev-shipping/ReserveStock",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "orders"
+    },
+    {
+      "file": "statemachine/shipping.asl.json",
+      "line": 15,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "orders-dev-shipping: ChargePayment invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "orders#statemachine/shipping.asl.json:orders-dev-shipping/ChargePayment",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "orders"
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:57.312Z",
+  "builtAt": "2026-11-24T19:20:04.169Z",
   "configHash": "77e23ae62b03",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 28,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 2030,
+      "durationMs": 4204,
       "packages": {
         "name": "rides",
         "runtime": [
@@ -83,7 +83,7 @@
     "missed": 6,
     "sites": 6,
     "notes": 2,
-    "findings": 1,
+    "findings": 3,
     "unresolved": 6
   }
 }

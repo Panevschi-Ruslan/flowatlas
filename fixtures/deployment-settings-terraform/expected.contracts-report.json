@@ -1,0 +1,129 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T19:20:13.704Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:orders#statemachine/fulfil-order.asl.json:29:5",
+        "to": "channel:sqs/shop-approvals",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/shop-approvals|emits|producer:orders#statemachine/fulfil-order.asl.json:29:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/shop-approvals is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/shop-billing",
+        "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/shop-billing|consumes|consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/shop-billing is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#statemachine/accept-return.asl.json:6:5",
+        "to": "channel:sqs/shop-inspections",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/shop-inspections|emits|producer:orders#statemachine/accept-return.asl.json:6:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/shop-inspections is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#infra/queues.tf:aws_sqs_queue.notices",
+        "to": "channel:sqs/shop-notices-dead",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/shop-notices-dead|emits|producer:orders#infra/queues.tf:aws_sqs_queue.notices",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/shop-notices-dead is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/shop-notices",
+        "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/shop-notices|consumes|consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/shop-notices is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#infra/queues.tf:aws_sqs_queue_redrive_policy.packing",
+        "to": "channel:sqs/shop-packing-dead",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/shop-packing-dead|emits|producer:orders#infra/queues.tf:aws_sqs_queue_redrive_policy.packing",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/shop-packing-dead is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/shop-packing",
+        "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/shop-packing|consumes|consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/shop-packing is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#infra/queues.tf:aws_sqs_queue.shipments",
+        "to": "channel:sqs/shop-shipments-dead",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/shop-shipments-dead|emits|producer:orders#infra/queues.tf:aws_sqs_queue.shipments",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/shop-shipments-dead is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/shop-shipments",
+        "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/shop-shipments|consumes|consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/shop-shipments is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 9,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

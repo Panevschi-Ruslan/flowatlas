@@ -152,6 +152,7 @@ export {
   type RowKind,
   type StoredKindRow,
 } from './model/row-kind.js';
+export { DEPLOYMENT_SETTING_FINDINGS, DEPLOYMENT_SETTING_NOTES } from './model/deployment-settings.js';
 export type {
   DetailLevel,
   ProjectGraph,
@@ -277,9 +278,12 @@ export type {
   DeployedGrant,
   DeployedHandler,
   DeployedKind,
+  DeployedQueue,
   DeployedRoute,
+  DeployedSeconds,
   DeployedWorkflow,
   DeployedSetting,
+  MappingBatch,
   DeliveryKind,
   DeliverySource,
   DeliveryTarget,

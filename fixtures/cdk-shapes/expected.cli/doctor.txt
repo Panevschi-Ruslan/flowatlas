@@ -1,7 +1,19 @@
-unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=8 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 3 to act on · missed: 3 · notes: 3 · findings: 1
-  1 finding: 1 rule nothing published matches
+unresolved: 8 to act on · missed: 3 · notes: 3 · findings: 6
+  6 findings: 3 queues read with no redrive, 2 function tasks retrying no transient error, 1 rule nothing published matches
+  queue-redrive-missing (finding): 3 rows
+    A queue a function reads has no redrive policy, so a message that always fails is received again and again until it expires, and is then lost. Give the queue a dead-letter queue.
+      club/lib/club-stack.ts:30  ${…}@ClubStack.Inbox is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give ClubStack/Inbox a dead-letter queue, with a maxReceiveCount of at least 5.
+      club/lib/workers.ts:9  club-dev-welcome is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give ClubStack/welcome-queue a dead-letter queue, with a maxReceiveCount of at least 5.
+      club/lib/workers.ts:9  club-dev-renewal is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give ClubStack/renewal-queue a dead-letter queue, with a maxReceiveCount of at least 5.
+  workflow-lambda-unretried (finding): 2 rows
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      club/lib/club-stack.ts:81  ClubStack/Renewals: Charge invokes a function and retries none of the platform's transient errors, so one fails the execution
+      club/statemachine/lapses.asl.json:5  club-dev-lapses: ReadInbox invokes a function and retries none of the platform's transient errors, so one fails the execution
   construct-repeated-unread: 1 row
     Write the collection out, or as a constant, and each is read under its own name.
       club/lib/club-stack.ts:54  ClubStack/lib/club-stack.ts:54
@@ -31,12 +43,19 @@ desync: none
 
 contracts: no errors, 0 excused, 7 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 3 now, +3)
+baseline: missing (0 accepted, 8 now, +8)
   no baseline at <root>/fixtures/cdk-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   construct-repeated-unread: 0 → 1 (+1)
   export-not-found: 0 → 1 (+1)
+  queue-redrive-missing: 0 → 3 (+3)
   reference-not-found: 0 → 1 (+1)
-  new (3):
+  workflow-lambda-unretried: 0 → 2 (+2)
+  new (8):
     club|lib/club-stack.ts|ClubStack/lib/club-stack.ts:54|construct-repeated-unread
+    club|lib/club-stack.ts|channel:sqs/${…}@ClubStack.Inbox|queue-redrive-missing
+    club|lib/club-stack.ts|club#lib/club-stack.ts:ClubStack/Renewals/Charge|workflow-lambda-unretried
     club|lib/club-stack.ts|consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0|reference-not-found
     club|lib/club-stack.ts|import:export:club-shared-queue-url|export-not-found
+    club|lib/workers.ts|channel:sqs/club-dev-renewal|queue-redrive-missing
+    club|lib/workers.ts|channel:sqs/club-dev-welcome|queue-redrive-missing
+    club|statemachine/lapses.asl.json|club#statemachine/lapses.asl.json:club-dev-lapses/ReadInbox|workflow-lambda-unretried

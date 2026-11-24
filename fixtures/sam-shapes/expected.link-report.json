@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:11.677Z",
+  "builtAt": "2026-11-24T19:25:15.067Z",
   "configHash": "e187e7f2c153",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 60,
       "types": 0,
       "unresolved": 11,
-      "durationMs": 946,
+      "durationMs": 1812,
       "packages": {
         "name": "library-desk",
         "runtime": [
@@ -103,7 +103,7 @@
     "missed": 11,
     "sites": 11,
     "notes": 3,
-    "findings": 1,
+    "findings": 5,
     "unresolved": 11
   }
 }

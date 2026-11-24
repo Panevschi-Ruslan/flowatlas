@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:24.880Z",
+  "builtAt": "2026-11-24T19:19:33.479Z",
   "services": [
     {
       "name": "club",
@@ -1324,6 +1324,19 @@
       "service": "club"
     },
     {
+      "file": "lib/club-stack.ts",
+      "line": 30,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@ClubStack.Inbox is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give ClubStack/Inbox a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@ClubStack.Inbox",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@ClubStack.Inbox"
+      },
+      "service": "club"
+    },
+    {
       "service": "club",
       "file": "lib/club-stack.ts",
       "line": 37,
@@ -1377,6 +1390,60 @@
       "meta": {
         "reference": "invoke:club-billing-charge"
       }
+    },
+    {
+      "file": "lib/club-stack.ts",
+      "line": 81,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "ClubStack/Renewals: Charge invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "club#lib/club-stack.ts:ClubStack/Renewals/Charge",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "club"
+    },
+    {
+      "file": "lib/workers.ts",
+      "line": 9,
+      "reason": "queue-redrive-missing",
+      "message": "club-dev-welcome is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give ClubStack/welcome-queue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/club-dev-welcome",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "club-dev-welcome"
+      },
+      "service": "club"
+    },
+    {
+      "file": "lib/workers.ts",
+      "line": 9,
+      "reason": "queue-redrive-missing",
+      "message": "club-dev-renewal is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give ClubStack/renewal-queue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/club-dev-renewal",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "club-dev-renewal"
+      },
+      "service": "club"
+    },
+    {
+      "file": "statemachine/lapses.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "club-dev-lapses: ReadInbox invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "club#statemachine/lapses.asl.json:club-dev-lapses/ReadInbox",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "club"
     }
   ]
 }

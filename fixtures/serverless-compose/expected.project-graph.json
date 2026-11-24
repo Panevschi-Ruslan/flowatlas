@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:31.517Z",
+  "builtAt": "2026-11-24T19:25:17.602Z",
   "services": [
     {
       "name": "jobs",
@@ -732,6 +732,35 @@
       "hint": "Point path at a folder of the repository holding a service file; a service in another repository is read where that repository is.",
       "symbol": "serverless-compose.yml#services.ghost",
       "adapter": "aws-lambda",
+      "service": "jobs"
+    },
+    {
+      "file": "shared/serverless.yml",
+      "line": 18,
+      "reason": "queue-visibility-short",
+      "message": "jobs-queue hides a message for 30s (the default), under 6 times the 6s timeout of jobs-shared-dev-work (36s): a message can come back while it is still being processed, and be processed twice",
+      "hint": "Raise the visibility timeout of jobs-queue to at least 36s, or lower the function's timeout.",
+      "symbol": "consumer:jobs#shared/serverless.yml:functions.work.events[0]",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "jobs-queue",
+        "visibilityTimeout": 30,
+        "functionTimeout": 6,
+        "wanted": 36
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "shared/serverless.yml",
+      "line": 23,
+      "reason": "queue-redrive-missing",
+      "message": "jobs-queue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give resources.Resources.JobsQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/jobs-queue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "jobs-queue"
+      },
       "service": "jobs"
     }
   ]

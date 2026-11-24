@@ -1,8 +1,18 @@
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 0 to act on · missed: 1 · notes: 0 · findings: 0
+unresolved: 3 to act on · missed: 1 · notes: 0 · findings: 3
   1 missed place static reading cannot see, folded into 1 row
+  3 findings: 2 queues read with no redrive, 1 batch reporting failures its handler never returns
   ways in: 13 found, 11 with a handler that was read, 2 without
+  queue-redrive-missing (finding): 2 rows
+    A queue a function reads has no redrive policy, so a message that always fails is received again and again until it expires, and is then lost. Give the queue a dead-letter queue.
+      desk/infra/queues.tf:1  library-desk-loans-opened is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give aws_sqs_queue.loans_opened a dead-letter queue, with a maxReceiveCount of at least 5.
+      desk/infra/queues.tf:6  library-desk-returns is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give aws_sqs_queue.returns a dead-letter queue, with a maxReceiveCount of at least 5.
+  batch-failures-unreported (finding): 1 row
+    Return { batchItemFailures } from the handler, or use a batch helper that builds it.
+      desk/infra/queues.tf:17  aws_lambda_event_source_mapping.process_returns says library-desk-process-returns reports the messages of a batch that failed (ReportBatchItemFailures), and its handler never returns batchItemFailures: every batch counts as a success, and a failed message is deleted
   function-handler-unread (info): 1 row
     A handler is read when it is a function, a function wrapped by calls each handed exactly one function wherever it sits among their arguments, or a function a factory of this repository returns.
       desk/infra/functions.tf:70  library-desk-archive-loan runs handlers/consumers.archiveLoan, and src/operations/archive.ts builds that export with batchHandler({ table: 'library-desk-loan-archive', batchSize: 25 }), which names no function of this repository
@@ -14,5 +24,11 @@ desync: none
 
 contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 0 now, +0)
+baseline: missing (0 accepted, 3 now, +3)
   no baseline at <root>/fixtures/lambda-namespace-handlers/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  batch-failures-unreported: 0 → 1 (+1)
+  queue-redrive-missing: 0 → 2 (+2)
+  new (3):
+    desk|infra/queues.tf|channel:sqs/library-desk-loans-opened|queue-redrive-missing
+    desk|infra/queues.tf|channel:sqs/library-desk-returns|queue-redrive-missing
+    desk|infra/queues.tf|consumer:desk#infra/queues.tf:aws_lambda_event_source_mapping.process_returns|batch-failures-unreported

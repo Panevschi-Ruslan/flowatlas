@@ -43,6 +43,8 @@
  * newer tool or a test.
  */
 
+import { DEPLOYMENT_SETTING_FINDINGS, DEPLOYMENT_SETTING_NOTES } from './deployment-settings.js';
+
 /** The kinds, in the order a reader is shown them. */
 export const ROW_KIND_NAMES = ['gap', 'note', 'finding'] as const;
 
@@ -157,6 +159,8 @@ const NOTES: readonly string[] = [
   'message-type-differs',
   // Two routes of a router that tries routes in order, whose order was not read; the join is a guess (P385)
   'route-order-unread',
+  // A check of a deployment's settings that could not be made (P389)
+  ...DEPLOYMENT_SETTING_NOTES,
 ];
 
 // Something about the code, true whatever the reader managed.
@@ -217,6 +221,8 @@ const FINDINGS: readonly string[] = [
   'job-no-handler',
   // A type of message published on a channel whose consumers choose by type, none choosing it (P358)
   'message-type-unselected',
+  // A deployment's settings contradicting the code it runs (P389)
+  ...DEPLOYMENT_SETTING_FINDINGS,
 ];
 
 // The reader could not follow something. Listed rather than left to the
@@ -607,6 +613,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       // A status traffic answered that no failure declares (P106): an
       // exception nobody mapped to the status it should answer.
       'failure-seen-undeclared',
+      ...DEPLOYMENT_SETTING_FINDINGS,
     ],
   ],
 ];

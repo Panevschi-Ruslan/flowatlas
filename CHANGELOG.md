@@ -309,6 +309,28 @@ only one of them moved.
   `field` the code that breaks if one field changes, `missing` (read, never
   answered) and `unused` (answered, read by no client); on one request's edge,
   the same for that request.
+- **Deployment settings that contradict the code are findings (P389).** For
+  every mapping from a queue to a function, read from Terraform, the Serverless
+  Framework, SAM, CloudFormation or the CDK: a mapping saying
+  `ReportBatchItemFailures` whose handler never returns `batchItemFailures`
+  (`batch-failures-unreported`; Powertools' batch helpers and the partial-batch
+  middleware count as returning it), the reverse (`batch-failures-ignored`), a
+  queue hiding a message for less than six times the function's timeout plus
+  the batch window (`queue-visibility-short`), no redrive policy
+  (`queue-redrive-missing`) or one under 5 receives (`queue-receives-few`); and
+  for every state machine task, one waiting on an activity, a `.sync` job or a
+  task token with no timeout of its own or of its machine
+  (`workflow-task-untimed`), a callback with no heartbeat
+  (`workflow-callback-no-heartbeat`, info) and a function task retrying none
+  of the platform's transient errors (`workflow-lambda-unretried`). Only
+  values the files settle, or the format's default, are compared; a check not
+  made is one `deployment-setting-unread` note naming why. The readers now
+  record a function's timeout, each queue's visibility timeout and redrive, and
+  a mapping's response types and batch window (`Deployment.queues`,
+  `DeployedFunction.timeout`, `DeployedDelivery.batch`); the shipped Lambda and
+  SQS module descriptions pass `timeout` and `visibility_timeout_seconds`
+  through, and a redrive policy written as JSON text now gives its
+  `maxReceiveCount`. New fixture `deployment-settings-terraform`.
 
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:

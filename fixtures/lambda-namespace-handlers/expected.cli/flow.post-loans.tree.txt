@@ -6,4 +6,4 @@
           @  library-desk-archive-loan                            desk/infra/functions.tf:70
     $  LOANS_OPENED_QUEUE_URL                                     desk/src/operations/loans.ts:21
     -> json                                                       desk/src/lib/http.ts:3
-unresolved on this path: 1
+unresolved on this path: 2

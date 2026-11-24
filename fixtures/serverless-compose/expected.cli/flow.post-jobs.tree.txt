@@ -6,4 +6,4 @@
         ~  mapping functions.work.events[0]  jobs/shared/serverless.yml:18
           @  jobs-shared-dev-work            jobs/shared/serverless.yml:15
             -> handler                       jobs/shared/src/work.ts:4
-unresolved on this path: 0
+unresolved on this path: 2

@@ -7,6 +7,7 @@ import {
   type DeliverySource,
   type DeployedDelivery,
   type DeployedKind,
+  type MappingBatch,
   type PathStep,
   SERVED_AT_META,
   type ServedAt,
@@ -14,6 +15,7 @@ import {
 import { intrinsicOf, type Deployed } from './cloudformation.js';
 import type { FileReading } from './reading.js';
 import { Imported, isRecord, textOf, Unread } from './variables.js';
+import { serviceBatch } from './settings.js';
 
 /**
  * The events a function is run by, one reader per event type (P57).
@@ -89,7 +91,7 @@ const deliver = (
   by: DeployedDelivery['by'],
   from: DeliverySource,
   meta: Record<string, unknown>,
-  extra: { readonly address?: string; readonly name?: string } = {},
+  extra: { readonly address?: string; readonly name?: string; readonly batch?: MappingBatch } = {},
 ): void => {
   reading.file.parts.deliveries.push({
     ...reading.file.siteOf(site.path),
@@ -98,6 +100,7 @@ const deliver = (
     ...(extra.name === undefined ? {} : { name: extra.name }),
     from,
     to: toFunction(site),
+    ...(extra.batch === undefined ? {} : { batch: extra.batch }),
     meta: { declaredAs: extra.address ?? site.address, ...meta },
   });
 };
@@ -247,7 +250,7 @@ const readSqs: EventReader = (value, site, reading) => {
     eventRow(reading, site, 'subscription-source-unread', `${site.address} reads ${found.name}, which is a ${found.kind}, not a queue`, 'An sqs event reads a queue.', 'info');
     return;
   }
-  deliver(reading, site, 'mapping', { kind: 'queue', name: found.name }, { ...(disabled(settings) ? { disabled: true } : {}), ...filtersOf(settings) });
+  deliver(reading, site, 'mapping', { kind: 'queue', name: found.name }, { ...(disabled(settings) ? { disabled: true } : {}), ...filtersOf(settings) }, { batch: serviceBatch(settings, site.address) });
 };
 
 /**

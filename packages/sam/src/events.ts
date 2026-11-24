@@ -1,6 +1,6 @@
 import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, eventPatternOf } from '@flowatlas/aws';
-import { makeHttpEntryKey, normalizePath, SERVED_AT_META, UNREAD_SPAN, type DeliveryKind, type DeliverySource, type DeliveryTarget, type DeployedKind, type PathStep, type ServedAt } from '@flowatlas/core';
-import { Imported, isRecord, textOf, Unread, userPoolName, type Deployed } from '@flowatlas/serverless';
+import { makeHttpEntryKey, normalizePath, SERVED_AT_META, UNREAD_SPAN, type DeliveryKind, type DeliverySource, type MappingBatch, type DeliveryTarget, type DeployedKind, type PathStep, type ServedAt } from '@flowatlas/core';
+import { Imported, isRecord, templateBatch, textOf, Unread, userPoolName, type Deployed } from '@flowatlas/serverless';
 import type { TemplateReading } from './reading.js';
 
 /**
@@ -41,7 +41,7 @@ const eventRow = (reading: TemplateReading, site: EventSite, reason: string, mes
   reading.file.row(site.path, site.address, { reason, message, hint, ...(level === undefined ? {} : { level }) });
 
 /** A delivery onto what the event runs, with what the event records about it. */
-const deliver = (reading: TemplateReading, site: EventSite, by: DeliveryKind, from: DeliverySource, meta: Record<string, unknown>, name?: string, address = site.address): void => {
+const deliver = (reading: TemplateReading, site: EventSite, by: DeliveryKind, from: DeliverySource, meta: Record<string, unknown>, name?: string, address = site.address, batch?: MappingBatch): void => {
   reading.file.parts.deliveries.push({
     ...reading.file.siteOf(site.path),
     address,
@@ -49,6 +49,7 @@ const deliver = (reading: TemplateReading, site: EventSite, by: DeliveryKind, fr
     ...(name === undefined ? {} : { name }),
     from,
     ...(site.to === undefined ? {} : { to: site.to }),
+    ...(batch === undefined ? {} : { batch }),
     meta: { declaredAs: address, ...meta, ...reading.conditionOf(site.logicalId) },
   });
 };
@@ -189,7 +190,7 @@ const readSqs: EventReader = (properties, site, reading) => {
     eventRow(reading, site, 'subscription-source-unread', `${site.address} reads ${found.name}, which is a ${found.kind}, not a queue`, 'An SQS event reads a queue.', 'info');
     return;
   }
-  deliver(reading, site, 'mapping', { kind: 'queue', name: found.name }, { ...disabled(properties), ...filtersOf(properties) });
+  deliver(reading, site, 'mapping', { kind: 'queue', name: found.name }, { ...disabled(properties), ...filtersOf(properties) }, undefined, site.address, templateBatch(properties, site.address));
 };
 
 const readSns: EventReader = (properties, site, reading) => {

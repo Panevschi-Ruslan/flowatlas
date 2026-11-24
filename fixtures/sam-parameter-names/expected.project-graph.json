@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:05.455Z",
+  "builtAt": "2026-11-24T19:25:04.707Z",
   "services": [
     {
       "name": "ledger",
@@ -1241,6 +1241,32 @@
       "hint": "Give the parameter LedgerTableName a Default, a value in samconfig.toml's parameter_overrides, or one under services[].infra.options, and it is named by that value.",
       "symbol": "Parameters.LedgerTableName",
       "adapter": "aws-lambda",
+      "service": "ledger"
+    },
+    {
+      "file": "template.yaml",
+      "line": 50,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@Resources.AuditQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.AuditQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@Resources.AuditQueue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@Resources.AuditQueue"
+      },
+      "service": "ledger"
+    },
+    {
+      "file": "template.yaml",
+      "line": 53,
+      "reason": "queue-redrive-missing",
+      "message": "team-billing is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.TeamQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/team-billing",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "team-billing"
+      },
       "service": "ledger"
     },
     {

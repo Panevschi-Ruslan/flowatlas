@@ -361,3 +361,45 @@ describe('what P246 added to the CloudFormation a service file holds', () => {
     expect(servedOf(optional, { region: 'ap-south-1' })[0]?.[1]).toEqual([{ host: '*.execute-api.ap-south-1.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]);
   });
 });
+
+describe('the settings a queue, its reader and the mapping between them are held to (P389)', () => {
+  it("reads a function's timeout, the provider's, else the framework's 6 seconds, and an sqs event's batch", () => {
+    const deployment = read({
+      'serverless.yml': [
+        'service: shop',
+        'provider:',
+        '  name: aws',
+        '  runtime: nodejs20.x',
+        '  timeout: 12',
+        'functions:',
+        '  ship:',
+        '    handler: src/ship.handler',
+        '    timeout: 40',
+        '    events:',
+        '      - sqs:',
+        '          arn: !GetAtt Shipments.Arn',
+        '          functionResponseType: ReportBatchItemFailures',
+        '          maximumBatchingWindow: 4',
+        '  bill:',
+        '    handler: src/bill.handler',
+        'resources:',
+        '  Resources:',
+        '    Shipments:',
+        '      Type: AWS::SQS::Queue',
+        '      Properties:',
+        '        QueueName: shop-shipments',
+        '        VisibilityTimeout: 100',
+        '        RedrivePolicy:',
+        '          deadLetterTargetArn: arn:aws:sqs:eu-west-1:000000000000:shop-dead',
+        '          maxReceiveCount: 3',
+        '',
+      ].join('\n'),
+    });
+    expect(deployment.functions.map((each) => each.timeout)).toEqual([{ seconds: 40 }, { seconds: 12 }]);
+    expect(deployment.queues?.map((queue) => [queue.name, queue.visibilityTimeout, queue.redrive])).toEqual([['shop-shipments', { seconds: 100 }, 'written']]);
+    expect(deployment.deliveries.find((delivery) => delivery.by === 'mapping')?.batch).toEqual({ reportsItemFailures: true, window: { seconds: 4 } });
+    expect(deployment.deliveries.find((delivery) => delivery.by === 'redrive')?.meta?.['maxReceiveCount']).toBe(3);
+    const bare = read({ 'serverless.yml': 'service: shop\nprovider:\n  name: aws\n  runtime: nodejs20.x\nfunctions:\n  bill:\n    handler: src/bill.handler\n' });
+    expect(bare.functions[0]?.timeout).toEqual({ seconds: 6, defaulted: true });
+  });
+});

@@ -19,4 +19,4 @@
       ~  sns/shop-prod-alerts                                             templates/platform.yaml:77
         => platform ~  subscription templates/platform.Resources.AlertsTopic.Subscription[0]  platform/templates/platform.yaml:77
 ... truncated: 1 more nodes (raise --depth)
-unresolved on this path: 0
+unresolved on this path: 2

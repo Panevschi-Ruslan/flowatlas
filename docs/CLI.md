@@ -4359,6 +4359,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Jobs on a queue | `job-no-handler` (info, P271): a job added under a name no handler of its queue takes, where every handler names the job it takes |
+| Deployment settings against the code (P389) | `batch-failures-unreported`, `batch-failures-ignored`, `queue-visibility-short`, `queue-redrive-missing`, `queue-receives-few`, `workflow-task-untimed`, `workflow-callback-no-heartbeat` (info), `workflow-lambda-unretried` (info where a Catch takes the errors): findings; `deployment-setting-unread` (info, a note): a check not made, and why |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files`, `channel-from-grant` (info; P272) |
 | Architecture rules (`flowatlas rules`, the `rules` section) | `rule-matches-nothing` (a side of a rule names nothing; never a pass), `rule-invalid` (a rule fails its schema; the configuration is refused), `rule-over-partial-read` (a note: the rule names a service read in part) |
 
@@ -8654,6 +8655,35 @@ taken (`fixtures/sqs-environment-fallback`).
 `terraform-aws-modules/s3-bucket/aws//modules/notification` ship described, beside the function and route
 modules (`fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
 `fixtures/multi-repo-events`).
+
+### Deployment settings that contradict the code
+
+A deployment and the code it runs are read side by side (P389), and where the
+settings of one contradict the other the build writes a finding, ranked and
+listed by `findings` like any other. Only values the files settle are compared:
+a value written, or the default of the format that writes it (a function runs
+3 seconds where nothing is written, 6 under the Serverless Framework; a queue
+hides a message for 30). A check that needs a value the files do not settle, a
+queue or a function declared outside the repository's deployments, or a handler
+that is not read is not made, and one `deployment-setting-unread` note on the
+mapping lists each check left and why. Terraform, the Serverless Framework, SAM,
+CloudFormation and the CDK are read alike; a disabled mapping is not checked.
+
+| Finding | When |
+|---|---|
+| `batch-failures-unreported` | a mapping from a queue says `ReportBatchItemFailures`, and its handler never returns `batchItemFailures`: nothing the handler runs (its own code and the repository's code it calls, three calls deep) names the field or a batch helper (`@aws-lambda-powertools/batch`, `@middy/sqs-partial-batch-failure`), and every value it returns is one the read holds. The platform takes such an answer as a batch that succeeded, so a failed message is deleted |
+| `batch-failures-ignored` | the handler returns `batchItemFailures`, or uses such a helper, and the mapping does not say `ReportBatchItemFailures`: the list is ignored |
+| `queue-visibility-short` | the queue hides a message for less than six times the function's timeout plus the mapping's batch window, as the platform recommends; under the timeout itself it says the platform refuses the mapping |
+| `queue-redrive-missing` | a queue a function reads has no redrive policy, written on it or as a policy of its own; said once per queue, on its declaration |
+| `queue-receives-few` | its redrive policy hands a message on after fewer than 5 receives |
+| `workflow-task-untimed` | a task waiting on an activity, a `.sync` job or a task token (`.waitForTaskToken`) has no `TimeoutSeconds` (or `TimeoutSecondsPath`), and the state machine has none |
+| `workflow-callback-no-heartbeat` (info) | a task waiting on a task token has no `HeartbeatSeconds` |
+| `workflow-lambda-unretried` | a task invoking a function (the integration or the function's ARN) retries none of `Lambda.ServiceException`, `Lambda.AWSLambdaException`, `Lambda.SdkClientException`, `Lambda.ClientExecutionTimeoutException`, `Lambda.TooManyRequestsException`, `States.ALL` or `States.TaskFailed`; at `info` where a `Catch` takes them |
+
+A handler that returns what a package outside the repository returns (a batch
+helper of its own, say) is not judged: the note says so. The state machine
+checks read the definition alone, so they hold for a definition file read on
+its own as well as one a deployment hands over (`fixtures/deployment-settings-terraform`).
 
 ### Functions declared with the Serverless Framework
 

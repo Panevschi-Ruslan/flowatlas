@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:37:35.769Z",
+  "builtAt": "2026-11-24T19:22:42.207Z",
   "services": [
     {
       "name": "circulation",
@@ -957,5 +957,32 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "infra/main.tf",
+      "line": 61,
+      "reason": "queue-redrive-missing",
+      "message": "library-returns is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.returns a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-returns",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-returns"
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "infra/main.tf",
+      "line": 65,
+      "reason": "queue-redrive-missing",
+      "message": "library-hold-requests is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.holds a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-hold-requests",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-hold-requests"
+      },
+      "service": "circulation"
+    }
+  ]
 }

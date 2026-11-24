@@ -16,4 +16,4 @@
           ~  subscription Notices.Resources.SenderFunction.Events.Lost  library/notices/template.yaml:20
             @  library-prod-notice-sender                               library/notices/template.yaml:12
               -> handler                                                library/notices/src/sender.ts:2
-unresolved on this path: 1
+unresolved on this path: 3

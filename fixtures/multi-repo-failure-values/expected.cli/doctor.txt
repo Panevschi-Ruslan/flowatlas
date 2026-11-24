@@ -1,7 +1,13 @@
-unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 1 to act on · missed: 1 · notes: 0 · findings: 2
-  2 findings: 1 likely N+1, 1 stream nothing writes to
+unresolved: 3 to act on · missed: 1 · notes: 0 · findings: 4
+  4 findings: 2 queues read with no redrive, 1 likely N+1, 1 stream nothing writes to
+  queue-redrive-missing (finding): 2 rows
+    A queue a function reads has no redrive policy, so a message that always fails is received again and again until it expires, and is then lost. Give the queue a dead-letter queue.
+      platform/infra/main.tf:29  shop-prod-jobs is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give aws_sqs_queue.jobs a dead-letter queue, with a maxReceiveCount of at least 5.
+      platform/infra/main.tf:33  shop-prod-failed is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give aws_sqs_queue.failed a dead-letter queue, with a maxReceiveCount of at least 5.
   environment-value-unread: 1 row
     Write the value so the files settle it: a literal, or a reference to the queue, topic or bus the deployment declares.
       stock/src/count.ts:12  the call at src/count.ts:12 sends to the value of SPILL_QUEUE_URL, which shop-stock-count is deployed with as a value not known from the files, and that is not read: which queue it names depends on a condition the files do not decide: data.aws_ssm_parameter.prefix.value is known only once it has been created
@@ -19,8 +25,11 @@ desync: none
 
 contracts: no errors, 0 excused, 9 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 1 now, +1)
+baseline: missing (0 accepted, 3 now, +3)
   no baseline at <root>/fixtures/multi-repo-failure-values/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   environment-value-unread: 0 → 1 (+1)
-  new (1):
+  queue-redrive-missing: 0 → 2 (+2)
+  new (3):
+    platform|infra/main.tf|channel:sqs/shop-prod-failed|queue-redrive-missing
+    platform|infra/main.tf|channel:sqs/shop-prod-jobs|queue-redrive-missing
     stock|src/count.ts|producer:stock#src/count.ts:12:29|environment-value-unread

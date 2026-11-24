@@ -9,4 +9,4 @@
             ~  message sqs/notices-prod-failed              members/services/notices/serverless.yml:40
               ~  sqs/notices-prod-failed                    services/notices/serverless.yml:40
       ~  sqs/${…}@resources.Resources.NoticesQueue#welcome  services/notices/src/notices/welcome.ts:7
-unresolved on this path: 0
+unresolved on this path: 2

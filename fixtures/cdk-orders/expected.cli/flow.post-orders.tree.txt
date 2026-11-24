@@ -32,4 +32,4 @@
                 -> Done [Succeed]                                         orders/lib/orders-stack.ts:104
     $  ORDERS_BUS_NAME                                                    orders/src/orders/cancel-order.ts:12
 ... truncated: ≥3 more nodes (raise --depth)
-unresolved on this path: 0
+unresolved on this path: 3

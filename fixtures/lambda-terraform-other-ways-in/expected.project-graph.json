@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:37:37.816Z",
+  "builtAt": "2026-11-24T19:22:57.675Z",
   "services": [
     {
       "name": "members",
@@ -1104,6 +1104,20 @@
     }
   },
   "unresolved": [
+    {
+      "file": "infra/returns.tf",
+      "line": 43,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "library-members-restock: Restock invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "members#infra/returns.tf:library-members-restock/Restock",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "members"
+    },
     {
       "file": "infra/returns.tf",
       "line": 52,

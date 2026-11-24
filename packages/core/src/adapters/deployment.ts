@@ -78,7 +78,54 @@ export interface DeployedFunction {
    * nothing - and the two are different things to tell a reader.
    */
   readonly grants?: readonly DeployedGrant[];
+  /**
+   * How long one run may take before the platform stops it (P389): as
+   * written, or the format's own default where nothing is written. Absent
+   * where the reader does not read it, which leaves every check that needs it
+   * unmade and said.
+   */
+  readonly timeout?: DeployedSeconds;
   readonly meta?: Record<string, unknown>;
+}
+
+/**
+ * A number of seconds a deployment sets (P389): written, or the default the
+ * format applies where nothing is written (`defaulted`), or written in a way
+ * the files do not settle (`unread`, saying why). A check that compares two
+ * settings is made only where both are numbers.
+ */
+export type DeployedSeconds = { readonly seconds: number; readonly defaulted?: true } | { readonly unread: string };
+
+/**
+ * One queue the deployment declares (P389), with the settings a reader of it
+ * is held to: how long a message it handed out stays hidden, and whether a
+ * redrive policy is written on it.
+ *
+ * A redrive policy written as a declaration of its own is a delivery `by:
+ * 'redrive'` from the queue, as one written on the queue is; `redrive` here
+ * says only what the queue's own declaration writes, so a queue is without
+ * one only where neither says so.
+ */
+export interface DeployedQueue {
+  readonly file: string;
+  readonly line: number;
+  /** Where it is declared, in the deployment's own terms. */
+  readonly address: string;
+  /** Its deployed name. */
+  readonly name: string;
+  readonly visibilityTimeout?: DeployedSeconds;
+  /** `written` where its declaration writes a redrive policy, read or not; `none` where it writes none. */
+  readonly redrive?: 'written' | 'none';
+}
+
+/**
+ * What a mapping from a queue is told about the batches it hands its function
+ * (P389): whether the function reports which messages of a batch failed
+ * (`ReportBatchItemFailures`), and how long it gathers a batch.
+ */
+export interface MappingBatch {
+  readonly reportsItemFailures: boolean | { readonly unread: string };
+  readonly window?: DeployedSeconds;
 }
 
 /**
@@ -289,6 +336,8 @@ export interface DeployedDelivery {
    * drawn as having a reader, because something does read it.
    */
   readonly to?: DeliveryTarget;
+  /** For a mapping from a queue, what it tells the platform about its batches (P389), where the reader reads it. */
+  readonly batch?: MappingBatch;
   readonly meta?: Record<string, unknown>;
 }
 
@@ -484,6 +533,8 @@ export interface Deployment {
   readonly deliveries: readonly DeployedDelivery[];
   /** The streams it declares, which a write in code publishes onto (P51). */
   readonly streams?: readonly DeclaredStream[];
+  /** The queues it declares, with the settings their readers are held to (P389). */
+  readonly queues?: readonly DeployedQueue[];
   /** The values it publishes for other deployments to read (P249). */
   readonly exports?: readonly DeployedExport[];
   /** Where it reads values other deployments publish (P249). */

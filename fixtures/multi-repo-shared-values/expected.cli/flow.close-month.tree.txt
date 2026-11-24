@@ -6,4 +6,4 @@
         => billing ~  mapping billing.Resources.InvoicesMapping  billing/billing.yaml:37
           @  shop-prod-invoice                                   billing/billing.yaml:28
             -> handler                                           billing/src/invoice.ts:4
-unresolved on this path: 0
+unresolved on this path: 1

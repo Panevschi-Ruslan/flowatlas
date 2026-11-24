@@ -410,3 +410,42 @@ describe('event patterns', () => {
     expect(readEventPattern(str('[1]'))).toEqual({ reason: 'not-an-object', text: 'event_pattern is not a JSON object' });
   });
 });
+
+describe('the settings a queue, its reader and the mapping between them are held to (P389, fixtures/deployment-settings-terraform)', () => {
+  const deployment = readFixture('deployment-settings-terraform');
+
+  it('reads each function timeout, the default where none is written', () => {
+    expect(deployment.functions.map((fn) => [fn.name, fn.timeout])).toEqual([
+      ['shop-ship-order', { seconds: 60 }],
+      ['shop-bill-order', { seconds: 20 }],
+      ['shop-pack-order', { seconds: 30 }],
+      ['shop-send-notice', { seconds: 3, defaulted: true }],
+      ['shop-reserve-stock', { seconds: 3, defaulted: true }],
+    ]);
+  });
+
+  it('reads each queue, its visibility timeout unread where a variable nothing sets gives it', () => {
+    expect(deployment.queues?.map((queue) => [queue.name, 'seconds' in (queue.visibilityTimeout ?? {}) ? queue.visibilityTimeout : 'unread', queue.redrive])).toEqual([
+      ['shop-shipments', { seconds: 120 }, 'written'],
+      ['shop-shipments-dead', { seconds: 30, defaulted: true }, 'none'],
+      ['shop-billing', { seconds: 10 }, 'none'],
+      ['shop-packing', { seconds: 190 }, 'none'],
+      ['shop-packing-dead', { seconds: 30, defaulted: true }, 'none'],
+      ['shop-notices', 'unread', 'written'],
+    ]);
+  });
+
+  it("reads each mapping's batch and each redrive's receives, from jsonencode and from JSON text alike", () => {
+    expect(deployment.deliveries.filter((delivery) => delivery.by === 'mapping').map((delivery) => [delivery.address, delivery.batch])).toEqual([
+      ['aws_lambda_event_source_mapping.ship_orders', { reportsItemFailures: true, window: { seconds: 0, defaulted: true } }],
+      ['aws_lambda_event_source_mapping.bill_orders', { reportsItemFailures: false, window: { seconds: 0, defaulted: true } }],
+      ['aws_lambda_event_source_mapping.pack_orders', { reportsItemFailures: true, window: { seconds: 10 } }],
+      ['aws_lambda_event_source_mapping.send_notices', { reportsItemFailures: true, window: { seconds: 0, defaulted: true } }],
+    ]);
+    expect(deployment.deliveries.filter((delivery) => delivery.by === 'redrive').map((delivery) => [delivery.address, delivery.meta?.['maxReceiveCount']])).toEqual([
+      ['aws_sqs_queue.shipments', 2],
+      ['aws_sqs_queue.notices', 10],
+      ['aws_sqs_queue_redrive_policy.packing', 5],
+    ]);
+  });
+});

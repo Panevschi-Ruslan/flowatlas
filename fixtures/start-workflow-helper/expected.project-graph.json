@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:49:44.235Z",
+  "builtAt": "2026-11-24T19:26:07.148Z",
   "services": [
     {
       "name": "lending",
@@ -967,6 +967,48 @@
       "meta": {
         "cause": "module-not-installed",
         "package": "@library/scheduling"
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: CheckBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 17,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/reserve-copies.asl.json",
+      "line": 18,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-reserve-copies: ReserveCopy invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/reserve-copies.asl.json:lending-reserve-copies/ReserveCopy",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
       },
       "service": "lending"
     }

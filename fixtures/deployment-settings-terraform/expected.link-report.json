@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:20:12.048Z",
+  "configHash": "5a59001c60ab",
+  "services": [
+    {
+      "name": "orders",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 38,
+      "edges": 30,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 1559,
+      "packages": {
+        "name": "shop-order-workers",
+        "runtime": [
+          "@aws-lambda-powertools/batch",
+          "notice-relay"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 9,
+    "linked": 0,
+    "noConsumers": [
+      "channel:sqs/shop-approvals",
+      "channel:sqs/shop-inspections",
+      "channel:sqs/shop-notices-dead",
+      "channel:sqs/shop-packing-dead",
+      "channel:sqs/shop-shipments-dead"
+    ],
+    "noProducers": [
+      "channel:sqs/shop-billing",
+      "channel:sqs/shop-notices",
+      "channel:sqs/shop-packing",
+      "channel:sqs/shop-shipments"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 38,
+    "edges": 32,
+    "types": 3,
+    "missed": 0,
+    "sites": 0,
+    "notes": 1,
+    "findings": 9,
+    "unresolved": 0
+  }
+}

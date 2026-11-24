@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:40:05.737Z",
+  "builtAt": "2026-11-24T19:24:27.356Z",
   "configHash": "b1d8951bb998",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 2,
-      "durationMs": 6266,
+      "durationMs": 1999,
       "packages": {
         "name": "shop-audit",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 5331,
+      "durationMs": 1812,
       "packages": {
         "name": "shop-billing",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 5343,
+      "durationMs": 1778,
       "packages": {
         "name": "shop-ledger",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 5703,
+      "durationMs": 1860,
       "packages": {
         "name": "shop-orders",
         "runtime": [
@@ -96,7 +96,7 @@
       "edges": 4,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 5396,
+      "durationMs": 1691,
       "packages": {
         "name": "shop-platform",
         "runtime": [
@@ -166,8 +166,8 @@
     "types": 1,
     "missed": 1,
     "sites": 1,
-    "notes": 0,
-    "findings": 1,
+    "notes": 1,
+    "findings": 3,
     "unresolved": 1
   }
 }

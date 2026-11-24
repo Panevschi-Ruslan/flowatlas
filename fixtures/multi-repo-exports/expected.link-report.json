@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:40:38.743Z",
+  "builtAt": "2026-11-24T19:24:35.874Z",
   "configHash": "b9aff0628b36",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 12,
       "types": 3,
       "unresolved": 2,
-      "durationMs": 3096,
+      "durationMs": 2240,
       "packages": {
         "name": "shop-catalog",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 9,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 3054,
+      "durationMs": 2113,
       "packages": {
         "name": "shop-gateway",
         "runtime": [
@@ -52,7 +52,7 @@
       "edges": 11,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 3489,
+      "durationMs": 2427,
       "packages": {
         "name": "shop-orders",
         "runtime": [
@@ -151,7 +151,7 @@
     "types": 4,
     "missed": 3,
     "sites": 3,
-    "notes": 1,
+    "notes": 3,
     "findings": 2,
     "unresolved": 3
   }

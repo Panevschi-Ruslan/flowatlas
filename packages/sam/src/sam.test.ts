@@ -919,3 +919,44 @@ describe('plain CloudFormation templates (P248)', () => {
     expect(samReader.files(repoDir, { config })).toEqual(['shared.yaml']);
   });
 });
+
+describe('the settings a queue, its reader and the mapping between them are held to (P389)', () => {
+  it("reads a function's Timeout with Globals merged, the platform's 3 seconds where none is, a queue's settings and an SQS event's batch", () => {
+    const deployment = read({
+      'template.yaml': template(
+        [
+          'Ship:',
+          '  Type: AWS::Serverless::Function',
+          '  Properties:',
+          '    FunctionName: shop-ship',
+          '    Runtime: nodejs20.x',
+          '    Handler: src/ship.handler',
+          '    Events:',
+          '      Orders:',
+          '        Type: SQS',
+          '        Properties:',
+          '          Queue: !GetAtt Orders.Arn',
+          '          FunctionResponseTypes: [ReportBatchItemFailures]',
+          'Bill:',
+          '  Type: AWS::Lambda::Function',
+          '  Properties:',
+          '    FunctionName: shop-bill',
+          '    Runtime: nodejs20.x',
+          '    Handler: src/bill.handler',
+          '    Code: src',
+          'Orders:',
+          '  Type: AWS::SQS::Queue',
+          '  Properties:',
+          '    QueueName: shop-orders',
+        ].join('\n'),
+        'Globals:\n  Function:\n    Timeout: 25\n',
+      ),
+    });
+    expect(deployment.functions.map((each) => [each.name, each.timeout])).toEqual([
+      ['shop-ship', { seconds: 25 }],
+      ['shop-bill', { seconds: 3, defaulted: true }],
+    ]);
+    expect(deployment.queues?.map((queue) => [queue.name, queue.visibilityTimeout, queue.redrive])).toEqual([['shop-orders', { seconds: 30, defaulted: true }, 'none']]);
+    expect(deployment.deliveries.find((delivery) => delivery.by === 'mapping')?.batch).toEqual({ reportsItemFailures: true, window: { seconds: 0, defaulted: true } });
+  });
+});

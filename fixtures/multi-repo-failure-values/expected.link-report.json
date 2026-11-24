@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:40:47.987Z",
+  "builtAt": "2026-11-24T19:24:40.607Z",
   "configHash": "100974a675fc",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 17,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 3943,
+      "durationMs": 1898,
       "packages": {
         "name": "shop-audit",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 15,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 3493,
+      "durationMs": 1729,
       "packages": {
         "name": "shop-ledger",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 3796,
+      "durationMs": 1794,
       "packages": {
         "name": "shop-orders",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 9,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 3609,
+      "durationMs": 1727,
       "packages": {
         "name": "shop-platform",
         "runtime": [
@@ -96,7 +96,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 3655,
+      "durationMs": 1774,
       "packages": {
         "name": "shop-stock",
         "runtime": [
@@ -175,7 +175,7 @@
     "missed": 1,
     "sites": 1,
     "notes": 0,
-    "findings": 2,
+    "findings": 4,
     "unresolved": 1
   }
 }

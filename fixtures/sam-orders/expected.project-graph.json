@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:03.554Z",
+  "builtAt": "2026-11-24T19:25:01.296Z",
   "services": [
     {
       "name": "orders",
@@ -2529,5 +2529,48 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "statemachine/shipping.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "orders-dev-shipping: ReserveStock invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "orders#statemachine/shipping.asl.json:orders-dev-shipping/ReserveStock",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "orders"
+    },
+    {
+      "file": "statemachine/shipping.asl.json",
+      "line": 15,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "orders-dev-shipping: ChargePayment invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "orders#statemachine/shipping.asl.json:orders-dev-shipping/ChargePayment",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "orders"
+    },
+    {
+      "file": "template.yaml",
+      "line": 273,
+      "reason": "queue-receives-few",
+      "message": "Resources.PlacedQueue hands a message of orders-dev-placed to its dead-letter queue after 3 receives, under the 5 the platform recommends: a throttled or briefly failing function gets too few retries",
+      "hint": "Set maxReceiveCount to at least 5.",
+      "symbol": "channel:sqs/orders-dev-placed",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "orders-dev-placed",
+        "maxReceiveCount": 3
+      },
+      "service": "orders"
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:07.384Z",
+  "builtAt": "2026-11-24T19:25:07.331Z",
   "services": [
     {
       "name": "relay",
@@ -1327,6 +1327,32 @@
           "start-name-unread"
         ]
       }
+    },
+    {
+      "file": "template.yaml",
+      "line": 21,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@Resources.OrdersQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.OrdersQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@Resources.OrdersQueue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@Resources.OrdersQueue"
+      },
+      "service": "relay"
+    },
+    {
+      "file": "template.yaml",
+      "line": 23,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@Resources.RefundsQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give Resources.RefundsQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@Resources.RefundsQueue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@Resources.RefundsQueue"
+      },
+      "service": "relay"
     },
     {
       "file": "template.yaml",

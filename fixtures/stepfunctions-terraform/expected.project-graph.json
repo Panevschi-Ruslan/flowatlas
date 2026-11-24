@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:49:51.064Z",
+  "builtAt": "2026-11-24T19:26:43.483Z",
   "services": [
     {
       "name": "lending",
@@ -2438,6 +2438,142 @@
   },
   "unresolved": [
     {
+      "file": "infra/workflows.tf",
+      "line": 62,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-overdue-sweep: SendReminder invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#infra/workflows.tf:lending-overdue-sweep/SendReminder",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "infra/workflows.tf",
+      "line": 91,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-hold-expiry: ReleaseHold invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 80,
+      "reason": "workflow-task-untimed",
+      "message": "lending-loan-approval: AwaitLibrarianApproval waits on a task token handed back (.waitForTaskToken) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit",
+      "hint": "Give the task a TimeoutSeconds, or the state machine one.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval",
+      "adapter": "aws-lambda",
+      "meta": {
+        "waitsOn": "wait-for-task-token"
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 126,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 137,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: NotifyBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-renewal: CheckBorrowerStanding invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 36,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-renewal: AssessLateFee invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 46,
+      "reason": "workflow-callback-no-heartbeat",
+      "level": "info",
+      "message": "lending-loan-renewal: AwaitFeePayment waits for a task token with no HeartbeatSeconds, so a worker that died is noticed only when the task times out",
+      "hint": "Give the task a HeartbeatSeconds below its timeout, and have the worker send heartbeats.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment",
+      "adapter": "aws-lambda",
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 46,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-renewal: AwaitFeePayment invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 66,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-renewal: ApplyBranchPolicy invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
       "file": "statemachine/loan-renewal.asl.json",
       "line": 66,
       "reason": "workflow-template-unbound",
@@ -2451,6 +2587,33 @@
         "variables": [
           "branch_policy_arn"
         ]
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 115,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-renewal: NotifyRenewal invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/NotifyRenewal",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-renewal.asl.json",
+      "line": 132,
+      "reason": "workflow-task-untimed",
+      "message": "lending-loan-renewal: ReapproveFlaggedLoans waits on the states job it starts (.sync) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit",
+      "hint": "Give the task a TimeoutSeconds, or the state machine one.",
+      "symbol": "lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ReapproveFlaggedLoans",
+      "adapter": "aws-lambda",
+      "meta": {
+        "waitsOn": "sync:2"
       },
       "service": "lending"
     }

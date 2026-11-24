@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:49:46.518Z",
+  "builtAt": "2026-11-24T19:26:15.446Z",
   "services": [
     {
       "name": "lending",
@@ -1250,5 +1250,72 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: CheckBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 20,
+      "reason": "workflow-callback-no-heartbeat",
+      "level": "info",
+      "message": "lending-loan-approval: AwaitLibrarianReview waits for a task token with no HeartbeatSeconds, so a worker that died is noticed only when the task times out",
+      "hint": "Give the task a HeartbeatSeconds below its timeout, and have the worker send heartbeats.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianReview",
+      "adapter": "aws-lambda",
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 20,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: AwaitLibrarianReview invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianReview",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 20,
+      "reason": "workflow-task-untimed",
+      "message": "lending-loan-approval: AwaitLibrarianReview waits on a task token handed back (.waitForTaskToken) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit",
+      "hint": "Give the task a TimeoutSeconds, or the state machine one.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianReview",
+      "adapter": "aws-lambda",
+      "meta": {
+        "waitsOn": "wait-for-task-token"
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 40,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    }
+  ]
 }

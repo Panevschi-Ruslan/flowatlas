@@ -1,6 +1,6 @@
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
-import type { GraphEdge, ProjectGraph } from '@flowatlas/core';
+import { DEPLOYMENT_SETTING_FINDINGS, DEPLOYMENT_SETTING_NOTES, type GraphEdge, type ProjectGraph } from '@flowatlas/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildProject } from './build.js';
 import { runImpact } from './impact.js';
@@ -65,7 +65,9 @@ describe('a step that sends', () => {
   });
 
   it('leaves no row saying a send is not joined', () => {
-    expect(graph.unresolved.map((row) => row.reason)).toEqual(['workflow-named-by-file']);
+    // What the deployment's settings say against the code is its own (P389), and no row about a send.
+    const settings = new Set([...DEPLOYMENT_SETTING_FINDINGS, ...DEPLOYMENT_SETTING_NOTES]);
+    expect(graph.unresolved.map((row) => row.reason).filter((reason) => !settings.has(reason))).toEqual(['workflow-named-by-file']);
   });
 });
 

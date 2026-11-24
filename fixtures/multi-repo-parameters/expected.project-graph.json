@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:41:13.031Z",
+  "builtAt": "2026-11-24T19:24:50.096Z",
   "services": [
     {
       "name": "platform",
@@ -1567,6 +1567,35 @@
       "message": "dynamodb/shop-orders is read by a function and nothing in the configured services writes to it",
       "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
       "symbol": "channel:dynamodb/shop-orders"
+    },
+    {
+      "file": "lib/stacks.ts",
+      "line": 18,
+      "reason": "queue-redrive-missing",
+      "message": "reports-jobs is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give reports-storage/Jobs a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/reports-jobs",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "reports-jobs"
+      },
+      "service": "reports"
+    },
+    {
+      "file": "lib/stacks.ts",
+      "line": 53,
+      "reason": "deployment-setting-unread",
+      "level": "info",
+      "message": "reports-worker/Tally/SqsEventSource:reports-worker/Placed: not every setting it is held to is checked: the queue shop-orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read",
+      "hint": "Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.",
+      "symbol": "consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+      "adapter": "aws-lambda",
+      "meta": {
+        "unmade": [
+          "the queue shop-orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read"
+        ]
+      },
+      "service": "reports"
     },
     {
       "file": "src/build.ts",

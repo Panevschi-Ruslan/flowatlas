@@ -12,4 +12,4 @@
       => platform ~  subscription aws_sns_topic_subscription.alerts  platform/infra/main.tf:75
         @  shop-prod-page                                            platform/infra/main.tf:67
           -> handler                                                 platform/src/page.ts:4
-unresolved on this path: 0
+unresolved on this path: 1

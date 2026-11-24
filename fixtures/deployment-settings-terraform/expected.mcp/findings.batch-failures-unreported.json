@@ -1,0 +1,18 @@
+{
+  "kind": "batch-failures-unreported",
+  "rows": [
+    {
+      "kind": "batch-failures-unreported",
+      "id": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "service": "orders",
+      "loc": "infra/mappings.tf:1",
+      "message": "aws_lambda_event_source_mapping.ship_orders says shop-ship-order reports the messages of a batch that failed (ReportBatchItemFailures), and its handler never returns batchItemFailures: every batch counts as a success, and a failed message is deleted",
+      "rank": 1,
+      "next": "get_source({symbol: \"consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders\"})"
+    }
+  ],
+  "total": 1,
+  "next": [
+    "get_source({symbol: \"consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders\"})"
+  ]
+}

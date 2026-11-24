@@ -1,4 +1,4 @@
-import { readJson, REACHES_META } from '@flowatlas/core';
+import { DEPLOYMENT_SETTING_FINDINGS, readJson, REACHES_META } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
 import { readStateMachine } from './definition.js';
 import { emitWorkflow, type EmitOptions, type WorkflowFragment } from './emit.js';
@@ -140,11 +140,13 @@ describe('emitWorkflow', () => {
   });
 
   it('writes a row for each target it could not join, by why, and draws no edge for it', () => {
-    expect(fragment.rows.map((row) => [row.reason, row.level ?? 'action', row.symbol])).toEqual([
+    // What the tasks' settings leave unsaid is settings.test.ts's (P389).
+    const targetRows = fragment.rows.filter((row) => !DEPLOYMENT_SETTING_FINDINGS.includes(row.reason));
+    expect(targetRows.map((row) => [row.reason, row.level ?? 'action', row.symbol])).toEqual([
       ['workflow-target-dynamic', 'info', stateId('PickPolicy')],
       ['workflow-template-unbound', 'action', stateId('ApplyPolicy')],
     ]);
-    expect(fragment.rows[1]?.meta).toEqual(
+    expect(targetRows[1]?.meta).toEqual(
       expect.objectContaining({ field: 'FunctionName', variables: ['PolicyFunctionArn'] }),
     );
     expect(node(stateId('PickPolicy'))?.meta?.[REACHES_META]).toBeUndefined();

@@ -10,6 +10,7 @@ import { FileReading, type DeploymentParts } from './reading.js';
 import { DESTINATION_KINDS, readResources } from './resources.js';
 import { readPluginStateMachines, readStateMachineResource } from './state-machines.js';
 import { DEFAULT_REGION, Imported, isRecord, textOf, Unread, Variables, type StageFrom } from './variables.js';
+import { secondsIn, SERVICE_TIMEOUT_DEFAULT } from './settings.js';
 
 /**
  * One service file, read into the parts of a deployment (P57).
@@ -369,6 +370,8 @@ const readFunction = (reading: FileReading, declaration: FunctionDeclaration): v
   }
   // What its role lets it send to (P272).
   const grants = serviceFunctionGrants(reading, fn, path, declaration.provider);
+  // How long one run may take: its own, the provider's, else the framework's (P389).
+  const timeout = secondsIn(fn['timeout'] ?? declaration.provider['timeout'], SERVICE_TIMEOUT_DEFAULT, `the timeout of ${address}`);
   const deployed: DeployedFunction = {
     ...at,
     ...(typeof name === 'string' ? { name } : {}),
@@ -377,6 +380,7 @@ const readFunction = (reading: FileReading, declaration: FunctionDeclaration): v
     ...(runtime === undefined ? {} : { runtime }),
     environment,
     ...(grants.length === 0 ? {} : { grants }),
+    ...(timeout === undefined ? {} : { timeout }),
     meta: {
       declaredAs: address,
       stageFrom: declaration.stageFrom,

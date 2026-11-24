@@ -1,15 +1,25 @@
-unresolved: total=8 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=12 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 8 to act on · missed: 11 · notes: 3 · findings: 1
+unresolved: 12 to act on · missed: 11 · notes: 3 · findings: 5
   3 missed places static reading cannot see, folded into 3 rows
-  1 finding: 1 stream nothing writes to
+  5 findings: 2 queues read with no redrive, 2 function tasks retrying no transient error, 1 stream nothing writes to
   ways in: 32 found, 27 with a handler that was read, 5 without
+  queue-redrive-missing (finding): 2 rows
+    A queue a function reads has no redrive policy, so a message that always fails is received again and again until it expires, and is then lost. Give the queue a dead-letter queue.
+      library/template.yaml:67  ${…}@Resources.HoldsQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give Resources.HoldsQueue a dead-letter queue, with a maxReceiveCount of at least 5.
+      library/template.yaml:357  library-prod-fiction-shelf is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give Resources.fictionShelfQueue a dead-letter queue, with a maxReceiveCount of at least 5.
   route-target-unread: 2 rows
     What answers a route is not read. Point the integration at a function, a queue, a topic or a bus the files declare, or at one by a name they settle.
       library/api/branches.yaml:13  Resources.BranchesApi.paths./branches.get
         ↳ Write the integration uri as the invocation ARN of a function the template declares, through Fn::Sub.
       library/template.yaml:330  Resources.OverdueStateMachine.Events.Check
         ↳ The workflow is still drawn and joined by its name; this way of starting it is not.
+  workflow-lambda-unretried (finding): 2 rows
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      library/statemachine/renewals.asl.json:5  Resources.RenewalsStateMachine: PlaceHold invokes a function and retries none of the platform's transient errors, so one fails the execution
+      library/template.yaml:309  library-prod-overdue: Remind invokes a function and retries none of the platform's transient errors, so one fails the execution
   construct-repeated-unread: 1 row
     Write the collection out, or give the parameter it reads a value, and each is read under its own name.
       library/template.yaml:363  Resources.Branches
@@ -57,7 +67,7 @@ desync: none
 
 contracts: no errors, 0 excused, 13 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 8 now, +8)
+baseline: missing (0 accepted, 12 now, +12)
   no baseline at <root>/fixtures/sam-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   construct-repeated-unread: 0 → 1 (+1)
   deployment-plugin-unread: 0 → 1 (+1)
@@ -65,13 +75,19 @@ baseline: missing (0 accepted, 8 now, +8)
   function-handler-unread: 0 → 1 (+1)
   function-name-unread: 0 → 1 (+1)
   nested-deployment-unread: 0 → 1 (+1)
+  queue-redrive-missing: 0 → 2 (+2)
   route-target-unread: 0 → 2 (+2)
-  new (8):
+  workflow-lambda-unretried: 0 → 2 (+2)
+  new (12):
     library|api/branches.yaml|Resources.BranchesApi.paths./branches.get|route-target-unread
+    library|statemachine/renewals.asl.json|library#statemachine/renewals.asl.json:Resources.RenewalsStateMachine/PlaceHold|workflow-lambda-unretried
     library|template.yaml|Resources.Branches|construct-repeated-unread
     library|template.yaml|Resources.OverdueStateMachine.Events.Check|route-target-unread
     library|template.yaml|Resources.Postcodes|nested-deployment-unread
+    library|template.yaml|channel:sqs/${…}@Resources.HoldsQueue|queue-redrive-missing
+    library|template.yaml|channel:sqs/library-prod-fiction-shelf|queue-redrive-missing
     library|template.yaml|entry:library:invoke:${…}@Resources.OwnerFunction|function-name-unread
     library|template.yaml|entry:library:invoke:library-prod-ping|function-handler-unread
     library|template.yaml|import:export:shared-notices-topic-arn|export-not-found
+    library|template.yaml|library#template.yaml:library-prod-overdue/Remind|workflow-lambda-unretried
     library|tools/template.yaml|tools/template.yaml#Transform|deployment-plugin-unread

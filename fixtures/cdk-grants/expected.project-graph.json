@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:12.923Z",
+  "builtAt": "2026-11-24T19:19:06.128Z",
   "services": [
     {
       "name": "stock",
@@ -351,6 +351,32 @@
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "lib/stock-stack.ts",
+      "line": 22,
+      "reason": "queue-redrive-missing",
+      "message": "stock-restock is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give StockStack/Restock a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/stock-restock",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "stock-restock"
+      },
+      "service": "stock"
+    },
+    {
+      "file": "lib/stock-stack.ts",
+      "line": 23,
+      "reason": "queue-redrive-missing",
+      "message": "stock-write-off is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give StockStack/WriteOff a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/stock-write-off",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "stock-write-off"
+      },
+      "service": "stock"
+    },
     {
       "service": "stock",
       "file": "src/move.ts",

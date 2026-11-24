@@ -40,4 +40,4 @@
         ~  message sns/loan-decisions                                     circulation/statemachine/loan-approval.asl.json:234
           ~  sns/loan-decisions                                           statemachine/loan-approval.asl.json:234
         -> LoanRejected [Fail]                                            circulation/statemachine/loan-approval.asl.json:243
-unresolved on this path: 8
+unresolved on this path: 10

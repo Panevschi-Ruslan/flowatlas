@@ -31,8 +31,10 @@ import {
   UNREAD_SPAN,
   type DeclaredStream,
   type DeliverySource,
+  type MappingBatch,
   type DeliveryTarget,
   type DeployedDelivery,
+  type DeployedQueue,
   type DeployedExport,
   type DeployedFunction,
   type DeployedGrant,
@@ -50,6 +52,7 @@ import {
 import type { CdkLibrary } from './library.js';
 import { definitionOf } from './state-machine.js';
 import { Attribute, Built, CdkRef, Construct, Embedded, EXPORT_VALUE, HOLE, Imported, ObjectValue, principalHolders, textOf, Unread, type Added, type Site, type Value } from './values.js';
+import { batchOf, functionTimeout, queueOf } from './settings.js';
 
 /**
  * The constructs an app made, written out as P21's `Deployment` (P57, D1).
@@ -290,6 +293,8 @@ export interface DeploymentParts {
   readonly workflows: DeployedWorkflow[];
   readonly deliveries: DeployedDelivery[];
   readonly streams: DeclaredStream[];
+  /** The queues the app creates, with the settings their readers are held to (P389). */
+  readonly queues: DeployedQueue[];
   /** Points of the app's APIs it publishes for other deployments' routes (P249). */
   readonly roots: PublishedRoot[];
   readonly exports: DeployedExport[];
@@ -574,7 +579,10 @@ export class AppDeployment {
     for (const topic of this.#ofType('aws-sns.Topic')) this.#subscriptions(topic);
     for (const rule of this.#ofType('aws-events.Rule')) this.#rule(rule);
     for (const schedule of this.#ofType('aws-scheduler.Schedule')) this.#schedule(schedule);
-    for (const queue of this.#ofType('aws-sqs.Queue')) this.#redrive(queue);
+    for (const queue of this.#ofType('aws-sqs.Queue')) {
+      this.#queue(queue);
+      this.#redrive(queue);
+    }
     for (const bucket of this.#ofType('aws-s3.Bucket')) this.#notifications(bucket);
     for (const pool of this.#ofType('aws-cognito.UserPool')) this.#userPool(pool);
     for (const table of this.#ofType('aws-dynamodb.Table', 'aws-dynamodb.TableV2', 'aws-kinesis.Stream')) this.#stream(table);
@@ -713,6 +721,7 @@ export class AppDeployment {
     for (const [variable, value] of pairs.sort(([a], [b]) => a.localeCompare(b))) environment[variable] = this.#setting(value, fn.site, `the value of ${variable} ${fn.path} is deployed with`);
     // What its role lets it send to (P272).
     const grants = this.#grants(fn);
+    const timeout = functionTimeout(prop(fn, 'timeout'), fn.path);
     this.parts.functions.push({
       ...fn.site,
       ...(name === undefined ? {} : { name }),
@@ -721,6 +730,7 @@ export class AppDeployment {
       ...(runtime === undefined ? {} : { runtime }),
       ...(written instanceof Unread ? {} : { environment }),
       ...(grants.length === 0 ? {} : { grants }),
+      ...(timeout === undefined ? {} : { timeout }),
       meta: {
         declaredAs: fn.path,
         constructPath: fn.path,
@@ -1324,11 +1334,11 @@ export class AppDeployment {
       const found = this.#source(of, site, address, `what ${address} reads`);
       if (found === undefined) continue;
       const to = { kind: 'function' as const, function: this.#functionIndex.get(fn) as number };
-      const push = (from: DeliverySource, kind: DeployedDelivery['by'], extra: Record<string, unknown> = {}): void => {
-        this.parts.deliveries.push({ ...site, address, by: kind, from, to, meta: { ...meta, ...extra } });
+      const push = (from: DeliverySource, kind: DeployedDelivery['by'], extra: Record<string, unknown> = {}, batch?: MappingBatch): void => {
+        this.parts.deliveries.push({ ...site, address, by: kind, from, to, ...(batch === undefined ? {} : { batch }), meta: { ...meta, ...extra } });
         if (kind === 'mapping') this.#mappingFailure(options instanceof ObjectValue ? options.get('onFailure') : undefined, site, `${address}/onFailure`, address, this.#conditional(fn.conditional, conditional));
       };
-      if (by === 'SqsEventSource' && found.kind === 'queue') push({ kind: 'queue', name: found.name }, 'mapping');
+      if (by === 'SqsEventSource' && found.kind === 'queue') push({ kind: 'queue', name: found.name }, 'mapping', {}, batchOf(options, address));
       else if (by === 'SnsEventSource' && found.kind === 'topic') {
         const policy = options instanceof ObjectValue ? options.get('filterPolicy') : undefined;
         push({ kind: 'topic', name: found.name }, 'subscription', { protocol: 'lambda', ...(policy === undefined ? {} : { unmatched: { filter_policy: JSON.stringify(patternJson(policy)) } }) });
@@ -1355,7 +1365,15 @@ export class AppDeployment {
     const from: DeliverySource | undefined =
       found.kind === 'queue' ? { kind: 'queue', name: found.name } : found.kind === 'stream' || (found.kind === 'table' && found.changes === true) ? { kind: 'changes', of: found.kind === 'stream' ? 'stream' : 'table', name: found.name } : undefined;
     if (from === undefined) return;
-    this.#deliver({ ...mapping.site, address: mapping.path, by: 'mapping', from, toValue: prop(mapping, 'target'), meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) } });
+    this.#deliver({
+      ...mapping.site,
+      address: mapping.path,
+      by: 'mapping',
+      from,
+      toValue: prop(mapping, 'target'),
+      ...(from.kind === 'queue' ? { batch: batchOf(mapping.props, mapping.path) } : {}),
+      meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) },
+    });
     this.#mappingFailure(prop(mapping, 'onFailure'), mapping.site, `${mapping.path}/onFailure`, mapping.path, this.#conditional(mapping.conditional));
   }
 
@@ -1402,7 +1420,7 @@ export class AppDeployment {
     const name = importedName(imported.key);
     for (const { kind, address } of alternatives ?? [{ kind: 'queue' as DeployedKind, address: mapping.path }]) {
       const from: DeliverySource = kind === 'queue' ? { kind: 'queue', name } : { kind: 'changes', of: kind === 'stream' ? 'stream' : 'table', name };
-      this.#deliver({ ...mapping.site, address, by: 'mapping', from, toValue: prop(mapping, 'target'), meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) } });
+      this.#deliver({ ...mapping.site, address, by: 'mapping', from, toValue: prop(mapping, 'target'), ...(from.kind === 'queue' ? { batch: batchOf(mapping.props, mapping.path) } : {}), meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) } });
       this.#mappingFailure(failure, mapping.site, failureAt(kind), address, this.#conditional(mapping.conditional));
     }
   }
@@ -1493,6 +1511,14 @@ export class AppDeployment {
       ...(value === 'unread' ? {} : { toValue: value }),
       ...(Object.keys(meta).length === 0 ? {} : { meta }),
     });
+  }
+
+  /** A queue the app creates, with what its readers are held to (P389). */
+  #queue(queue: Construct): void {
+    if (queue.imported !== undefined) return;
+    const found = this.deployedOf(queue);
+    if (found === undefined || found instanceof Unread) return;
+    this.parts.queues.push(queueOf(queue.site, queue.path, found.name, prop(queue, 'visibilityTimeout'), prop(queue, 'deadLetterQueue')));
   }
 
   #redrive(queue: Construct): void {

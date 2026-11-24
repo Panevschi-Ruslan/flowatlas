@@ -837,6 +837,26 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'iot-action-not-read': () =>
     'An IoT rule hands its messages to a service this reading does not follow - a delivery stream, a log group, an HTTP endpoint, another topic. Its other actions are drawn; nothing past this one is. Nothing to fix.',
 
+  // A deployment's settings contradicting the code it runs (P389)
+  'batch-failures-unreported': () =>
+    'A mapping from a queue says its function reports which messages of a batch failed (ReportBatchItemFailures), and the function never returns batchItemFailures. The platform takes an answer without them as a batch that succeeded, so every message is deleted, the failed ones too. Return { batchItemFailures } from the handler, or use a batch helper that builds it.',
+  'batch-failures-ignored': () =>
+    'The function returns batchItemFailures, and the mapping from the queue does not say it reports them, so the platform ignores the list: a failed message is retried only when the whole batch throws. Add ReportBatchItemFailures to the mapping\'s function response types.',
+  'queue-visibility-short': () =>
+    'A queue hides a message it handed to its function for less than six times the function\'s timeout plus the batch window, which is what the platform recommends; under the timeout itself the mapping is refused. A message can come back while it is still being processed, and be processed twice. Raise the queue\'s visibility timeout, or lower the function\'s timeout.',
+  'queue-redrive-missing': () =>
+    'A queue a function reads has no redrive policy, so a message that always fails is received again and again until it expires, and is then lost. Give the queue a dead-letter queue.',
+  'queue-receives-few': () =>
+    'The queue\'s redrive policy hands a message to its dead-letter queue after fewer than five receives; a throttled or briefly failing function gets too few retries. Set maxReceiveCount to at least 5.',
+  'workflow-task-untimed': () =>
+    'A task waits on an activity, a .sync job or a task token with no TimeoutSeconds, and its state machine has none: if the answer never comes, the execution waits until the service\'s own limit. Give the task a TimeoutSeconds.',
+  'workflow-callback-no-heartbeat': () =>
+    'A task waits for a task token with no HeartbeatSeconds, so a worker that died is noticed only when the task times out. Give the task a HeartbeatSeconds below its timeout, and have the worker send heartbeats.',
+  'workflow-lambda-unretried': () =>
+    'A task invokes a function and retries none of the platform\'s transient errors (Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.TooManyRequestsException, or States.ALL / States.TaskFailed). Add a Retry for them.',
+  'deployment-setting-unread': () =>
+    'A check of a deployment\'s settings against the code it runs was not made: a value the files do not settle, a queue or a function declared somewhere this reading does not hold, or a handler not read. Nothing is said about it either way.',
+
   // Boundaries nothing could be compared on (contracts)
   ...Object.fromEntries(
     Object.entries(UNCHECKED_HINTS).map(([reason, hint]) => [reason, () => hint]),
@@ -990,6 +1010,14 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],
   'failure-seen-undeclared': ['status seen that the code does not declare', 'statuses seen that the code does not declare'],
+  'batch-failures-unreported': ['batch reporting failures its handler never returns', 'batches reporting failures their handlers never return'],
+  'batch-failures-ignored': ['batch failures a mapping ignores', 'batch failures mappings ignore'],
+  'queue-visibility-short': ['queue hiding a message too briefly', 'queues hiding a message too briefly'],
+  'queue-redrive-missing': ['queue read with no redrive', 'queues read with no redrive'],
+  'queue-receives-few': ['redrive after too few receives', 'redrives after too few receives'],
+  'workflow-task-untimed': ['waiting task with no timeout', 'waiting tasks with no timeout'],
+  'workflow-callback-no-heartbeat': ['callback with no heartbeat', 'callbacks with no heartbeat'],
+  'workflow-lambda-unretried': ['function task retrying no transient error', 'function tasks retrying no transient error'],
 });
 
 /** One finding reason and its count, in words: `1 likely N+1`, `2 routes with no guard`. */

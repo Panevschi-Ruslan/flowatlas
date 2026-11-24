@@ -4,6 +4,7 @@ import { asText, type Because, type Instance, type Value } from '../eval/values.
 import { argument, blockOrArgument, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
 import { alternativesAt, deliverAt, deployedAt, deployedInText, deployedOf, deployedOfValue, importAt, isBecause, targetOf, type Deployed } from './deployed.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
+import { mappingBatch, readQueueSettings } from './settings.js';
 
 /**
  * Queues, topics and streams, and what reads each.
@@ -78,6 +79,7 @@ const readImportedMapping = (mapping: Instance, key: string, reading: ResourceRe
       by: 'mapping',
       from,
       ...(to === undefined ? {} : { to }),
+      ...(alternative.kind === 'queue' ? { batch: mappingBatch(mapping) } : {}),
       meta: enabled?.kind === 'bool' && !enabled.value ? { disabled: true } : {},
     });
   }
@@ -109,6 +111,7 @@ const readMapping = (mapping: Instance, reading: ResourceReading): void => {
     by: 'mapping',
     from,
     ...(to === undefined ? {} : { to }),
+    ...(from.kind === 'queue' ? { batch: mappingBatch(mapping) } : {}),
     meta: {
       ...(enabled?.kind === 'bool' && !enabled.value ? { disabled: true } : {}),
       ...(filters.length === 0 ? {} : { unmatched: { filter: filters } }),
@@ -199,8 +202,7 @@ const pushRedrive = (owner: Instance, queue: Deployed | Because | undefined, pol
     reading.rows.push(unreadRow(owner, 'subscription-source-unread', `the queue ${owner.address} redrives`, because));
     return;
   }
-  const count = policy?.kind === 'unknown' && policy.partial?.kind === 'object' ? policy.partial.entries.get('maxReceiveCount') : undefined;
-  const receives = count?.kind === 'number' ? count.value : undefined;
+  const receives = receivesOf(policy);
   deliverAt(
     reading,
     owner,
@@ -217,8 +219,29 @@ const pushRedrive = (owner: Instance, queue: Deployed | Because | undefined, pol
   );
 };
 
-const readQueue = (queue: Instance, reading: ResourceReading): void =>
+/**
+ * How many receives a redrive policy allows before handing a message on: from
+ * the JSON text it evaluates to, or the object it is built from where a
+ * reference keeps the text from being finished (P389).
+ */
+const receivesOf = (policy: Value | undefined): number | undefined => {
+  if (policy?.kind === 'string') {
+    try {
+      const count = (JSON.parse(policy.value) as Record<string, unknown>)['maxReceiveCount'];
+      if (typeof count === 'number') return count;
+      return typeof count === 'string' && /^\d+$/.test(count) ? Number(count) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  const count = policy?.kind === 'unknown' && policy.partial?.kind === 'object' ? policy.partial.entries.get('maxReceiveCount') : undefined;
+  return count?.kind === 'number' ? count.value : count?.kind === 'string' && /^\d+$/.test(count.value) ? Number(count.value) : undefined;
+};
+
+const readQueue = (queue: Instance, reading: ResourceReading): void => {
+  readQueueSettings(queue, reading);
   pushRedrive(queue, deployedOf({ kind: 'instance', instance: queue }, reading), argument(queue, 'redrive_policy'), reading);
+};
 
 const readRedrivePolicy = (policy: Instance, reading: ResourceReading): void =>
   pushRedrive(policy, deployedAt(policy, 'queue_url', reading), argument(policy, 'redrive_policy'), reading);

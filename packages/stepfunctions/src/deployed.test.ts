@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { REACHES_META, type DeployedWorkflow } from '@flowatlas/core';
+import { DEPLOYMENT_SETTING_FINDINGS, REACHES_META, type DeployedWorkflow } from '@flowatlas/core';
 import { drawDeployedWorkflow } from './deployed.js';
 
 const TEMPLATE = `{
@@ -52,7 +52,7 @@ describe('a workflow a deployment hands over', () => {
     const fragment = drawDeployedWorkflow(workflow(), 'lending');
     const check = fragment.nodes.find((node) => node.id.endsWith('/CheckBorrower'));
     expect(check?.meta?.[REACHES_META]).toEqual(['invoke:lending-check-borrower']);
-    expect(fragment.rows).toEqual([
+    expect(fragment.rows.filter((row) => !DEPLOYMENT_SETTING_FINDINGS.includes(row.reason))).toEqual([
       expect.objectContaining({
         reason: 'workflow-template-unbound',
         line: 24,

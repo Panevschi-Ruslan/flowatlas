@@ -257,3 +257,23 @@ describe("a function URL's address, handed to code", () => {
     expect(deployment.routes).toEqual([expect.objectContaining({ meta: expect.objectContaining({ key: 'ALL:/*@shop-receipt' }) })]);
   });
 });
+
+describe('the settings a queue, its reader and the mapping between them are held to (P389)', () => {
+  it('reads a timeout and a visibility timeout as Durations, the defaults where none is written, and an event source batch', () => {
+    const deployment = stack(
+      [
+        "    const dead = new sqs.Queue(this, 'Dead', { queueName: 'shop-dead' });",
+        "    const queue = new sqs.Queue(this, 'Orders', { queueName: 'shop-orders', visibilityTimeout: cdk.Duration.minutes(2), deadLetterQueue: { queue: dead, maxReceiveCount: 3 } });",
+        `    const reader = ${fn('Reader', ', timeout: cdk.Duration.seconds(30)')};`,
+        `    ${fn('Other')};`,
+        "    reader.addEventSource(new SqsEventSource(queue, { reportBatchItemFailures: true, maxBatchingWindow: cdk.Duration.seconds(5) }));",
+      ].join('\n'),
+    );
+    expect(deployment.functions.map((each) => each.timeout)).toEqual([{ seconds: 30 }, { seconds: 3, defaulted: true }]);
+    expect(deployment.queues?.map((queue) => [queue.name, queue.visibilityTimeout, queue.redrive])).toEqual([
+      ['shop-dead', { seconds: 30, defaulted: true }, 'none'],
+      ['shop-orders', { seconds: 120 }, 'written'],
+    ]);
+    expect(deployment.deliveries.find((delivery) => delivery.by === 'mapping')?.batch).toEqual({ reportsItemFailures: true, window: { seconds: 5 } });
+  });
+});

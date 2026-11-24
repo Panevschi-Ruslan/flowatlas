@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:45.450Z",
+  "builtAt": "2026-11-24T19:25:25.374Z",
   "services": [
     {
       "name": "notices",
@@ -652,6 +652,35 @@
       "hint": "Give the parameter alertsQueue a value under params (for the stage, or default) in the service file, or hand it in from a compose file, and it is named by that value.",
       "symbol": "params.alertsQueue",
       "adapter": "aws-lambda",
+      "service": "notices"
+    },
+    {
+      "file": "serverless.yml",
+      "line": 52,
+      "reason": "queue-visibility-short",
+      "message": "${…}@params.alertsQueue hides a message for 30s (the default), under 6 times the 6s timeout of notices-dev-onAlert (36s): a message can come back while it is still being processed, and be processed twice",
+      "hint": "Raise the visibility timeout of ${…}@params.alertsQueue to at least 36s, or lower the function's timeout.",
+      "symbol": "consumer:notices#serverless.yml:functions.onAlert.events[0]",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@params.alertsQueue",
+        "visibilityTimeout": 30,
+        "functionTimeout": 6,
+        "wanted": 36
+      },
+      "service": "notices"
+    },
+    {
+      "file": "serverless.yml",
+      "line": 61,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@params.alertsQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give resources.Resources.AlertsQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@params.alertsQueue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@params.alertsQueue"
+      },
       "service": "notices"
     },
     {

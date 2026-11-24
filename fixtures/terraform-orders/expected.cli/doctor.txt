@@ -1,6 +1,14 @@
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: none
+unresolved: 3 to act on · missed: 0 · notes: 0 · findings: 3
+  3 findings: 2 function tasks retrying no transient error, 1 redrive after too few receives
+  workflow-lambda-unretried (finding): 2 rows
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      orders/statemachine/shipping.asl.json:5  orders-dev-shipping: ReserveStock invokes a function and retries none of the platform's transient errors, so one fails the execution
+      orders/statemachine/shipping.asl.json:15  orders-dev-shipping: ChargePayment invokes a function and retries none of the platform's transient errors, so one fails the execution
+  queue-receives-few (finding): 1 row
+    Set maxReceiveCount to at least 5.
+      orders/infra/messaging.tf:7  aws_sqs_queue.placed hands a message of orders-dev-placed to its dead-letter queue after 3 receives, under the 5 the platform recommends: a throttled or briefly failing function gets too few retries
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
@@ -9,5 +17,11 @@ desync: none
 
 contracts: no errors, 0 excused, 5 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 0 now, +0)
+baseline: missing (0 accepted, 3 now, +3)
   no baseline at <root>/fixtures/terraform-orders/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  queue-receives-few: 0 → 1 (+1)
+  workflow-lambda-unretried: 0 → 2 (+2)
+  new (3):
+    orders|infra/messaging.tf|channel:sqs/orders-dev-placed|queue-receives-few
+    orders|statemachine/shipping.asl.json|orders#statemachine/shipping.asl.json:orders-dev-shipping/ChargePayment|workflow-lambda-unretried
+    orders|statemachine/shipping.asl.json|orders#statemachine/shipping.asl.json:orders-dev-shipping/ReserveStock|workflow-lambda-unretried

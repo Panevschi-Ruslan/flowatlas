@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:48:04.231Z",
+  "builtAt": "2026-11-24T19:25:35.129Z",
   "configHash": "c3d849be9f85",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 32,
       "types": 5,
       "unresolved": 7,
-      "durationMs": 4654,
+      "durationMs": 2454,
       "packages": {
         "name": "club-members",
         "runtime": [
@@ -91,8 +91,8 @@
     "types": 5,
     "missed": 6,
     "sites": 6,
-    "notes": 1,
-    "findings": 0,
+    "notes": 2,
+    "findings": 3,
     "unresolved": 6
   }
 }

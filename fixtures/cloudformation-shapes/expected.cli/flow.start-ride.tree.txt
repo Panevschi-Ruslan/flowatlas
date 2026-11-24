@@ -6,4 +6,4 @@
         ~  mapping stacks/rides.Resources.DockMapping        rides/stacks/rides.yaml:174
           @  rides-harbour-dock                              rides/stacks/rides.yaml:51
             -> handler                                       rides/src/docks/dock.ts:2
-unresolved on this path: 0
+unresolved on this path: 1

@@ -1,0 +1,13 @@
+{
+  "name": "shop-order-workers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A shop's order workers: Lambda functions reading SQS queues, and a fulfilment state machine, deployed with Terraform.",
+  "dependencies": {
+    "@aws-lambda-powertools/batch": "^2.10.0",
+    "notice-relay": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

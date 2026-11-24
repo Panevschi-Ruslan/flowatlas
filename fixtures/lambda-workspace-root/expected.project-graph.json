@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:37:50.211Z",
+  "builtAt": "2026-11-24T19:24:05.903Z",
   "services": [
     {
       "name": "lending",
@@ -619,5 +619,34 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: CheckBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 17,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    }
+  ]
 }

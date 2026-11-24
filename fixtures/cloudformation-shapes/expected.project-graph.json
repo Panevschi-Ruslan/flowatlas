@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:57.312Z",
+  "builtAt": "2026-11-24T19:20:04.169Z",
   "services": [
     {
       "name": "rides",
@@ -1330,6 +1330,19 @@
       "service": "rides"
     },
     {
+      "file": "stacks/docks.yaml",
+      "line": 12,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@stacks.docks.Resources.RecountQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give stacks/docks.Resources.RecountQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@stacks.docks.Resources.RecountQueue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@stacks.docks.Resources.RecountQueue"
+      },
+      "service": "rides"
+    },
+    {
       "service": "rides",
       "file": "stacks/docks.yaml",
       "line": 15,
@@ -1392,6 +1405,20 @@
       "hint": "Nothing of this workflow is drawn. Write the definition under Definition, or point DefinitionS3Location at a .asl.json or .asl.yaml file of the repository, which aws cloudformation package uploads.",
       "symbol": "stacks/rides.Resources.ArchiveStateMachine",
       "adapter": "aws-lambda",
+      "service": "rides"
+    },
+    {
+      "file": "workflows/billing.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "rides-harbour-billing: Charge invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "rides#workflows/billing.asl.json:rides-harbour-billing/Charge",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
       "service": "rides"
     }
   ]

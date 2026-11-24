@@ -18,4 +18,4 @@
               ~  message sns/catalog-restock                   catalog/src/reorder.ts:15
                 ~  sns/catalog-restock                         lib/orders-stack.ts:55
 ... truncated: ≥1 more nodes (raise --depth)
-unresolved on this path: 4
+unresolved on this path: 6

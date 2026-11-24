@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:48.444Z",
+  "builtAt": "2026-11-24T19:20:17.483Z",
   "services": [
     {
       "name": "circulation",
@@ -1703,6 +1703,20 @@
       "message": "publishLibraryEvent -> detailType",
       "hint": "The channel name cannot be read here. Annotate publishLibraryEvent with the channel it uses.",
       "symbol": "producer:circulation#src/lib/events.ts:15:9",
+      "service": "circulation"
+    },
+    {
+      "file": "statemachines/loan-review.asl.json",
+      "line": 5,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "loan-review: ReviewLoan invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
       "service": "circulation"
     }
   ]

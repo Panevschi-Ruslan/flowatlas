@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:07.384Z",
+  "builtAt": "2026-11-24T19:25:07.331Z",
   "configHash": "1e03572902a2",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 24,
       "types": 2,
       "unresolved": 5,
-      "durationMs": 868,
+      "durationMs": 1488,
       "packages": {
         "name": "relay",
         "runtime": [
@@ -145,7 +145,7 @@
     "missed": 2,
     "sites": 8,
     "notes": 5,
-    "findings": 0,
+    "findings": 2,
     "unresolved": 2
   }
 }

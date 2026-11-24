@@ -1,6 +1,6 @@
 unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 3 to act on · missed: 3 · notes: 1 · findings: 2
+unresolved: 3 to act on · missed: 3 · notes: 3 · findings: 2
   2 findings: 2 likely N+1s
   environment-value-unread: 1 row
     The value is an output another deployment publishes: add the repository that declares it to the configuration, and it is joined to what it names.
@@ -11,6 +11,10 @@ unresolved: 3 to act on · missed: 3 · notes: 1 · findings: 2
   route-path-unread: 1 row
     Hang the route from the shared API with AWS::ApiGateway::Resource and AWS::ApiGateway::Method (or an AWS::ApiGatewayV2::Route), whose ParentId or ApiId imports it; those are joined to it.
       catalog/template.yaml:91  Resources.Legacy.Events.Old
+  deployment-setting-unread (note): 2 rows
+    Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.
+      catalog/template.yaml:79  Resources.Reorder.Events.Placed: not every setting it is held to is checked: the queue orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read
+      gateway/serverless.yml:31  functions.audit.events[0]: not every setting it is held to is checked: the queue orders-placed is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read
   query-in-loop (finding): 2 rows
     Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
       gateway/src/audit.ts:8  A `for-of` loop runs 1 publish once per item: likely N+1.  (1 way in)

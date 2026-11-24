@@ -1,7 +1,8 @@
-unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 4 to act on · missed: 5 over 7 sites · notes: 0 · findings: 0
+unresolved: 5 to act on · missed: 5 over 7 sites · notes: 0 · findings: 1
   3 missed places static reading cannot see, folded into 1 row
+  1 finding: 1 function task retrying no transient error
   starter-undescribed: 2 rows
     A deployed function calls into a package whose source is not read, in the shape of a helper that starts a workflow or invokes a function by its deployed name: it is handed an id the same package made earlier in the body, or the package is installed with types that reach a client that starts things. If it is one, describe it under adapters.starters, as the row says; or make the package's source readable here.
       lending src/handlers/create-loan.ts:22  @library/notify send
@@ -14,6 +15,9 @@ unresolved: 4 to act on · missed: 5 over 7 sites · notes: 0 · findings: 0
   type-unresolved: 1 row
     The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.
       lending src/handlers/create-loan.ts:24  any
+  workflow-lambda-unretried (finding): 1 row
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      lending statemachine/loan-approval.asl.json:5  lending-loan-approval: CheckBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
   call-dynamic-receiver (info): 1 row over 3 places
     The receiver has no single class type; inject a class to make the edge visible.
       lending src/handlers/create-loan.ts:18  handler -> orchestrator.create
@@ -25,13 +29,15 @@ desync: none
 
 contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 4 now, +4)
+baseline: missing (0 accepted, 5 now, +5)
   no baseline at <root>/fixtures/start-workflow-by-record/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   start-name-unread: 0 → 1 (+1)
   starter-undescribed: 0 → 2 (+2)
   type-unresolved: 0 → 1 (+1)
-  new (4):
+  workflow-lambda-unretried: 0 → 1 (+1)
+  new (5):
     lending|src/handlers/create-loan.ts|@library/notify send|starter-undescribed
     lending|src/handlers/create-loan.ts|any|type-unresolved
     lending|src/handlers/resume-run.ts|producer:lending#src/handlers/resume-run.ts:7:9|start-name-unread
     lending|src/handlers/send-overdue-notices.ts|@library/jobs submit|starter-undescribed
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower|workflow-lambda-unretried

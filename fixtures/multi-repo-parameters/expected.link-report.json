@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:41:13.031Z",
+  "builtAt": "2026-11-24T19:24:50.096Z",
   "configHash": "5b50e4d34a30",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 18,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 1553,
+      "durationMs": 1409,
       "packages": {
         "name": "shop-catalog",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 4,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 1503,
+      "durationMs": 1422,
       "packages": {
         "name": "shop-orders",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1510,
+      "durationMs": 1324,
       "packages": {
         "name": "shop-platform",
         "runtime": [
@@ -73,7 +73,7 @@
       "edges": 14,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1631,
+      "durationMs": 1548,
       "packages": {
         "name": "shop-reports",
         "runtime": [
@@ -153,8 +153,8 @@
     "types": 6,
     "missed": 1,
     "sites": 1,
-    "notes": 1,
-    "findings": 2,
+    "notes": 2,
+    "findings": 3,
     "unresolved": 1
   }
 }

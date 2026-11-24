@@ -17,4 +17,4 @@
           -> ReserveCopy [Task lambda:invoke]       lending/statemachine/reserve-copies.asl.json:18
             @  lending-reserve-copy                 lending/infra/functions.tf:43
               -> handler                            lending/src/handlers/reserve-copy.ts:1
-unresolved on this path: 0
+unresolved on this path: 3

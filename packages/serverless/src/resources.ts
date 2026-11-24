@@ -3,6 +3,7 @@ import { alternativeAddress, generatedName, importedName, makeFunctionUrlEntryKe
 import { intrinsicOf, type Deployed, type Resource } from './cloudformation.js';
 import { asTarget, type FileReading } from './reading.js';
 import { Imported, isRecord, textOf, Unread } from './variables.js';
+import { receivesIn, templateBatch, templateQueue } from './settings.js';
 
 /**
  * What the resources of a template declare besides themselves (P57): a
@@ -96,9 +97,11 @@ const readKinesis: ResourceReader = (resource, reading) => {
 /** A queue: its name, and the dead-letter queue its redrive policy hands failures to. */
 const readQueue: ResourceReader = (resource, reading) => {
   const found = declared(resource, reading);
+  // What its readers are held to (P389).
+  if (found !== undefined) reading.parts.queues.push(templateQueue(reading.siteOf(pathOf(resource)), resource.address, found.name, resource.properties));
   const policy = resource.properties['RedrivePolicy'];
   if (!isRecord(policy) || found === undefined) return;
-  const receives = policy['maxReceiveCount'];
+  const receives = receivesIn(policy);
   pushDelivery(
     reading,
     resource,
@@ -220,6 +223,7 @@ const readMapping: ResourceReader = (resource, reading) => {
         by: 'mapping',
         from,
         ...(to === undefined ? {} : { to }),
+        ...(from.kind === 'queue' ? { batch: templateBatch(resource.properties, resource.address) } : {}),
         ...(resource.properties['Enabled'] === false ? { meta: { disabled: true } } : {}),
       });
     }
@@ -250,6 +254,7 @@ const readMapping: ResourceReader = (resource, reading) => {
     by: 'mapping',
     from,
     ...(to === undefined ? {} : { to }),
+    ...(from.kind === 'queue' ? { batch: templateBatch(resource.properties, resource.address) } : {}),
     ...(resource.properties['Enabled'] === false ? { meta: { disabled: true } } : {}),
   });
   readMappingFailure(resource, reading, [{ kind: from.kind === 'queue' ? 'queue' : from.of, address: resource.address }]);

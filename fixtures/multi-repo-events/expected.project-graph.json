@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:40:30.317Z",
+  "builtAt": "2026-11-24T19:24:30.550Z",
   "services": [
     {
       "name": "platform-events",
@@ -1264,6 +1264,19 @@
     }
   },
   "unresolved": [
+    {
+      "file": "infra/main.tf",
+      "line": 57,
+      "reason": "queue-redrive-missing",
+      "message": "library-loan-digest is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.loan_digest a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-loan-digest",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-loan-digest"
+      },
+      "service": "notifications"
+    },
     {
       "service": "routing",
       "file": "rules.tf",

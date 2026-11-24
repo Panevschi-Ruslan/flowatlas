@@ -3,6 +3,7 @@ import type {
   DeclaredStream,
   DeployedDelivery,
   DeployedExport,
+  DeployedQueue,
   DeployedFunction,
   DeployedImport,
   DeployedKind,
@@ -36,6 +37,8 @@ export interface DeploymentParts {
   readonly workflows: DeployedWorkflow[];
   readonly deliveries: DeployedDelivery[];
   readonly streams: DeclaredStream[];
+  /** The queues declared, with the settings their readers are held to (P389). */
+  readonly queues: DeployedQueue[];
   readonly exports: DeployedExport[];
   readonly imports: DeployedImport[];
   readonly rows: Unresolved[];
@@ -48,6 +51,7 @@ export const emptyParts = (): DeploymentParts => ({
   workflows: [],
   deliveries: [],
   streams: [],
+  queues: [],
   exports: [],
   imports: [],
   rows: [],

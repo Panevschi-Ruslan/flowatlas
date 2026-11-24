@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:37:35.769Z",
+  "builtAt": "2026-11-24T19:22:42.207Z",
   "configHash": "fb8d35696f3a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 23,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 799,
+      "durationMs": 7938,
       "packages": {
         "name": "lending-library-circulation",
         "runtime": [],
@@ -69,7 +69,7 @@
     "missed": 0,
     "sites": 0,
     "notes": 0,
-    "findings": 0,
+    "findings": 2,
     "unresolved": 0
   }
 }

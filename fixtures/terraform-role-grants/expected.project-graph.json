@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:50:04.123Z",
+  "builtAt": "2026-11-24T19:27:10.313Z",
   "services": [
     {
       "name": "payments",
@@ -455,6 +455,32 @@
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "infra/main.tf",
+      "line": 20,
+      "reason": "queue-redrive-missing",
+      "message": "payments-settled is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.settled a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/payments-settled",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "payments-settled"
+      },
+      "service": "payments"
+    },
+    {
+      "file": "infra/main.tf",
+      "line": 24,
+      "reason": "queue-redrive-missing",
+      "message": "payments-refunded is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.refunded a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/payments-refunded",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "payments-refunded"
+      },
+      "service": "payments"
+    },
     {
       "file": "src/notify.ts",
       "line": 9,

@@ -1,7 +1,10 @@
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 0 to act on · missed: 0 · notes: 0 · findings: 2
-  2 findings: 1 likely N+1, 1 bucket write no notification takes
+unresolved: 1 to act on · missed: 0 · notes: 0 · findings: 3
+  3 findings: 1 likely N+1, 1 queue read with no redrive, 1 bucket write no notification takes
+  queue-redrive-missing (finding): 1 row
+    Give aws_sqs_queue.thumbnails a dead-letter queue, with a maxReceiveCount of at least 5.
+      media/infra/main.tf:29  library-thumbnails is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
   query-in-loop (finding): 1 row
     Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
       media/src/uploads/make-thumbnail.ts:12  A `for-of` loop runs 3 publishes once per item: likely N+1.  (1 way in)
@@ -16,5 +19,8 @@ desync: none
 
 contracts: no errors, 0 excused, 13 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 0 now, +0)
+baseline: missing (0 accepted, 1 now, +1)
   no baseline at <root>/fixtures/lambda-terraform-bucket-notification/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  queue-redrive-missing: 0 → 1 (+1)
+  new (1):
+    media|infra/main.tf|channel:sqs/library-thumbnails|queue-redrive-missing

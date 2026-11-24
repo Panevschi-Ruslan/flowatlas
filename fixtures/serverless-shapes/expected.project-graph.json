@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:48:04.231Z",
+  "builtAt": "2026-11-24T19:25:35.129Z",
   "services": [
     {
       "name": "members",
@@ -1614,6 +1614,22 @@
     },
     {
       "file": "services/notices/serverless.yml",
+      "line": 34,
+      "reason": "queue-visibility-short",
+      "message": "${…}@resources.Resources.NoticesQueue hides a message for 30s (the default), under 6 times the 6s timeout of notices-prod-send-notice (36s): a message can come back while it is still being processed, and be processed twice",
+      "hint": "Raise the visibility timeout of ${…}@resources.Resources.NoticesQueue to at least 36s, or lower the function's timeout.",
+      "symbol": "consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@resources.Resources.NoticesQueue",
+        "visibilityTimeout": 30,
+        "functionTimeout": 6,
+        "wanted": 36
+      },
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
       "line": 64,
       "reason": "function-name-unread",
       "message": "the name of functions.audit is not read: the value is the parameter /club/audit-function-name, which another deployment writes",
@@ -1622,6 +1638,22 @@
       "adapter": "aws-lambda",
       "meta": {
         "variable": "ssm:/club/audit-function-name"
+      },
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 68,
+      "reason": "deployment-setting-unread",
+      "level": "info",
+      "message": "functions.audit.events[0]: not every setting it is held to is checked: the queue ${…}@import.export.shared-audit-queue-arn is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read",
+      "hint": "Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.",
+      "symbol": "consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+      "adapter": "aws-lambda",
+      "meta": {
+        "unmade": [
+          "the queue ${…}@import.export.shared-audit-queue-arn is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read"
+        ]
       },
       "service": "members"
     },
@@ -1672,12 +1704,39 @@
     },
     {
       "file": "services/notices/serverless.yml",
+      "line": 96,
+      "reason": "workflow-lambda-unretried",
+      "level": "action",
+      "message": "stepFunctions.stateMachines.remind: Send invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "members#services/notices/serverless.yml:stepFunctions.stateMachines.remind/Send",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
       "line": 104,
       "reason": "deployment-plugin-unread",
       "message": "services/notices/serverless.yml declares constructs, which a plugin turns into functions, queues and routes, and which are not read",
       "hint": "Declare them under functions and resources, or expect them missing from the map.",
       "symbol": "constructs",
       "adapter": "aws-lambda",
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 113,
+      "reason": "queue-redrive-missing",
+      "message": "${…}@resources.Resources.NoticesQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give resources.Resources.NoticesQueue a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/${…}@resources.Resources.NoticesQueue",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "${…}@resources.Resources.NoticesQueue"
+      },
       "service": "members"
     }
   ]

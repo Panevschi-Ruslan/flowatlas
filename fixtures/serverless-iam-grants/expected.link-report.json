@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:45.450Z",
+  "builtAt": "2026-11-24T19:25:25.374Z",
   "configHash": "47d9255e1059",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 13,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 3097,
+      "durationMs": 1243,
       "packages": {
         "name": "notices",
         "runtime": [
@@ -85,7 +85,7 @@
     "missed": 1,
     "sites": 1,
     "notes": 2,
-    "findings": 0,
+    "findings": 2,
     "unresolved": 1
   }
 }

@@ -5,4 +5,4 @@
       => platform ~  mapping aws_lambda_event_source_mapping.failed  platform/infra/main.tf:62
         @  shop-prod-replay                                          platform/infra/main.tf:54
           -> handler                                                 platform/src/replay.ts:4
-unresolved on this path: 0
+unresolved on this path: 1

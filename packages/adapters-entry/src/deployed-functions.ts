@@ -38,6 +38,8 @@ import { graphqlServerHandled } from '@flowatlas/graphql';
 import { drawDeliveries, drawRouteSends, environmentMeta, grantsMeta } from './deployed-channels.js';
 import { graphqlServedMeta } from './graphql-resolvers.js';
 import { drawDeployedWorkflows } from './deployed-workflows.js';
+import type { HandlerCode } from './batch-answer.js';
+import { deploymentSettingRows, type SettingsReading } from './deployment-settings.js';
 import { readingOf } from './request-readings.js';
 import { builtByFactory, fileOfNode, isWrittenFunction, repoFunctionOf, unwrapValue } from './shared.js';
 import { evidenceOf, functionArguments, label, unwrapChain, type Chain } from './wrapped-work.js';
@@ -164,7 +166,20 @@ interface ResolvedHandler {
    * resolvers answer, and a route in front of it is that server's endpoint.
    */
   graphql?: boolean;
+  /** The code handed each run, for the checks of the deployment's settings against it (P389). */
+  code?: HandlerCode;
 }
+
+/** The function a declaration holds: itself, or the function a variable is initialised with. */
+const heldFunction = (declaration: TsNode): TsNode | undefined => {
+  if (Node.isFunctionDeclaration(declaration) || Node.isMethodDeclaration(declaration) || isWrittenFunction(declaration)) return declaration;
+  if (Node.isVariableDeclaration(declaration)) {
+    const value = declaration.getInitializer();
+    const unwrapped = value === undefined ? undefined : unwrapValue(value);
+    return unwrapped !== undefined && isWrittenFunction(unwrapped) ? unwrapped : undefined;
+  }
+  return undefined;
+};
 
 /**
  * Why a call a handler export was built with names no function, in the words of
@@ -285,7 +300,7 @@ const resolveHandler = (
     return { wrapping: [], meta };
   }
 
-  const done = (found: EntryHandler, via: string, chain?: Chain): ResolvedHandler => {
+  const done = (found: EntryHandler, via: string, chain?: Chain, code?: HandlerCode): ResolvedHandler => {
     // A wrapper nothing of which could be read makes the landing as uncertain as
     // a handler found by searching, and says which wrapper it was (R167).
     const wrapped = chain === undefined ? undefined : evidenceOf(chain.through);
@@ -295,6 +310,7 @@ const resolveHandler = (
       wrapping: chain?.wrapping ?? [],
       ...(landed === undefined ? {} : { confidence: landed }),
       meta: { ...meta, handlerVia: via, ...(wrapped?.why === undefined ? {} : { wrapperUnread: wrapped.why }) },
+      ...(code === undefined ? {} : { code }),
     };
   };
 
@@ -305,13 +321,13 @@ const resolveHandler = (
   const declaration = boundDeclaration(exported);
   let unreadCall: CallExpression | undefined;
   if (Node.isFunctionDeclaration(declaration) && declaration.getName() !== undefined) {
-    return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: startLineOf(declaration) }, 'function');
+    return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName() as string, line: startLineOf(declaration) }, 'function', undefined, { fn: declaration, around: [] });
   }
   if (Node.isVariableDeclaration(declaration)) {
     const initializer = declaration.getInitializer();
     const value = initializer === undefined ? undefined : unwrapValue(initializer);
     if (value !== undefined && isWrittenFunction(value)) {
-      return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName(), line: startLineOf(declaration) }, 'function');
+      return done({ file: fileOfNode(declaration, ctx), functionName: declaration.getName(), line: startLineOf(declaration) }, 'function', undefined, { fn: value, around: [declaration] });
     }
     const built = value !== undefined && Node.isCallExpression(value) ? value : undefined;
     if (built !== undefined) {
@@ -323,16 +339,21 @@ const resolveHandler = (
             { file: fileOfNode(chain.inner, ctx), line: where.line, column: where.column, label: handler.export, inline: true },
             'inline',
             chain,
+            { fn: chain.inner, around: [declaration] },
           );
         }
         const named = repoFunctionOf(chain.inner);
         if (named !== undefined) {
-          return done({ file: fileOfNode(named.declaration, ctx), functionName: named.name, line: named.line }, 'wrapped', chain);
+          const held = heldFunction(named.declaration);
+          return done({ file: fileOfNode(named.declaration, ctx), functionName: named.name, line: named.line }, 'wrapped', chain, {
+            ...(held === undefined ? {} : { fn: held }),
+            around: [declaration, named.declaration],
+          });
         }
       }
       const factory = builtByFactory(built);
       if (factory !== undefined) {
-        return done({ file: fileOfNode(factory.declaration, ctx), functionName: factory.name, line: factory.line }, 'call');
+        return done({ file: fileOfNode(factory.declaration, ctx), functionName: factory.name, line: factory.line }, 'call', undefined, { around: [declaration, factory.declaration] });
       }
       // `new ApolloServer({ resolvers, typeDefs }).createHandler()`: no one
       // function is the handler, every field a resolver answers is a way in of
@@ -523,6 +544,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       ),
     );
     let placedAt = 0;
+    const settings: SettingsReading[] = [];
     for (const { reader, deployment } of deployments) {
       const rows: Unresolved[] = [...deployment.rows];
       /** The node drawn for each declaration, by its address, for `reportRows`. */
@@ -666,7 +688,20 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       for (const value of deployment.imports ?? []) imported.push({ ...value });
       drawDeployedWorkflows(ctx, deployment.workflows, reader.name, DEPLOYED_FUNCTIONS, drawn);
       reportRows(ctx, rows, drawn);
+      settings.push({
+        deployment,
+        drawn,
+        codeOf: (index) => {
+          const reading = resolved[index];
+          const fn = deployment.functions[index];
+          if (reading?.code !== undefined) return reading.code;
+          if (fn?.handler === undefined) return { unread: `the code ${fn?.name ?? fn?.address ?? 'the function'} runs is not pointed at` };
+          return { unread: `the handler ${fn.handler.written} is not read` };
+        },
+      });
     }
+    // Where the settings of the deployments contradict the code they run (P389).
+    for (const row of deploymentSettingRows(ctx, settings)) ctx.builder.addUnresolved({ ...row, adapter: DEPLOYED_FUNCTIONS });
 
     // What this repository publishes for other repositories' routes to hang
     // from is a fact about the repository rather than about any one entry, and

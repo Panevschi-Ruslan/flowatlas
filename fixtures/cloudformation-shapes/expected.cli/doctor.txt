@@ -1,8 +1,8 @@
-unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=7 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 5 to act on · missed: 6 · notes: 2 · findings: 1
+unresolved: 7 to act on · missed: 6 · notes: 2 · findings: 3
   1 missed place static reading cannot see, folded into 1 row
-  1 finding: 1 stream nothing writes to
+  3 findings: 1 queue read with no redrive, 1 stream nothing writes to, 1 function task retrying no transient error
   ways in: 20 found, 19 with a handler that was read, 1 without
   subscription-source-unread: 2 rows
     What a rule, a subscription, a mapping or a pipe takes its messages from is not read, so it is drawn on no channel. Write the queue, topic, bus or stream so the files settle it: a reference to what the configuration declares, or its ARN. A source of a kind nothing here reads is said once, at info.
@@ -16,9 +16,15 @@ unresolved: 5 to act on · missed: 6 · notes: 2 · findings: 1
   deployment-plugin-unread: 1 row
     Add Transform: AWS::Serverless-2016-10-31 to the template, and it is read as a SAM template.
       rides/legacy/fleet.template:4  legacy/fleet.template#Transform
+  queue-redrive-missing (finding): 1 row
+    Give stacks/docks.Resources.RecountQueue a dead-letter queue, with a maxReceiveCount of at least 5.
+      rides/stacks/docks.yaml:12  ${…}@stacks.docks.Resources.RecountQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
   workflow-definition-not-loaded: 1 row
     Nothing of this workflow is drawn. Write the definition under Definition, or point DefinitionS3Location at a .asl.json or .asl.yaml file of the repository, which aws cloudformation package uploads.
       rides/stacks/rides.yaml:228  stacks/rides.Resources.ArchiveStateMachine
+  workflow-lambda-unretried (finding): 1 row
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      rides/workflows/billing.asl.json:5  rides-harbour-billing: Charge invokes a function and retries none of the platform's transient errors, so one fails the execution
   deployed-name-generated (note): 1 row
     Give it a name of its own where other repositories reach it.
       rides/stacks/docks.yaml:12  stacks.docks.Resources.RecountQueue
@@ -39,15 +45,19 @@ desync: none
 
 contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 5 now, +5)
+baseline: missing (0 accepted, 7 now, +7)
   no baseline at <root>/fixtures/cloudformation-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   api-body-unread: 0 → 1 (+1)
   deployment-plugin-unread: 0 → 1 (+1)
+  queue-redrive-missing: 0 → 1 (+1)
   subscription-source-unread: 0 → 2 (+2)
   workflow-definition-not-loaded: 0 → 1 (+1)
-  new (5):
+  workflow-lambda-unretried: 0 → 1 (+1)
+  new (7):
     rides|legacy/fleet.template|legacy/fleet.template#Transform|deployment-plugin-unread
+    rides|stacks/docks.yaml|channel:sqs/${…}@stacks.docks.Resources.RecountQueue|queue-redrive-missing
     rides|stacks/rides.yaml|stacks/rides.Resources.ArchiveApi|api-body-unread
     rides|stacks/rides.yaml|stacks/rides.Resources.ArchiveStateMachine|workflow-definition-not-loaded
     rides|stacks/rides.yaml|stacks/rides.Resources.AuditMapping|subscription-source-unread
     rides|stacks/rides.yaml|stacks/rides.Resources.LostSubscription|subscription-source-unread
+    rides|workflows/billing.asl.json|rides#workflows/billing.asl.json:rides-harbour-billing/Charge|workflow-lambda-unretried

@@ -18,4 +18,4 @@
     ~  s3:ObjectRemoved:Delete s3/library-cover-uploads                   media/src/uploads/make-thumbnail.ts:21
       (again) s3/library-cover-uploads ~heuristic
 ... truncated: 2 more nodes (raise --depth)
-unresolved on this path: 2
+unresolved on this path: 3

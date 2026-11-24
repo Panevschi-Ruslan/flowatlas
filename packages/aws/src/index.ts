@@ -60,3 +60,15 @@ export { SDK_SENDS, SDK_WRITES, type SendingService, type SendOperation, type Wr
 export { eventFilterOf, eventPatternOf, type PatternUnread } from './event-pattern.js';
 export { cognitoTriggerKey, destinationOf, READ_PRINCIPALS, RESULT_DETAIL_TYPES } from './triggers.js';
 export { grantedIn, isWildcardResource, kindsGranted, MANAGED_WRITE_POLICIES, managedPolicyName, WRITE_ACTIONS } from './grants.js';
+export {
+  BATCH_ANSWER_PACKAGES,
+  BATCH_FAILURES_FIELD,
+  FUNCTION_TIMEOUT_DEFAULT,
+  FUNCTION_TRANSIENT_ERRORS,
+  QUEUE_VISIBILITY_DEFAULT,
+  RECEIVES_AT_LEAST,
+  REPORT_BATCH_ITEM_FAILURES,
+  RETRY_WILDCARDS,
+  secondsWritten,
+  VISIBILITY_TIMES_TIMEOUT,
+} from './settings.js';
