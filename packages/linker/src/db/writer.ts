@@ -13,6 +13,7 @@ import {
 } from '@flowatlas/core';
 import type { LinkReport } from '../report.js';
 import { GRAPH_DB_FORMAT_VERSION, SCHEMA_SQL } from './schema.js';
+import { insertWordsOf, nodeWordsRow, typeWordsRow } from './words.js';
 
 /** A channel or a third party belongs to the project, not to any one service. */
 const serviceOf = (node: GraphNode): string | null =>
@@ -40,6 +41,20 @@ const statementsOf = (db: Database.Database) => ({
 });
 
 type Statements = ReturnType<typeof statementsOf>;
+
+/** The repository a type id names, `type:<repo>#...`. */
+const typeRepoOf = (id: string): string | null => /^type:([^#]+)#/.exec(id)?.[1] ?? null;
+
+/** Each node's and type's words, for the search that takes a sentence (P383). */
+const insertWords = (db: Database.Database, nodes: readonly GraphNode[], types: Readonly<Record<string, TypeEntry>>): void => {
+  const insert = insertWordsOf(db);
+  for (const item of nodes) insert(nodeWordsRow(item, serviceOf(item)));
+  for (const [id, entry] of Object.entries(types)) insert(typeWordsRow(id, entry, typeRepoOf(id)));
+};
+
+/** Whether the database holds the words table: one written before P383 does not, and is left without it. */
+const holdsWords = (db: Database.Database): boolean =>
+  db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'words'").get() !== undefined;
 
 const insertNode = (statements: Statements, item: GraphNode): void => {
   statements.node.run(
@@ -75,7 +90,7 @@ const insertType = (statements: Statements, id: string, entry: TypeEntry): void 
     id,
     entry.name,
     entry.kind,
-    /^type:([^#]+)#/.exec(id)?.[1] ?? null,
+    typeRepoOf(id),
     entry.declaredIn,
     entry.structuralHash,
     JSON.stringify(entry.fields ?? []),
@@ -158,6 +173,7 @@ export const writeGraphDb = (
       for (const item of project.edges) insertEdge(statements, item);
       for (const [id, entry] of Object.entries(project.types)) insertType(statements, id, entry);
       for (const item of project.unresolved) insertRow(statements, item);
+      insertWords(db, project.nodes, project.types);
     })();
   } finally {
     db.close();
@@ -197,10 +213,13 @@ export const replaceService = (
     db.prepare('DELETE FROM nodes WHERE service = ?').run(service);
     db.prepare('DELETE FROM types WHERE repo = ?').run(service);
     db.prepare('DELETE FROM unresolved WHERE service = ?').run(service);
+    const words = holdsWords(db);
+    if (words) db.prepare('DELETE FROM words WHERE service = ?').run(service);
 
     for (const item of graph.nodes) insertNode(statements, item);
     for (const item of graph.edges) insertEdge(statements, item);
     for (const [id, entry] of Object.entries(graph.types)) insertType(statements, id, entry);
     for (const item of graph.unresolved) insertRow(statements, item, service);
+    if (words) insertWords(db, graph.nodes, graph.types);
   })();
 };

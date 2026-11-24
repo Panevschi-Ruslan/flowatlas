@@ -98,9 +98,13 @@ describe('search finds a route by the path a client writes', () => {
     }
   });
 
-  it('not under another verb', async () => {
+  it('not under another verb, which finds it by its words only, never complete (P383)', async () => {
     const answer = await call('search', { query: 'GET /admin/:s/orders/:o/modify', kinds: ['routes'] });
-    expect(answer.error).toBe('nothing matches "GET /admin/:s/orders/:o/modify"');
+    expect(answer.results).toBeUndefined();
+    expect(answer.best?.map((row: { id: string }) => row.id)).toEqual([MODIFY_ROUTE]);
+    expect(answer.best?.[0]?.matched).toEqual(['admin', 'orders', 'modify']);
+    expect(answer.complete).toBe(false);
+    expect(answer.left?.[0]).toMatch(/^fuzzy: ranked by the words get, admin, orders, modify/);
   });
 
   it('reads a path query into segments with every hole a parameter', () => {

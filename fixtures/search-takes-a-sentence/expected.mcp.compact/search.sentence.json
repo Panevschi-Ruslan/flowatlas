@@ -1,0 +1,62 @@
+{
+  "query": "where is the order cancelled",
+  "best": [
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:14",
+      "reach": "alive",
+      "matched": [
+        "order",
+        "cancelled"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "line": 16,
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "order",
+        "cancelled"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "line": 14,
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "order",
+        "cancelled"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+      "line": 14,
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "order",
+        "cancelled"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
+      "line": 21,
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "order",
+        "cancelled"
+      ]
+    }
+  ],
+  "complete": false,
+  "left": [
+    "fuzzy: ranked by the words order, cancelled; 16 hold fewer"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:POST:/orders/:param/cancel\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:POST:/orders/:param/cancel\"})"
+  ]
+}

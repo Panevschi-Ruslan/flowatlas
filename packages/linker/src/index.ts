@@ -105,6 +105,7 @@ export type {
 export type { LinkReport, LinkTotals, ServicePackages, ServiceReport } from './report.js';
 export { replaceService, writeGraphDb } from './db/writer.js';
 export { GRAPH_DB_FORMAT_VERSION } from './db/schema.js';
+export { queryWordsOf, STOP_WORDS, wordsOf, type WordHit } from './db/words.js';
 export type { WriteOptions } from './db/writer.js';
 export { blastRadius, BLAST_EDGES, DEFAULT_BLAST_DEPTH, PROVIDER_EDGES } from './diff/blast-radius.js';
 export { compareDeclarations } from './diff/compare-declarations.js';

@@ -1,0 +1,134 @@
+{
+  "query": "cancel OR refund",
+  "best": [
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:14",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "label": "POST /orders/:param/refund",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "dead",
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "method",
+      "label": "OrdersService.refund",
+      "loc": "src/orders/orders.service.ts:20",
+      "service": "shop-api",
+      "reach": "alive",
+      "from": "POST /orders/:param/refund",
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "type": "method",
+      "label": "PaymentsService.refund",
+      "loc": "src/payments/payments.service.ts:9",
+      "service": "shop-api",
+      "reach": "alive",
+      "from": "POST /orders/:param/refund",
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "method",
+      "label": "OrdersController.refund",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "shop-api",
+      "reach": "alive",
+      "from": "POST /orders/:param/refund",
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens.issue",
+      "type": "method",
+      "label": "CancellationTokens.issue",
+      "loc": "src/common/cancellation-tokens.ts:10",
+      "service": "shop-api",
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+      "type": "method",
+      "label": "OrdersClient.cancel",
+      "loc": "src/app/orders.client.ts:14",
+      "service": "shop-web",
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "loc": "src/orders/orders.service.ts:16",
+      "service": "shop-api",
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "loc": "src/orders/orders.controller.ts:14",
+      "service": "shop-api",
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
+      "type": "method",
+      "label": "OrdersComponent.cancelOne",
+      "loc": "src/app/orders.component.ts:21",
+      "service": "shop-web",
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "cancel"
+      ]
+    }
+  ],
+  "complete": false,
+  "left": [
+    "fuzzy: ranked by the words cancel, refund; 1 more rows hold as many"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:POST:/orders/:param/cancel\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:POST:/orders/:param/cancel\"})",
+    "impact({symbol: \"entry:shop-api:http:POST:/orders/:param/cancel\"})"
+  ]
+}

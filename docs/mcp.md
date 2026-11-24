@@ -536,6 +536,34 @@ where it answered "nothing matches" and the services had to be read from
 land: `find_symbol.several` grew from 965 to 1,380 characters,
 `find_symbol.unreferenced` from 656 to 922.
 
+`search` and `find_symbol` take a sentence since P383
+(`search-takes-a-sentence`). Every name is split into its words once (camel,
+snake and kebab case, path segments, lower case) and stored with the graph in
+an SQLite FTS5 table whose tokenizer stems them, so "cancelled" meets
+`cancel` and "payments" meets `PaymentsClient`. A query's words, stop words
+("where", "is", "the", `OR`) and single letters dropped, are each asked for;
+only the names holding as many of them as the best do are kept ("order
+cancel" is what holds both, where anything does), ranked by how many the name
+holds, then by kind (a way in, then a handler, then code, then a class), then
+by `reach` (code that runs first), then BM25 with a name weighted five times
+its service and file. `search` answers them as `best`, at most `limit` rows
+across every kind (methods and functions too, which no kind lists), when no
+kind holds the query as a name or the query is a sentence; `find_symbol`
+answers them as its `matches`, ten to a page, when no name holds the query as
+written. Each row says the words it holds (`matched`); the answer is never
+`complete`, and `left` says `fuzzy: ranked by the words …` with how many rows
+hold as many and how many fewer. A site in code (a request, a query, a
+publish) is never a row: the method it is written in is. A database written
+before the words were stored is indexed in memory on its first search, by the
+same code. On `multi-repo`, `find_symbol` for "order cancel" answers the
+cancel route, its handler and `OrdersClient.cancel` in 919 characters where it
+answered no match, complete (40), and `search` for "where is the order
+cancelled" the same three in 896 where it was an error; on
+`search-takes-a-sentence` "what handles payments" answers the payments route
+first and every name for payments (1,515), `cancelOrder` the cancel route and
+`OrdersClient.cancel` (1,173), and "cancel OR refund" both routes (1,774), each
+an error or no match before.
+
 A complete answer whose `next` still names the same call asked further (a
 deeper `who_calls`, the next page) fails the budget too (P376): the agent
 would ask it, so the answer was not the whole answer after all.
@@ -919,8 +947,8 @@ accepted with `flowatlas accept` under `accepted`.
 | Tool | Answers | Takes |
 |---|---|---|
 | `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `in` (a class, method or file: the ways in it declares, each row with `reach` and who calls it, `callers` and the first `caller` as `dead` on a class says them, the answer with `declaredBy` and `next` the `dead` call judging each), `reach` (only the rows with that reach, `dead` for the ones no code calls), `offset` |
-| `find_symbol` | fuzzy search over every node, by substring or camel-case initials | `query` (required), `types`, `service`, `offset` |
-| `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
+| `find_symbol` | fuzzy search over every node, by substring or camel-case initials, and by the words of the query where no name holds it as written (P383) | `query` (required), `types`, `service`, `offset` |
+| `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each; a sentence, or a query no kind holds as a name, also answers `best`, the names holding its words, ranked (P383) | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
 `kind` is one of `http`, `rpc`, `event`, `cron`, `invoke`, `workflow`,
 `bot_command`, `bot_callback`, `bot_event`, `scene_step`, `task` and `screen`. An `invoke` is a

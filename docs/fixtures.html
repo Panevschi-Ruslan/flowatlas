@@ -67,7 +67,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
     <span>339 fixtures</span>
-    <span>897 snapshot files</span>
+    <span>896 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -2419,14 +2419,6 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A Nuxt 4 application (P240): its code under <code>app/</code>, the server and <code>shared/</code> beside it, and a <code>tsconfig.json</code> that refers to the four tsconfigs <code>nuxi prepare</code> writes into <code>.nuxt/</code> - none of which a fresh clone has.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
-      <li class="fixture" data-search="one-call-per-question everything else a question an agent asks is one call (p382): the inputs it writes are taken as it writes them, a message type given as the channel is answered on the channels carrying it, every input error names the exact call to make, a class's code answers its skeleton as plain text, and a detail-2 flow says each fact once.">
-        <div class="head">
-          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/one-call-per-question">one-call-per-question</a>
-          <span class="kind">2 services</span>
-        </div>
-        <p>A question an agent asks is one call (P382): the inputs it writes are taken as it writes them, a message type given as the channel is answered on the channels carrying it, every input error names the exact call to make, a class's code answers its skeleton as plain text, and a detail-2 flow says each fact once.</p>
-        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.mcp.compact</code> <code>expected.project-graph.json</code></p>
-      </li>
       <li class="fixture" data-search="orpc-contract everything else a contract-first orpc service (p58): the routes, inputs, outputs and failures written on a contract, implemented elsewhere, and served as rest routes.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/orpc-contract">orpc-contract</a>
@@ -2666,6 +2658,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A plain page whose scripts keep their functions inside wrappers run at once and hand them to the page by name, with jQuery and superagent the globals its script tags load and ky a global its linter's configuration declares; and a server that answers them.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="search-takes-a-sentence everything else `search` and `find_symbol` take a sentence or a name written another way (p383): &quot;where is the order cancelled&quot;, &quot;what handles payments&quot;, &quot;order cancel&quot;, `cancelorder`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/search-takes-a-sentence">search-takes-a-sentence</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p><code>search</code> and <code>find_symbol</code> take a sentence or a name written another way (P383): &quot;where is the order cancelled&quot;, &quot;what handles payments&quot;, &quot;order cancel&quot;, <code>cancelOrder</code>.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.mcp.compact</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="service-package-types everything else a workspace of three configured services: a nestjs api (`apps/api`) serving graphql at `/graphql` and rest under a `v1` prefix, a storefront that declares nothing of it, and a back office that declares the api's package (`&quot;@shop/api&quot;: &quot;workspace:^&quot;`) to import its `order` type and one helper (p282).">
         <div class="head">

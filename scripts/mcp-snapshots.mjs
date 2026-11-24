@@ -455,6 +455,20 @@ const ONE_CALL_COMPACT_CASES = [
   ['get_source.method', '#callText', { name: 'get_source', arguments: { symbol: 'OrdersController.addNote' } }],
   ['describe_for_prompt.route', '#callText', { name: 'describe_for_prompt', arguments: { id: 'PATCH /api/orders/:orderId/cancel' } }],
 ];
+ * Search and find_symbol taking a sentence (P383): each name's words indexed
+ * once, a query's words ranked, every row with the words it holds, and the
+ * answer never complete. A sentence, a word no name holds beside one that
+ * does, `OR`, and a name written another way (`cancelOrder`, "order cancel").
+ */
+const SENTENCE_CASES = [
+  ['search.sentence', 'search', { query: 'where is the order cancelled' }],
+  ['search.payments-sentence', 'search', { query: 'what handles payments' }],
+  ['search.or', 'search', { query: 'cancel OR refund' }],
+  ['find_symbol.words', 'find_symbol', { query: 'order cancel' }],
+  ['find_symbol.camel-words', 'find_symbol', { query: 'cancelOrder' }],
+];
+/** The same, compact: what an agent is handed. */
+const SENTENCE_COMPACT_CASES = SENTENCE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
@@ -981,6 +995,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'one-call-per-question'),
     outDir: join(root, 'fixtures', 'one-call-per-question', 'expected.mcp.compact'),
     cases: ONE_CALL_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'search-takes-a-sentence'),
+    outDir: join(root, 'fixtures', 'search-takes-a-sentence', 'expected.mcp'),
+    cases: SENTENCE_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'search-takes-a-sentence'),
+    outDir: join(root, 'fixtures', 'search-takes-a-sentence', 'expected.mcp.compact'),
+    cases: SENTENCE_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'loops-worth-fixing'),

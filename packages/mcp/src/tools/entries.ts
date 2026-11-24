@@ -8,6 +8,7 @@ import { rankMatches } from '../query/names.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown, withTraceFor } from '../query/next.js';
 import { declaredBy, isDeclared } from '../query/declared.js';
 import { requestsOf } from '../query/requests.js';
+import { byWords, wordsLeft, WORDS_PAGE } from '../query/words.js';
 import { deadOptionsOf, reachOfVerdict, reachReader, REACHES, type Reach, type ReachReader } from '../query/ways-in.js';
 import {
   answerEach,
@@ -76,9 +77,9 @@ export const listEntriesOutput = {
   next: nextOutput,
 };
 
-/** What find_symbol answers: one page of matches, best first. */
+/** What find_symbol answers: one page of matches, best first; found by words (P383), each with the words it holds. */
 export const findSymbolOutput = {
-  matches: z.array(matchedNodeOutput).optional(),
+  matches: z.array(matchedNodeOutput.extend({ matched: z.array(z.string()).optional() })).optional(),
   total: pageOutput.total.optional(),
   nextOffset: pageOutput.nextOffset,
   truncated: pageOutput.truncated,
@@ -108,9 +109,11 @@ const findOne = (db: GraphDb, input: FindAsked, query: string, reader: ReachRead
   });
   const wider = pool.length > 0 ? pool : db.nodesByType('method');
   const ranked = rankMatches(wider.filter(inService(input.service)), query);
+  const args = { query, types: input.types, service: input.service, detail: input.detail, maxNodes };
+  // No name holds the query: the names holding its words (P383), ranked, and never said complete.
+  if (ranked.length === 0) return findByWords(db, input, query, reader, args);
 
   const { items, total, truncated, nextOffset } = truncate(ranked, maxNodes, input.offset);
-  const args = { query, types: input.types, service: input.service, detail: input.detail, maxNodes };
   // A method that sends requests says where they land (P377).
   const rows = items.map((match) => ({ ...reader.annotate(projectDetail(match.node, detail)), ...requestsOf(db, match.node) }));
   return withNext(
@@ -122,6 +125,42 @@ const findOne = (db: GraphDb, input: FindAsked, query: string, reader: ReachRead
       ...(note === undefined ? {} : { note }),
     },
     pagedNext({ tool: 'find_symbol', args, nextOffset }, withoutShown(nextFor(items[0]?.node), rows)),
+  );
+};
+
+/**
+ * find_symbol by the words of the query (P383), where no name holds it as
+ * written: "order cancel" and "cancelOrder" find `OrdersClient.cancel` and the
+ * cancel route. Ranked, so never `complete` (`left` says `fuzzy`); an empty answer only
+ * where no name holds any of its words.
+ */
+const findByWords = (db: GraphDb, input: FindAsked, query: string, reader: ReachReader, args: Record<string, unknown>): object => {
+  const { detail, maxNodes, note } = bound(input);
+  const types = input.types === undefined || input.types.length === 0 ? undefined : new Set(input.types);
+  const found = byWords(db, query, {
+    ...(types === undefined ? {} : { admits: (node: GraphNode) => types.has(node.type) }),
+    withTypes: false,
+    service: input.service,
+    limit: Math.min(maxNodes, WORDS_PAGE),
+    offset: input.offset,
+    detail,
+    reader,
+  });
+  if (found.rows.length === 0) return { matches: [], total: 0, complete: true, ...(note === undefined ? {} : { note }) };
+  const nextOffset = found.total > input.offset + found.rows.length ? input.offset + found.rows.length : undefined;
+  const rows = found.rows.map((row) => {
+    const node = db.node(row.id);
+    return node === undefined ? row : { ...row, ...requestsOf(db, node) };
+  });
+  return withNext(
+    {
+      matches: rows,
+      total: found.total,
+      ...(nextOffset === undefined ? {} : { nextOffset }),
+      ...completeOf([wordsLeft(found, found.rows.length, input.offset), ...reader.left()]),
+      ...(note === undefined ? {} : { note }),
+    },
+    pagedNext({ tool: 'find_symbol', args, nextOffset }, withoutShown(nextFor(found.first), rows)),
   );
 };
 
@@ -255,7 +294,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
     'find_symbol',
     {
       title: 'Find a symbol',
-      description: 'Any node by part of its name or id, or initials ("ocs": OrderCreationService).',
+      description: 'Any node by part of a name or id, words or initials ("ocs": OrderCreationService).',
       inputSchema: {
         query: z.string().optional(),
         queries: severalInput(),

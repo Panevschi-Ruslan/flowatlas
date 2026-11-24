@@ -104,6 +104,37 @@ only one of them moved.
   escaped), a detail-2 flow 5,186 (6,219); `get_flow.route-detail-2` 2,766 to
   2,143 and `get_flow.inline-type` 1,933 to 1,668 for the same reason.
 
+- **Search takes a sentence (P383).** `search` and `find_symbol` answered
+  "where is the order cancelled", "what handles payments", "order cancel" and
+  `cancelOrder` with an error or an empty match marked `complete: true`, while
+  the cancel route and `OrdersClient.cancel` were in the graph: both matched
+  the query whole, as a substring. Every name is now split into its words
+  once (camel, snake and kebab case, path segments), stored with the graph in
+  an SQLite FTS5 table with a stemming tokenizer (`graph.db` layout 3; a
+  database written before is indexed in memory on its first search, by the
+  same code), and a query's words, stop words and single letters dropped, are
+  ranked: only the names holding as many of the words as the best, then by
+  how many the name holds, kind (a way in first), `reach` (code that runs
+  first) and BM25 with the name weighted five times its service and file.
+  `search` answers them as `best` (every kind, methods and functions too)
+  when no kind holds the query as a name or the query is a sentence;
+  `find_symbol` as its `matches`, ten to a page, when no name holds the query
+  as written. Each row says the words it holds (`matched`); such an answer is
+  never `complete`, and `left` says `fuzzy: ranked by the words …` with how
+  many rows hold as many and how many fewer. A route path under the wrong
+  verb is found the same way instead of "nothing matches". A new fixture,
+  `search-takes-a-sentence`, with a decoy whose name stems as "cancelled"
+  does, verbose and compact snapshots, and five answer-budget questions with
+  hand-written answers, each one call: `find_symbol` "order cancel" on
+  `multi-repo` 919 characters (no match, complete, before), `search` "where
+  is the order cancelled" 896 (an error), "what handles payments" 1,515,
+  `cancelOrder` 1,173 and "cancel OR refund" 1,774 (each an error or no
+  match). `find_symbol`'s description says words (listing core 5,633 to
+  5,637); the output schemas gained `best` and `matched`, so the tool
+  listing's whole-size ceilings move to 36,650 and 33,000. A build of 53,700
+  nodes spends about half a second on the words; a search reads them in
+  under a millisecond on the fixtures and about 0.1 s for a word held by
+  thousands of names.
 - **who_calls answers stay small and finish, also on several symbols
   (P379).** `depth` is how far the tree of callers is drawn, never a cut:
   every way in past it is listed under `waysIn` whatever it is, one symbol or

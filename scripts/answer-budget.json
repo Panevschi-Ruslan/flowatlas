@@ -1903,6 +1903,133 @@
         }
       },
       "note": "P382: `route` is read as `entry`; the step's edge says no types its signature says, and the reader's own meta and the route's fails and guards said twice are gone."
+    },
+    {
+      "id": "find_symbol.two-words",
+      "ask": "where is the order cancel code, asked as two words",
+      "fixture": "multi-repo",
+      "tool": "find_symbol",
+      "args": {
+        "query": "order cancel"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "matches": [
+            "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+            "entry:gateway:http:POST:/orders/:param/cancel"
+          ]
+        },
+        "notListed": {
+          "matches": [
+            "orders#src/orders/orders.controller.ts:OrdersController.archive"
+          ]
+        }
+      },
+      "note": "P383: no name holds \"order cancel\" as written; it answered no match, complete. Found by its words, never complete."
+    },
+    {
+      "id": "search.sentence",
+      "ask": "where is the order cancelled",
+      "fixture": "multi-repo",
+      "tool": "search",
+      "args": {
+        "query": "where is the order cancelled"
+      },
+      "lists": [
+        "best"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "best": [
+            "entry:gateway:http:POST:/orders/:param/cancel",
+            "gateway#src/clients/orders.client.ts:OrdersClient.cancel"
+          ]
+        }
+      },
+      "note": "P383: it answered isError \"nothing matches\"."
+    },
+    {
+      "id": "search.sentence-payments",
+      "ask": "what handles payments",
+      "fixture": "search-takes-a-sentence",
+      "tool": "search",
+      "args": {
+        "query": "what handles payments"
+      },
+      "lists": [
+        "best"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "best": [
+            "entry:shop-api:http:POST:/payments",
+            "shop-api#src/payments/payments.controller.ts:PaymentsController.capture",
+            "shop-web#src/app/payments.client.ts:PaymentsClient.pay"
+          ]
+        },
+        "notListed": {
+          "best": [
+            "entry:shop-api:http:POST:/orders/:param/cancel"
+          ]
+        }
+      },
+      "note": "P383: it answered isError \"nothing matches\"."
+    },
+    {
+      "id": "find_symbol.camel-words",
+      "ask": "where is cancelOrder",
+      "fixture": "search-takes-a-sentence",
+      "tool": "find_symbol",
+      "args": {
+        "query": "cancelOrder"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "matches": [
+            "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+            "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+            "entry:shop-api:http:POST:/orders/:param/cancel"
+          ]
+        },
+        "notListed": {
+          "matches": [
+            "shop-api#src/common/cancellation-tokens.ts:CancellationTokens"
+          ]
+        }
+      },
+      "note": "P383: the client method is named cancel; it answered no match, complete. The decoy holds one of the two words and is left out."
+    },
+    {
+      "id": "search.or",
+      "ask": "where are orders cancelled or refunded",
+      "fixture": "search-takes-a-sentence",
+      "tool": "search",
+      "args": {
+        "query": "cancel OR refund"
+      },
+      "lists": [
+        "best"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "best": [
+            "entry:shop-api:http:POST:/orders/:param/cancel",
+            "entry:shop-api:http:POST:/orders/:param/refund"
+          ]
+        }
+      },
+      "note": "P383: it answered isError \"nothing matches\"."
     }
   ],
   "fixed": {
@@ -2227,6 +2354,41 @@
       "tokens": 103,
       "rows": 1,
       "complete": true,
+      "calls": 1
+    },
+    "find_symbol.two-words": {
+      "chars": 919,
+      "tokens": 230,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "search.sentence": {
+      "chars": 896,
+      "tokens": 224,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "search.sentence-payments": {
+      "chars": 1515,
+      "tokens": 379,
+      "rows": 8,
+      "complete": false,
+      "calls": 1
+    },
+    "find_symbol.camel-words": {
+      "chars": 1173,
+      "tokens": 294,
+      "rows": 5,
+      "complete": false,
+      "calls": 1
+    },
+    "search.or": {
+      "chars": 1774,
+      "tokens": 444,
+      "rows": 10,
+      "complete": false,
       "calls": 1
     },
     "check_contract.route-alias": {

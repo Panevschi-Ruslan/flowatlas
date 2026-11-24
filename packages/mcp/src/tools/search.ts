@@ -33,6 +33,7 @@ import { hintsFor, MAX_NEXT, withNext, withoutShown, type Identified, type RowSh
 import { reachReader, type ReachReader } from '../query/ways-in.js';
 import { shapeFields, topField } from '../query/fields.js';
 import type { CompactNode } from '../query/types.js';
+import { byWords, wordsLeft, type WordsFound } from '../query/words.js';
 import { rankMatches } from './entries.js';
 import {
   answerEach,
@@ -566,6 +567,8 @@ export const searchOutput = {
       }),
     ),
   ).optional(),
+  // Found by the words of the query (P383), each row a node as a kind's row says it, with the words it holds.
+  best: z.array(z.object({ id: z.string(), matched: z.array(z.string()) }).loose()).optional(),
   truncated: z.string().optional(),
   nextOffset: z.number().optional(),
   note: z.string().optional(),
@@ -573,6 +576,33 @@ export const searchOutput = {
   ...completeOutput,
   next: nextOutput,
 };
+
+/**
+ * Which nodes the kinds asked admit to the rows found by words (P383): a
+ * route for `routes`, a channel for `channels`, a type of message for
+ * `messages`, a table, a class; every node when no kind was asked, methods
+ * and functions too, which no kind lists.
+ */
+const admitsOf = (kinds: readonly SearchKind[] | undefined): { admits?: (node: GraphNode) => boolean; withTypes: boolean; any: boolean } => {
+  if (kinds === undefined || kinds.length === 0) return { withTypes: true, any: true };
+  const asked = new Set(kinds);
+  const classes = new Set<string>(CLASS_TYPES);
+  const admits = (node: GraphNode): boolean =>
+    (asked.has('routes') && node.type === 'entry') ||
+    (asked.has('channels') && node.type === 'channel' && !isMessageTypeNode(node)) ||
+    (asked.has('messages') && isMessageTypeNode(node)) ||
+    (asked.has('tables') && node.type === 'table') ||
+    (asked.has('classes') && classes.has(node.type));
+  const any = ['routes', 'channels', 'messages', 'tables', 'classes', 'types'].some((kind) => asked.has(kind as SearchKind));
+  return { admits, withTypes: asked.has('types'), any };
+};
+
+/**
+ * A query written as a sentence or as words, not as one name: it holds a
+ * space and is no route's path. Found by words beside the kinds' rows, since a
+ * name holding the sentence whole is rarely what was meant.
+ */
+const isSentence = (text: string): boolean => /\s/.test(text) && pathQueryOf(text) === undefined;
 
 /** The kinds whose rows are code `dead` judges, so each row says whether it runs (P364). */
 const REACHED_KINDS: ReadonlySet<SearchKind> = new Set(['routes', 'channels', 'messages', 'classes', 'fails']);
@@ -589,6 +619,11 @@ export const runSearch = (
   next: string[];
   /** Kinds with rows past this page, and how many each has left. */
   more: Partial<Record<SearchKind, number>>;
+  /**
+   * The names holding the query's words, ranked (P383): found when no kind
+   * matched the query as a name, or when it is a sentence.
+   */
+  best?: WordsFound;
 } => {
   const text = input.query.trim();
   const offset = input.offset ?? 0;
@@ -606,8 +641,15 @@ export const runSearch = (
     if (left > 0) more[kind] = left;
     if (found.rows[0] !== undefined) hints.push(...hintsOfHit(found.rows[0]));
   }
-  const shown = Object.values(results).flat() as RowShown[];
-  return { results, counts, more, next: withoutShown([...new Set(hints)], shown).slice(0, MAX_NEXT) };
+  const scope = admitsOf(input.kinds);
+  const found = scope.any && (Object.keys(counts).length === 0 || isSentence(text))
+    ? byWords(db, text, { ...scope, service: input.service, limit: input.limit, offset, detail: bounded.detail, reader })
+    : undefined;
+  const best = found === undefined || found.rows.length === 0 ? undefined : found;
+  // A sentence's best rows lead: what it asked for is them more than a name holding it whole.
+  if (best?.first !== undefined) hints.unshift(...hintsFor(best.first));
+  const shown = [...Object.values(results).flat(), ...(best?.rows ?? [])] as RowShown[];
+  return { results, counts, more, ...(best === undefined ? {} : { best }), next: withoutShown([...new Set(hints)], shown).slice(0, MAX_NEXT) };
 };
 
 /** The defaults a hint for the next page leaves out. */
@@ -618,7 +660,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     'search',
     {
       title: 'Search everything',
-      description: 'Any node by name (`kinds` narrows), a field read or sent, or a route by the path a client writes.',
+      description: "Any node by name or words (`kinds` narrows), a field read or sent, or a route by a client's path.",
       inputSchema: {
         query: z.string().min(1).optional(),
         queries: severalInput(),
@@ -641,7 +683,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
         // Whether each row runs and where it is reached from (P364), one reader for every query.
         const reader = reachReader(db, ctx.handle, bounded.detail);
         const one = (query: string): object => {
-          const { results, counts, more, next } = runSearch(
+          const { results, counts, more, best, next } = runSearch(
             db,
             {
               query,
@@ -654,7 +696,7 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
             accepted,
             reader,
           );
-          if (Object.keys(counts).length === 0) return { error: `nothing matches ${JSON.stringify(query)}` };
+          if (Object.keys(counts).length === 0 && best === undefined) return { error: `nothing matches ${JSON.stringify(query)}` };
           // An accepted.json that could not be read marks nothing accepted, and says so (P80).
           const notes = [
             ...(bounded.note === undefined ? [] : [bounded.note]),
@@ -683,10 +725,14 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
           return withNext(
             {
               query,
-              counts,
-              results,
+              ...(Object.keys(counts).length === 0 ? {} : { counts, results }),
+              ...(best === undefined ? {} : { best: best.rows }),
               ...paging,
-              ...completeOf([paging.truncated === undefined ? undefined : `page: ${paging.truncated}`, ...reader.left()]),
+              ...completeOf([
+                paging.truncated === undefined ? undefined : `page: ${paging.truncated}`,
+                best === undefined ? undefined : wordsLeft(best, best.rows.length, input.offset),
+                ...reader.left(),
+              ]),
               ...(notes.length === 0 ? {} : { note: notes.join(' ') }),
             },
             [...page, ...next].slice(0, MAX_NEXT),
