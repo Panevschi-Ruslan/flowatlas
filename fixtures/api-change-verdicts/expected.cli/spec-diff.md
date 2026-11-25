@@ -4,7 +4,7 @@
 
 ### Changes
 
-4 errors, 2 warnings, 4 infos · 10 breaking by kind, 1 of them with no caller in this project
+4 errors, 3 warnings, 5 infos · 12 breaking by kind, 1 of them with no caller in this project
 
 Judged by use: 8 consumers in 4 repositories; consumers outside them unknown.
 
@@ -14,8 +14,10 @@ Judged by use: 8 consumers in 4 repositories; consumers outside them unknown.
 | error | `response-property-removed` | `catalog` `GET /items/{id}` | `response.price` | base had `response.price` as `number`; head has no such field | 1 of 2 callers: reads `price` in ItemPage, line 13 (breaking: the answer no longer holds it) | callers first: stop relying on `price`, then catalog |
 | error | `request-property-added-required` | `catalog` `POST /items` | `body.currency` | head has `body.currency` as `string` and requires it; base did not | 1 of 1 caller: sends name, price; no `currency` (breaking: narrows the request: a caller must now send it) | callers first: send `currency`, then catalog |
 | error | `message-property-removed` | `catalog` `send item.changed` | `payload.label` | base had `payload.label` as `string`; head has no such field | 1 of 1 consumer: reads `label`, line 16 (breaking: the message no longer carries it) | consumers first: stop reading `label` (or cope without it), then catalog |
+| warning | `response-property-became-optional` | `catalog` `GET /items` | `response[].stock` | `response[].stock` was required in base and may be left out in head | 1 of 1 caller: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there (breaking: widens the response: it may now be absent) | callers first: stop relying on `stock`, then catalog |
 | warning | `response-property-removed` | `catalog` `POST /items` | `response.price` | base had `response.price` as `number`; head has no such field | 1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known (breaking: the answer no longer holds it) | callers first: stop relying on `price`, then catalog |
 | warning | `message-property-removed` | `catalog` `send stock.changed` | `payload.warehouse` | base had `payload.warehouse` as `string`; head has no such field | 1 of 1 consumer: takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known (breaking: the message no longer carries it) | consumers first: stop reading `warehouse` (or cope without it), then catalog |
+| info | `response-property-became-optional` | `catalog` `GET /items` | `response[].badge` | `response[].badge` was required in base and may be left out in head | every caller that reads `badge` checks it is there first, among 1 (breaking: widens the response: it may now be absent) | — |
 | info | `response-property-removed` | `catalog` `GET /items` | `response[].thumbnail` | base had `response[].thumbnail` as `string`; head has no such field | no caller reads `thumbnail`, among 1 (breaking: the answer no longer holds it) | — |
 | info | `response-property-removed` | `catalog` `GET /items/{id}/archive` | `response.reason` | base had `response.reason` as `string`; head has no such field (no caller in this project) | nothing in the 4 repositories read calls it (breaking: the answer no longer holds it) | — |
 | info | `request-property-became-required` | `catalog` `POST /drafts` | `body.title` | `body.title` could be left out in base and is required in head | every caller sends `title`, among 1 (breaking: narrows the request: a caller must now send it) | — |

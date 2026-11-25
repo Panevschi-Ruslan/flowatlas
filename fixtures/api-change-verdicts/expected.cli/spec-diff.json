@@ -137,10 +137,10 @@
       },
       "callers": [
         {
-          "id": "ui_api_call:dashboard#src/api.ts:18:26",
+          "id": "ui_api_call:dashboard#src/api.ts:20:26",
           "service": "dashboard",
           "file": "src/api.ts",
-          "line": 18,
+          "line": 20,
           "confidence": "static",
           "via": "hits"
         },
@@ -165,7 +165,7 @@
         "among": 2,
         "readers": [
           {
-            "id": "ui_api_call:dashboard#src/api.ts:18:26",
+            "id": "ui_api_call:dashboard#src/api.ts:20:26",
             "service": "dashboard",
             "file": "src/ItemPage.tsx",
             "line": 13,
@@ -207,15 +207,15 @@
               "label": "fetchItem",
               "service": "dashboard",
               "file": "src/api.ts",
-              "line": 17
+              "line": 19
             },
             {
-              "id": "ui_api_call:dashboard#src/api.ts:18:26",
+              "id": "ui_api_call:dashboard#src/api.ts:20:26",
               "step": "code",
               "label": "GET /items/:param",
               "service": "dashboard",
               "file": "src/api.ts",
-              "line": 18
+              "line": 20
             },
             {
               "id": "entry:catalog:http:GET:/items/:param",
@@ -557,6 +557,116 @@
       }
     },
     {
+      "kind": "response-property-became-optional",
+      "level": "warning",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items",
+      "field": "response[].stock",
+      "base": "number",
+      "head": "number",
+      "message": "GET /items: `response[].stock` was required in base and may be left out in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 29
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:25:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 25,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-became-optional|catalog|GET /items|response[].stock",
+      "use": {
+        "direction": "breaking",
+        "why": "widens the response: it may now be absent",
+        "level": "warning",
+        "verdict": "1 of 1 caller: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:25:26",
+            "service": "dashboard",
+            "file": "src/ItemsList.tsx",
+            "line": 10,
+            "how": "reads",
+            "said": "reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there",
+            "level": "warning"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:dashboard:screen:/items",
+              "step": "way in",
+              "label": "/items",
+              "service": "dashboard",
+              "file": "src/App.tsx",
+              "line": 10
+            },
+            {
+              "id": "dashboard#src/ItemsList.tsx:ItemsList",
+              "step": "handler",
+              "label": "ItemsList",
+              "service": "dashboard",
+              "file": "src/ItemsList.tsx",
+              "line": 5
+            },
+            {
+              "id": "dashboard#src/api.ts:fetchItems",
+              "step": "code",
+              "label": "fetchItems",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 24
+            },
+            {
+              "id": "ui_api_call:dashboard#src/api.ts:25:26",
+              "step": "code",
+              "label": "GET /items",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 25
+            },
+            {
+              "id": "entry:catalog:http:GET:/items",
+              "step": "route",
+              "label": "GET /items",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 24
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.list",
+              "step": "handler",
+              "label": "ItemsController.list",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 24
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: stop relying on `stock`, then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 24
+        }
+      }
+    },
+    {
       "kind": "response-property-removed",
       "level": "warning",
       "document": "catalog",
@@ -785,6 +895,61 @@
       }
     },
     {
+      "kind": "response-property-became-optional",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items",
+      "field": "response[].badge",
+      "base": "string",
+      "head": "string",
+      "message": "GET /items: `response[].badge` was required in base and may be left out in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 29
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:25:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 25,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-became-optional|catalog|GET /items|response[].badge",
+      "use": {
+        "direction": "breaking",
+        "why": "widens the response: it may now be absent",
+        "level": "info",
+        "verdict": "every caller that reads `badge` checks it is there first, among 1",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:25:26",
+            "service": "dashboard",
+            "file": "src/ItemsList.tsx",
+            "line": 10,
+            "how": "reads",
+            "said": "reads `badge` only behind a check that it is there in ItemsList, line 10: it copes without it",
+            "level": "info"
+          }
+        ],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 24
+        }
+      }
+    },
+    {
       "kind": "response-property-removed",
       "level": "info",
       "document": "catalog",
@@ -802,10 +967,10 @@
       },
       "callers": [
         {
-          "id": "ui_api_call:dashboard#src/api.ts:23:26",
+          "id": "ui_api_call:dashboard#src/api.ts:25:26",
           "service": "dashboard",
           "file": "src/api.ts",
-          "line": 23,
+          "line": 25,
           "confidence": "static",
           "via": "hits"
         }
@@ -822,10 +987,10 @@
         "among": 1,
         "readers": [
           {
-            "id": "ui_api_call:dashboard#src/api.ts:23:26",
+            "id": "ui_api_call:dashboard#src/api.ts:25:26",
             "service": "dashboard",
             "file": "src/api.ts",
-            "line": 23,
+            "line": 25,
             "how": "ignores",
             "said": "does not read `thumbnail`",
             "level": "info"
@@ -988,9 +1153,9 @@
   ],
   "summary": {
     "errors": 4,
-    "warnings": 2,
-    "infos": 4,
-    "breaking": 10,
+    "warnings": 3,
+    "infos": 5,
+    "breaking": 12,
     "uncalled": 1
   },
   "coverage": {

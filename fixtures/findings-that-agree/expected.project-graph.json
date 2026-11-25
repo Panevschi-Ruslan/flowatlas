@@ -1,0 +1,2048 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:21:10.952Z",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "back-office",
+      "repo": "./back-office",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ops-web",
+      "repo": "./ops-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "back-office#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "back-office",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CatalogRelayController"
+        ],
+        "providers": [
+          "CatalogHandlers"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers",
+      "type": "provider",
+      "label": "CatalogHandlers",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "method",
+      "label": "CatalogHandlers.onCatalogEvent",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#CatalogMessage"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "catalog_events"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 17
+          },
+          {
+            "field": "sku",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "type": "method",
+      "label": "CatalogHandlers.onPriceChanged",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#PriceChangedEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "catalog_events"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "price",
+            "line": 11
+          },
+          {
+            "field": "sku",
+            "line": 11
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/catalog/catalog-relay.controller.ts:CatalogRelayController",
+      "type": "provider",
+      "label": "CatalogRelayController",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/catalog/catalog-relay.controller.ts:CatalogRelayController.relay",
+      "type": "method",
+      "label": "CatalogRelayController.relay",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{message:type:back-office#CatalogMessage}"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": [
+          {
+            "field": "message",
+            "line": 13
+          },
+          {
+            "field": "message.type",
+            "line": 14
+          },
+          {
+            "field": "message.reason",
+            "in": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+            "line": 17
+          },
+          {
+            "field": "message.sku",
+            "in": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+            "line": 17
+          },
+          {
+            "field": "message.price",
+            "in": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+            "line": 11,
+            "when": [
+              "PRICE_CHANGED"
+            ]
+          },
+          {
+            "field": "message.sku",
+            "in": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+            "line": 11,
+            "when": [
+              "PRICE_CHANGED"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog-api#node_modules/@nestjs/common:ClassSerializerInterceptor",
+      "type": "interceptor",
+      "label": "ClassSerializerInterceptor",
+      "repo": "catalog-api",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true
+      }
+    },
+    {
+      "id": "catalog-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog-api",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ProductsController",
+          "ReportsController",
+          "CatalogEventsController",
+          "ChatHookController"
+        ],
+        "providers": [
+          "CatalogBus",
+          "CatalogService",
+          "ChatBot"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog-api#src/chat/chat-bot.ts:ChatBot",
+      "type": "provider",
+      "label": "ChatBot",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-bot.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/chat/chat-bot.ts:ChatBot.handleUpdate",
+      "type": "method",
+      "label": "ChatBot.handleUpdate",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-bot.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:catalog-api#ChatUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/chat/chat-bot.ts:ChatBot.onModuleInit",
+      "type": "method",
+      "label": "ChatBot.onModuleInit",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-bot.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/chat/chat-bot.ts:ChatBot.replyStock",
+      "type": "method",
+      "label": "ChatBot.replyStock",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-bot.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/chat/chat-hook.controller.ts:ChatHookController",
+      "type": "provider",
+      "label": "ChatHookController",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-hook.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/chat/chat-hook.controller.ts:ChatHookController.receive",
+      "type": "method",
+      "label": "ChatHookController.receive",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-hook.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "secret",
+              "type": "string"
+            },
+            {
+              "name": "update",
+              "type": "{message?:{text?:string}}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "message.text",
+            "in": "catalog-api#src/chat/chat-bot.ts:ChatBot.handleUpdate",
+            "line": 22
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog-api#src/envelope.interceptor.ts:EnvelopeInterceptor",
+      "type": "interceptor",
+      "label": "EnvelopeInterceptor",
+      "repo": "catalog-api",
+      "file": "src/envelope.interceptor.ts",
+      "line": 5,
+      "meta": {
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog-bus.ts:CatalogBus",
+      "type": "provider",
+      "label": "CatalogBus",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-bus.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog-bus.ts:CatalogBus.publish",
+      "type": "method",
+      "label": "CatalogBus.publish",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-bus.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController",
+      "type": "provider",
+      "label": "CatalogEventsController",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.price",
+      "type": "method",
+      "label": "CatalogEventsController.price",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "price",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.retire",
+      "type": "method",
+      "label": "CatalogEventsController.retire",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.stock",
+      "type": "method",
+      "label": "CatalogEventsController.stock",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "left",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "label": "CatalogService",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog.service.ts:CatalogService.priceChanged",
+      "type": "method",
+      "label": "CatalogService.priceChanged",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "price",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog.service.ts:CatalogService.retired",
+      "type": "method",
+      "label": "CatalogService.retired",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/events/catalog.service.ts:CatalogService.stockLow",
+      "type": "method",
+      "label": "CatalogService.stockLow",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "left",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/products/products.controller.ts:ProductsController",
+      "type": "provider",
+      "label": "ProductsController",
+      "repo": "catalog-api",
+      "file": "src/products/products.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/products/products.controller.ts:ProductsController.product",
+      "type": "method",
+      "label": "ProductsController.product",
+      "repo": "catalog-api",
+      "file": "src/products/products.controller.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalog-api#ProductCard"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/reports/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "catalog-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "method",
+      "label": "ReportsController.daily",
+      "repo": "catalog-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog-api#DailyReport"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/reports/totals.interceptor.ts:TotalsInterceptor",
+      "type": "interceptor",
+      "label": "TotalsInterceptor",
+      "repo": "catalog-api",
+      "file": "src/reports/totals.interceptor.ts",
+      "line": 5,
+      "meta": {
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/reports/totals.interceptor.ts:TotalsInterceptor.intercept",
+      "type": "method",
+      "label": "TotalsInterceptor.intercept",
+      "repo": "catalog-api",
+      "file": "src/reports/totals.interceptor.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            },
+            {
+              "name": "next",
+              "type": "type:@nestjs/common#CallHandler<any>"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/reports/totals.interceptor.ts:TotalsInterceptor.withTotals",
+      "type": "method",
+      "label": "TotalsInterceptor.withTotals",
+      "repo": "catalog-api",
+      "file": "src/reports/totals.interceptor.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "report",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "channel:catalog_events",
+      "type": "channel",
+      "label": "catalog_events",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 10,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "catalog-bus"
+        ],
+        "producers": 3,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:catalog_events#PRICE_CHANGED",
+      "type": "channel",
+      "label": "catalog_events#PRICE_CHANGED",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 10,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:catalog_events",
+        "messageType": "PRICE_CHANGED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:catalog_events#PRODUCT_RETIRED",
+      "type": "channel",
+      "label": "catalog_events#PRODUCT_RETIRED",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 18,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:catalog_events",
+        "messageType": "PRODUCT_RETIRED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:catalog_events#STOCK_LOW",
+      "type": "channel",
+      "label": "catalog_events#STOCK_LOW",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 14,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:catalog_events",
+        "messageType": "STOCK_LOW",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "consumer",
+      "label": "CatalogHandlers.onCatalogEvent",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "catalog-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selectsRest": [
+          {
+            "consumer": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+            "excluding": [
+              "PRICE_CHANGED"
+            ],
+            "line": 16,
+            "file": "src/catalog/catalog-relay.controller.ts"
+          }
+        ],
+        "selects": [
+          {
+            "type": "PRODUCT_RETIRED",
+            "consumer": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+            "via": "else",
+            "line": 16,
+            "file": "src/catalog/catalog-relay.controller.ts"
+          },
+          {
+            "type": "STOCK_LOW",
+            "consumer": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+            "via": "else",
+            "line": 16,
+            "file": "src/catalog/catalog-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "type": "consumer",
+      "label": "CatalogHandlers.onPriceChanged",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "catalog-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "PRICE_CHANGED",
+            "consumer": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+            "via": "if",
+            "line": 14,
+            "file": "src/catalog/catalog-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:back-office:http:POST:/events/catalog",
+      "type": "entry",
+      "label": "POST /events/catalog",
+      "repo": "back-office",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/events/catalog",
+        "rawPath": "/events/catalog",
+        "controller": "CatalogRelayController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:bot_command:stock",
+      "type": "entry",
+      "label": "bot_command stock",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-bot.ts",
+      "line": 14,
+      "kind": "bot_command",
+      "meta": {
+        "key": "stock",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'stock'",
+        "updateClass": "ChatBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/products/:param",
+      "type": "entry",
+      "label": "GET /products/:param",
+      "repo": "catalog-api",
+      "file": "src/products/products.controller.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/:param",
+        "rawPath": "/products/:id",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http",
+        "answerWraps": [
+          {
+            "by": "ClassSerializerInterceptor",
+            "excluded": [
+              "costPrice"
+            ]
+          },
+          {
+            "by": "EnvelopeInterceptor",
+            "file": "src/envelope.interceptor.ts",
+            "line": 7,
+            "envelope": {
+              "fields": [
+                "data",
+                "success"
+              ],
+              "into": "data"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/reports/daily",
+      "type": "entry",
+      "label": "GET /reports/daily",
+      "repo": "catalog-api",
+      "file": "src/reports/reports.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/daily",
+        "rawPath": "/reports/daily",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http",
+        "answerWraps": [
+          {
+            "by": "TotalsInterceptor",
+            "file": "src/reports/totals.interceptor.ts",
+            "line": 7,
+            "unread": "its map(...) answers this.withTotals(report), not an object written out"
+          },
+          {
+            "by": "EnvelopeInterceptor",
+            "file": "src/envelope.interceptor.ts",
+            "line": 7,
+            "envelope": {
+              "fields": [
+                "data",
+                "success"
+              ],
+              "into": "data"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/catalog/:param/price/:param",
+      "type": "entry",
+      "label": "POST /catalog/:param/price/:param",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/catalog/:param/price/:param",
+        "rawPath": "/catalog/:sku/price/:price",
+        "controller": "CatalogEventsController",
+        "adapter": "nestjs-http",
+        "answerWraps": [
+          {
+            "by": "EnvelopeInterceptor",
+            "file": "src/envelope.interceptor.ts",
+            "line": 7,
+            "envelope": {
+              "fields": [
+                "data",
+                "success"
+              ],
+              "into": "data"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/catalog/:param/retire/:param",
+      "type": "entry",
+      "label": "POST /catalog/:param/retire/:param",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/catalog/:param/retire/:param",
+        "rawPath": "/catalog/:sku/retire/:reason",
+        "controller": "CatalogEventsController",
+        "adapter": "nestjs-http",
+        "answerWraps": [
+          {
+            "by": "EnvelopeInterceptor",
+            "file": "src/envelope.interceptor.ts",
+            "line": 7,
+            "envelope": {
+              "fields": [
+                "data",
+                "success"
+              ],
+              "into": "data"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/catalog/:param/stock/:param",
+      "type": "entry",
+      "label": "POST /catalog/:param/stock/:param",
+      "repo": "catalog-api",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/catalog/:param/stock/:param",
+        "rawPath": "/catalog/:sku/stock/:left",
+        "controller": "CatalogEventsController",
+        "adapter": "nestjs-http",
+        "answerWraps": [
+          {
+            "by": "EnvelopeInterceptor",
+            "file": "src/envelope.interceptor.ts",
+            "line": 7,
+            "envelope": {
+              "fields": [
+                "data",
+                "success"
+              ],
+              "into": "data"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/tg/:param",
+      "type": "entry",
+      "label": "POST /tg/:param",
+      "repo": "catalog-api",
+      "file": "src/chat/chat-hook.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/tg/:param",
+        "rawPath": "/tg/:secret",
+        "controller": "ChatHookController",
+        "adapter": "nestjs-http",
+        "answerWraps": [
+          {
+            "by": "EnvelopeInterceptor",
+            "file": "src/envelope.interceptor.ts",
+            "line": 7,
+            "envelope": {
+              "fields": [
+                "data",
+                "success"
+              ],
+              "into": "data"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "ops-web#src/products.ts:productLine",
+      "type": "function",
+      "label": "productLine",
+      "repo": "ops-web",
+      "file": "src/products.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "ops-web#src/reports.ts:reportLine",
+      "type": "function",
+      "label": "reportLine",
+      "repo": "ops-web",
+      "file": "src/reports.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "producer:catalog-api#src/events/catalog.service.ts:10:11",
+      "type": "producer",
+      "label": "event catalog_events",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "catalog-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "PRICE_CHANGED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:catalog-api#src/events/catalog.service.ts:14:11",
+      "type": "producer",
+      "label": "event catalog_events",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "catalog-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "STOCK_LOW"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:catalog-api#src/events/catalog.service.ts:18:11",
+      "type": "producer",
+      "label": "event catalog_events",
+      "repo": "catalog-api",
+      "file": "src/events/catalog.service.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "catalog-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "PRODUCT_RETIRED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:back-office",
+      "type": "repo",
+      "label": "back-office",
+      "repo": "back-office",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog-api",
+      "type": "repo",
+      "label": "catalog-api",
+      "repo": "catalog-api",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 11,
+          "skippedExternalCalls": {
+            "rxjs": 2,
+            "@nestjs/common": 2,
+            "telegraf": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ops-web",
+      "type": "repo",
+      "label": "ops-web",
+      "repo": "ops-web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:ops-web#src/products.ts:10:26",
+      "type": "ui_api_call",
+      "label": "GET /products/:param",
+      "repo": "ops-web",
+      "file": "src/products.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/products/:param",
+        "path": "/products/:param",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "success",
+            "in": "ops-web#src/products.ts:productLine",
+            "line": 12,
+            "guarded": true
+          },
+          {
+            "field": "data.costPrice",
+            "in": "ops-web#src/products.ts:productLine",
+            "line": 13
+          },
+          {
+            "field": "data.name",
+            "in": "ops-web#src/products.ts:productLine",
+            "line": 13
+          },
+          {
+            "field": "price",
+            "in": "ops-web#src/products.ts:productLine",
+            "line": 13
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "ui_api_call:ops-web#src/reports.ts:7:26",
+      "type": "ui_api_call",
+      "label": "GET /reports/daily",
+      "repo": "ops-web",
+      "file": "src/reports.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/reports/daily",
+        "path": "/reports/daily",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "data.date",
+            "in": "ops-web#src/reports.ts:reportLine",
+            "line": 9
+          },
+          {
+            "field": "data.revenue",
+            "in": "ops-web#src/reports.ts:reportLine",
+            "line": 9
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "catalog-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "back-office#src/catalog/catalog-relay.controller.ts:CatalogRelayController",
+      "to": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "back-office#src/catalog/catalog-relay.controller.ts:CatalogRelayController.relay",
+      "to": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#CatalogMessage"
+      ],
+      "returns": "string",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "back-office#src/catalog/catalog-relay.controller.ts:CatalogRelayController.relay",
+      "to": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#PriceChangedEvent"
+      ],
+      "returns": "string",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "catalog-api#src/chat/chat-bot.ts:ChatBot.handleUpdate",
+      "to": "catalog-api#src/chat/chat-bot.ts:ChatBot.replyStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/chat/chat-bot.ts",
+      "line": 22
+    },
+    {
+      "from": "catalog-api#src/chat/chat-bot.ts:ChatBot.onModuleInit",
+      "to": "catalog-api#src/chat/chat-bot.ts:ChatBot.replyStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/chat/chat-bot.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog-api#src/chat/chat-hook.controller.ts:ChatHookController",
+      "to": "catalog-api#src/chat/chat-bot.ts:ChatBot",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/chat/chat-hook.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "catalog-api#src/chat/chat-hook.controller.ts:ChatHookController.receive",
+      "to": "catalog-api#src/chat/chat-bot.ts:ChatBot.handleUpdate",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:catalog-api#ChatUpdate"
+      ],
+      "returns": "void",
+      "file": "src/chat/chat-hook.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController",
+      "to": "catalog-api#src/events/catalog.service.ts:CatalogService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.price",
+      "to": "catalog-api#src/events/catalog.service.ts:CatalogService.priceChanged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.retire",
+      "to": "catalog-api#src/events/catalog.service.ts:CatalogService.retired",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.stock",
+      "to": "catalog-api#src/events/catalog.service.ts:CatalogService.stockLow",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "catalog-api#src/events/catalog.service.ts:CatalogService",
+      "to": "catalog-api#src/events/catalog-bus.ts:CatalogBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/events/catalog.service.ts",
+      "line": 7
+    },
+    {
+      "from": "catalog-api#src/events/catalog.service.ts:CatalogService.priceChanged",
+      "to": "catalog-api#src/events/catalog-bus.ts:CatalogBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog.service.ts",
+      "line": 10
+    },
+    {
+      "from": "catalog-api#src/events/catalog.service.ts:CatalogService.priceChanged",
+      "to": "producer:catalog-api#src/events/catalog.service.ts:10:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events/catalog.service.ts",
+      "line": 10
+    },
+    {
+      "from": "catalog-api#src/events/catalog.service.ts:CatalogService.retired",
+      "to": "catalog-api#src/events/catalog-bus.ts:CatalogBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "from": "catalog-api#src/events/catalog.service.ts:CatalogService.retired",
+      "to": "producer:catalog-api#src/events/catalog.service.ts:18:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "from": "catalog-api#src/events/catalog.service.ts:CatalogService.stockLow",
+      "to": "catalog-api#src/events/catalog-bus.ts:CatalogBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog.service.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog-api#src/events/catalog.service.ts:CatalogService.stockLow",
+      "to": "producer:catalog-api#src/events/catalog.service.ts:14:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events/catalog.service.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog-api#src/reports/totals.interceptor.ts:TotalsInterceptor.intercept",
+      "to": "catalog-api#src/reports/totals.interceptor.ts:TotalsInterceptor.withTotals",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "unknown",
+      "file": "src/reports/totals.interceptor.ts",
+      "line": 8
+    },
+    {
+      "from": "channel:catalog_events",
+      "to": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 15
+    },
+    {
+      "from": "channel:catalog_events",
+      "to": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 9
+    },
+    {
+      "from": "channel:catalog_events#PRICE_CHANGED",
+      "to": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 14,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:catalog_events#PRODUCT_RETIRED",
+      "to": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 16,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+        "via": "else"
+      }
+    },
+    {
+      "from": "channel:catalog_events#STOCK_LOW",
+      "to": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 16,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+        "via": "else"
+      }
+    },
+    {
+      "from": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "to": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#CatalogMessage"
+      ],
+      "returns": "string",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 15
+    },
+    {
+      "from": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "to": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#PriceChangedEvent"
+      ],
+      "returns": "string",
+      "file": "src/catalog/catalog-handlers.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:back-office:http:POST:/events/catalog",
+      "to": "back-office#src/catalog/catalog-relay.controller.ts:CatalogRelayController.relay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{message:type:back-office#CatalogMessage}"
+      ],
+      "returns": "string",
+      "file": "src/catalog/catalog-relay.controller.ts",
+      "line": 11,
+      "meta": {
+        "body": "{message:type:back-office#CatalogMessage}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:bot_command:stock",
+      "to": "catalog-api#src/chat/chat-bot.ts:ChatBot.replyStock",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/chat/chat-bot.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/products/:param",
+      "to": "catalog-api#node_modules/@nestjs/common:ClassSerializerInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/products/products.controller.ts",
+      "line": 5,
+      "meta": {
+        "order": 1,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/products/:param",
+      "to": "catalog-api#src/envelope.interceptor.ts:EnvelopeInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/products/:param",
+      "to": "catalog-api#src/products/products.controller.ts:ProductsController.product",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalog-api#ProductCard",
+      "file": "src/products/products.controller.ts",
+      "line": 7,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/reports/daily",
+      "to": "catalog-api#src/envelope.interceptor.ts:EnvelopeInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/reports/daily",
+      "to": "catalog-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog-api#DailyReport",
+      "file": "src/reports/reports.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/reports/daily",
+      "to": "catalog-api#src/reports/totals.interceptor.ts:TotalsInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/reports/reports.controller.ts",
+      "line": 11,
+      "meta": {
+        "order": 1,
+        "scope": "class",
+        "layer": "interceptor",
+        "source": "UseInterceptors"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/catalog/:param/price/:param",
+      "to": "catalog-api#src/envelope.interceptor.ts:EnvelopeInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/catalog/:param/price/:param",
+      "to": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.price",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{sku:string;price:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/catalog/:param/retire/:param",
+      "to": "catalog-api#src/envelope.interceptor.ts:EnvelopeInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/catalog/:param/retire/:param",
+      "to": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.retire",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{sku:string;reason:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/catalog/:param/stock/:param",
+      "to": "catalog-api#src/envelope.interceptor.ts:EnvelopeInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/catalog/:param/stock/:param",
+      "to": "catalog-api#src/events/catalog-events.controller.ts:CatalogEventsController.stock",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/events/catalog-events.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{sku:string;left:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/tg/:param",
+      "to": "catalog-api#src/chat/chat-hook.controller.ts:ChatHookController.receive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{message?:{text?:string}}"
+      ],
+      "returns": "void",
+      "file": "src/chat/chat-hook.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{secret:string}",
+        "body": "{message?:{text?:string}}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/tg/:param",
+      "to": "catalog-api#src/envelope.interceptor.ts:EnvelopeInterceptor",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "ops-web#src/products.ts:productLine",
+      "to": "ui_api_call:ops-web#src/products.ts:10:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/products.ts",
+      "line": 10
+    },
+    {
+      "from": "ops-web#src/reports.ts:reportLine",
+      "to": "ui_api_call:ops-web#src/reports.ts:7:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports.ts",
+      "line": 7
+    },
+    {
+      "from": "producer:catalog-api#src/events/catalog.service.ts:10:11",
+      "to": "channel:catalog_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;sku:string;price:number}"
+      ],
+      "file": "src/events/catalog.service.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:catalog-api#src/events/catalog.service.ts:10:11",
+      "to": "channel:catalog_events#PRICE_CHANGED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events/catalog.service.ts",
+      "line": 10,
+      "params": [
+        "{type:string;sku:string;price:number}"
+      ]
+    },
+    {
+      "from": "producer:catalog-api#src/events/catalog.service.ts:14:11",
+      "to": "channel:catalog_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;sku:string;left:number}"
+      ],
+      "file": "src/events/catalog.service.ts",
+      "line": 14
+    },
+    {
+      "from": "producer:catalog-api#src/events/catalog.service.ts:14:11",
+      "to": "channel:catalog_events#STOCK_LOW",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events/catalog.service.ts",
+      "line": 14,
+      "params": [
+        "{type:string;sku:string;left:number}"
+      ]
+    },
+    {
+      "from": "producer:catalog-api#src/events/catalog.service.ts:18:11",
+      "to": "channel:catalog_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;sku:string;reason:string}"
+      ],
+      "file": "src/events/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "from": "producer:catalog-api#src/events/catalog.service.ts:18:11",
+      "to": "channel:catalog_events#PRODUCT_RETIRED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events/catalog.service.ts",
+      "line": 18,
+      "params": [
+        "{type:string;sku:string;reason:string}"
+      ]
+    },
+    {
+      "from": "ui_api_call:ops-web#src/products.ts:10:26",
+      "to": "entry:catalog-api:http:GET:/products/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/products.ts",
+      "line": 10,
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "ui_api_call:ops-web#src/reports.ts:7:26",
+      "to": "entry:catalog-api:http:GET:/reports/daily",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/reports.ts",
+      "line": 7,
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog-api"
+      }
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#CallHandler<any>": {
+      "name": "CallHandler",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "7398ff7b62cfd6d1",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:back-office#CatalogMessage": {
+      "name": "CatalogMessage",
+      "kind": "object",
+      "declaredIn": "back-office#src/catalog/catalog-events.ts",
+      "structuralHash": "8d8a92f927745809",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#PriceChangedEvent": {
+      "name": "PriceChangedEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/catalog/catalog-events.ts",
+      "structuralHash": "323b3a83bd16b9ba",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'PRICE_CHANGED'",
+          "optional": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:catalog-api#ChatUpdate": {
+      "name": "ChatUpdate",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/chat/chat-bot.ts",
+      "structuralHash": "0d9cd1b110efd5ae",
+      "fields": [
+        {
+          "name": "message",
+          "type": "{text?:string}",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:catalog-api#DailyReport": {
+      "name": "DailyReport",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/reports/reports.controller.ts",
+      "structuralHash": "0fac0a89ef9994bb",
+      "fields": [
+        {
+          "name": "date",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orders",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:catalog-api#ProductCard": {
+      "name": "ProductCard",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/products/product-card.ts",
+      "structuralHash": "d22b4de040f7f322",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "costPrice",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "exclude": true
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

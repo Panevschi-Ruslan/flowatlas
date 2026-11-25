@@ -28,7 +28,7 @@ import {
 import { nearNames } from './entries.js';
 import { READ_ONLY, withDb, type ToolContext } from './common.js';
 import { crossingsBetween } from './contract.js';
-import { rankedFindingsOf } from './findings.js';
+import { countedNotListed, countedOf, rankedFindingsOf } from './findings.js';
 import { loadContractBreaks } from '../query/contracts.js';
 import { ruleBreaksAt, rulesReportOf } from './rules.js';
 import { specOfNode } from './spec.js';
@@ -153,11 +153,14 @@ export const promptScopeContext = (db: GraphDb, dbPath: string, rules?: readonly
   let fresh: AnchoredUnresolvedRow[] | undefined;
   const rows = (): AnchoredUnresolvedRow[] => (fresh ??= acceptedSplitOf(db, db.allUnresolved(), readAccepted(dbPath)).fresh);
   let ranked: FindingRow[] | undefined;
+  const ofService = (service: string): FindingRow[] =>
+    (ranked ??= rankedFindingsOf(db, rows(), loadContractBreaks(dbPath), rules)).filter((row) => row.service === service);
   return {
     ...(counts === undefined ? {} : { counts }),
     crossings: (from, to) => crossingsBetween(db, from, to),
-    findings: (service) =>
-      (ranked ??= rankedFindingsOf(db, rows(), loadContractBreaks(dbPath), rules)).filter((row) => row.service === service).map(findingGapOf),
+    // Contract breaks at warning are counted with the call that lists them, as `findings` counts them (P400).
+    findings: (service) => ofService(service).filter((row) => !countedNotListed(row)).map(findingGapOf),
+    counted: (service) => countedOf(ofService(service), service),
     rows,
   };
 };

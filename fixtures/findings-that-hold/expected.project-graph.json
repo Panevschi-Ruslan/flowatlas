@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T09:23:38.599Z",
+  "builtAt": "2026-11-25T13:21:02.312Z",
   "services": [
     {
       "name": "stores-api",
@@ -778,6 +778,18 @@
             "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
             "via": "parameter",
             "line": 32
+          }
+        ],
+        "selectsRest": [
+          {
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+            "excluding": [
+              "BUILD_DONE",
+              "BUILD_FAILED",
+              "JOB_QUEUED"
+            ],
+            "line": 21,
+            "file": "src/builds/build-relay.controller.ts"
           }
         ]
       }
@@ -4330,14 +4342,15 @@
       "file": "src/audit/audit.service.ts",
       "line": 15,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects ALERT_RAISED on shop:*:events: 1 consumer chooses other types (handleLive)",
+      "message": "no code that runs selects ALERT_RAISED on shop:*:events: 1 consumer chooses other types (handleLive); handleFeed chooses it and receives channels not all read (1 subscription(s) behind GET /shops/:param/feed name a channel not read)",
       "symbol": "producer:stores-api#src/audit/audit.service.ts:15:11",
       "service": "stores-api",
       "meta": {
         "type": "channel:shop:*:events#ALERT_RAISED",
         "channel": "channel:shop:*:events",
         "messageType": "ALERT_RAISED",
-        "sureness": "sure"
+        "sureness": "unsure",
+        "heldBecause": "handleFeed chooses ALERT_RAISED, and 1 subscription(s) behind GET /shops/:param/feed name a channel not read"
       }
     },
     {

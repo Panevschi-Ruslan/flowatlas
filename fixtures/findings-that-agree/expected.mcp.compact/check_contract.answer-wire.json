@@ -1,0 +1,62 @@
+{
+  "entry": "entry:catalog-api:http:GET:/products/:param",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:catalog-api#ProductCard",
+    "wire": "{ data: ProductCard, success } (EnvelopeInterceptor); costPrice left out by ClassSerializerInterceptor (@Exclude)",
+    "reads": [
+      {
+        "field": "success",
+        "id": "ops-web#src/products.ts:productLine",
+        "line": 12,
+        "guarded": true
+      },
+      {
+        "field": "data.costPrice",
+        "id": "ops-web#src/products.ts:productLine",
+        "line": 13
+      },
+      {
+        "field": "data.name",
+        "id": "ops-web#src/products.ts:productLine",
+        "line": 13
+      },
+      {
+        "field": "price",
+        "id": "ops-web#src/products.ts:productLine",
+        "line": 13
+      }
+    ],
+    "missing": [
+      {
+        "field": "price",
+        "id": "ops-web#src/products.ts:productLine",
+        "line": 13,
+        "wrapped": true
+      },
+      {
+        "field": "data.costPrice",
+        "id": "ops-web#src/products.ts:productLine",
+        "line": 13,
+        "excluded": "ClassSerializerInterceptor (@Exclude)"
+      }
+    ],
+    "unused": [
+      {
+        "field": "data.id"
+      },
+      {
+        "field": "data.price"
+      }
+    ]
+  },
+  "callers": 1,
+  "complete": false,
+  "left": [
+    "unread: interceptor ClassSerializerInterceptor was not read for the fields it reads"
+  ],
+  "next": [
+    "check_contract({from: \"ui_api_call:ops-web#src/products.ts:10:26\", to: \"entry:catalog-api:http:GET:/products/:param\"})"
+  ]
+}

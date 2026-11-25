@@ -28,6 +28,6 @@ export class ItemsController {
 
   @Get()
   list(): ItemRow[] {
-    return [{ id: 'item-1', name: 'kettle', thumbnail: 'kettle.png' }];
+    return [{ id: 'item-1', name: 'kettle', thumbnail: 'kettle.png', badge: 'new', stock: 3 }];
   }
 }

@@ -27,9 +27,17 @@ import type { GraphEdge, GraphNode } from '@flowatlas/core';
  */
 export type PackedFinding = [kind: number, id: number | string, service: number | string, loc: string | null, message: string];
 
+/**
+ * Findings of one service counted rather than listed (P400), as the server's
+ * `countedOf` says them: kind (a position in `kinds`), service, severity,
+ * count and the call that lists them.
+ */
+export type PackedCounted = [kind: number, service: number | string, severity: string, count: number, call: string];
+
 export interface PackedOverview {
   kinds: string[];
   findings: PackedFinding[];
+  counted?: PackedCounted[];
   verdicts?: Record<string, number>;
 }
 
@@ -43,8 +51,10 @@ export interface OverviewFinding {
 }
 
 export interface OverviewInput {
-  /** Every finding of the project, ranked (`rankedFindingsOf` in the MCP server). */
+  /** Every finding of the project the prompt lists, ranked (`rankedFindingsOf` in the MCP server). */
   findings?: readonly OverviewFinding[];
+  /** Each service's findings counted rather than listed, with the call that lists them (P400). */
+  counted?: ReadonlyArray<{ service: string; kind: string; severity: string; count: number; call: string }>;
   /** A crossing's verdict as its rank: a request edge, or a publish and the subscription that takes it. */
   verdictOf?: (edge: GraphEdge, consumed?: GraphEdge) => number;
 }
@@ -64,11 +74,13 @@ export const packOverview = (
 ): { overview?: PackedOverview } => {
   const kinds: string[] = [];
   const kindIx = new Map<string, number>();
-  const findings = (input.findings ?? []).map((row): PackedFinding => {
-    if (!kindIx.has(row.kind)) kindIx.set(row.kind, kinds.push(row.kind) - 1);
-    const service = row.service === '' ? -1 : (repoIx.get(row.service) ?? row.service);
-    return [kindIx.get(row.kind) as number, position.get(row.id) ?? row.id, service, row.loc ?? null, row.message];
-  });
+  const kindOf = (kind: string): number => {
+    if (!kindIx.has(kind)) kindIx.set(kind, kinds.push(kind) - 1);
+    return kindIx.get(kind) as number;
+  };
+  const serviceOf = (service: string): number | string => (service === '' ? -1 : (repoIx.get(service) ?? service));
+  const findings = (input.findings ?? []).map((row): PackedFinding => [kindOf(row.kind), position.get(row.id) ?? row.id, serviceOf(row.service), row.loc ?? null, row.message]);
+  const counted = (input.counted ?? []).map((row): PackedCounted => [kindOf(row.kind), serviceOf(row.service), row.severity, row.count, row.call]);
 
   const verdicts: Record<string, number> = {};
   const verdictOf = input.verdictOf;
@@ -99,6 +111,6 @@ export const packOverview = (
   }
 
   const some = Object.keys(verdicts).length > 0;
-  if (findings.length === 0 && !some) return {};
-  return { overview: { kinds, findings, ...(some ? { verdicts } : {}) } };
+  if (findings.length === 0 && counted.length === 0 && !some) return {};
+  return { overview: { kinds, findings, ...(counted.length === 0 ? {} : { counted }), ...(some ? { verdicts } : {}) } };
 };

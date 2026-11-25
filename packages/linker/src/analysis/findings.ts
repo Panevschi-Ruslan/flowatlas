@@ -5,6 +5,7 @@ import type { RuleViolation } from '../rules/types.js';
 import { promoteGap, typesNeverPublished, type BoundaryFinding, type HeldBack } from './boundary.js';
 import { deadChannels } from './dead.js';
 import { boundaryMismatches } from './mismatches.js';
+import { UNSELECTED_HELD_META } from '../message-types.js';
 import { byId } from './graph.js';
 
 /**
@@ -361,6 +362,12 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
       continue;
     }
     if (rowKind !== 'finding' || row.level === 'nothing') continue;
+    // A type nothing selects where a consumer choosing it receives channels not all read (P400): held back, with why.
+    const held = row.reason === 'message-type-unselected' ? row.meta?.[UNSELECTED_HELD_META] : undefined;
+    if (typeof held === 'string') {
+      holdBack(heldBack, { kind: row.reason, id: row.node ?? '', why: held });
+      continue;
+    }
     findings.push(rowFinding(db, row, unguarded));
   }
   // Read off the graph rather than the rows, as the one-ended channels are:

@@ -1,5 +1,5 @@
 import { frameworkCallOf, isMessageTypeNode, wasMissed, type GraphNode } from '@flowatlas/core';
-import { classifyRoute, methodsOf, routeFactsOf, type GraphDb } from '@flowatlas/linker';
+import { botFilesOf, classifyRoute, isBotKind, methodsOf, routeFactsOf, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, projectEdge, truncate } from '../query/detail.js';
@@ -587,37 +587,6 @@ const kindOfWay = (node: GraphNode): string => {
     default:
       return isBotKind(node.kind) ? 'bots' : 'other';
   }
-};
-
-/** A bot's way in: a command, a callback, an update, a step of a scene. */
-const isBotKind = (kind: string | undefined): boolean => kind !== undefined && (kind.startsWith('bot_') || kind === 'scene_step');
-
-/**
- * The gaps that leave a bot's way in unnamed (P396): a trigger written as a
- * value, handlers registered where the reading could not find them. A file
- * holding one is a bot's, though no way in of it is drawn.
- */
-const BOT_GAP_REASONS: ReadonlySet<string> = new Set(['dynamic-bot-trigger', 'bot-handlers-not-found']);
-
-/**
- * The files of a bot's code, by `service\0file` (P396): where a bot's way in
- * is registered, where the code handling one is written, and where a bot's
- * trigger was left unread. A route handled in one of them is the bot's
- * webhook, how its updates arrive, and code in one of them behind an unread
- * call is the bot's: either breaks a bot, not an API.
- */
-const botFilesOf = (db: GraphDb): ReadonlySet<string> => {
-  const files = new Set<string>();
-  const add = (node: Pick<GraphNode, 'repo' | 'file'> | undefined): void => {
-    if (node?.file !== undefined) files.add(`${node.repo}\u0000${node.file}`);
-  };
-  for (const entry of db.nodesByType('entry')) {
-    if (!isBotKind(entry.kind)) continue;
-    add(entry);
-    for (const edge of db.edgesFrom(entry.id, ['handles'])) add(db.node(edge.to));
-  }
-  for (const row of db.allUnresolved()) if (row.service !== null && row.file !== null && BOT_GAP_REASONS.has(row.reason)) files.add(`${row.service}\u0000${row.file}`);
-  return files;
 };
 
 /** The most hops a way in's chain is followed towards the changed code to tell whether a bot's code is on it. */

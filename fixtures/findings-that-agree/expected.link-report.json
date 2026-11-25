@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:21:10.952Z",
+  "configHash": "a9823d20564f",
+  "services": [
+    {
+      "name": "back-office",
+      "repo": "./back-office",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 8,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1766,
+      "packages": {
+        "name": "back-office",
+        "runtime": [
+          "@flowatlas/markers",
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 38,
+      "edges": 34,
+      "types": 5,
+      "unresolved": 0,
+      "durationMs": 3642,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "class-transformer",
+          "rxjs",
+          "telegraf"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ops-web",
+      "repo": "./ops-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 963,
+      "packages": {
+        "name": "ops-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 2,
+    "resolved": 2,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 2,
+    "uncalled": [
+      "entry:back-office:http:POST:/events/catalog",
+      "entry:catalog-api:http:POST:/catalog/:param/price/:param",
+      "entry:catalog-api:http:POST:/catalog/:param/retire/:param",
+      "entry:catalog-api:http:POST:/catalog/:param/stock/:param",
+      "entry:catalog-api:http:POST:/tg/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 56,
+    "edges": 52,
+    "types": 7,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

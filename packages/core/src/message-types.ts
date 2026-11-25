@@ -79,6 +79,15 @@ export const SELECTS_OTHERS_META = 'selectsOthers';
 export const SELECTION_DIFFERS_META = 'selectionDiffers';
 /** On a consumer drawn for a selection: the consumer whose handler selected it. */
 export const SELECTED_BY_META = 'selectedBy';
+/**
+ * On a consumer whose choice ends in an `else` or a `default` that runs a
+ * handler (P400): the types the branches before it choose, and the handler.
+ * That handler takes the remaining types the channel carries, which only the
+ * linker knows: where every publish on every channel the consumer receives
+ * says its type and those channels are known whole, it draws them (`via:
+ * 'else'`); elsewhere the handler chooses none, as before.
+ */
+export const SELECTS_REST_META = 'selectsRest';
 
 /**
  * How a selection was written. `parameter` (P369): the handler chooses nothing
@@ -86,7 +95,7 @@ export const SELECTED_BY_META = 'selectedBy';
  * in has a discriminator whose type is a literal - `handle(event:
  * OrderReady)` where `OrderReady` says `type: 'ORDER_READY'`.
  */
-export type SelectionVia = 'switch' | 'if' | 'guard' | 'map' | 'decorator' | 'filter' | 'parameter';
+export type SelectionVia = 'switch' | 'if' | 'guard' | 'map' | 'decorator' | 'filter' | 'parameter' | 'else';
 
 /**
  * On a consumer that subscribes to every channel of a bus at once (P369) - a
@@ -121,6 +130,32 @@ export const selectionsOf = (node: Pick<GraphNode, 'meta'> | undefined): Selecti
       entry !== null &&
       typeof (entry as Selection).type === 'string' &&
       typeof (entry as Selection).consumer === 'string',
+  );
+};
+
+/** The handler of an `else` or a `default` after a choice on the type (P400), as a consumer records it. */
+export interface RestSelection {
+  /** The consumer node that takes the rest: the dispatcher's own, or one to draw for the handler. */
+  readonly consumer: string;
+  /** The handler's node, where the consumer is one to draw for it. */
+  readonly handler?: string;
+  /** The types the branches before it choose. */
+  readonly excluding: readonly string[];
+  readonly line: number;
+  /** The file the choice is written in, where it is not the consumer's own. */
+  readonly file?: string;
+}
+
+/** The `else` handlers a consumer node records, as written; malformed entries are dropped. */
+export const restSelectionsOf = (node: Pick<GraphNode, 'meta'> | undefined): RestSelection[] => {
+  const raw = node?.meta?.[SELECTS_REST_META];
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (entry): entry is RestSelection =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      typeof (entry as RestSelection).consumer === 'string' &&
+      Array.isArray((entry as RestSelection).excluding),
   );
 };
 

@@ -20,7 +20,7 @@ import { rulesReportOf } from './rules.js';
 import { truncate } from '../query/detail.js';
 import { reachReader } from '../query/ways-in.js';
 import { channelContract, requestFields } from './fields-contract.js';
-import { answerFieldsOf, answerOf } from '../query/answer-fields.js';
+import { answerFieldsOf, answerOf, answerWireOf, typeSaid } from '../query/answer-fields.js';
 import { topField } from '../query/fields.js';
 import { nearWords } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
@@ -206,11 +206,23 @@ export const fieldFindingsOf = (
   return { rows, heldBack: held };
 };
 
-/** A declared answer as a person writes it: `type:shop#Profile[]` is `Profile[]`. */
-const typeSaid = (type: string | undefined): string => (type === undefined ? 'a shape' : type.replace(/type:[^#\s]+#/g, ''));
-
 /** The evidence a field of an answer read and never returned needs: the route's answer was read whole. */
 const ANSWER_EVIDENCE = 'the route answers a shape read whole, and the field is not in it';
+
+/** The same, where interceptors reshape the answer on the way out and each was read (P400). */
+const WIRE_EVIDENCE = 'the route answers a shape read whole, every interceptor around it was read, and the field is not on the wire';
+
+/** The nearest fix of an answer field read and not sent: expose it, read it where the envelope puts it, or the field it was renamed from. */
+const answerFix = (
+  row: { field: string; excluded?: string; wrapped?: true },
+  route: string,
+  renamed: string | undefined,
+  wire: ReturnType<typeof answerWireOf>,
+): string => {
+  if (row.excluded !== undefined) return `${row.excluded} leaves \`${row.field.split('.').at(-1)}\` out of the answer: expose it, or stop reading it`;
+  if (row.wrapped === true && wire?.path !== undefined) return `the answer is wrapped: read \`${wire.path}.${row.field}\`, or stop reading it`;
+  return renamed === undefined ? `return \`${row.field}\` from ${route}, or stop reading it` : `likely renamed: ${renamed} is returned, ${row.field} is read`;
+};
 
 /**
  * Fields of a route's answer a client reads that the route never returns
@@ -226,8 +238,8 @@ const ANSWER_EVIDENCE = 'the route answers a shape read whole, and the field is 
 export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: { count: number; why: string } | undefined } => {
   const rows: FindingRow[] = [];
   /** Each reason a candidate was held back for, with the first such candidate's words: one row per reason in the answer's why. */
-  const held = new Map<'shape' | 'guarded', { count: number; why: string }>();
-  const hold = (reason: 'shape' | 'guarded', why: string): void => {
+  const held = new Map<'shape' | 'guarded' | 'reshaped', { count: number; why: string }>();
+  const hold = (reason: 'shape' | 'guarded' | 'reshaped', why: string): void => {
     const known = held.get(reason);
     held.set(reason, known === undefined ? { count: 1, why } : { ...known, count: known.count + 1 });
   };
@@ -235,6 +247,15 @@ export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: {
   for (const route of routes) {
     const callers = [...new Set(db.edgesTo(route.id, ['http_calls', 'hits']).map((edge) => edge.from))].sort();
     const fields = answerFieldsOf(db, route.id);
+    // What the wire carries where interceptors reshape the answer (P400): the fields as a client reads them there.
+    const wire = answerWireOf(db, route.id);
+    const sent = fields?.filter((field) => !(wire?.excluded.has(field) ?? false));
+    const onWire =
+      sent === undefined || wire === undefined
+        ? fields
+        : wire.path === undefined
+          ? sent
+          : [...(wire.outer ?? []).filter((field) => field !== wire.path!.split('.')[0]), ...sent.map((field) => `${wire.path}.${field}`)];
     for (const call of callers) {
       const said = answerOf(db, route.id, undefined, call);
       if (said === undefined) continue;
@@ -254,6 +275,11 @@ export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: {
           hold('guarded', why);
           continue;
         }
+        // An interceptor reshapes the answer in a way not read: what reaches the client is not known (P400).
+        if (row.unsure !== undefined) {
+          hold('reshaped', `the answer to ${route.label} is reshaped on the way out in a way not read (${row.unsure}): \`${row.field}\` may be sent`);
+          continue;
+        }
         const reading = db.node(row.id);
         const file = row.file ?? reading?.file;
         const renamed = likelyRenamed(row.field, notRead);
@@ -265,10 +291,13 @@ export const answerFindingsOf = (db: GraphDb): { rows: FindingRow[]; heldBack: {
           to: route.id,
           service: reading?.repo ?? db.node(call)?.repo ?? '',
           ...(file === undefined ? {} : { loc: `${file}:${row.line}` }),
-          message: `\`${row.field}\` of the answer to ${route.label} is read by ${reading?.label ?? row.id} and never returned: ${route.label} answers ${typeSaid(said.answer.type)} (${fields.join(', ')})`,
+          message:
+            wire === undefined
+              ? `\`${row.field}\` of the answer to ${route.label} is read by ${reading?.label ?? row.id} and never returned: ${route.label} answers ${typeSaid(said.answer.type)} (${fields.join(', ')})`
+              : `\`${row.field}\` of the answer to ${route.label} is read by ${reading?.label ?? row.id} and is not on the wire: ${route.label} answers ${wire.said} (${(onWire ?? fields).join(', ')})`,
           precision: precisionOf('answer-field-never-returned'),
-          evidence: ANSWER_EVIDENCE,
-          fix: renamed === undefined ? `return \`${row.field}\` from ${route.label}, or stop reading it` : `likely renamed: ${renamed} is returned, ${row.field} is read`,
+          evidence: wire === undefined ? ANSWER_EVIDENCE : WIRE_EVIDENCE,
+          fix: answerFix(row, route.label, renamed, wire),
           ...(ways.seenBy.length === 0 ? {} : { seenBy: ways.seenBy }),
           reach: ways.waysIn === 0 ? {} : { waysIn: ways.waysIn },
           rank: 0,
@@ -322,6 +351,33 @@ const collectedOf = (
  * for by severity; counted under `warnings` otherwise, with the call.
  */
 export const countedNotListed = (row: FindingRow): boolean => row.kind === 'contract-break' && row.severity === 'warning';
+
+/** Rows of one kind and severity counted rather than listed, and the call that lists them (P400). */
+export interface CountedFindings {
+  kind: string;
+  severity: string;
+  count: number;
+  call: string;
+}
+
+/**
+ * The rows `countedNotListed` keeps out of a list, counted by kind and
+ * severity, each with the `findings` call that lists them (P400): what
+ * `describe_for_prompt`'s service scope and the page say in their place, as
+ * `findings` does with `warnings`.
+ */
+export const countedOf = (rows: readonly FindingRow[], service?: string): CountedFindings[] => {
+  const counts = new Map<string, CountedFindings>();
+  for (const row of rows) {
+    if (!countedNotListed(row)) continue;
+    const severity = row.severity ?? '';
+    const key = `${row.kind}\u0000${severity}`;
+    const known = counts.get(key);
+    if (known !== undefined) known.count += 1;
+    else counts.set(key, { kind: row.kind, severity, count: 1, call: callOf('findings', { kind: row.kind, severity, service }) });
+  }
+  return [...counts.values()];
+};
 
 /**
  * Every finding of the project, ranked (P95): the rows nobody accepted, the

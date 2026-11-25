@@ -225,6 +225,14 @@ export interface PromptCrossing {
   first: Array<{ from: PromptStep; to: PromptStep; type: string }>;
 }
 
+/** Findings of one kind and severity counted rather than listed, and the call that lists them (P400). */
+export interface PromptCounted {
+  kind: string;
+  severity: string;
+  count: number;
+  call: string;
+}
+
 /** A service's front (P95): what an assistant starts from. */
 export interface PromptOverview {
   /** Its ways in by kind. */
@@ -237,6 +245,8 @@ export interface PromptOverview {
   consumes: PromptStep[];
   /** Its findings by kind, ranked by reach, with the top rows of each. */
   findings: Array<{ kind: string; count: number; top: PromptGap[] }>;
+  /** Findings counted rather than listed (contract breaks at warning), each with the call that lists them (P400). */
+  counted?: PromptCounted[];
   /** Its most common gaps, by reason, with the first place of each. */
   gaps: Array<{ reason: string; count: number; first: PromptGap }>;
 }

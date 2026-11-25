@@ -32,9 +32,11 @@ export interface ItemChanged {
   legacyCode: string;
 }
 
-/** One row of `GET /items`; the dashboard shows the name only. */
+/** One row of `GET /items`; the dashboard shows the name, the badge and the stock. */
 export interface ItemRow {
   id: string;
   name: string;
   thumbnail: string;
+  badge: string;
+  stock: number;
 }

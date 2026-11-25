@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T09:23:38.599Z",
+  "builtAt": "2026-11-25T13:21:02.312Z",
   "configHash": "4e694d4df266",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 22,
       "types": 6,
       "unresolved": 0,
-      "durationMs": 1195,
+      "durationMs": 3425,
       "packages": {
         "name": "back-office",
         "runtime": [
@@ -36,7 +36,7 @@
       "edges": 14,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 837,
+      "durationMs": 2426,
       "packages": {
         "name": "shop-web",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 66,
       "types": 3,
       "unresolved": 8,
-      "durationMs": 1617,
+      "durationMs": 4349,
       "packages": {
         "name": "stores-api",
         "runtime": [
@@ -119,14 +119,15 @@
       "file": "src/audit/audit.service.ts",
       "line": 15,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects ALERT_RAISED on shop:*:events: 1 consumer chooses other types (handleLive)",
+      "message": "no code that runs selects ALERT_RAISED on shop:*:events: 1 consumer chooses other types (handleLive); handleFeed chooses it and receives channels not all read (1 subscription(s) behind GET /shops/:param/feed name a channel not read)",
       "symbol": "producer:stores-api#src/audit/audit.service.ts:15:11",
       "service": "stores-api",
       "meta": {
         "type": "channel:shop:*:events#ALERT_RAISED",
         "channel": "channel:shop:*:events",
         "messageType": "ALERT_RAISED",
-        "sureness": "sure"
+        "sureness": "unsure",
+        "heldBecause": "handleFeed chooses ALERT_RAISED, and 1 subscription(s) behind GET /shops/:param/feed name a channel not read"
       }
     },
     {

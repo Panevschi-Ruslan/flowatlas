@@ -109,6 +109,10 @@
   ],
   "total": 7,
   "heldBack": {
+    "message-type-unselected": {
+      "count": 1,
+      "why": "handleFeed chooses ALERT_RAISED, and 1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+    },
     "type-never-published": {
       "count": 1,
       "why": "1 subscription(s) behind GET /shops/:param/feed name a channel not read"

@@ -681,11 +681,37 @@ const HOLD_CASES = [
   // P397: each handler compared under the types the relay's if/else and its parameter say, one said two ways held back.
   ['findings.field-never-sent', 'findings', { kind: 'field-never-sent' }],
   ['check_contract.chosen-types', 'check_contract', { channel: 'build_updates' }],
+  // P400: a type nothing selects held back where the screen choosing it is fed through a channel not read; the
+  // back office's contract warnings counted in its service prompt with the call that lists them.
+  ['findings.message-type-unselected', 'findings', { kind: 'message-type-unselected' }],
+  ['describe_for_prompt.service-warnings', 'describe_for_prompt', { id: 'back-office', scope: 'service' }],
 ];
 /** The same, compact: what an agent is handed. */
 const HOLD_COMPACT_CASES = [
   ['findings.all', 'findings', { verbose: false }],
   ['check_contract.answer-guarded', 'check_contract', { edge: 'GET /stores/:id', verbose: false }],
+];
+
+/**
+ * Findings and verdicts that agree (P400): an answer compared against the
+ * wire an envelope interceptor and a serializer make of it, one whose
+ * interceptor is not read held back, the handler of a relay's last else
+ * taking the remaining types, and a webhook handing its request to a bot's
+ * code the bot's way in.
+ */
+const AGREE_CASES = [
+  ['findings.all', 'findings', {}],
+  ['findings.answer-field-never-returned', 'findings', { kind: 'answer-field-never-returned' }],
+  ['check_contract.answer-wire', 'check_contract', { edge: 'GET /products/:id' }],
+  ['check_contract.answer-reshaped', 'check_contract', { edge: 'GET /reports/daily' }],
+  ['check_contract.else-types', 'check_contract', { channel: 'catalog_events' }],
+  ['who_consumes.else-type', 'who_consumes', { channel: 'catalog_events', type: 'STOCK_LOW' }],
+  ['dead.bot-webhook', 'dead', { ids: ['entry:catalog-api:http:POST:/tg/:param', 'entry:catalog-api:http:POST:/catalog/:param/price/:param'] }],
+];
+/** The same, compact: what an agent is handed. */
+const AGREE_COMPACT_CASES = [
+  ['findings.all', 'findings', { verbose: false }],
+  ['check_contract.answer-wire', 'check_contract', { edge: 'GET /products/:id', verbose: false }],
 ];
 /**
  * Protocol, validation, settings, status and CORS mismatches (P388): each
@@ -1225,6 +1251,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'findings-that-hold'),
     outDir: join(root, 'fixtures', 'findings-that-hold', 'expected.mcp.compact'),
     cases: HOLD_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-that-agree'),
+    outDir: join(root, 'fixtures', 'findings-that-agree', 'expected.mcp'),
+    cases: AGREE_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-that-agree'),
+    outDir: join(root, 'fixtures', 'findings-that-agree', 'expected.mcp.compact'),
+    cases: AGREE_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'boundary-mismatches'),

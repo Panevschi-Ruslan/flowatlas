@@ -6,6 +6,7 @@ import {
   SELECTION_UNREAD_META,
   SELECTS_META,
   SELECTS_OTHERS_META,
+  SELECTS_REST_META,
   SELECTION_DIFFERS_META,
   definePass,
   evaluateExpression,
@@ -24,6 +25,7 @@ import {
   type GraphEdge,
   type GraphNode,
   type NamedFunction,
+  type RestSelection,
   type Selection,
   type SelectionVia,
   type Unresolved,
@@ -37,6 +39,7 @@ import {
   type ClassDeclaration,
   type FunctionDeclaration,
   type FunctionExpression,
+  type IfStatement,
   type MethodDeclaration,
   type Node as TsNode,
   type Project,
@@ -301,8 +304,25 @@ export interface ReadSelection {
   readonly file?: string;
 }
 
+/**
+ * The handler of the `else` or `default` that ends a choice on the type
+ * (P400): it takes what the branches before it do not choose, which the
+ * linker works out from what the channel carries.
+ */
+export interface ReadRest {
+  readonly field: DiscriminatorField;
+  /** The types the branches before it choose. */
+  readonly excluding: readonly string[];
+  readonly line: number;
+  readonly handler: ChosenHandler;
+  /** The file the choice is written in, relative to the repository, where it is not the handler's own. */
+  readonly file?: string;
+}
+
 export interface SelectionReading {
   readonly selections: readonly ReadSelection[];
+  /** The `else` or `default` handlers that end a choice on the type (P400). */
+  readonly rest?: readonly ReadRest[];
   readonly unread: readonly { readonly line: number; readonly text: string; readonly why: string; readonly file?: string }[];
   /** A default branch that hands every other type on the same way. */
   readonly others: boolean;
@@ -411,6 +431,7 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
   const discriminators = new Map<TsNode, DiscriminatorField>();
   const selections: ReadSelection[] = [];
   const unread: { line: number; text: string; why: string }[] = [];
+  const rest: ReadRest[] = [];
   let others = false;
 
   const declarationOf = (node: TsNode): TsNode | undefined => (Node.isIdentifier(node) ? node.getSymbol()?.getDeclarations()[0] : undefined);
@@ -664,6 +685,35 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     unread.push({ line: at.getStartLineNumber(), text: textOf(at), why });
   };
 
+  /**
+   * The final `else` of a chain whose head is this `if` (P400): every test
+   * of the chain a positive one on the same field, read, and the chain ending
+   * in a plain `else` that runs something. The types the tests choose are
+   * what that `else` leaves out. Undefined for an `if` that is itself an
+   * `else if` (its head reads the chain), and for any chain not so written.
+   */
+  const elseOfChain = (head: IfStatement): { field: DiscriminatorField; excluding: string[]; line: number; statement: Statement } | undefined => {
+    const parent = head.getParent();
+    if (parent !== undefined && Node.isIfStatement(parent) && parent.getElseStatement() === head) return undefined;
+    const excluding: string[] = [];
+    let field: DiscriminatorField | undefined;
+    for (let at: IfStatement = head, step = 0; step < 32; step += 1) {
+      const test = condition(at.getExpression());
+      if (test === undefined || 'unread' in test || !test.positive || (field !== undefined && test.field !== field)) return undefined;
+      field = test.field;
+      excluding.push(...test.values);
+      const otherwise = at.getElseStatement();
+      if (otherwise === undefined) return undefined;
+      if (Node.isIfStatement(otherwise)) {
+        at = otherwise;
+        continue;
+      }
+      if (exitsOnly(Node.isBlock(otherwise) ? otherwise.getStatements() : [otherwise])) return undefined;
+      return { field, excluding: [...new Set(excluding)], line: otherwise.getStartLineNumber(), statement: otherwise };
+    }
+    return undefined;
+  };
+
   /** The handler a record's entry runs. */
   const handlerOfEntry = (value: TsNode | undefined): ChosenHandler | undefined => {
     if (value === undefined) return undefined;
@@ -780,17 +830,31 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
       const field = fieldRead(node.getExpression());
       if (field === undefined) continue;
       let pending: string[] = [];
+      // Every case's values, and whether each was read: what the default leaves to its handler (P400).
+      const cased: string[] = [];
+      let casesRead = true;
       for (const clause of node.getCaseBlock().getClauses()) {
         const statements = clause.getStatements();
         if (Node.isCaseClause(clause)) {
           const values = valuesOf(clause.getExpression());
-          if (values === undefined || !values.exact) noteUnread(clause, `case ${textOf(clause.getExpression())} is not a value the code states.`);
-          else pending.push(...values.values);
+          if (values === undefined || !values.exact) {
+            noteUnread(clause, `case ${textOf(clause.getExpression())} is not a value the code states.`);
+            casesRead = false;
+          } else {
+            pending.push(...values.values);
+            cased.push(...values.values);
+          }
           if (statements.length === 0) continue;
           add(pending, field, 'switch', clause, handlerIn(statements, fn));
           pending = [];
         } else {
-          if (statements.length > 0 && handlerIn(statements, fn).kind !== 'self') others = true;
+          const handler = statements.length > 0 ? handlerIn(statements, fn) : undefined;
+          if (handler !== undefined && handler.kind !== 'self') others = true;
+          // The default takes every type no case names, where every case was read and the default runs a handler of
+          // the repository's own: one that answers a value, logs or drops the message handles nothing.
+          if (handler !== undefined && handler.kind !== 'self' && casesRead && cased.length > 0 && !exitsOnly(statements)) {
+            rest.push({ field, excluding: [...new Set([...cased, ...pending])], line: clause.getStartLineNumber(), handler });
+          }
           pending = [];
         }
       }
@@ -807,6 +871,10 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
       const otherwise = node.getElseStatement();
       if (test.positive) {
         add(test.values, test.field, 'if', node, handlerIn([then], fn));
+        // The head of an if, else if, …, else: the last else takes what the tests before it do not choose (P400).
+        const chain = elseOfChain(node);
+        const restHandler = chain === undefined ? undefined : handlerIn([chain.statement], fn);
+        if (chain !== undefined && restHandler !== undefined && restHandler.kind !== 'self') rest.push({ ...chain, handler: restHandler });
         continue;
       }
       if (exits(then)) {
@@ -865,8 +933,13 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     const passed = handlerIn(statements, fn);
     if ((passed.kind === 'method' || passed.kind === 'function') && passed.argument !== undefined) return { selections, unread, others, handsTo: passed };
   }
-  return { selections, unread, others };
+  return { selections, unread, others, ...(rest.length === 0 ? {} : { rest }) };
 };
+
+/** A branch that only leaves - a `return;`, a `throw` - runs nothing that takes the message. */
+const exitsOnly = (statements: readonly TsNode[]): boolean =>
+  statements.length === 0 ||
+  statements.every((statement) => Node.isThrowStatement(statement) || Node.isBreakStatement(statement) || (Node.isReturnStatement(statement) && statement.getExpression() === undefined));
 
 // ---------------------------------------------------------------------------
 // A subscription (P362)
@@ -1213,6 +1286,7 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
       selections: inner.selections.map((each) => ({ ...each, file, handler: each.handler.kind === 'self' ? itself : each.handler })),
       unread: [...reading.unread, ...inner.unread.map((row) => ({ ...row, file }))],
       others: inner.others,
+      ...(inner.rest === undefined ? {} : { rest: inner.rest.map((each) => ({ ...each, file, handler: each.handler.kind === 'self' ? itself : each.handler })) }),
     };
   };
 
@@ -1223,9 +1297,10 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
    * under `case 'ORDER_READY'`. Read as any handler is, every parameter of the
    * caller that can hold a message being one.
    */
-  const dispatchedTo = (target: GraphNode): ReadSelection[] => {
+  const dispatchedTo = (target: GraphNode): { selections: ReadSelection[]; rest: ReadRest[] } => {
     const callers = [...new Set((callsTo.get(target.id) ?? []).map((edge) => edge.from))].sort().slice(0, MOST_CALLERS);
     const out: ReadSelection[] = [];
+    const rest: ReadRest[] = [];
     for (const callerId of callers) {
       const caller = builder.getNode(callerId);
       if (caller === undefined || (caller.type !== 'method' && caller.type !== 'function')) continue;
@@ -1237,8 +1312,13 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
         if (idOfHandler(selection.handler) !== target.id) continue;
         out.push({ ...selection, handler: { kind: 'self' }, file });
       }
+      // Called in the else that ends the caller's choice: it takes what the branches before it do not (P400).
+      for (const each of read.rest ?? []) {
+        if (idOfHandler(each.handler) !== target.id) continue;
+        rest.push({ ...each, handler: { kind: 'self' }, file });
+      }
     }
-    return out;
+    return { selections: out, rest };
   };
 
   const consumers = builder.nodes.filter((node) => node.type === 'consumer' && node.meta?.[SELECTED_BY_META] === undefined);
@@ -1270,9 +1350,12 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
     // declared type of its parameter; where both say, and differ, the caller's
     // choice is drawn and a row says so.
     let own: readonly ReadSelection[] = read.selections;
+    let ownRest: readonly ReadRest[] = read.rest ?? [];
     if (own.length === 0 && read.unread.length === 0 && found !== undefined && (target.type === 'method' || target.type === 'function')) {
-      const dispatched = dispatchedTo(target);
+      const { selections: dispatched, rest: dispatchedRest } = dispatchedTo(target);
       const declared = parameterSelection(found.fn);
+      // Called in a caller's last else: the linker draws the remaining types, or checks them against its parameter's (P400).
+      if (ownRest.length === 0) ownRest = dispatchedRest;
       if (dispatched.length > 0) {
         own = dispatched;
         const said = [...new Set(dispatched.map((each) => each.type))].sort();
@@ -1297,7 +1380,7 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
     }
     // Each choice followed into the function it hands the message to, where that chooses again.
     const followed = followedIn(own, (handler) => lookupOf(idOfHandler(handler)), relative);
-    const reading: SelectionReading = { selections: followed.selections, unread: read.unread, others: read.others };
+    const reading: SelectionReading = { selections: followed.selections, unread: read.unread, others: read.others, rest: ownRest };
     for (const row of followed.unread) {
       host.report({
         file: row.file ?? file,
@@ -1319,7 +1402,7 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
         symbol: consumer.label,
       });
     }
-    if (reading.selections.length === 0) {
+    if (reading.selections.length === 0 && ownRest.length === 0) {
       if (reading.unread.length > 0) consumer.meta = { ...consumer.meta, [SELECTION_UNREAD_META]: reading.unread[0]!.why };
       continue;
     }
@@ -1336,10 +1419,9 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
       return host.ensureFunctionNode(handler.fn) === undefined ? undefined : host.functionIdOf(handler.fn);
     };
 
-    const recorded: Selection[] = [];
-    const seen = new Set<string>();
-    for (const selection of reading.selections) {
-      const id = handlerId(selection.handler) ?? target.id;
+    /** The consumer a chosen handler runs as: the dispatcher's own, or one drawn for the handler, handing it work. */
+    const consumerFor = (handler: ChosenHandler, heuristic: boolean, type?: string): { consumerId: string; id: string } => {
+      const id = handlerId(handler) ?? target.id;
       const node = builder.getNode(id);
       const consumerId = id === target.id || node === undefined ? consumer.id : `consumer:${id}`;
       if (consumerId !== consumer.id) {
@@ -1359,19 +1441,30 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
             ...(typeof consumer.meta?.[UNREACHED_META] === 'string' ? { [UNREACHED_META]: consumer.meta[UNREACHED_META] } : {}),
           },
         });
-        if (drawn.meta?.[SELECTED_BY_META] !== undefined) {
-          const types = new Set<string>([...((drawn.meta['messageTypes'] as string[] | undefined) ?? []), selection.type]);
+        if (type !== undefined && drawn.meta?.[SELECTED_BY_META] !== undefined) {
+          const types = new Set<string>([...((drawn.meta['messageTypes'] as string[] | undefined) ?? []), type]);
           drawn.meta = { ...drawn.meta, messageTypes: [...types].sort() };
         }
         builder.addEdge({
           from: consumerId,
           to: id,
           type: 'handles',
-          confidence: selection.heuristic === true ? 'heuristic' : 'static',
+          confidence: heuristic ? 'heuristic' : 'static',
           ...(node!.file === undefined ? {} : { file: node!.file }),
           ...(node!.line === undefined ? {} : { line: node!.line }),
         });
       }
+      return { consumerId, id };
+    };
+
+    /** Where a choice is written, as a recorded selection says it: only where it is not the consumer's own file. */
+    const fileSaid = (file: string | undefined): { file?: string } =>
+      file !== undefined ? (file === consumer.file ? {} : { file }) : target.file === undefined || target.file === consumer.file ? {} : { file: target.file };
+
+    const recorded: Selection[] = [];
+    const seen = new Set<string>();
+    for (const selection of reading.selections) {
+      const { consumerId } = consumerFor(selection.handler, selection.heuristic === true, selection.type);
       const key = `${selection.type}\u0000${consumerId}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -1380,22 +1473,28 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
         consumer: consumerId,
         via: selection.via,
         line: selection.line,
-        ...(selection.file !== undefined
-          ? selection.file === consumer.file
-            ? {}
-            : { file: selection.file }
-          : target.file === undefined || target.file === consumer.file
-            ? {}
-            : { file: target.file }),
+        ...fileSaid(selection.file),
         ...(selection.heuristic === true ? { heuristic: true as const } : {}),
       });
     }
+    // The else and default handlers, each with what the branches before it choose (P400).
+    const rests: RestSelection[] = [];
+    const restSeen = new Set<string>();
+    for (const each of ownRest) {
+      const { consumerId, id } = consumerFor(each.handler, false);
+      const excluding = [...new Set(each.excluding)].sort();
+      const key = `${consumerId}\u0000${excluding.join(',')}`;
+      if (restSeen.has(key)) continue;
+      restSeen.add(key);
+      rests.push({ consumer: consumerId, ...(consumerId === consumer.id ? {} : { handler: id }), excluding, line: each.line, ...fileSaid(each.file) });
+    }
     recorded.sort((a, b) => (a.type < b.type ? -1 : a.type > b.type ? 1 : a.consumer < b.consumer ? -1 : a.consumer > b.consumer ? 1 : 0));
-    const fields = [...new Set(reading.selections.map((selection) => selection.field))];
+    const fields = [...new Set([...reading.selections.map((selection) => selection.field), ...ownRest.map((each) => each.field)])];
     consumer.meta = {
       ...consumer.meta,
       [DISCRIMINATOR_META]: fields.length === 1 ? fields[0] : fields,
-      [SELECTS_META]: recorded,
+      ...(recorded.length === 0 ? {} : { [SELECTS_META]: recorded }),
+      ...(rests.length === 0 ? {} : { [SELECTS_REST_META]: rests }),
       ...(reading.others ? { [SELECTS_OTHERS_META]: true } : {}),
       ...(reading.unread.length === 0 ? {} : { [SELECTION_UNREAD_META]: reading.unread[0]!.why }),
     };

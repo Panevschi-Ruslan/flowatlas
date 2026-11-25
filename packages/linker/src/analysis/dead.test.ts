@@ -807,3 +807,37 @@ describe('a screen the router registers (P363)', () => {
     expect(spare?.evidence.unreferenced).toBeUndefined();
   });
 });
+
+describe("a route nothing calls that hands its request to a bot's code (P400)", () => {
+  const bot = (verb: string) =>
+    buildTestDb({
+      nodes: [
+        route(`entry:shop:http:${verb}:/tg/:param`, { repo: 'shop', label: `${verb} /tg/:param`, meta: { method: verb, path: '/tg/:param', controller: 'ChatHookController' } }),
+        node('shop#src/hook.ts:ChatHookController.receive', { repo: 'shop', type: 'method', label: 'ChatHookController.receive', file: 'src/hook.ts' }),
+        node('shop#src/bot.ts:ChatBot.handleUpdate', { repo: 'shop', type: 'method', label: 'ChatBot.handleUpdate', file: 'src/bot.ts' }),
+        node('shop#src/bot.ts:ChatBot.reply', { repo: 'shop', type: 'method', label: 'ChatBot.reply', file: 'src/bot.ts' }),
+        node('entry:shop:bot_command:stock', { repo: 'shop', type: 'entry', kind: 'bot_command', file: 'src/bot.ts', line: 9 }),
+      ],
+      edges: [
+        edge(`entry:shop:http:${verb}:/tg/:param`, 'shop#src/hook.ts:ChatHookController.receive', { type: 'handles' }),
+        edge('shop#src/hook.ts:ChatHookController.receive', 'shop#src/bot.ts:ChatBot.handleUpdate'),
+        edge('entry:shop:bot_command:stock', 'shop#src/bot.ts:ChatBot.reply', { type: 'handles' }),
+      ],
+      report: { routes: { total: 1, called: 0, uncalled: [`entry:shop:http:${verb}:/tg/:param`], duplicated: [] } },
+    });
+
+  it("is the bot's way in, reached from outside: infrastructure, its verdict unknown, as impact counts it a bot", () => {
+    const db = bot('POST');
+    const [row] = deadEntries(db, db.report());
+    db.close();
+    expect(row).toMatchObject({ class: 'infrastructure', role: 'bot', verdict: 'unknown', why: 'hands its request to ChatBot.handleUpdate (src/bot.ts)', evidence: { outside: 'bot' } });
+    expect(row?.reason).toContain("the bot's webhook");
+  });
+
+  it('stays dead where the route only reads: a bot platform posts its updates', () => {
+    const db = bot('GET');
+    const [row] = deadEntries(db, db.report());
+    db.close();
+    expect(row).toMatchObject({ class: 'actionable', verdict: 'dead' });
+  });
+});

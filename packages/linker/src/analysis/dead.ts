@@ -1,5 +1,6 @@
 import { frameworkCallOf, frameworkCallSaid, isMessageTypeNode, UNREFERENCED_META, type GraphNode } from '@flowatlas/core';
 import { messageTypeFacts, unreachedHandler, unselectedSaid } from './message-types.js';
+import { botCodeBehind, botFilesOf } from './bots.js';
 import type { GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
 import { matchesRoutePattern } from '../route-audit.js';
@@ -53,7 +54,7 @@ export const ENTRY_CLASS_NAMES = ['actionable', 'stream', 'infrastructure', 'dec
 export type EntryClassName = (typeof ENTRY_CLASS_NAMES)[number];
 
 /** What kind of infrastructure a route is, for the line that counts them. */
-export type InfrastructureRole = 'probe' | 'webhook' | 'callback' | 'discovery' | 'configured';
+export type InfrastructureRole = 'probe' | 'webhook' | 'callback' | 'discovery' | 'configured' | 'bot';
 
 /**
  * How sure a row is that nothing reaches the route.
@@ -360,6 +361,7 @@ const ROLE_REASONS: Readonly<Record<InfrastructureRole, string>> = {
   callback: 'looks like a callback a provider redirects to; whoever sends it there is outside the project',
   discovery: 'a well-known address, asked for by clients outside the project',
   configured: 'named infrastructure under dead.infrastructure; its callers are outside the project',
+  bot: "hands its request to a bot's code: the bot's webhook, posted to by the bot's platform from outside the project",
 };
 
 const infrastructureRow = (role: InfrastructureRole, why: string): RouteClass => ({
@@ -544,6 +546,8 @@ interface RouteContext {
   readonly options: DeadOptions;
   nearMissesOf(id: string): NearMiss[];
   oneOffsOf(route: GraphNode): OneOff[];
+  /** The bot's code a route hands its request to, as impact reads a bot's webhook (P396, P400). */
+  botCodeOf(route: GraphNode): GraphNode | undefined;
 }
 
 const routeContext = (db: GraphDb, report: LinkReport | undefined, options: DeadOptions): RouteContext => {
@@ -551,9 +555,11 @@ const routeContext = (db: GraphDb, report: LinkReport | undefined, options: Dead
   // rather than re-matched here, so the command and the report agree.
   const nearMissed = report?.routes.nearMissed ?? {};
   let unjoined: Unjoined[] | undefined;
+  let bots: ReadonlySet<string> | undefined;
   return {
     db,
     options,
+    botCodeOf: (route) => botCodeBehind(db, route, (bots ??= botFilesOf(db))),
     nearMissesOf: (id) =>
       (Object.hasOwn(nearMissed, id) ? (nearMissed[id] ?? []) : []).slice(0, NEAR_MISSES_NAMED).flatMap((callId) => {
         const call = db.node(callId);
@@ -601,6 +607,24 @@ const routeVerdict = (
   return { verdict: couldHit.length > 0 ? 'likely-dead' : 'dead', evidence };
 };
 
+/** The verbs a request carrying something is sent with: a bot's platform posts its updates. */
+const SENT_VERBS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH']);
+
+/**
+ * A route nothing in the project calls, and nothing its address or names say
+ * explains, whose handler hands the request to a bot's code within a few
+ * calls (P400): the bot's webhook, reached from the bot's platform, as
+ * `impact` counts it a bot (P396). So `dead`, `list_entries` and `impact`
+ * agree. Any other class stands as it was.
+ */
+const botWebhookOf = (context: RouteContext, route: GraphNode, found: RouteClass): RouteClass => {
+  if (found.class !== 'actionable' || route.kind !== 'http') return found;
+  if (!SENT_VERBS.has(routeFactsOf(route).method.toUpperCase())) return found;
+  const bot = context.botCodeOf(route);
+  if (bot === undefined) return found;
+  return { class: 'infrastructure', role: 'bot', why: `hands its request to ${bot.label}${bot.file === undefined ? '' : ` (${bot.file})`}`, reason: ROLE_REASONS.bot };
+};
+
 /** One route nothing calls, as a row: its class, why, and its verdict with the evidence. */
 const routeRow = (context: RouteContext, node: GraphNode): DeadEntry => {
   const { db, options } = context;
@@ -624,7 +648,7 @@ const routeRow = (context: RouteContext, node: GraphNode): DeadEntry => {
     };
   }
   const handler = db.edgesFrom(node.id, ['handles']).map((edge) => db.node(edge.to)?.label).find((label) => label !== undefined);
-  const found = classifyRoute(routeFactsOf(node, handler), options);
+  const found = botWebhookOf(context, node, classifyRoute(routeFactsOf(node, handler), options));
   const couldHit = context.nearMissesOf(node.id);
   const oneOff = found.class === 'actionable' ? context.oneOffsOf(node) : [];
   const { verdict, evidence } = routeVerdict(found, couldHit, oneOff);

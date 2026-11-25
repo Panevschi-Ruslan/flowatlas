@@ -761,15 +761,16 @@ const promptServiceSections = (subject) => {
       ...(view.publishes.length === 0 ? [] : [`- publishes ${promptIds(view.publishes, 8)}`]),
       ...(view.consumes.length === 0 ? [] : [`- consumes ${promptIds(view.consumes, 8)}`]),
     ]),
-    ...promptSection(
-      `Findings · ${total(view.findings)}`,
-      view.findings.flatMap((item) => [
+    ...promptSection(`Findings · ${total(view.findings)}`, [
+      ...view.findings.flatMap((item) => [
         `- ${item.kind} · ${item.count}`,
         ...item.top.map(
           (gap) => `  - ${gap.loc === undefined ? '' : `${promptCode(gap.loc)}: `}${gap.message}${gap.id === undefined ? '' : ` — ${promptCode(gap.id)}`}`,
         ),
       ]),
-    ),
+      // Counted, not listed, as the findings tool counts them (P400): the call lists them.
+      ...(view.counted ?? []).map((item) => `- ${item.kind} at ${item.severity} · ${item.count}, counted, not listed: ${promptCode(item.call)}`),
+    ]),
     ...promptSection(
       'Most common gaps',
       view.gaps.map(

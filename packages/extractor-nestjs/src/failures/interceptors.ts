@@ -109,7 +109,7 @@ const RXJS = /^rxjs(\/|$)/;
 /** The error `timeout()` raises unless it is told otherwise. */
 const TIMEOUT_ERROR: Pick<Given, 'exception' | 'lineage'> = { exception: 'TimeoutError', lineage: ['TimeoutError', 'Error'] };
 
-const bare = (node: Node): Node => {
+export const bare = (node: Node): Node => {
   let at = node;
   while (Node.isAsExpression(at) || Node.isParenthesizedExpression(at) || Node.isNonNullExpression(at) || Node.isSatisfiesExpression(at)) {
     at = at.getExpression();
@@ -118,7 +118,7 @@ const bare = (node: Node): Node => {
 };
 
 /** Whether a name is one of RxJS's: imported from it, or written with nothing to say otherwise. */
-const isRx = (node: Node, name: string): boolean => {
+export const isRx = (node: Node, name: string): boolean => {
   if (!Node.isIdentifier(node)) return false;
   const named = classNamed(node as Identifier);
   return named.name === name && named.declaration === undefined && (named.module === undefined || RXJS.test(named.module));
@@ -136,7 +136,7 @@ const givenBy = (node: Node): Given | undefined => {
 };
 
 /** The value a function hands back: its expression body, or a block's one `return`. */
-const returnedBy = (fn: Node): Node | undefined => {
+export const returnedBy = (fn: Node): Node | undefined => {
   const value = bare(fn);
   if (!Node.isArrowFunction(value) && !Node.isFunctionExpression(value)) return undefined;
   const body = value.getBody();

@@ -737,7 +737,7 @@ export type { TypeCollectorOptions } from './types/collector.js';
 export { functionLikeOf, recordSignatures, recordStatedSignatures } from './types/signatures.js';
 export { FIELDS_READ_META, FIELDS_UNREAD_META, readFields, walkFields } from './field-reads.js';
 export type { FieldEscape, FieldRead, FieldReadOptions, FieldStart, FieldsRead, FieldSureness, FieldUnread, FieldWalk, HolderState, ResponseState, ValueState } from './field-reads.js';
-export { ANSWER_READ_META, ANSWER_UNREAD_META, answerFieldsRead } from './answer-reads.js';
+export { ANSWER_READ_META, ANSWER_UNREAD_META, ANSWER_WRAPS_META, answerFieldsRead, answerWrapsOf, type AnswerWrap } from './answer-reads.js';
 export { switchedOver, switchOf } from './switch-cases.js';
 export type { SwitchDefault, SwitchedOver } from './switch-cases.js';
 export type { AnswerComes, AnswerReadOptions, AnswerStart, AnswerMemberUse } from './answer-reads.js';
@@ -1062,6 +1062,7 @@ export type {
   PromptFailGroup,
   PromptFailure,
   PromptFailuresSeen,
+  PromptCounted,
   PromptGap,
   PromptRuleBreak,
   PromptSpec,
@@ -1272,9 +1273,12 @@ export {
   SELECTION_UNREAD_META,
   selectionsOf,
   SELECTS_META,
+  SELECTS_REST_META,
+  restSelectionsOf,
   SELECTS_OTHERS_META,
   SELECTION_DIFFERS_META,
   type DiscriminatorField,
+  type RestSelection,
   type Selection,
   type SelectionVia,
 } from './message-types.js';

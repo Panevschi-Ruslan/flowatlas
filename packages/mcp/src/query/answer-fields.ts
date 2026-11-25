@@ -1,4 +1,4 @@
-import { ANSWER_READ_META, ANSWER_UNREAD_META, parseTypeRef, type FieldRead, type FieldUnread, type TypeRefAst } from '@flowatlas/core';
+import { ANSWER_READ_META, ANSWER_UNREAD_META, answerWrapsOf, parseTypeRef, type FieldRead, type FieldUnread, type TypeRefAst } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import { compareFields } from '../tools/fields-contract.js';
 import { readsField, shapeFields, topField, type Reading } from './fields.js';
@@ -90,15 +90,109 @@ export const answerFieldsOf = (db: GraphDb, entry: string): string[] | undefined
   return returns === undefined ? undefined : fieldsOf(db, parse(returns));
 };
 
+/**
+ * What the wire carries where interceptors reshape a route's answer on the
+ * way out (P400), read off the route's `answerWraps`.
+ */
+export interface AnswerWire {
+  /** The fields the outermost envelope holds, where one wraps the answer. */
+  outer?: string[];
+  /** The path to the declared answer inside the envelopes, outermost first: `data`, `result.data`. */
+  path?: string;
+  /** Fields of the answer's class left out on the way out, each with what leaves it out. */
+  excluded: Map<string, string>;
+  /** Why what an interceptor does to the answer was not read, where one was not. */
+  unread?: string;
+  /** In words, for an answer to say: `{ success, data: StoreCard } (EnvelopeInterceptor)`. */
+  said: string;
+}
+
+/** What the interceptors around a route make of its answer; undefined where none reshapes it. */
+export const answerWireOf = (db: GraphDb, entry: string): AnswerWire | undefined => {
+  const wraps = answerWrapsOf(db.node(entry)?.meta);
+  if (wraps.length === 0) return undefined;
+  const excluded = new Map<string, string>();
+  const unread = wraps.find((wrap) => wrap.unread !== undefined);
+  // Innermost first: each envelope holds what the ones before it made.
+  const intos: string[] = [];
+  let outer: string[] | undefined;
+  const type = db.edgesFrom(entry, ['handles'])[0]?.returns;
+  let shape = typeSaid(type);
+  for (const wrap of wraps) {
+    for (const field of wrap.excluded ?? []) excluded.set(field, `${wrap.by} (@Exclude)`);
+    if (wrap.envelope !== undefined) {
+      intos.unshift(wrap.envelope.into);
+      outer = wrap.envelope.fields;
+      shape = `{ ${wrap.envelope.fields.map((field) => (field === wrap.envelope!.into ? `${field}: ${shape}` : field)).join(', ')} }`;
+    }
+  }
+  const by = wraps.filter((wrap) => wrap.envelope !== undefined).map((wrap) => wrap.by);
+  const left = [...excluded.keys()];
+  const said = [
+    ...(by.length === 0 ? [] : [`${shape} (${by.join(', ')})`]),
+    ...(left.length === 0 ? [] : [`${left.join(', ')} left out by ${[...new Set(excluded.values())].join(', ')}`]),
+    ...(unread === undefined ? [] : [`reshaped by ${unread.by} in a way not read (${unread.unread})`]),
+  ].join('; ');
+  return {
+    ...(outer === undefined ? {} : { outer }),
+    ...(intos.length === 0 ? {} : { path: intos.join('.') }),
+    excluded,
+    ...(unread?.unread === undefined ? {} : { unread: `${unread.by}: ${unread.unread}` }),
+    said,
+  };
+};
+
+/** A declared answer as a person writes it: `type:shop#Profile[]` is `Profile[]`. */
+export const typeSaid = (type: string | undefined): string => (type === undefined ? 'a shape' : type.replace(/type:[^#\s]+#/g, ''));
+
+/** One missing field of an answer, where it is read, and why it is missing. */
+export interface AnswerMissing {
+  field: string;
+  id: string;
+  line: number;
+  file?: string;
+  /** Every read of it there checks it is there first, so the client copes without it (P395). */
+  guarded?: true;
+  /** The field is the answer's, and what leaves it out on the way out (P400). */
+  excluded?: string;
+  /** Read at the top of an answer an envelope wraps (P400). */
+  wrapped?: true;
+  /** Why the comparison is not sure: an interceptor reshapes the answer in a way not read (P400). */
+  unsure?: string;
+}
+
 /** The answer's fields as one route's clients read them, against what it answers. */
 export interface AnswerSaid {
   /** What the route answers, as its handler declares it. */
   type?: string;
+  /** What the wire carries, where interceptors reshape the answer on the way out (P400). */
+  wire?: string;
   reads: AnswerRead[];
-  /** `guarded`: every read of it there checks it is there first, so the client copes without it (P395). */
-  missing: Array<{ field: string; id: string; line: number; file?: string; guarded?: true }>;
+  missing: AnswerMissing[];
   unused: Array<{ field: string }>;
 }
+
+/** One client's reading as the part of the wire it reads: reads under `path` with it taken off, or the others. */
+const partOf = (
+  reading: Reading & { files: Map<string, string>; guarded: Set<string> },
+  path: string,
+  inner: boolean,
+): Reading & { files: Map<string, string>; guarded: Set<string> } => {
+  const files = new Map<string, string>();
+  const guarded = new Set<string>();
+  const reads = reading.reads.flatMap((site) => {
+    const under = site.field.startsWith(`${path}.`);
+    if (site.field === path || under !== inner) return [];
+    const field = inner ? site.field.slice(path.length + 1) : site.field;
+    const was = `${site.field}|${site.id}|${site.line}`;
+    const now = `${field}|${site.id}|${site.line}`;
+    const file = reading.files.get(was);
+    if (file !== undefined) files.set(now, file);
+    if (reading.guarded.has(was)) guarded.add(now);
+    return [{ ...site, field }];
+  });
+  return { ...reading, reads, files, guarded };
+};
 
 /**
  * `check_contract` on a route, or on one request into it (P391): what the
@@ -139,43 +233,60 @@ export const answerOf = (
     }
   }
   if (reads.length > MOST_READS) left.push(`page: ${reads.length - MOST_READS} more reads; ask with field`);
-  const compared = compareFields(
-    fields === undefined ? [] : [{ id: entry, sends: fields }],
-    readings.map(({ id, reading }) => ({ id, label: `the answer to ${db.node(id)?.label ?? id} (${id})`, reading })),
-    field,
-    (use) => db.node(use.id)?.label ?? use.id,
-  );
+  // What the wire carries, where interceptors reshape the answer on the way out (P400).
+  const wire = answerWireOf(db, entry);
   if (fields === undefined) left.push(`unsure: what ${db.node(entry)?.label ?? entry} answers is not a shape read, so no read was compared`);
+  if (wire?.unread !== undefined) left.push(`unsure: the answer is reshaped on the way out in a way not read (${wire.unread}), so a field said missing may be sent`);
+  const sent = fields === undefined ? undefined : fields.filter((name) => !(wire?.excluded.has(name) ?? false));
+  const label = (id: string): string => `the answer to ${db.node(id)?.label ?? id} (${id})`;
+  /** The reads of one part of the wire compared against what that part holds, each missing field named as the client reads it. */
+  const comparePart = (part: 'inner' | 'outer'): { missing: AnswerMissing[]; unused: Array<{ field: string }>; left: string[] } => {
+    const path = wire?.path;
+    const parted = readings.map(({ id, reading }) => ({ id, reading: path === undefined ? reading : partOf(reading, path, part === 'inner') }));
+    const holds = part === 'inner' ? sent : wire?.outer;
+    const compared = compareFields(holds === undefined ? [] : [{ id: entry, sends: holds }], parted.map(({ id, reading }) => ({ id, label: label(id), reading })), field, (use) => db.node(use.id)?.label ?? use.id);
+    const sitesOf = (row: { field: string; id: string; line: number }): Array<{ file: string | undefined; guarded: boolean }> =>
+      parted.flatMap(({ reading }) =>
+        reading.reads
+          .filter((site) => topField(site.field) === row.field && site.id === row.id && site.line === row.line)
+          .map((site) => {
+            const key = `${site.field}|${site.id}|${site.line}`;
+            return { file: reading.files.get(key), guarded: reading.guarded.has(key) };
+          }),
+      );
+    const missing = compared.missing.map((row): AnswerMissing => {
+      const sites = sitesOf(row);
+      const file = sites.find((site) => site.file !== undefined)?.file;
+      const excluded = part === 'inner' ? wire?.excluded.get(row.field) : undefined;
+      return {
+        field: part === 'inner' && path !== undefined ? `${path}.${row.field}` : row.field,
+        id: row.id,
+        line: row.line,
+        ...(file === undefined ? {} : { file }),
+        ...(sites.length > 0 && sites.every((site) => site.guarded) ? { guarded: true as const } : {}),
+        ...(excluded === undefined ? {} : { excluded }),
+        ...(part === 'outer' ? { wrapped: true as const } : {}),
+        ...(wire?.unread === undefined ? {} : { unsure: wire.unread }),
+      };
+    });
+    return { missing, unused: compared.unused.map((row) => ({ field: part === 'inner' && path !== undefined ? `${path}.${row.field}` : row.field })), left: compared.left };
+  };
+  const inner = comparePart('inner');
+  // Read at the top of an answer an envelope wraps: compared against the envelope's own fields.
+  const outer = wire?.path === undefined ? undefined : comparePart('outer');
   // A request no reader followed says so in its own words: its answer was not read.
-  const said = compared.left
+  const said = [...new Set([...inner.left, ...(outer?.left ?? [])])]
     .filter((line) => !line.startsWith('unsure: a receiver hands the value'))
     .map((line) => line.replace(/was not read for the fields it reads$/, 'was not read for the fields its client reads'));
   // A client that hands the answer where it is not read may read any field there: none is said unused.
   const handedOn = readings.some(({ reading }) => reading.unread.length > 0);
-  const fileOf = (row: { field: string; id: string; line: number }): string | undefined => {
-    for (const { reading } of readings) {
-      for (const site of reading.reads) {
-        if (topField(site.field) === row.field && site.id === row.id && site.line === row.line) return reading.files.get(`${site.field}|${site.id}|${site.line}`);
-      }
-    }
-    return undefined;
-  };
-  /** Every read of the field at that place checks it is there first. */
-  const guardedAt = (row: { field: string; id: string; line: number }): boolean => {
-    const sites = readings.flatMap(({ reading }) =>
-      reading.reads.filter((site) => topField(site.field) === row.field && site.id === row.id && site.line === row.line).map((site) => reading.guarded.has(`${site.field}|${site.id}|${site.line}`)),
-    );
-    return sites.length > 0 && sites.every(Boolean);
-  };
   return {
     answer: {
       ...(type === undefined ? {} : { type }),
+      ...(wire === undefined ? {} : { wire: wire.said }),
       reads: reads.slice(0, MOST_READS),
-      missing: compared.missing.map((row) => {
-        const file = fileOf(row);
-        return { field: row.field, id: row.id, line: row.line, ...(file === undefined ? {} : { file }), ...(guardedAt(row) ? { guarded: true as const } : {}) };
-      }),
-      unused: handedOn ? [] : compared.unused.map((row) => ({ field: row.field })),
+      missing: [...(outer?.missing ?? []), ...inner.missing],
+      unused: handedOn ? [] : inner.unused,
     },
     left: [...left, ...said],
   };

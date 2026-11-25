@@ -992,8 +992,11 @@ answer naming the ones it does (`scopes`), with a `next` per scope.
 - `# Service: …`: *Ways in · n* by kind, *Calls into other services* and
   *Called from other services* (the crossings `check_contract` lists between
   two services, by the other service), *Channels* it publishes and consumes,
-  *Findings · n* by kind with the top three of each as `findings` ranks them,
-  and its most common gaps. No *Steps*.
+  *Findings · n* by kind with the top three of each as `findings` ranks them
+  (contract breaks at warning counted on a line of their own with the call
+  that lists them, `findings({kind: "contract-break", severity: "warning",
+  service})`, as `findings` counts them, P400), and its most common gaps. No
+  *Steps*.
 
 The page gathers a class, a file and a service the same way (`subjectOf` in
 its `steps.js` takes them as targets, and the parity test compares both sides
@@ -1134,7 +1137,7 @@ words), `fix` (the nearest fix) and `seenBy` (the ways in that meet it):
 |---|---|---|---|
 | `call-to-missing-route` | a request to a route the service it is sent to does not serve (a `target-route-not-found` row) | every route of that service was read: no row says a route, a mount or a prefix of it went unread, and no catch-all of it could answer | high |
 | `field-never-sent` | a field the receiving code reads that no sender sends, on a channel (type by type, each handler only under the types it is chosen for, P397) or a request's body, with the field sent and never read it was likely renamed from (`likely renamed: deskNumber is sent, deskId is read`) | every sender's shape and every reader on the crossing was read (`check_contract` answers `complete`); a read under a type two sources say differently (a caller's branch and the parameter's type, `meta.selectionDiffers` on the consumer, `unsure` on the missing row) is held back | high |
-| `answer-field-never-returned` | a field of a route's answer a browser client reads (P391's `answerRead`) that the answer never holds, per request, placed where it is read, with the field returned and never read it was likely renamed from, else "return it, or stop reading it" (P393) | the route's handler declares an answer that is a shape read whole (a type, an inline object, a list's or a promise's element); where it is not (`any`, a value parsed from text), the request's reads are held back, one count per request; a read behind a check that the field is there (`?.` past it, `??`, `\|\|`, `&&`, `if (x)`, `!x`, a ternary on it, `== null`, `typeof x === 'undefined'`, `'k' in o`, also through a local holding it or anywhere in the functions around the read, P395; in an Angular template, `?.`, `@if`, `*ngIf`, `??`, `&&`, `!` or a ternary on it anywhere in the template, P402) is the client handling its absence, held back, one count per read | high |
+| `answer-field-never-returned` | a field of a route's answer a browser client reads (P391's `answerRead`) that the answer never holds, per request, placed where it is read, with the field returned and never read it was likely renamed from, else "return it, or stop reading it" (P393) | the route's handler declares an answer that is a shape read whole (a type, an inline object, a list's or a promise's element); where it is not (`any`, a value parsed from text), the request's reads are held back, one count per request; a read behind a check that the field is there (`?.` past it, `??`, `\|\|`, `&&`, `if (x)`, `!x`, a ternary on it, `== null`, `typeof x === 'undefined'`, `'k' in o`, also through a local holding it or anywhere in the functions around the read, P395; in an Angular template, `?.`, `@if`, `*ngIf`, `??`, `&&`, `!` or a ternary on it anywhere in the template, P402) is the client handling its absence, held back, one count per read; where interceptors reshape the answer (a global envelope, a serializer leaving `@Exclude()` fields out, P400) the reads are compared against the wire, and where one reshapes it in a way not read the request's reads are held back, one count per read | high |
 | `type-never-published` | a consumer choosing a type of message no publish on any channel it receives sends, with the published type it was likely respelled from; a screen fed through a stream route or a hub receives every channel that route or hub relays (P395) | every channel the consumer receives is known whole and every publish on each says the type it sends; held back where a stream route feeding it relays a channel not read (`meta.relaysUnread` on the route: a subscription whose channel is worked out when the code runs, an object whose class is not read), where a hub is written to with a channel not read (`meta.forwardsUnread` on its channel), where nothing publishing on one of several channels was read, or where a publish sends a type not read | high |
 | `contract-break` | the contracts report's errors, listed; its warnings counted under `warnings` with the call that lists them (`findings({kind: "contract-break", severity: "warning"})`, P395) | the two declarations | high at error, medium at warning |
 | `unguarded-among-guarded` | a route nothing guards while the routes beside it in its controller are guarded | `guardedSiblings`, the guarded routes beside it | medium |
@@ -1603,14 +1606,23 @@ lists the publishes of it and, where there are none, `maybe`: publishes on the
 channel whose type was not read. A type nobody reads answers with the types
 that are. `dead` and `impact` take a type node like any channel; a type
 published on a channel whose consumers choose by type, and chosen by none, is
-the finding `message-type-unselected`.
+the finding `message-type-unselected`. Where a consumer choosing the type
+elsewhere receives channels not all read (a stream route relaying a channel
+not read, `relaysUnread`; a hub written to with one, `forwardsUnread`), any of
+them may be this channel: the row says so, is `unsure`, and `findings` holds
+it back with why (P400), the mirror of `type-never-published`'s hold.
 
 A handler that chooses no type in its body is still read for the types it
 takes (P369): the code calling it under a `case` or an `if` on the message it
 hands it (`via` that choice, the caller's file in `selects`), and failing
 that the declared type of its parameter where its discriminator is a literal
 (`via: parameter`); where the two differ the caller's choice is drawn and a
-`message-type-differs` row says so.
+`message-type-differs` row says so. The handler of the `else` that ends an
+`if`, `else if` chain on the type, or of a `switch`'s `default` (in its own
+dispatcher or in the caller that calls it), takes the remaining types: those
+the channel carries that the branches before it do not choose (`via: else`,
+P400), where every channel it receives is known whole and every publish on
+each says its type; elsewhere it chooses none, as before.
 
 A branch's handler is the first call of the repository's own it makes that is
 handed the message, else the first such call, else the branch itself; a call
@@ -1785,7 +1797,20 @@ its handler declares it answers; `reads`, every field of it a client reads,
 several callers), 40 at most; `missing`, a field a client reads that the
 answer never holds, at the first place it is read; `unused`, a field answered
 and read by no client, said only where every caller's answer was read and none
-hands it on. `field` keeps the reads of one field: the code that breaks if it
+hands it on. Where interceptors reshape the answer on the way out (P400) the
+reads are compared against the wire, said in `wire` (`{ data: ProductCard,
+success } (EnvelopeInterceptor); costPrice left out by
+ClassSerializerInterceptor (@Exclude)`): a read under the envelope's field is
+compared against the declared answer (`data.costPrice`, `excluded` where a
+serializer leaves it out), one at the top against the envelope's own fields
+(`wrapped`), and where an interceptor's reshaping was not read every missing
+row says `unsure` with why. The Nest reader writes it on the route as
+`meta.answerWraps`, innermost first: `{ by, envelope: { fields, into } }` for
+a `map` building an object around the answer, `{ by, excluded }` for
+`ClassSerializerInterceptor` (the `@Exclude()` fields of the class the handler
+answers), `{ by, unread }` for an operator putting another value in the
+answer's place, a `map` whose result a call works out, or an interceptor from
+a package. `field` keeps the reads of one field: the code that breaks if it
 changes, each read's component or method naming the screen it is on. A request
 whose answer was not read, a server-side caller among them, is said in
 `left`, as is each use not followed. On a request edge into a route, `answer`

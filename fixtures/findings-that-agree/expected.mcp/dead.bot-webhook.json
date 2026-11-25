@@ -1,0 +1,38 @@
+{
+  "answers": [
+    {
+      "asked": "entry:catalog-api:http:POST:/tg/:param",
+      "id": "entry:catalog-api:http:POST:/tg/:param",
+      "type": "entry",
+      "kind": "http",
+      "service": "catalog-api",
+      "loc": "src/chat/chat-hook.controller.ts:9",
+      "verdict": "unknown",
+      "reason": "hands its request to a bot's code: the bot's webhook, posted to by the bot's platform from outside the project",
+      "callers": 0,
+      "class": "infrastructure",
+      "role": "bot",
+      "evidence": {
+        "outside": "bot"
+      }
+    },
+    {
+      "asked": "entry:catalog-api:http:POST:/catalog/:param/price/:param",
+      "id": "entry:catalog-api:http:POST:/catalog/:param/price/:param",
+      "type": "entry",
+      "kind": "http",
+      "service": "catalog-api",
+      "loc": "src/events/catalog-events.controller.ts:8",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "callers": 0,
+      "class": "actionable",
+      "evidence": {}
+    }
+  ],
+  "next": [
+    "get_source({symbol: \"entry:catalog-api:http:POST:/tg/:param\"})",
+    "get_source({symbol: \"entry:catalog-api:http:POST:/catalog/:param/price/:param\"})",
+    "cant_follow({service: \"catalog-api\"})"
+  ]
+}

@@ -24,6 +24,7 @@ import {
   type FailureComparison,
   type PromptFailure,
   type PromptFailuresSeen,
+  type PromptCounted,
   type PromptGap,
   type PromptLog,
   type PromptMarks,
@@ -606,6 +607,8 @@ export interface ServiceInput {
   out: readonly ServiceCrossing[];
   into: readonly ServiceCrossing[];
   findings: readonly PromptGap[];
+  /** Rows counted rather than listed (contract breaks at warning), each with the call that lists them (P400). */
+  counted?: readonly PromptCounted[];
   rows?: readonly AnchoredUnresolvedRow[];
 }
 
@@ -683,6 +686,7 @@ export const gatherServiceSubject = (
       publishes,
       consumes,
       findings: [...findingKinds].map(([kind, list]) => ({ kind, count: list.length, top: list.slice(0, OVERVIEW_FIRST) })),
+      ...(input.counted === undefined || input.counted.length === 0 ? {} : { counted: [...input.counted] }),
       gaps,
     },
     gaps: [],
@@ -698,6 +702,8 @@ export interface ScopeContext {
   counts?: ObservedCounts;
   crossings?: (from: string, to: string) => ReadonlyArray<{ from: string; to: string; type: string }>;
   findings?: (service: string) => readonly PromptGap[];
+  /** The findings of a service counted rather than listed, with the call that lists them (P400). */
+  counted?: (service: string) => readonly PromptCounted[];
   /** The rows nobody accepted, which the service scope counts its gaps from (P143). */
   rows?: () => readonly AnchoredUnresolvedRow[];
 }
@@ -749,6 +755,7 @@ export const serviceInputOf = (
     out: others.flatMap((other) => between(service, other).map((hop) => ({ ...hop, service: other }))),
     into: others.flatMap((other) => between(other, service).map((hop) => ({ ...hop, service: other }))),
     findings: context.findings?.(service) ?? [],
+    ...(context.counted === undefined ? {} : { counted: context.counted(service) }),
     ...(context.rows === undefined ? {} : { rows: context.rows() }),
   };
 };

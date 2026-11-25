@@ -67,6 +67,7 @@ export { findOperations, specFragment } from './document/fragment.js';
 export { routeInventory } from './document/inventory.js';
 export type { InventoryRow } from './document/inventory.js';
 export * from './spec-diff/index.js';
+export { botCodeBehind, botFileKey, botFilesOf, isBotKind } from './analysis/bots.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';

@@ -3242,6 +3242,58 @@ only one of them moved.
 
 ### Fixed
 
+- **Findings and verdicts that agree with each other (P400).** Six places
+  where one answer said one thing and another, or the code, said otherwise:
+  - "No code selects T on C" (`message-type-unselected`) is held back, with
+    why, where a consumer choosing T receives channels not all read (a stream
+    route relaying a channel not read, a hub written to with one), any of
+    which may be C: the mirror of P395's hold on `type-never-published`,
+    asked by the same code (linker `receivedOf`, `carriesOf`,
+    `channelsUnknown`). The row says so and is `unsure`; `dead` on the type
+    says `unknown`.
+  - `describe_for_prompt`'s service scope and the page's *Copy as prompt*
+    counted every contract break at warning as a finding row; they now say
+    them on a line of their own with the call that lists them
+    (`findings({kind: "contract-break", severity: "warning", service})`), as
+    `findings` counts them.
+  - A `POST`, `PUT` or `PATCH` route nothing in the project calls, whose
+    handler hands the request to a bot's code within three calls, was `dead`
+    while `impact` counted it a bot; `dead`, `list_entries` and `impact` now
+    agree it is the bot's webhook (class `infrastructure`, role `bot`,
+    verdict `unknown`, `why: hands its request to ChatBot.handleUpdate`).
+  - The handler of the `else` that ends an `if`, `else if` chain on a
+    message's type, or of a `switch`'s `default`, takes the types the channel
+    carries that the branches before it do not choose (`via: else`), where
+    every channel it receives is known whole and every publish on each says
+    its type; elsewhere it chooses none, as before. The reader records the
+    choice (`meta.selectsRest`), the linker draws the types; where the
+    handler's parameter already says a type and the remaining ones differ,
+    `selectionDiffers` says so. A handler taking every other type was compared
+    under every type, a field it reads named under a type it never gets.
+  - The spec diff's `response-property-became-optional` is an `info` where
+    every client read of the field checks it is there first (`guarded`,
+    P395), and a `warning` naming the read where one does not; it was an
+    `error` for any read.
+  - An answer reshaped on the way out: the Nest reader reads what the
+    interceptors around a route do to its answer (`meta.answerWraps`): a
+    `map` building an envelope around it (`{ success, data }`), the
+    framework's `ClassSerializerInterceptor` leaving out the fields the
+    answer's class marks `@Exclude()`, or why that is not read (an operator
+    putting another value in its place, a `map` whose result a call works
+    out, an interceptor from a package). `check_contract` and
+    `answer-field-never-returned` compare a client's reads against the wire
+    (`answer.wire`; a missing row `excluded` or `wrapped`), and hold the rows
+    back where an interceptor's reshaping is not read (`unsure`).
+
+  New fixture `findings-that-agree`; `findings-that-hold` holds its
+  `ALERT_RAISED` row back; `api-change-verdicts` gains a field that became
+  optional read behind `??` and one read as it is. The answer budget's
+  questions that were there before go to 145,158 characters (145,174):
+  `findings.that-hold` 4,083 to 3,912 (a row held back), and
+  `findings.handler-types` 1,349 to 1,504 (the same fixture's `heldBack` says
+  it on every `findings` answer); three new questions (4,627). The text every
+  turn carries is unchanged (9,385).
+
 - **A table of handlers is followed (P398).** `route.handler(ctx, data)`,
   where `route` is an element of a table the code writes out (an array of
   object literals or a record of them, in a field, a `const`, a static, or

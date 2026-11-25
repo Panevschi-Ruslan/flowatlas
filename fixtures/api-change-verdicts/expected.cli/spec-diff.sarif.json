@@ -67,6 +67,20 @@
               }
             },
             {
+              "id": "spec/response-property-became-optional",
+              "name": "spec/response-property-became-optional",
+              "shortDescription": {
+                "text": "response field may now be absent"
+              },
+              "help": {
+                "text": "Callers that read it may get nothing. Keep sending it, or make the callers cope.",
+                "markdown": "Callers that read it may get nothing. Keep sending it, or make the callers cope."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
               "id": "spec/response-property-removed",
               "name": "spec/response-property-removed",
               "shortDescription": {
@@ -292,7 +306,7 @@
         },
         {
           "ruleId": "spec/response-property-removed",
-          "ruleIndex": 4,
+          "ruleIndex": 5,
           "level": "error",
           "message": {
             "text": "GET /items/{id}: base had `response.price` as `number`; head has no such field. Use: 1 of 2 callers: reads `price` in ItemPage, line 13. Deploy callers first: stop relying on `price`, then catalog. ([dashboard: reads `price` in ItemPage, line 13](1); [storefront: which fields of the answer its client reads was not read, so whether it reads `price` is not known](2))"
@@ -389,7 +403,7 @@
                             "uriBaseId": "%SRCROOT%"
                           },
                           "region": {
-                            "startLine": 17
+                            "startLine": 19
                           }
                         },
                         "message": {
@@ -406,7 +420,7 @@
                             "uriBaseId": "%SRCROOT%"
                           },
                           "region": {
-                            "startLine": 18
+                            "startLine": 20
                           }
                         },
                         "message": {
@@ -1002,7 +1016,7 @@
         },
         {
           "ruleId": "spec/response-property-removed",
-          "ruleIndex": 4,
+          "ruleIndex": 5,
           "level": "warning",
           "message": {
             "text": "POST /items: base had `response.price` as `number`; head has no such field. Use: 1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known. Deploy callers first: stop relying on `price`, then catalog. ([storefront: which fields of the answer its client reads was not read, so whether it reads `price` is not known](1))"
@@ -1163,6 +1177,173 @@
             "callers": 1,
             "direction": "breaking",
             "verdict": "1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known",
+            "deployFirst": "callers",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/response-property-became-optional",
+          "ruleIndex": 4,
+          "level": "warning",
+          "message": {
+            "text": "GET /items: `response\\[\\].stock` was required in base and may be left out in head. Use: 1 of 1 caller: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there. Deploy callers first: stop relying on `stock`, then catalog. ([dashboard: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dashboard/src/ItemsList.tsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              },
+              "message": {
+                "text": "dashboard: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/App.tsx",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 10
+                          }
+                        },
+                        "message": {
+                          "text": "way in /items (dashboard)"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/ItemsList.tsx",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 5
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsList (dashboard)"
+                        }
+                      },
+                      "executionOrder": 2
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/api.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 24
+                          }
+                        },
+                        "message": {
+                          "text": "code fetchItems (dashboard)"
+                        }
+                      },
+                      "executionOrder": 3
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "dashboard/src/api.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 25
+                          }
+                        },
+                        "message": {
+                          "text": "code GET /items (dashboard)"
+                        }
+                      },
+                      "executionOrder": 4
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 24
+                          }
+                        },
+                        "message": {
+                          "text": "route GET /items (catalog)"
+                        }
+                      },
+                      "executionOrder": 5
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "catalog/src/items/items.controller.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 24
+                          }
+                        },
+                        "message": {
+                          "text": "handler ItemsController.list (catalog)"
+                        }
+                      },
+                      "executionOrder": 6
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "6f90c1fa58cf36c631e445de46f21c5e",
+            "primaryLocationLineHash": "6f90c1fa58cf36c6:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "GET /items",
+            "field": "response[].stock",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "1 of 1 caller: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there",
             "deployFirst": "callers",
             "anchor": "same"
           }
@@ -1407,7 +1588,7 @@
         },
         {
           "ruleId": "spec/response-property-removed",
-          "ruleIndex": 4,
+          "ruleIndex": 5,
           "level": "note",
           "message": {
             "text": "GET /items/{id}/archive: base had `response.reason` as `string`; head has no such field (no caller in this project). Use: nothing in the 4 repositories read calls it."
@@ -1444,8 +1625,62 @@
           }
         },
         {
-          "ruleId": "spec/response-property-removed",
+          "ruleId": "spec/response-property-became-optional",
           "ruleIndex": 4,
+          "level": "note",
+          "message": {
+            "text": "GET /items: `response\\[\\].badge` was required in base and may be left out in head. Use: every caller that reads `badge` checks it is there first, among 1. ([dashboard: reads `badge` only behind a check that it is there in ItemsList, line 10: it copes without it](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "catalog/src/items/items.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "dashboard/src/ItemsList.tsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10
+                }
+              },
+              "message": {
+                "text": "dashboard: reads `badge` only behind a check that it is there in ItemsList, line 10: it copes without it"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "9004347d4cfb5158064da4bfa324ac1b",
+            "primaryLocationLineHash": "9004347d4cfb5158:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "catalog",
+            "document": "catalog",
+            "operation": "GET /items",
+            "field": "response[].badge",
+            "confidence": "static",
+            "callers": 1,
+            "direction": "breaking",
+            "verdict": "every caller that reads `badge` checks it is there first, among 1",
+            "anchor": "same"
+          }
+        },
+        {
+          "ruleId": "spec/response-property-removed",
+          "ruleIndex": 5,
           "level": "note",
           "message": {
             "text": "GET /items: base had `response\\[\\].thumbnail` as `string`; head has no such field. Use: no caller reads `thumbnail`, among 1. ([dashboard: does not read `thumbnail`](1))"
@@ -1472,7 +1707,7 @@
                   "uriBaseId": "%SRCROOT%"
                 },
                 "region": {
-                  "startLine": 23
+                  "startLine": 25
                 }
               },
               "message": {

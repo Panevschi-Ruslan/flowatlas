@@ -1,22 +1,15 @@
 import {
   DEPLOYMENT_UNREAD_REASONS,
-  FORWARDS_UNREAD_META,
   gapFindingOf,
-  isMessageTypeNode,
   makeMessageTypeId,
-  MESSAGE_TYPE_UNREAD_META,
-  messageTypesOf,
-  RELAYS_UNREAD_META,
   ROUTES_UNREAD_REASONS,
   selectionsOf,
-  STREAM_KIND,
   type GraphNode,
   type Precision,
 } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '../db/reader.js';
-import { EVERY_CHANNEL_VIA } from '../every-channel-link.js';
 import { oneSegmentOff, pathAnswers } from '../route-match.js';
-import { unreachedHandler } from './message-types.js';
+import { receivedOf, unreachedHandler } from './message-types.js';
 
 /**
  * What looks broken between the services (P384): the mismatches the graph
@@ -322,49 +315,6 @@ export const closeSpelling = (a: string, b: string): boolean => {
 };
 
 /**
- * What one channel a consumer receives carries, as far as its publishes say:
- * the types they send, or why that is not known whole.
- */
-interface ChannelCarries {
-  channel: GraphNode;
-  producers: number;
-  types: ReadonlySet<string>;
-  /** Why the types on it may not be all it carries. */
-  unknown?: string;
-}
-
-/** The types a channel's publishes say they send, and whether that is all it may carry. */
-const carriesOf = (db: GraphDb, channel: GraphNode): ChannelCarries => {
-  const producers = db.edgesTo(channel.id, ['emits']).flatMap((each) => db.node(each.from) ?? []);
-  const types = new Set(producers.flatMap((producer) => messageTypesOf(producer)));
-  const unread = producers.filter((producer) => typeof producer.meta?.[MESSAGE_TYPE_UNREAD_META] === 'string').length;
-  const base = { channel, producers: producers.length, types };
-  if (unread > 0) return { ...base, unknown: `${unread} publish(es) on ${channel.label} send a type not read` };
-  // A hub that stands for the channels it is handed by name carries what they carry, where every write to it names one.
-  const forwards = channel.meta?.['forwards'];
-  const forwardsUnread = channel.meta?.[FORWARDS_UNREAD_META];
-  if (typeof forwardsUnread === 'number' && forwardsUnread > 0) {
-    return { ...base, unknown: `${forwardsUnread} write(s) to ${channel.label} hand it a channel not read` };
-  }
-  if (Array.isArray(forwards) && forwards.length > 0) return base;
-  if (producers.length === 0) return { ...base, unknown: `nothing publishing on ${channel.label} was read` };
-  // A hub written to directly, its writes saying no type: what it hands its streams is not read.
-  if (typeof channel.meta?.['heldBy'] === 'string' && types.size === 0) return { ...base, unknown: `the ${producers.length} write(s) to ${channel.label} say no type` };
-  return base;
-};
-
-/** Why the channels a consumer receives may not be all of them: a stream route relaying channels not all read. */
-const channelsUnknown = (db: GraphDb, edges: readonly { meta?: Record<string, unknown> | undefined }[]): string | undefined => {
-  for (const edge of edges) {
-    if (edge.meta?.['via'] !== STREAM_KIND) continue;
-    const route = typeof edge.meta['route'] === 'string' ? db.node(edge.meta['route']) : undefined;
-    const why = route?.meta?.[RELAYS_UNREAD_META];
-    if (typeof why === 'string') return why;
-  }
-  return undefined;
-};
-
-/**
  * Consumers choosing a type of message nothing publishes (P384), the reverse
  * of `message-type-unselected`: a handler waiting for a message that never
  * comes, usually the type renamed or respelled on the publishing side. Read
@@ -392,19 +342,12 @@ export const typesNeverPublished = (db: GraphDb): Promoted[] => {
   for (const consumer of consumers) {
     const selections = selectionsOf(consumer);
     if (selections.length === 0) continue;
-    const edges = db.edgesTo(consumer.id, ['consumes']).filter((edge) => edge.meta?.['via'] !== EVERY_CHANNEL_VIA);
-    const channels = [
-      ...new Map(
-        edges
-          .map((edge) => db.node(edge.from))
-          .filter((channel): channel is GraphNode => channel !== undefined && channel.type === 'channel' && !isMessageTypeNode(channel))
-          .map((channel) => [channel.id, channel] as const),
-      ).values(),
-    ].sort((a, b) => byText(a.id, b.id));
-    const carried = channels.map((channel) => carriesOf(db, channel));
+    // Every channel it receives, and whether that set and what each carries are known whole: asked the way its
+    // mirror, `message-type-unselected`, asks it (P400).
+    const { carried, notWhole } = receivedOf(db, consumer);
     const published = new Set(carried.flatMap((each) => [...each.types]));
     if (published.size === 0) continue;
-    const unknown = channelsUnknown(db, edges) ?? carried.find((each) => each.unknown !== undefined)?.unknown;
+    const unknown = notWhole ?? carried.find((each) => each.unknown !== undefined)?.unknown;
     // The channel a row is filed under: the first that says types, so the call it names shows what is published.
     const said = carried.filter((each) => each.types.size > 0);
     const home = said[0]!;

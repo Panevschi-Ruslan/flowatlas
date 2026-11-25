@@ -33,6 +33,38 @@ export const ANSWER_READ_META = 'answerRead';
 /** The node meta key the uses of the answer that could not be followed are written under. */
 export const ANSWER_UNREAD_META = 'answerUnread';
 
+/**
+ * On a route (P400): what stands between its handler's answer and the wire,
+ * in the order the answer passes through, innermost first - an interceptor
+ * wrapping every answer in an envelope (`{ success, data }`), a serializer
+ * leaving out the fields the answer's class marks `@Exclude()`, or one whose
+ * reshaping was not read. The answer's fields a client reads are compared
+ * against the wire shape this says, and held back where it says `unread`.
+ */
+export const ANSWER_WRAPS_META = 'answerWraps';
+
+/** One step between a route's answer and the wire (P400). */
+export interface AnswerWrap {
+  /** The interceptor or serializer, by name. */
+  by: string;
+  /** Where it is written, where it is code of the project. */
+  file?: string;
+  line?: number;
+  /** The answer handed back inside an object: its fields, and the one holding the answer. */
+  envelope?: { fields: string[]; into: string };
+  /** The fields of the answer's class marked to be left out on the way out. */
+  excluded?: string[];
+  /** Why what it does to the answer was not read. */
+  unread?: string;
+}
+
+/** The steps a route records, as written; malformed ones dropped. */
+export const answerWrapsOf = (meta: Readonly<Record<string, unknown>> | undefined): AnswerWrap[] => {
+  const raw = meta?.[ANSWER_WRAPS_META];
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((entry): entry is AnswerWrap => typeof entry === 'object' && entry !== null && typeof (entry as AnswerWrap).by === 'string');
+};
+
 /** How the answer to a request comes back to the code that makes it. */
 export type AnswerComes = 'promise' | 'observable';
 

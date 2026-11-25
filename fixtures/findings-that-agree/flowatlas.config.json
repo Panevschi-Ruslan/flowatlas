@@ -1,0 +1,50 @@
+{
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "baseUrlEnv": [
+        "CATALOG_API_URL"
+      ]
+    },
+    {
+      "name": "back-office",
+      "repo": "./back-office",
+      "type": "nestjs"
+    },
+    {
+      "name": "ops-web",
+      "repo": "./ops-web",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_CATALOG_URL"
+      ],
+      "apiTarget": {
+        "VITE_CATALOG_URL": "catalog-api"
+      }
+    }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "catalog-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": [
+                "CatalogBus"
+              ],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

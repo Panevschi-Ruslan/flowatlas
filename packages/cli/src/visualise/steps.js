@@ -1562,6 +1562,16 @@ const promptFindingsOf = (model) => {
   }));
 };
 
+/** A service's findings counted rather than listed (P400): kind, severity, count and the call that lists them. */
+const promptCountedOf = (model, service) => {
+  const overview = model.data.overview;
+  if (!overview || !overview.counted) return [];
+  const { repos } = model.data.dicts;
+  return overview.counted
+    .filter(([, at]) => (typeof at === 'string' ? at : at >= 0 ? repos[at] : '') === service)
+    .map(([kind, , severity, count, call]) => ({ kind: overview.kinds[kind], severity, count, call }));
+};
+
 /** Whether a check row is a gap the reading missed, as core's `wasMissed`: not a note or a finding, and not one that says nothing. */
 const promptWasMissed = (model, r) => {
   const row = model.data.rows[r];
@@ -1609,6 +1619,8 @@ const promptServiceSubject = (model, service, limits) => {
     });
   }
   const findings = [...byKind].map(([kind, list]) => ({ kind, count: list.length, top: list.slice(0, first) }));
+  // Counted, not listed, with the call that lists them (P400), as the server says them.
+  const counted = promptCountedOf(model, service);
 
   const accepted = new Set((model.data.accepted && model.data.accepted.rows) || []);
   const fileOf = (row) => (row[2] >= 0 ? files[row[2]] : '');
@@ -1634,7 +1646,7 @@ const promptServiceSubject = (model, service, limits) => {
       waysIn,
       crossingsOut: promptCrossingCounts(model, out, first),
       crossingsIn: promptCrossingCounts(model, into, first),
-      publishes, consumes, findings, gaps,
+      publishes, consumes, findings, ...(counted.length === 0 ? {} : { counted }), gaps,
     },
     gaps: [],
   };

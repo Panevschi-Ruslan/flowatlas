@@ -1,15 +1,20 @@
 import {
+  FORWARDS_UNREAD_META,
   HANDS_ON_META,
   isMessageTypeNode,
   MESSAGE_TYPE_UNREAD_META,
+  messageTypesOf,
+  RELAYS_UNREAD_META,
   SELECTED_BY_META,
   SELECTION_UNREAD_META,
   selectionsOf,
+  STREAM_KIND,
   SUBSCRIPTIONS_META,
   UNREACHED_META,
   type GraphEdge,
   type GraphNode,
 } from '@flowatlas/core';
+import { EVERY_CHANNEL_VIA } from '../every-channel-link.js';
 
 /**
  * What is known about one type of message on a channel (P358), asked the same
@@ -60,6 +65,19 @@ export interface MessageTypeFacts {
   readonly receivers: readonly ChannelReceiver[];
   /** Producers on the channel whose payload's type was not read: any of them may send this one. */
   readonly unreadProducers: readonly GraphNode[];
+  /**
+   * Consumers choosing this type elsewhere that receive channels not all read
+   * (P400): a stream route relaying a channel not read, a hub written to with
+   * one. Any of those may be this channel, so "nothing selects it" is not
+   * sure. Asked only where nothing live selects it on this channel.
+   */
+  readonly relayed: readonly RelayedChooser[];
+}
+
+/** A consumer choosing a type whose channels are not known whole, and why. */
+export interface RelayedChooser {
+  readonly consumer: GraphNode;
+  readonly why: string;
 }
 
 /** The class a method's id names, by id: `<repo>#<file>:<Class>.<method>` gives `<repo>#<file>:<Class>`. */
@@ -217,7 +235,111 @@ export const messageTypeFacts = (lookup: MessageTypeLookup, type: GraphNode, mod
           .flatMap((edge) => lookup.node(edge.from) ?? [])
           .filter((producer) => typeof producer.meta?.[MESSAGE_TYPE_UNREAD_META] === 'string')
           .sort(byId);
-  return { type, channel, value, producers, selectors, receivers, unreadProducers };
+  const live = selectors.some((selector) => selector.unreached === undefined);
+  const relayed = live ? [] : relayedChoosers(lookup, value, new Set(selectors.map((selector) => selector.consumer.id)), modulesByRepo);
+  return { type, channel, value, producers, selectors, receivers, unreadProducers, relayed };
+};
+
+/**
+ * The consumers choosing a type whose channels are not known whole (P400),
+ * those already selecting it on the channel asked about left out: the mirror
+ * of P395's hold on `type-never-published`, asked by `receivedOf`.
+ */
+const relayedChoosers = (lookup: MessageTypeLookup, value: string, already: ReadonlySet<string>, modulesByRepo?: ReadonlySet<string>): RelayedChooser[] => {
+  const out: RelayedChooser[] = [];
+  for (const consumer of lookup.nodesByType('consumer')) {
+    const chosen = selectionsOf(consumer).filter((selection) => selection.type === value && selection.heuristic !== true && !already.has(selection.consumer));
+    if (chosen.length === 0) continue;
+    // A handler that never runs chooses nothing that arrives.
+    const running = chosen.some((selection) => {
+      const handler = lookup.node(selection.consumer);
+      return handler !== undefined && unreachedHandler(lookup, handler, modulesByRepo) === undefined;
+    });
+    if (!running) continue;
+    const { notWhole } = receivedOf(lookup, consumer);
+    if (notWhole !== undefined) out.push({ consumer, why: notWhole });
+  }
+  return out.sort((a, b) => (a.consumer.id < b.consumer.id ? -1 : a.consumer.id > b.consumer.id ? 1 : 0));
+};
+
+/**
+ * What one channel a consumer receives carries, as far as its publishes say:
+ * the types they send, or why that is not known whole.
+ */
+export interface ChannelCarries {
+  channel: GraphNode;
+  producers: number;
+  types: ReadonlySet<string>;
+  /** Why the types on it may not be all it carries. */
+  unknown?: string;
+  /** Why the channels a hub stands for may not all be read: a write to it hands it a channel not read. */
+  forwardsUnread?: string;
+}
+
+/** The types a channel's publishes say they send, and whether that is all it may carry. */
+export const carriesOf = (lookup: MessageTypeLookup, channel: GraphNode): ChannelCarries => {
+  const producers = lookup.edgesTo(channel.id, ['emits']).flatMap((each) => lookup.node(each.from) ?? []);
+  const types = new Set(producers.flatMap((producer) => messageTypesOf(producer)));
+  const unread = producers.filter((producer) => typeof producer.meta?.[MESSAGE_TYPE_UNREAD_META] === 'string').length;
+  const base = { channel, producers: producers.length, types };
+  if (unread > 0) return { ...base, unknown: `${unread} publish(es) on ${channel.label} send a type not read` };
+  // A hub that stands for the channels it is handed by name carries what they carry, where every write to it names one.
+  const forwards = channel.meta?.['forwards'];
+  const forwardsUnread = channel.meta?.[FORWARDS_UNREAD_META];
+  if (typeof forwardsUnread === 'number' && forwardsUnread > 0) {
+    const why = `${forwardsUnread} write(s) to ${channel.label} hand it a channel not read`;
+    return { ...base, unknown: why, forwardsUnread: why };
+  }
+  if (Array.isArray(forwards) && forwards.length > 0) return base;
+  if (producers.length === 0) return { ...base, unknown: `nothing publishing on ${channel.label} was read` };
+  // A hub written to directly, its writes saying no type: what it hands its streams is not read.
+  if (typeof channel.meta?.['heldBy'] === 'string' && types.size === 0) return { ...base, unknown: `the ${producers.length} write(s) to ${channel.label} say no type` };
+  return base;
+};
+
+/** Why the channels a consumer receives may not be all of them: a stream route relaying channels not all read. */
+export const channelsUnknown = (lookup: MessageTypeLookup, edges: readonly { meta?: Record<string, unknown> | undefined }[]): string | undefined => {
+  for (const edge of edges) {
+    if (edge.meta?.['via'] !== STREAM_KIND) continue;
+    const route = typeof edge.meta['route'] === 'string' ? lookup.node(edge.meta['route']) : undefined;
+    const why = route?.meta?.[RELAYS_UNREAD_META];
+    if (typeof why === 'string') return why;
+  }
+  return undefined;
+};
+
+/** Every channel one consumer receives, what each carries, and why that set may not be whole. */
+export interface Received {
+  readonly channels: readonly GraphNode[];
+  readonly carried: readonly ChannelCarries[];
+  /**
+   * Why the channels it receives may not be all of them (P395): a stream
+   * route feeding it relays a channel not read, or a hub it receives is
+   * written to with one.
+   */
+  readonly notWhole?: string;
+}
+
+/**
+ * What a consumer receives (P395, P400), asked the same way by
+ * `type-never-published` (is each type it chooses published on a channel it
+ * receives?) and by "nothing selects this type" (could a consumer choosing it
+ * be receiving this channel?). A subscriber to every channel of a bus did not
+ * choose its channels, and they are left out.
+ */
+export const receivedOf = (lookup: MessageTypeLookup, consumer: GraphNode): Received => {
+  const edges = lookup.edgesTo(consumer.id, ['consumes']).filter((edge) => edge.meta?.['via'] !== EVERY_CHANNEL_VIA);
+  const channels = [
+    ...new Map(
+      edges
+        .map((edge) => lookup.node(edge.from))
+        .filter((channel): channel is GraphNode => channel !== undefined && channel.type === 'channel' && !isMessageTypeNode(channel))
+        .map((channel) => [channel.id, channel] as const),
+    ).values(),
+  ].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const carried = channels.map((channel) => carriesOf(lookup, channel));
+  const notWhole = channelsUnknown(lookup, edges) ?? carried.find((each) => each.forwardsUnread !== undefined)?.forwardsUnread;
+  return { channels, carried, ...(notWhole === undefined ? {} : { notWhole }) };
 };
 
 /** The type nodes on one channel, by value. */
@@ -232,6 +354,11 @@ export interface Unselected {
   /** `sure`: every consumer of the channel was read and chooses by type; `unsure`: some forward every type on, or were not read. */
   readonly sureness: 'sure' | 'unsure' | 'no-consumer';
   readonly said: string;
+  /**
+   * Why the row is held back from the findings (P400): a consumer choosing
+   * the type receives channels not all read, any of which may be this one.
+   */
+  readonly held?: string;
 }
 
 const named = (nodes: readonly { consumer: GraphNode }[], most = 2): string =>
@@ -255,12 +382,23 @@ export const unselectedSaid = (facts: MessageTypeFacts): Unselected | undefined 
   const selecting = running.filter((each) => each.takes === 'selects');
   const generic = running.filter((each) => each.takes === 'generic');
   const unread = running.filter((each) => each.takes === 'unread');
+  // A consumer choosing it elsewhere whose channels are not all read may be receiving this one (P400).
+  const relayed = facts.relayed;
+  const one = relayed.length === 1;
+  const choosing = relayed.length === 0 ? undefined : `${named(relayed)} choose${one ? 's' : ''} it and receive${one ? 's' : ''} channels not all read (${relayed[0]!.why})`;
+  const held = relayed.length === 0 ? {} : { held: `${named(relayed)} choose${one ? 's' : ''} ${facts.value}, and ${relayed[0]!.why}` };
   if (running.length === 0) {
-    return { sureness: 'no-consumer', said: `no code that runs selects ${facts.value}: nothing that runs consumes ${channelName}${parts.length === 0 ? '' : `; ${parts.join('; ')}`}` };
+    if (choosing !== undefined) parts.push(choosing);
+    return {
+      sureness: choosing === undefined ? 'no-consumer' : 'unsure',
+      said: `no code that runs selects ${facts.value}: nothing that runs consumes ${channelName}${parts.length === 0 ? '' : `; ${parts.join('; ')}`}`,
+      ...held,
+    };
   }
   if (selecting.length > 0) parts.push(`${selecting.length} consumer${selecting.length === 1 ? '' : 's'} choose${selecting.length === 1 ? 's' : ''} other types (${named(selecting)})`);
   if (generic.length > 0) parts.push(`${named(generic)} pass${generic.length === 1 ? 'es' : ''} every type on without choosing, and what takes them past it is not read`);
   if (unread.length > 0) parts.push(`${named(unread)} not read (${unread[0]!.why})`);
-  const sureness = generic.length === 0 && unread.length === 0 ? 'sure' : 'unsure';
-  return { sureness, said: `no code that runs selects ${facts.value} on ${channelName}: ${parts.join('; ')}` };
+  if (choosing !== undefined) parts.push(choosing);
+  const sureness = generic.length === 0 && unread.length === 0 && choosing === undefined ? 'sure' : 'unsure';
+  return { sureness, said: `no code that runs selects ${facts.value} on ${channelName}: ${parts.join('; ')}`, ...held };
 };

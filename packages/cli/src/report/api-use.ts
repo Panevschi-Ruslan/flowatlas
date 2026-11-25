@@ -162,7 +162,7 @@ const typeSent = (graphs: UseGraphs, producer: string): string | undefined => {
  * request, or one whose client is not read): that caller is then a warning,
  * said so, never an error or an info guessed.
  */
-const responseReading = (graphs: UseGraphs, caller: string): (Reading & { files: Map<string, string>; db: GraphDb }) | undefined => {
+const responseReading = (graphs: UseGraphs, caller: string): (Reading & { files: Map<string, string>; guarded: Set<string>; db: GraphDb }) | undefined => {
   const found = either(graphs, caller);
   if (found === undefined) return undefined;
   const reading = answerReadingOf(found.db, caller);
@@ -310,6 +310,45 @@ const requestReader = (graphs: UseGraphs, change: SpecChange, caller: SpecChange
 };
 
 /**
+ * A client's verdict on an answer field that may now be absent (P400), from
+ * whether each of its reads checks the field is there first (`guarded`,
+ * P395): every read guarded is an info, the client copes without it; any read
+ * not is a warning naming that read, which meets nothing where it met a
+ * value. Undefined where the client does not read the field.
+ */
+const optionalReadSaid = (
+  reading: NonNullable<ReturnType<typeof responseReading>>,
+  field: string,
+): Omit<SpecUseReader, 'id' | 'service'> | undefined => {
+  const reads = reading.reads.filter((row) => readsField(row.field, field));
+  if (reads.length === 0) return undefined;
+  const placed = (read: (typeof reads)[number]): { file?: string; line: number; label: string | undefined } => {
+    const file = reading.files.get(`${read.field}|${read.id}|${read.line}`) ?? reading.db.node(read.id)?.file;
+    return { ...(file === undefined ? {} : { file }), line: read.line, label: reading.db.node(read.id)?.label };
+  };
+  const plain = reads.find((read) => !reading.guarded.has(`${read.field}|${read.id}|${read.line}`));
+  if (plain === undefined) {
+    const first = placed(reads[0]!);
+    const lines = [...new Set(reads.map((read) => read.line))].sort((a, b) => a - b).join(', ');
+    return {
+      ...(first.file === undefined ? {} : { file: first.file }),
+      line: first.line,
+      how: 'reads',
+      said: `reads ${code(field)} only behind a check that it is there${first.label === undefined ? '' : ` in ${first.label}`}, line${reads.length === 1 ? '' : 's'} ${lines}: it copes without it`,
+      level: 'info',
+    };
+  }
+  const at = placed(plain);
+  return {
+    ...(at.file === undefined ? {} : { file: at.file }),
+    line: at.line,
+    how: 'reads',
+    said: `reads ${code(plain.field)}${at.label === undefined ? '' : ` in ${at.label}`}, line ${at.line}${at.file === undefined ? '' : ` of ${at.file}`}, with no check that it is there`,
+    level: 'warning',
+  };
+};
+
+/**
  * What the callers of a route do with a change to its answer, from what each
  * request's client was read to read of it (P391): a read of the field is an
  * error placed on the reading code, a client that reads other fields only is
@@ -322,6 +361,11 @@ const responseReader = (graphs: UseGraphs, change: SpecChange, caller: SpecChang
   const reading = responseReading(graphs, caller.id);
   if (reading === undefined) {
     return { ...at, how: 'unknown', said: `which fields of the answer its client reads was not read, so whether it reads ${code(field || 'the answer')} is not known`, level: 'warning' };
+  }
+  // A field that may now be absent breaks only a read that does not check it is there first (P395, P400).
+  if (change.kind === 'response-property-became-optional' && field !== '') {
+    const said = optionalReadSaid(reading, field);
+    if (said !== undefined) return { ...at, ...said };
   }
   // A change to the whole answer (its type) is read by any read of it.
   const read = reading.reads.find((row) => field === '' || readsField(row.field, field));
@@ -401,7 +445,10 @@ const verdictOf = (change: SpecChange, at: SpecUseContext, level: SpecChangeLeve
           ? `every ${noun} sends ${what}, among ${among}`
           : readers.every((reader) => reader.how === 'joined')
             ? `nothing a ${noun} relied on changed, among ${among}`
-            : `no ${noun} ${partOf(change) === 'body' || partOf(change) === 'parameter' ? 'sends' : 'reads'} ${what}, among ${among}`;
+            : readers.some((reader) => reader.how === 'reads')
+              ? // A field that may now be absent, read only behind a check that it is there (P400).
+                `every ${noun} that reads ${what} checks it is there first, among ${among}`
+              : `no ${noun} ${partOf(change) === 'body' || partOf(change) === 'parameter' ? 'sends' : 'reads'} ${what}, among ${among}`;
     return publicNote ? `${base}; it is public, so callers outside the project are not read` : base;
   }
   const loudest = readers.filter((reader) => reader.level === level);

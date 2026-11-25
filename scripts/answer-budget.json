@@ -3276,6 +3276,90 @@
         ]
       },
       "note": "P403: no code that runs selects it; the two consumers whose choice was not read are named with their line and why, one Read each, where 'not read (A.f, B.g)' sent agents grepping."
+    },
+    {
+      "id": "findings.that-agree",
+      "ask": "what looks broken between the catalog, the back office and the ops screens",
+      "fixture": "findings-that-agree",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "field-never-sent": [
+            "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent"
+          ],
+          "answer-field-never-returned": [
+            "ops-web#src/products.ts:productLine"
+          ]
+        },
+        "notListed": {
+          "answer-field-never-returned": [
+            "ops-web#src/reports.ts:reportLine"
+          ]
+        },
+        "exact": [
+          "field-never-sent"
+        ]
+      },
+      "note": "P400: the else's handler takes STOCK_LOW and PRODUCT_RETIRED, so reason is missing under STOCK_LOW only; the product's answer is compared against the wire (an envelope, a field the serializer leaves out); the report's reads are held back, an interceptor reshaping its answer in a way not read."
+    },
+    {
+      "id": "check_contract.answer-wire",
+      "ask": "which fields of GET /products/:id does the ops screen read that are not on the wire",
+      "fixture": "findings-that-agree",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /products/:id"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "lists": {
+          "missing": [
+            "price",
+            "data.costPrice"
+          ]
+        },
+        "notListed": {
+          "missing": [
+            "success",
+            "data.name"
+          ]
+        }
+      },
+      "note": "P400: the global interceptor wraps the answer in { success, data } and the serializer leaves costPrice out; before, data.costPrice and price were read as fields of the declared answer and success as one it never holds."
+    },
+    {
+      "id": "dead.bot-webhook",
+      "ask": "is POST /tg/:secret dead, and POST /catalog/:sku/price/:price",
+      "fixture": "findings-that-agree",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "entry:catalog-api:http:POST:/tg/:param",
+          "entry:catalog-api:http:POST:/catalog/:param/price/:param"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "entry:catalog-api:http:POST:/tg/:param": {
+              "verdict": "unknown"
+            },
+            "entry:catalog-api:http:POST:/catalog/:param/price/:param": {
+              "verdict": "dead"
+            }
+          }
+        }
+      },
+      "note": "P400: the webhook hands its request to the chat bot's code, so it is the bot's way in, reached from outside, as impact counts it; the price route nothing calls stays dead."
     }
   ],
   "fixed": {
@@ -3786,20 +3870,6 @@
       "complete": null,
       "calls": 1
     },
-    "findings.client-checks": {
-      "chars": 1920,
-      "tokens": 480,
-      "rows": 2,
-      "complete": null,
-      "calls": 1
-    },
-    "check_contract.gathered-answer": {
-      "chars": 1125,
-      "tokens": 282,
-      "rows": 5,
-      "complete": true,
-      "calls": 1
-    },
     "who_calls.shadowed-handler": {
       "chars": 567,
       "tokens": 142,
@@ -3986,6 +4056,41 @@
       "chars": 1046,
       "tokens": 262,
       "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.that-agree": {
+      "chars": 2575,
+      "tokens": 644,
+      "rows": 3,
+      "complete": null,
+      "calls": 1
+    },
+    "check_contract.answer-wire": {
+      "chars": 1218,
+      "tokens": 305,
+      "rows": 8,
+      "complete": false,
+      "calls": 1
+    },
+    "dead.bot-webhook": {
+      "chars": 834,
+      "tokens": 209,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.client-checks": {
+      "chars": 1920,
+      "tokens": 480,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "check_contract.gathered-answer": {
+      "chars": 1125,
+      "tokens": 282,
+      "rows": 5,
       "complete": true,
       "calls": 1
     },

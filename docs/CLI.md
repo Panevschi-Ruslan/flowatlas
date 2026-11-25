@@ -2679,6 +2679,7 @@ whether it is dead, and every row says which rule put it there (`why`):
 | `infrastructure` | `decorator @HealthCheck` | a probe, whatever its path (role `probe`) |
 | `infrastructure` | `path …` | a probe: the last segment is `health`, `healthz`, `ping`, `readyz`, `metrics`, `status` and the like; a webhook: a segment `webhook`, `webhooks` or `hooks` at any depth, or `notify` / `notifications` on anything but a `GET`; a callback: a segment `callback` or `callbacks` (`/oauth/callback`, `/auth/callback`); a well-known address: `/.well-known/*` (role `probe`, `webhook`, `callback` or `discovery`) |
 | `infrastructure` | `name …` | a handler or controller named for what it answers: ending in `Webhook`, `Callback` or `Probe`, a `HealthController`, a handler starting `handleWebhook` or `onCallback` |
+| `infrastructure` | `hands its request to <code> (<file>)` | a `POST`, `PUT` or `PATCH` route nothing above explains whose handler reaches a bot's code within three calls (a file where a bot's way in is registered or handled, or a bot's trigger was left unread): the bot's webhook, posted to by the bot's platform (role `bot`, P400), as `impact` counts it a bot |
 | `stream` | `path …` | the last segment is `stream` or `sse`, or ends in `-stream`; a browser subscribing to one is not read yet |
 | `actionable` | `no caller read` | nothing above applies, which is what this command is for |
 
@@ -4975,7 +4976,11 @@ consumer of a message reads (P368) - and the change gets:
   not followed or a request's client was not read at all (a server's request,
   a client whose answer no reader follows), said so, never an error or an info
   guessed. A list's element's field (`response[].sku`) is matched to the reads
-  of each element. A public route's change is never under `warning`. A type
+  of each element. A response field that may now be absent
+  (`response-property-became-optional`) is weighed by whether each read checks
+  it is there first (`guarded`, P395): `info` where every read of it does
+  (`reads \`badge\` only behind a check that it is there`), `warning` where any
+  read does not, naming that read (P400). A public route's change is never under `warning`. A type
   that gains literal values (a status, a message's kind) is weighed by how the
   code switches over the field (P402): `error` where a `switch` names no case
   for a new value and has no `default`, or a `default` that only proves no

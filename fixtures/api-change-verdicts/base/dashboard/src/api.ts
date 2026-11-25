@@ -10,6 +10,8 @@ export interface ItemRow {
   id: string;
   name: string;
   thumbnail: string;
+  badge?: string;
+  stock: number;
 }
 
 const base = import.meta.env.VITE_CATALOG_URL;

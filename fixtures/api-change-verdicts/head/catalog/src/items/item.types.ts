@@ -29,8 +29,10 @@ export interface ItemChanged {
   name: string;
 }
 
-/** One row of `GET /items`: the thumbnail is no longer sent. */
+/** One row of `GET /items`: the thumbnail is no longer sent, the badge and the stock only sometimes. */
 export interface ItemRow {
   id: string;
   name: string;
+  badge?: string;
+  stock?: number;
 }

@@ -109,6 +109,15 @@ describe('what an API change does to the code that uses it (P390)', () => {
     expect(change('GET /items', 'response[].thumbnail')).toMatchObject({ level: 'info', use: { verdict: 'no caller reads `thumbnail`, among 1' } });
   });
 
+  it('weighs an answer field that may now be absent by whether each read checks it is there first (P400)', () => {
+    // `badge` is read only behind `??`: the list copes without it.
+    const badge = change('GET /items', 'response[].badge');
+    expect(badge).toMatchObject({ level: 'info', use: { verdict: 'every caller that reads `badge` checks it is there first, among 1', readers: [{ how: 'reads', level: 'info', said: expect.stringContaining('reads `badge` only behind a check that it is there') }] } });
+    // `stock` is read as it is: a warning naming the read.
+    const stock = change('GET /items', 'response[].stock');
+    expect(stock).toMatchObject({ level: 'warning', use: { readers: [{ how: 'reads', level: 'warning', file: 'src/ItemsList.tsx', said: expect.stringMatching(/^reads `stock` in .*line \d+.*with no check that it is there$/) }] } });
+  });
+
   it('is a warning where the value reaches a consumer whole, or what it reads of an answer is not read: said, never guessed', () => {
     const warehouse = change('send stock.changed', 'payload.warehouse');
     expect(warehouse).toMatchObject({ level: 'warning', use: { readers: [{ how: 'opaque', said: expect.stringContaining('spread into another value') }] } });

@@ -1,4 +1,5 @@
 import {
+  ANSWER_WRAPS_META,
   FAILS_META,
   forEachCall,
   hasAnyDependency,
@@ -26,6 +27,7 @@ import {
   throughInterceptors,
   type InterceptorInFront,
 } from './interceptors.js';
+import { answerWrapsFor } from './answer-wraps.js';
 import {
   DECLARED_ERRORS,
   ERROR_FACTORY_FRAMEWORKS,
@@ -393,16 +395,14 @@ export const failuresPass = definePass('failures', (ctx: NestExtractContext) => 
     const http = record.kind === 'http' || procedure;
     // Interceptors and filters both answer a request: on a bot or a message
     // handler neither is read, as before.
-    const found = failuresFrom(
-      ctx,
-      record,
-      reading,
-      http ? filtersFor(filters, record) : [],
-      http ? interceptorsFor(interceptors, record) : [],
-    );
+    const around = http ? interceptorsFor(interceptors, record) : [];
+    const found = failuresFrom(ctx, record, reading, http ? filtersFor(filters, record) : [], around);
     // The same exception reaches a bot or a message handler too, and there is
     // no status line for it to set there.
     const node = ctx.builder.getNode(record.node.id);
+    // What the same interceptors do to the answer on its way out (P400).
+    const wraps = record.kind === 'http' ? answerWrapsFor(ctx, around, record.handlerMethod) : [];
+    if (node !== undefined && wraps.length > 0) node.meta = { ...node.meta, [ANSWER_WRAPS_META]: wraps };
     const declared = procedure ? declaredStatuses(node ?? record.node) : undefined;
     const settled = procedure ? settleFailures([...found.map((failure) => asDeclared(failure, declared)), ...inputRefusal(record.node)]) : found;
     if (node !== undefined && declared !== undefined && declared.size > 0) {

@@ -3,8 +3,8 @@ import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { describeAcceptedProblem, describeObservedProblem, loadConfig, readAccepted, type AcceptedRead } from '@flowatlas/core';
 import { trafficPaths, trafficReport } from '@flowatlas/contracts';
-import { acceptedSplitOf, confirmedJoins, neverSeen, type ContractBreak, type GraphDb } from '@flowatlas/linker';
-import { blindSpotsAsRows, CONTRACT_STATUS_RANK, crossingStatusOf, docsNow, loadContractBreaks, rankedFindingsOf } from '@flowatlas/mcp';
+import { acceptedSplitOf, confirmedJoins, neverSeen, type ContractBreak, type FindingRow, type GraphDb } from '@flowatlas/linker';
+import { blindSpotsAsRows, CONTRACT_STATUS_RANK, countedNotListed, countedOf, crossingStatusOf, docsNow, loadContractBreaks, rankedFindingsOf } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { cannotRun } from '../exit.js';
 import { dbPathFor, openDbFromOptions, sourceRootsFor, type DbOptions } from '../db.js';
@@ -285,12 +285,26 @@ export const packDatabase = (
     typeOf: (id) => db.type(id),
     accepted: split,
     overview: {
-      findings: rankedFindingsOf(db, split.fresh, contracts),
+      // Listed and counted as describe_for_prompt's service scope says them (P400).
+      ...overviewFindingsOf(rankedFindingsOf(db, split.fresh, contracts)),
       verdictOf: (edge, consumed) => CONTRACT_STATUS_RANK[crossingStatusOf(db, edge, consumed)],
     },
     ...rest,
     ...(traffic === undefined ? {} : { traffic }),
   });
+};
+
+/**
+ * The findings the page's service prompt lists, and those it counts with the
+ * call that lists them, each service's apart (P400): as `describe_for_prompt`
+ * says them, so the two texts stay one.
+ */
+const overviewFindingsOf = (ranked: readonly FindingRow[]): { findings: FindingRow[]; counted: Array<{ service: string; kind: string; severity: string; count: number; call: string }> } => {
+  const services = [...new Set(ranked.filter(countedNotListed).map((row) => row.service))].sort();
+  return {
+    findings: ranked.filter((row) => !countedNotListed(row)),
+    counted: services.flatMap((service) => countedOf(ranked.filter((row) => row.service === service), service).map((row) => ({ service, ...row }))),
+  };
 };
 
 /** The two files `--observed-diff` names, read, with their names and the floor (P111). */
