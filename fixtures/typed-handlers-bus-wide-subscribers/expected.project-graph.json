@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T15:59:20.646Z",
+  "builtAt": "2026-11-25T21:21:02.629Z",
   "services": [
     {
       "name": "shop",
@@ -80,7 +80,8 @@
         "fieldsRead": [
           {
             "field": "label",
-            "line": 16
+            "line": 16,
+            "guarded": true
           },
           {
             "field": "orderId",

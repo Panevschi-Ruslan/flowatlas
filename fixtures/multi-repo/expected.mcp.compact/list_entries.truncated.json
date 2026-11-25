@@ -10,6 +10,7 @@
     },
     {
       "id": "entry:billing:http:GET:/invoices/:param",
+      "label": "GET /invoices/:id",
       "loc": "src/invoices/invoices.controller.ts:26"
     }
   ],

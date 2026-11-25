@@ -2,6 +2,7 @@
   "entries": [
     {
       "id": "entry:lending-api:http:DELETE:/books/:param/hold",
+      "label": "DELETE /books/:bookId/hold",
       "loc": "src/books.controller.ts:33"
     }
   ],

@@ -22,7 +22,8 @@
       "label": "GET /invoices/:param",
       "loc": "src/invoices/invoices.controller.ts:26",
       "service": "billing",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/invoices/:id"
     },
     {
       "id": "entry:billing:http:POST:/invoices",

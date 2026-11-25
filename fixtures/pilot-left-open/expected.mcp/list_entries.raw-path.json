@@ -1,0 +1,35 @@
+{
+  "declaredBy": "desk-api#src/kits/kits.controller.ts:KitsController",
+  "entries": [
+    {
+      "id": "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped",
+      "type": "entry",
+      "label": "GET /api/admin/:param/kits/auto-stopped",
+      "loc": "src/kits/kits.controller.ts:6",
+      "service": "desk-api",
+      "kind": "http",
+      "rawPath": "/api/admin/:tenantId/kits/auto-stopped",
+      "reach": "dead",
+      "callers": 0
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/admin/:param/kits/:param/restart",
+      "type": "entry",
+      "label": "POST /api/admin/:param/kits/:param/restart",
+      "loc": "src/kits/kits.controller.ts:11",
+      "service": "desk-api",
+      "kind": "http",
+      "rawPath": "/api/admin/:tenantId/kits/:kitId/restart",
+      "reach": "dead",
+      "callers": 0
+    }
+  ],
+  "total": 2,
+  "complete": true,
+  "next": [
+    "dead({id: \"desk-api#src/kits/kits.controller.ts:KitsController\"})",
+    "get_flow({entry: \"entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped\"})",
+    "describe_for_prompt({id: \"entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped\"})",
+    "impact({symbol: \"entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped\"})"
+  ]
+}

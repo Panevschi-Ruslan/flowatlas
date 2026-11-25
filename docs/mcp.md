@@ -889,6 +889,47 @@ the first answer could have settled.
   Past `MAX_ANSWER_CHARS` the tree's deepest rows are cut first, a level at a
   time, `requests` kept whole and the cut said in `left`.
 
+#### What the pilot left open (P405)
+
+A pilot after P404 took several turns on each of five questions whose first
+answer missed one fact.
+
+- **`alsoOn` keeps the channel that answers.** The other channels a type is
+  sent on are ranked by the code there reading the field asked about (or, in
+  `who_emits`, sending it), then by the handlers choosing the type (or the
+  publishes), and a channel with any is never cut: each reader is named with
+  the line it reads at (`readers: [{id, line}]`, `in` where the read is in
+  another function); the channels with none are counted in one clause,
+  `alsoOnRest` (`"and 3 other channels carry STEP_READY with no handler
+  reading stepName"`). With `field`, `settled` says how many ends read (or
+  send) it and the other channels where code does.
+- **A dispatcher read through its cast.** A message handed over as text and
+  parsed (`JSON.parse(raw)`) is read as the message, into the function it is
+  handed to. A consumer chosen by another's dispatch whose handler holds the
+  choice itself (`dispatch(scopeId, raw)`, `const evt = raw as {…}; switch
+  (evt.type)`) is read on its own, each read under the case it is written
+  in, a read before the switch under every type it takes. A message
+  handler's reads say whether the code checks the field is there first
+  (`guarded`) and what it does without it (`whenAbsent`: `returns` early or
+  `throws`), so `check_contract({channel, type})` says `missing: [{field:
+  "roomId", id, line, guarded: true, effect: "returns early"}]`: the
+  handler drops the message, it does not fail; `findings` says it too.
+- **A set built by spreading others.** `new Set([...OTHER_EVENTS,
+  ...SEAT_EVENTS, RESYNC_EVENT])` is read as the strings each part holds,
+  across files: a set, an `as const` list, an enum member, an imported
+  constant. Only an element worked out when the code runs leaves the test
+  unread.
+- **A route's parameter names on a list's rows.** `list_entries` rows at
+  detail 1 say `rawPath` where it differs from the path the label says
+  (`/api/admin/:tenantId/kits/auto-stopped` beside `GET
+  /api/admin/:param/…`); a compact row says it in its label where that is 80
+  characters or fewer, `rawPath` then left out.
+- **A screen that refetches reads nothing.** A handler chosen for a type
+  that takes no parameter (`private load(): void`, run by `subscribe(() =>
+  this.load())`) is drawn with `readsNothing`: `who_consumes` with `field`
+  lists it in `readsNothing` (settled, never "not read for the fields it
+  reads"), and its row says `readsNothing: true` where reads are said.
+
 #### Answers never falsely complete (P381)
 
 An answer that says `complete: true` is the whole answer to what was asked;

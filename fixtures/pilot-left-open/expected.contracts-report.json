@@ -1,0 +1,1774 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-25T21:18:35.075Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "roomNumber",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `roomNumber: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "ts",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `ts: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "type",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "step",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `step: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "stepName",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `stepName: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "type",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+        "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:24:5|emits|consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "type:push-worker#StatusEvent",
+        "symbol": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+            "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:24:5|emits|consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;step:string;stepName:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "type:push-worker#StatusEvent",
+            "symbol": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady"
+          },
+          "typeId": "type:push-worker#StatusEvent",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+            "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:24:5|emits|consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;step:string;stepName:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "type:push-worker#StatusEvent",
+            "symbol": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady"
+          },
+          "typeId": "type:push-worker#StatusEvent",
+          "field": "step",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `step: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+            "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:24:5|emits|consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;step:string;stepName:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "type:push-worker#StatusEvent",
+            "symbol": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady"
+          },
+          "typeId": "type:push-worker#StatusEvent",
+          "field": "stepName",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`stepName` is optional for receiver push-worker and always sent by sender desk-api",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;tableId:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;tableId:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "tableId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`tableId` is optional for receiver push-worker and always sent by sender desk-api",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;orderId:string;tableId:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "type",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveTable"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;tableId:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveTable"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "tableId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`tableId` is optional for receiver push-worker and always sent by sender desk-api",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;tableId:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveTable"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "type",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;tableId:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "tableId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`tableId` is optional for receiver push-worker and always sent by sender desk-api",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;tableId:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "type",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.resync"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+            "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "type": "emits"
+          },
+          "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+          "direction": "payload",
+          "sender": {
+            "service": "desk-api",
+            "typeId": "{type:string;scopeId:string}",
+            "symbol": "desk-api#src/steps/steps.service.ts:StepsService.resync"
+          },
+          "receiver": {
+            "service": "push-worker",
+            "typeId": "{scopeId:string;tableId?:string}",
+            "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          },
+          "typeId": "{scopeId:string;tableId?:string}",
+          "field": "type",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:staff-web#src/app/steps/call-board.component.ts:22:5",
+        "to": "entry:desk-api:http:GET:/api/:param/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:staff-web#src/app/steps/call-board.component.ts:22:5|hits|entry:desk-api:http:GET:/api/:param/orders/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{id:string;steps:string[]}",
+        "symbol": "desk-api#src/steps/steps.controller.ts:StepsController.order"
+      },
+      "receiver": {
+        "service": "staff-web",
+        "typeId": "{id:string;steps:string[]}",
+        "symbol": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:staff-web#src/app/steps/staff-steps.component.ts:24:5",
+        "to": "entry:desk-api:http:GET:/api/:param/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:staff-web#src/app/steps/staff-steps.component.ts:24:5|hits|entry:desk-api:http:GET:/api/:param/orders/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{id:string;steps:string[]}",
+        "symbol": "desk-api#src/steps/steps.controller.ts:StepsController.order"
+      },
+      "receiver": {
+        "service": "staff-web",
+        "typeId": "{id:string;steps:string[]}",
+        "symbol": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "roomNumber",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `roomNumber: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "ts",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `ts: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.callStaff"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "type",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "step",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `step: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "stepName",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `stepName: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "type",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+        "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:24:5|emits|consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "type:push-worker#StatusEvent",
+        "symbol": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady"
+      },
+      "typeId": "type:push-worker#StatusEvent",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+        "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:24:5|emits|consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "type:push-worker#StatusEvent",
+        "symbol": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady"
+      },
+      "typeId": "type:push-worker#StatusEvent",
+      "field": "step",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `step: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+        "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:24:5|emits|consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;step:string;stepName:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.stepReady"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "type:push-worker#StatusEvent",
+        "symbol": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady"
+      },
+      "typeId": "type:push-worker#StatusEvent",
+      "field": "stepName",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`stepName` is optional for receiver push-worker and always sent by sender desk-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `orderId: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "tableId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`tableId` is optional for receiver push-worker and always sent by sender desk-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;orderId:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "type",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveTable"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "tableId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`tableId` is optional for receiver push-worker and always sent by sender desk-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.moveTable"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "type",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "tableId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`tableId` is optional for receiver push-worker and always sent by sender desk-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;tableId:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "type",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+        "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "direction": "payload",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "{type:string;scopeId:string}",
+        "symbol": "desk-api#src/steps/steps.service.ts:StepsService.resync"
+      },
+      "receiver": {
+        "service": "push-worker",
+        "typeId": "{scopeId:string;tableId?:string}",
+        "symbol": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+      },
+      "typeId": "{scopeId:string;tableId?:string}",
+      "field": "type",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender desk-api sends `type: string`; receiver push-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "desk-api#src/steps/steps.controller.ts:StepsController.stream has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/push/push.service.ts:PushService.onEvent has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+        "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:16:5|emits|consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "desk-api#src/steps/steps.controller.ts:StepsController.stream has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/push/push.service.ts:PushService.onEvent has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+        "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:20:5|emits|consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:21:5",
+        "to": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:21:5|emits|consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/session/session-audit.service.ts:SessionAudit.record has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:22:5",
+        "to": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:22:5|emits|consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/session/session-audit.service.ts:SessionAudit.record has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:23:5",
+        "to": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:23:5|emits|consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/session/session-audit.service.ts:SessionAudit.record has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "desk-api#src/steps/steps.controller.ts:StepsController.stream has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/push/push.service.ts:PushService.onEvent has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+        "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:28:5|emits|consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "desk-api#src/steps/steps.controller.ts:StepsController.stream has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/push/push.service.ts:PushService.onEvent has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+        "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:32:5|emits|consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "desk-api#src/steps/steps.controller.ts:StepsController.stream has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/push/push.service.ts:PushService.onEvent has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+        "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:36:5|emits|consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+        "to": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "desk-api#src/steps/steps.controller.ts:StepsController.stream has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+        "to": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "push-worker#src/push/push.service.ts:PushService.onEvent has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+        "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+        "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+        "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/steps/steps.service.ts:40:5|emits|consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+        "to": "entry:desk-api:http:GET:/api/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19|hits|entry:desk-api:http:GET:/api/:param/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+        "to": "entry:desk-api:http:GET:/api/:param/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19|hits|entry:desk-api:http:GET:/api/:param/stream",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:staff-web#src/app/steps/call-board.component.ts:22:5",
+        "to": "entry:desk-api:http:GET:/api/:param/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:staff-web#src/app/steps/call-board.component.ts:22:5|hits|entry:desk-api:http:GET:/api/:param/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:staff-web#src/app/steps/staff-steps.component.ts:24:5",
+        "to": "entry:desk-api:http:GET:/api/:param/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:staff-web#src/app/steps/staff-steps.component.ts:24:5|hits|entry:desk-api:http:GET:/api/:param/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 9,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 7,
+    "unchecked": 37,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 19,
+    "ignored": 0
+  }
+}

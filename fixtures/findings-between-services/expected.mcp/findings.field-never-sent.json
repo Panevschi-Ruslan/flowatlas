@@ -21,7 +21,7 @@
       "to": "channel:catalog_events#PRODUCT_CREATED",
       "service": "storefront",
       "loc": "src/catalog-events.service.ts:23",
-      "message": "`productTitle` is read by CatalogEventsService.onCatalogEvent on catalog_events (PRODUCT_CREATED) and sent by none of its publishers",
+      "message": "`productTitle` is read by CatalogEventsService.onCatalogEvent on catalog_events (PRODUCT_CREATED) and sent by none of its publishers; it checks for it first and goes on without it",
       "precision": "high",
       "evidence": "every sender on the crossing and every reader of it was read",
       "fix": "likely renamed: title is sent, productTitle is read",

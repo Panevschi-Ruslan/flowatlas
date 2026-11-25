@@ -8,6 +8,22 @@ only one of them moved.
 
 ### Added
 
+- **What the pilot left open (P405).** `who_consumes` and `who_emits` rank
+  `alsoOn` by the code reading (or sending) the field asked about, then by
+  the handlers (or publishes) of the type, never cut a channel with any, name
+  each reader with its line, and count the rest in `alsoOnRest`; with a field,
+  `settled` says how many read it and where else code does. A message parsed
+  from text is read as the message; a consumer chosen by another's dispatch
+  whose handler holds the choice (`const evt = raw as {…}; switch
+  (evt.type)`) is read on its own, each read under its case; a message
+  handler's reads say `guarded` and `whenAbsent` (`returns`, `throws`), so
+  `check_contract` says `missing: roomId` with `guarded: true, effect:
+  "returns early"` and `findings` says the handler checks first. A set built
+  by spreading other sets, `as const` lists, enum members and imported
+  constants across files is read as their strings. `list_entries` rows say
+  `rawPath` at detail 1, a compact row its label with the parameter names.
+  A handler chosen for a type that takes no parameter is drawn
+  `readsNothing`, settled for field questions.
 - **Answers that settle themselves (P404).** The build records where each
   type of message's name is written in the code it read (sent or built, the
   enum member or constant defining it and that member's uses, every other

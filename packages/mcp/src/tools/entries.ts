@@ -69,7 +69,7 @@ export { nearNames, rankMatches, type Ranked } from '../query/names.js';
 /** What list_entries answers: one page of entries, and how many there are. */
 export const listEntriesOutput = {
   // Asked with `in`, each row also says who calls it (P379): how many callers, and the first.
-  entries: z.array(reachedNodeOutput.extend({ callers: z.number().optional(), caller: z.string().optional() })),
+  entries: z.array(reachedNodeOutput.extend({ callers: z.number().optional(), caller: z.string().optional(), rawPath: z.string().optional() })),
   declaredBy: z.string().optional(),
   ...pageOutput,
   ...completeOutput,
@@ -97,6 +97,18 @@ interface FindAsked {
   maxNodes: number;
   offset: number;
 }
+
+/**
+ * A way in's path as written, with its parameters' names (P405), on a row of
+ * `list_entries` at detail 1, where it differs from the path the label says
+ * (`/api/admin/:tenantId/kits` beside `GET /api/admin/:param/kits`). Detail 2
+ * says it in `meta`; a list's row said it nowhere, and an agent spent eight
+ * turns finding the parameter's name.
+ */
+const rawPathOf = (entry: GraphNode, detail: number): { rawPath?: string } => {
+  const raw = entry.meta?.['rawPath'];
+  return detail === 1 && typeof raw === 'string' && raw !== entry.meta?.['path'] ? { rawPath: raw } : {};
+};
 
 /** One query's matches, best first, each row with whether it runs and where it is reached from (P364). */
 const findOne = (db: GraphDb, input: FindAsked, query: string, reader: ReachReader): object => {
@@ -258,7 +270,7 @@ export const registerEntries = (server: McpServer, ctx: ToolContext): void => {
         // Asked about one class's ways in, each row says whether it runs and who calls it (P379); asked for one reach,
         // the call said whether.
         const withReach = (entry: GraphNode): object => {
-          const row = projectDetail(entry, detail);
+          const row = { ...projectDetail(entry, detail), ...rawPathOf(entry, detail) };
           if (declared === undefined || detail < 1) return row;
           const reach = input.reach === undefined ? reachOf(entry) : undefined;
           return { ...row, ...(reach === undefined ? {} : { reach }), ...callersOf(entry) };

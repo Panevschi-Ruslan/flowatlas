@@ -1,0 +1,4343 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T21:18:34.515Z",
+  "services": [
+    {
+      "name": "desk-api",
+      "repo": "./desk-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "push-worker",
+      "repo": "./push-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "staff-web",
+      "repo": "./staff-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:session:*:closed",
+      "type": "channel",
+      "label": "session:*:closed",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 21,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "tenant-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:session:*:closed#STEP_READY",
+      "type": "channel",
+      "label": "session:*:closed#STEP_READY",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 21,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:session:*:closed",
+        "messageType": "STEP_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:20",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:21",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:22",
+              "text": "type: 'STEP_READY'"
+            }
+          ],
+          "sentCount": 5,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/push/push.service.ts:18",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            },
+            {
+              "service": "staff-web",
+              "loc": "src/app/steps/staff-steps.component.ts:9",
+              "text": "const TYPES: ReadonlySet<string> = new Set(['STEP_READY']);",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 2
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:session:*:paid",
+      "type": "channel",
+      "label": "session:*:paid",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 22,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "tenant-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:session:*:paid#STEP_READY",
+      "type": "channel",
+      "label": "session:*:paid#STEP_READY",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 22,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:session:*:paid",
+        "messageType": "STEP_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:20",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:21",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:22",
+              "text": "type: 'STEP_READY'"
+            }
+          ],
+          "sentCount": 5,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/push/push.service.ts:18",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            },
+            {
+              "service": "staff-web",
+              "loc": "src/app/steps/staff-steps.component.ts:9",
+              "text": "const TYPES: ReadonlySet<string> = new Set(['STEP_READY']);",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 2
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:session:*:split",
+      "type": "channel",
+      "label": "session:*:split",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "tenant-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:session:*:split#STEP_READY",
+      "type": "channel",
+      "label": "session:*:split#STEP_READY",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 23,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:session:*:split",
+        "messageType": "STEP_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:20",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:21",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:22",
+              "text": "type: 'STEP_READY'"
+            }
+          ],
+          "sentCount": 5,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/push/push.service.ts:18",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            },
+            {
+              "service": "staff-web",
+              "loc": "src/app/steps/staff-steps.component.ts:9",
+              "text": "const TYPES: ReadonlySet<string> = new Set(['STEP_READY']);",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 2
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:status_feed",
+      "type": "channel",
+      "label": "status_feed",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 24,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "tenant-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:status_feed#STEP_READY",
+      "type": "channel",
+      "label": "status_feed#STEP_READY",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 24,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:status_feed",
+        "messageType": "STEP_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:20",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:21",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:22",
+              "text": "type: 'STEP_READY'"
+            }
+          ],
+          "sentCount": 5,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/push/push.service.ts:18",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            },
+            {
+              "service": "staff-web",
+              "loc": "src/app/steps/staff-steps.component.ts:9",
+              "text": "const TYPES: ReadonlySet<string> = new Set(['STEP_READY']);",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 2
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:tenant:*:events",
+      "type": "channel",
+      "label": "tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 58,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "tenant-bus"
+        ],
+        "producers": 6,
+        "consumers": 6
+      }
+    },
+    {
+      "id": "channel:tenant:*:events#CALL_STAFF",
+      "type": "channel",
+      "label": "tenant:*:events#CALL_STAFF",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 16,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:tenant:*:events",
+        "messageType": "CALL_STAFF",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:16",
+              "text": "type: 'CALL_STAFF'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/push/push.service.ts:18",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "CALL_STAFF is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:tenant:*:events#ORDER_MOVED",
+      "type": "channel",
+      "label": "tenant:*:events#ORDER_MOVED",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 28,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:tenant:*:events",
+        "messageType": "ORDER_MOVED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:28",
+              "text": "type: 'ORDER_MOVED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/live/event-sets.ts:2",
+              "text": "export const OTHER_EVENTS: ReadonlySet<string> = new Set(['ORDER_MOVED', 'TABLE_",
+              "why": "ORDER_MOVED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:tenant:*:events#RESYNC",
+      "type": "channel",
+      "label": "tenant:*:events#RESYNC",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 40,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:tenant:*:events",
+        "messageType": "RESYNC",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:40",
+              "text": "type: 'RESYNC'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/live/live-feed.service.ts:13",
+              "text": "const LIVE: ReadonlySet<string> = new Set([...OTHER_EVENTS, ...SEAT_EVENTS, RESY",
+              "why": "RESYNC is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:tenant:*:events#STEP_READY",
+      "type": "channel",
+      "label": "tenant:*:events#STEP_READY",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 20,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:tenant:*:events",
+        "messageType": "STEP_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:20",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:21",
+              "text": "type: 'STEP_READY'"
+            },
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:22",
+              "text": "type: 'STEP_READY'"
+            }
+          ],
+          "sentCount": 5,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/push/push.service.ts:18",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            },
+            {
+              "service": "staff-web",
+              "loc": "src/app/steps/staff-steps.component.ts:9",
+              "text": "const TYPES: ReadonlySet<string> = new Set(['STEP_READY']);",
+              "why": "STEP_READY is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 2
+        },
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:tenant:*:events#TABLE_MERGED",
+      "type": "channel",
+      "label": "tenant:*:events#TABLE_MERGED",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 36,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:tenant:*:events",
+        "messageType": "TABLE_MERGED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:36",
+              "text": "type: 'TABLE_MERGED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/live/event-sets.ts:10",
+              "text": "export const SEAT_EVENTS = [SeatEvent.Merged] as const;",
+              "why": "TABLE_MERGED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:tenant:*:events#TABLE_MOVED",
+      "type": "channel",
+      "label": "tenant:*:events#TABLE_MOVED",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 32,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:tenant:*:events",
+        "messageType": "TABLE_MOVED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/steps/steps.service.ts:32",
+              "text": "type: 'TABLE_MOVED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "push-worker",
+              "loc": "src/live/event-sets.ts:2",
+              "text": "export const OTHER_EVENTS: ReadonlySet<string> = new Set(['ORDER_MOVED', 'TABLE_",
+              "why": "TABLE_MOVED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "type": "consumer",
+      "label": "StepsController.stream",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 58,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "relay": "entry:desk-api:http:GET:/api/:param/stream",
+        "entryId": "entry:desk-api:event:tenant:*:events",
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 58,
+            "column": 55,
+            "through": "this.bus.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "type": "consumer",
+      "label": "ChatBot.handleStepReady",
+      "repo": "push-worker",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:push-worker:event:status_feed",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "STEP_READY",
+            "consumer": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+            "via": "if",
+            "line": 23
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "consumer",
+      "label": "LiveFeed.redraw",
+      "repo": "push-worker",
+      "file": "src/live/live-feed.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:push-worker:event:tenant:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_MOVED",
+            "consumer": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "via": "guard",
+            "line": 25
+          },
+          {
+            "type": "RESYNC",
+            "consumer": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "via": "guard",
+            "line": 25
+          },
+          {
+            "type": "TABLE_MERGED",
+            "consumer": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "via": "guard",
+            "line": 25
+          },
+          {
+            "type": "TABLE_MOVED",
+            "consumer": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+            "via": "guard",
+            "line": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumer",
+      "label": "PushService.dispatch",
+      "repo": "push-worker",
+      "file": "src/push/push.service.ts",
+      "line": 36,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "selectedBy": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "messageTypes": [
+          "CALL_STAFF",
+          "STEP_READY"
+        ]
+      }
+    },
+    {
+      "id": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "type": "consumer",
+      "label": "PushService.onEvent",
+      "repo": "push-worker",
+      "file": "src/push/push.service.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:push-worker:event:tenant:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CALL_STAFF",
+            "consumer": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+            "via": "switch",
+            "line": 41
+          },
+          {
+            "type": "STEP_READY",
+            "consumer": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+            "via": "switch",
+            "line": 48
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "consumer",
+      "label": "SessionAudit.record",
+      "repo": "push-worker",
+      "file": "src/session/session-audit.service.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:push-worker:event:session:*:closed"
+      }
+    },
+    {
+      "id": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "type": "consumer",
+      "label": "DeskStreamService.connect",
+      "repo": "staff-web",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 26,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 26,
+            "column": 29,
+            "through": "EventSource.message"
+          }
+        ],
+        "handsOnTo": [
+          "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+          "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit"
+        ],
+        "subjects": [
+          "DeskStreamService._event$"
+        ],
+        "routes": [
+          "entry:desk-api:http:GET:/api/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "type": "consumer",
+      "label": "CallBoardComponent.load",
+      "repo": "staff-web",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 21,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "readsNothing": true,
+        "messageTypes": [
+          "CALL_STAFF",
+          "STEP_READY"
+        ]
+      }
+    },
+    {
+      "id": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "type": "consumer",
+      "label": "CallBoardComponent.ngOnInit",
+      "repo": "staff-web",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 16,
+            "column": 5,
+            "through": "DeskStreamService.event$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CALL_STAFF",
+            "consumer": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+            "via": "if",
+            "line": 17
+          },
+          {
+            "type": "STEP_READY",
+            "consumer": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+            "via": "if",
+            "line": 17
+          }
+        ],
+        "routes": [
+          "entry:desk-api:http:GET:/api/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+      "type": "consumer",
+      "label": "StaffStepsComponent.load",
+      "repo": "staff-web",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 23,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "readsNothing": true,
+        "messageTypes": [
+          "STEP_READY"
+        ]
+      }
+    },
+    {
+      "id": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "type": "consumer",
+      "label": "StaffStepsComponent.ngOnInit",
+      "repo": "staff-web",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 20,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 20,
+            "column": 5,
+            "through": "DeskStreamService.event$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "STEP_READY",
+            "consumer": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+            "via": "filter",
+            "line": 20
+          }
+        ],
+        "routes": [
+          "entry:desk-api:http:GET:/api/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "desk-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "desk-api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "StepsController",
+          "KitsController"
+        ],
+        "providers": [
+          "TenantBus",
+          "StepsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "desk-api#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "provider",
+      "label": "TenantBus",
+      "repo": "desk-api",
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "method",
+      "label": "TenantBus.publish",
+      "repo": "desk-api",
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.subscribe",
+      "type": "method",
+      "label": "TenantBus.subscribe",
+      "repo": "desk-api",
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/kits/kits.controller.ts:KitsController",
+      "type": "provider",
+      "label": "KitsController",
+      "repo": "desk-api",
+      "file": "src/kits/kits.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-api#src/kits/kits.controller.ts:KitsController.autoStopped",
+      "type": "method",
+      "label": "KitsController.autoStopped",
+      "repo": "desk-api",
+      "file": "src/kits/kits.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/kits/kits.controller.ts:KitsController.restart",
+      "type": "method",
+      "label": "KitsController.restart",
+      "repo": "desk-api",
+      "file": "src/kits/kits.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "kitId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController",
+      "type": "provider",
+      "label": "StepsController",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.call",
+      "type": "method",
+      "label": "StepsController.call",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "roomNumber",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.merge",
+      "type": "method",
+      "label": "StepsController.merge",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "tableId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.move",
+      "type": "method",
+      "label": "StepsController.move",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{tableId:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "tableId",
+            "line": 32
+          }
+        ]
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.moveTable",
+      "type": "method",
+      "label": "StepsController.moveTable",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "tableId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.order",
+      "type": "method",
+      "label": "StepsController.order",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 50,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;steps:string[]}"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.ready",
+      "type": "method",
+      "label": "StepsController.ready",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "step",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{sessionId:string;stepName:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "sessionId",
+            "line": 27
+          },
+          {
+            "field": "stepName",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.resync",
+      "type": "method",
+      "label": "StepsController.resync",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "type": "method",
+      "label": "StepsController.stream",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.service.ts:StepsService",
+      "type": "provider",
+      "label": "StepsService",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.service.ts:StepsService.callStaff",
+      "type": "method",
+      "label": "StepsService.callStaff",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "roomNumber",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables",
+      "type": "method",
+      "label": "StepsService.mergeTables",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "tableId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder",
+      "type": "method",
+      "label": "StepsService.moveOrder",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "tableId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.service.ts:StepsService.moveTable",
+      "type": "method",
+      "label": "StepsService.moveTable",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "tableId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.service.ts:StepsService.resync",
+      "type": "method",
+      "label": "StepsService.resync",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "type": "method",
+      "label": "StepsService.stepReady",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            },
+            {
+              "name": "sessionId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "step",
+              "type": "string"
+            },
+            {
+              "name": "stepName",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:desk-api:event:tenant:*:events",
+      "type": "entry",
+      "label": "event tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 58,
+      "kind": "event",
+      "meta": {
+        "pattern": "tenant:*:events",
+        "adapter": "tenant-bus"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:GET:/api/:param/orders/:param",
+      "type": "entry",
+      "label": "GET /api/:param/orders/:param",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 50,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/:param/orders/:param",
+        "rawPath": "/api/:tenantId/orders/:orderId",
+        "controller": "StepsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:GET:/api/:param/stream",
+      "type": "entry",
+      "label": "GET /api/:param/stream",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 55,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/:param/stream",
+        "rawPath": "/api/:tenantId/stream",
+        "controller": "StepsController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "stream"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:tenant:*:events"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped",
+      "type": "entry",
+      "label": "GET /api/admin/:param/kits/auto-stopped",
+      "repo": "desk-api",
+      "file": "src/kits/kits.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin/:param/kits/auto-stopped",
+        "rawPath": "/api/admin/:tenantId/kits/auto-stopped",
+        "controller": "KitsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/:param/orders/:param/move",
+      "type": "entry",
+      "label": "POST /api/:param/orders/:param/move",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/:param/orders/:param/move",
+        "rawPath": "/api/:tenantId/orders/:orderId/move",
+        "controller": "StepsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/:param/orders/:param/steps/:param/ready",
+      "type": "entry",
+      "label": "POST /api/:param/orders/:param/steps/:param/ready",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/:param/orders/:param/steps/:param/ready",
+        "rawPath": "/api/:tenantId/orders/:orderId/steps/:step/ready",
+        "controller": "StepsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/:param/resync",
+      "type": "entry",
+      "label": "POST /api/:param/resync",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/:param/resync",
+        "rawPath": "/api/:tenantId/resync",
+        "controller": "StepsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/:param/rooms/:param/call",
+      "type": "entry",
+      "label": "POST /api/:param/rooms/:param/call",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/:param/rooms/:param/call",
+        "rawPath": "/api/:tenantId/rooms/:roomNumber/call",
+        "controller": "StepsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/:param/tables/:param/merge",
+      "type": "entry",
+      "label": "POST /api/:param/tables/:param/merge",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/:param/tables/:param/merge",
+        "rawPath": "/api/:tenantId/tables/:tableId/merge",
+        "controller": "StepsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/:param/tables/:param/move",
+      "type": "entry",
+      "label": "POST /api/:param/tables/:param/move",
+      "repo": "desk-api",
+      "file": "src/steps/steps.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/:param/tables/:param/move",
+        "rawPath": "/api/:tenantId/tables/:tableId/move",
+        "controller": "StepsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/admin/:param/kits/:param/restart",
+      "type": "entry",
+      "label": "POST /api/admin/:param/kits/:param/restart",
+      "repo": "desk-api",
+      "file": "src/kits/kits.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/admin/:param/kits/:param/restart",
+        "rawPath": "/api/admin/:tenantId/kits/:kitId/restart",
+        "controller": "KitsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:push-worker:event:session:*:closed",
+      "type": "entry",
+      "label": "event session:*:closed",
+      "repo": "push-worker",
+      "file": "src/session/session-audit.service.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "pattern": "session:*:closed",
+        "adapter": "tenant-bus"
+      }
+    },
+    {
+      "id": "entry:push-worker:event:session:*:paid",
+      "type": "entry",
+      "label": "event session:*:paid",
+      "repo": "push-worker",
+      "file": "src/session/session-audit.service.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "pattern": "session:*:paid",
+        "adapter": "tenant-bus"
+      }
+    },
+    {
+      "id": "entry:push-worker:event:session:*:split",
+      "type": "entry",
+      "label": "event session:*:split",
+      "repo": "push-worker",
+      "file": "src/session/session-audit.service.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "pattern": "session:*:split",
+        "adapter": "tenant-bus"
+      }
+    },
+    {
+      "id": "entry:push-worker:event:status_feed",
+      "type": "entry",
+      "label": "event status_feed",
+      "repo": "push-worker",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "status_feed",
+        "adapter": "tenant-bus"
+      }
+    },
+    {
+      "id": "entry:push-worker:event:tenant:*:events",
+      "type": "entry",
+      "label": "event tenant:*:events",
+      "repo": "push-worker",
+      "file": "src/live/live-feed.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "pattern": "tenant:*:events",
+        "adapter": "tenant-bus"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:16:5",
+      "type": "producer",
+      "label": "event tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "CALL_STAFF"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:20:5",
+      "type": "producer",
+      "label": "event tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "STEP_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:21:5",
+      "type": "producer",
+      "label": "event session:*:closed",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "STEP_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:22:5",
+      "type": "producer",
+      "label": "event session:*:paid",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "STEP_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:23:5",
+      "type": "producer",
+      "label": "event session:*:split",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "STEP_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:24:5",
+      "type": "producer",
+      "label": "event status_feed",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "STEP_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:28:5",
+      "type": "producer",
+      "label": "event tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_MOVED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:32:5",
+      "type": "producer",
+      "label": "event tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "TABLE_MOVED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:36:5",
+      "type": "producer",
+      "label": "event tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 36,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "TABLE_MERGED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:40:5",
+      "type": "producer",
+      "label": "event tenant:*:events",
+      "repo": "desk-api",
+      "file": "src/steps/steps.service.ts",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "tenant-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "RESYNC"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "push-worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "push-worker",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "TenantBus",
+          "PushService",
+          "PushSender",
+          "RoomDirectory",
+          "LiveFeed",
+          "ResyncService",
+          "ChatBot",
+          "SessionAudit"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "push-worker#src/bot/chat-bot.service.ts:ChatBot",
+      "type": "provider",
+      "label": "ChatBot",
+      "repo": "push-worker",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "type": "method",
+      "label": "ChatBot.handleStepReady",
+      "repo": "push-worker",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "type:push-worker#StatusEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "stepName",
+            "line": 28,
+            "guarded": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "push-worker#src/bot/chat-bot.service.ts:ChatBot.onModuleInit",
+      "type": "method",
+      "label": "ChatBot.onModuleInit",
+      "repo": "push-worker",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "provider",
+      "label": "TenantBus",
+      "repo": "push-worker",
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "method",
+      "label": "TenantBus.publish",
+      "repo": "push-worker",
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/bus/tenant-bus.service.ts:TenantBus.subscribe",
+      "type": "method",
+      "label": "TenantBus.subscribe",
+      "repo": "push-worker",
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/live/live-feed.service.ts:LiveFeed",
+      "type": "provider",
+      "label": "LiveFeed",
+      "repo": "push-worker",
+      "file": "src/live/live-feed.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/live/live-feed.service.ts:LiveFeed.onModuleInit",
+      "type": "method",
+      "label": "LiveFeed.onModuleInit",
+      "repo": "push-worker",
+      "file": "src/live/live-feed.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "method",
+      "label": "LiveFeed.redraw",
+      "repo": "push-worker",
+      "file": "src/live/live-feed.service.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "{scopeId:string;tableId?:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "scopeId",
+            "line": 31
+          },
+          {
+            "field": "tableId",
+            "line": 31,
+            "guarded": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "push-worker#src/push/push-sender.service.ts:PushSender",
+      "type": "provider",
+      "label": "PushSender",
+      "repo": "push-worker",
+      "file": "src/push/push-sender.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/push/push-sender.service.ts:PushSender.send",
+      "type": "method",
+      "label": "PushSender.send",
+      "repo": "push-worker",
+      "file": "src/push/push-sender.service.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "line",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/push/push.service.ts:PushService",
+      "type": "provider",
+      "label": "PushService",
+      "repo": "push-worker",
+      "file": "src/push/push.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "method",
+      "label": "PushService.dispatch",
+      "repo": "push-worker",
+      "file": "src/push/push.service.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "raw",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 40,
+            "switched": {
+              "has": "none",
+              "cases": [
+                "'CALL_STAFF'",
+                "'STEP_READY'"
+              ],
+              "line": 40
+            }
+          },
+          {
+            "field": "roomId",
+            "line": 42,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "roomId",
+            "line": 43,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "roomId",
+            "line": 45,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "ts",
+            "line": 45,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true
+          },
+          {
+            "field": "orderId",
+            "line": 49,
+            "when": [
+              "STEP_READY"
+            ]
+          },
+          {
+            "field": "step",
+            "line": 49,
+            "when": [
+              "STEP_READY"
+            ]
+          },
+          {
+            "field": "orderId",
+            "in": "push-worker#src/push/push.service.ts:PushService.resolveAssigned",
+            "line": 57,
+            "guarded": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "push-worker#src/push/push.service.ts:PushService.onEvent",
+      "type": "method",
+      "label": "PushService.onEvent",
+      "repo": "push-worker",
+      "file": "src/push/push.service.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "raw",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 32
+          },
+          {
+            "field": "scopeId",
+            "line": 33
+          },
+          {
+            "field": "type",
+            "in": "push-worker#src/push/push.service.ts:PushService.dispatch",
+            "line": 40,
+            "switched": {
+              "has": "none",
+              "cases": [
+                "'CALL_STAFF'",
+                "'STEP_READY'"
+              ],
+              "line": 40
+            }
+          },
+          {
+            "field": "roomId",
+            "in": "push-worker#src/push/push.service.ts:PushService.dispatch",
+            "line": 42,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "roomId",
+            "in": "push-worker#src/push/push.service.ts:PushService.dispatch",
+            "line": 43,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "roomId",
+            "in": "push-worker#src/push/push.service.ts:PushService.dispatch",
+            "line": 45,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "ts",
+            "in": "push-worker#src/push/push.service.ts:PushService.dispatch",
+            "line": 45,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true
+          },
+          {
+            "field": "orderId",
+            "in": "push-worker#src/push/push.service.ts:PushService.dispatch",
+            "line": 49,
+            "when": [
+              "STEP_READY"
+            ]
+          },
+          {
+            "field": "step",
+            "in": "push-worker#src/push/push.service.ts:PushService.dispatch",
+            "line": 49,
+            "when": [
+              "STEP_READY"
+            ]
+          },
+          {
+            "field": "orderId",
+            "in": "push-worker#src/push/push.service.ts:PushService.resolveAssigned",
+            "line": 57,
+            "guarded": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "push-worker#src/push/push.service.ts:PushService.onModuleInit",
+      "type": "method",
+      "label": "PushService.onModuleInit",
+      "repo": "push-worker",
+      "file": "src/push/push.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/push/push.service.ts:PushService.resolveAssigned",
+      "type": "method",
+      "label": "PushService.resolveAssigned",
+      "repo": "push-worker",
+      "file": "src/push/push.service.ts",
+      "line": 56,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "evt",
+              "type": "{orderId?:string}"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/push/room-directory.service.ts:RoomDirectory",
+      "type": "provider",
+      "label": "RoomDirectory",
+      "repo": "push-worker",
+      "file": "src/push/room-directory.service.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/push/room-directory.service.ts:RoomDirectory.findRoom",
+      "type": "method",
+      "label": "RoomDirectory.findRoom",
+      "repo": "push-worker",
+      "file": "src/push/room-directory.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:push-worker#Room"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/session/session-audit.service.ts:SessionAudit",
+      "type": "provider",
+      "label": "SessionAudit",
+      "repo": "push-worker",
+      "file": "src/session/session-audit.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/session/session-audit.service.ts:SessionAudit.onModuleInit",
+      "type": "method",
+      "label": "SessionAudit.onModuleInit",
+      "repo": "push-worker",
+      "file": "src/session/session-audit.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "method",
+      "label": "SessionAudit.record",
+      "repo": "push-worker",
+      "file": "src/session/session-audit.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "raw",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 20,
+            "why": "handed to this.seen.push"
+          }
+        ]
+      }
+    },
+    {
+      "id": "push-worker#src/sync/resync.service.ts:ResyncService",
+      "type": "provider",
+      "label": "ResyncService",
+      "repo": "push-worker",
+      "file": "src/sync/resync.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "push-worker#src/sync/resync.service.ts:ResyncService.resync",
+      "type": "method",
+      "label": "ResyncService.resync",
+      "repo": "push-worker",
+      "file": "src/sync/resync.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:desk-api",
+      "type": "repo",
+      "label": "desk-api",
+      "repo": "desk-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "rxjs": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:push-worker",
+      "type": "repo",
+      "label": "push-worker",
+      "repo": "push-worker",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:staff-web",
+      "type": "repo",
+      "label": "staff-web",
+      "repo": "staff-web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "templates": 2,
+          "skippedExternalCalls": {
+            "rxjs": 6,
+            "@angular/common": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "staff-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "staff-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService",
+      "type": "provider",
+      "label": "DeskStreamService",
+      "repo": "staff-web",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "type": "method",
+      "label": "DeskStreamService.connect",
+      "repo": "staff-web",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "tenantId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent",
+      "type": "ui_component",
+      "label": "CallBoardComponent",
+      "repo": "staff-web",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 8,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-call-board",
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "type": "method",
+      "label": "CallBoardComponent.load",
+      "repo": "staff-web",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "type": "method",
+      "label": "CallBoardComponent.ngOnInit",
+      "repo": "staff-web",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent",
+      "type": "ui_component",
+      "label": "StaffStepsComponent",
+      "repo": "staff-web",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 12,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-staff-steps",
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+      "type": "method",
+      "label": "StaffStepsComponent.load",
+      "repo": "staff-web",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "type": "method",
+      "label": "StaffStepsComponent.ngOnInit",
+      "repo": "staff-web",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:staff-web#src/app/steps/call-board.component.ts:14:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "staff-web",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 14,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent",
+        "template": "src/app/steps/call-board.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:staff-web#src/app/steps/staff-steps.component.ts:18:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "staff-web",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 18,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent",
+        "template": "src/app/steps/staff-steps.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+      "type": "ui_api_call",
+      "label": "GET /api/:param/stream",
+      "repo": "staff-web",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 25,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/:param/stream",
+        "path": "/api/:param/stream",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "desk-api"
+      }
+    },
+    {
+      "id": "ui_api_call:staff-web#src/app/steps/call-board.component.ts:22:5",
+      "type": "ui_api_call",
+      "label": "GET /api/demo/orders/o2",
+      "repo": "staff-web",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/demo/orders/o2",
+        "path": "/api/demo/orders/o2",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "{id:string;steps:string[]}",
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "steps",
+            "in": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+            "line": 23
+          }
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "desk-api"
+      }
+    },
+    {
+      "id": "ui_api_call:staff-web#src/app/steps/staff-steps.component.ts:24:5",
+      "type": "ui_api_call",
+      "label": "GET /api/demo/orders/o1",
+      "repo": "staff-web",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/demo/orders/o1",
+        "path": "/api/demo/orders/o1",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "{id:string;steps:string[]}",
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "steps",
+            "in": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+            "line": 25
+          }
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "desk-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:session:*:closed",
+      "to": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/session/session-audit.service.ts",
+      "line": 14
+    },
+    {
+      "from": "channel:session:*:paid",
+      "to": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/session/session-audit.service.ts",
+      "line": 15
+    },
+    {
+      "from": "channel:session:*:split",
+      "to": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/session/session-audit.service.ts",
+      "line": 16
+    },
+    {
+      "from": "channel:status_feed",
+      "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:status_feed#STEP_READY",
+      "to": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 23,
+      "meta": {
+        "selectedBy": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events",
+      "to": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/steps/steps.controller.ts",
+      "line": 58
+    },
+    {
+      "from": "channel:tenant:*:events",
+      "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live-feed.service.ts",
+      "line": 23
+    },
+    {
+      "from": "channel:tenant:*:events",
+      "to": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 27
+    },
+    {
+      "from": "channel:tenant:*:events",
+      "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 26,
+      "meta": {
+        "via": "sse",
+        "route": "entry:desk-api:http:GET:/api/:param/stream",
+        "call": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events",
+      "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:desk-api:http:GET:/api/:param/stream",
+        "call": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events",
+      "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 20,
+      "meta": {
+        "via": "sse",
+        "route": "entry:desk-api:http:GET:/api/:param/stream",
+        "call": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#CALL_STAFF",
+      "to": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 41,
+      "meta": {
+        "selectedBy": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#CALL_STAFF",
+      "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 17,
+      "meta": {
+        "selectedBy": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#ORDER_MOVED",
+      "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live-feed.service.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "via": "guard"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#RESYNC",
+      "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live-feed.service.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "via": "guard"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#STEP_READY",
+      "to": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 48,
+      "meta": {
+        "selectedBy": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#STEP_READY",
+      "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 17,
+      "meta": {
+        "selectedBy": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#STEP_READY",
+      "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 20,
+      "meta": {
+        "selectedBy": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+        "via": "filter"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#TABLE_MERGED",
+      "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live-feed.service.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "via": "guard"
+      }
+    },
+    {
+      "from": "channel:tenant:*:events#TABLE_MOVED",
+      "to": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live-feed.service.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+        "via": "guard"
+      }
+    },
+    {
+      "from": "consumer:desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/steps/steps.controller.ts",
+      "line": 58,
+      "meta": {
+        "params": "{tenantId:string}"
+      }
+    },
+    {
+      "from": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "to": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:push-worker#StatusEvent"
+      ],
+      "returns": "void",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "to": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{scopeId:string;tableId?:string}"
+      ],
+      "returns": "void",
+      "file": "src/live/live-feed.service.ts",
+      "line": 23
+    },
+    {
+      "from": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 36
+    },
+    {
+      "from": "consumer:push-worker#src/push/push.service.ts:PushService.onEvent",
+      "to": "push-worker#src/push/push.service.ts:PushService.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 27
+    },
+    {
+      "from": "consumer:push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "to": "push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/session/session-audit.service.ts",
+      "line": 14
+    },
+    {
+      "from": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "to": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 26
+    },
+    {
+      "from": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "to": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "to": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+      "to": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 23
+    },
+    {
+      "from": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "to": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 20
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/steps/steps.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController",
+      "to": "desk-api#src/steps/steps.service.ts:StepsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/steps/steps.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController.call",
+      "to": "desk-api#src/steps/steps.service.ts:StepsService.callStaff",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController.merge",
+      "to": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 42
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController.move",
+      "to": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 32
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController.moveTable",
+      "to": "desk-api#src/steps/steps.service.ts:StepsService.moveTable",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 37
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController.ready",
+      "to": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 27
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController.resync",
+      "to": "desk-api#src/steps/steps.service.ts:StepsService.resync",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 47
+    },
+    {
+      "from": "desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 58
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 13
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.callStaff",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.service.ts",
+      "line": 16
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.callStaff",
+      "to": "producer:desk-api#src/steps/steps.service.ts:16:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 16
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.service.ts",
+      "line": 36
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.mergeTables",
+      "to": "producer:desk-api#src/steps/steps.service.ts:36:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 36
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.service.ts",
+      "line": 28
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.moveOrder",
+      "to": "producer:desk-api#src/steps/steps.service.ts:28:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 28
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.moveTable",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.service.ts",
+      "line": 32
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.moveTable",
+      "to": "producer:desk-api#src/steps/steps.service.ts:32:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 32
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.resync",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.service.ts",
+      "line": 40
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.resync",
+      "to": "producer:desk-api#src/steps/steps.service.ts:40:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 40
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "to": "desk-api#src/bus/tenant-bus.service.ts:TenantBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.service.ts",
+      "line": 20
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "to": "producer:desk-api#src/steps/steps.service.ts:20:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 20
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "to": "producer:desk-api#src/steps/steps.service.ts:21:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 21
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "to": "producer:desk-api#src/steps/steps.service.ts:22:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 22
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "to": "producer:desk-api#src/steps/steps.service.ts:23:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 23
+    },
+    {
+      "from": "desk-api#src/steps/steps.service.ts:StepsService.stepReady",
+      "to": "producer:desk-api#src/steps/steps.service.ts:24:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:desk-api:event:tenant:*:events",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/steps/steps.controller.ts",
+      "line": 58,
+      "meta": {
+        "params": "{tenantId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:GET:/api/:param/orders/:param",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.order",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;steps:string[]}",
+      "file": "src/steps/steps.controller.ts",
+      "line": 50,
+      "meta": {
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:GET:/api/:param/stream",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/steps/steps.controller.ts",
+      "line": 55,
+      "meta": {
+        "params": "{tenantId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped",
+      "to": "desk-api#src/kits/kits.controller.ts:KitsController.autoStopped",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/kits/kits.controller.ts",
+      "line": 6,
+      "meta": {
+        "params": "{tenantId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/api/:param/orders/:param/move",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.move",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{tableId:string}"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 30,
+      "meta": {
+        "params": "{tenantId:string;orderId:string}",
+        "body": "{tableId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/api/:param/orders/:param/steps/:param/ready",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.ready",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string",
+        "{sessionId:string;stepName:string}"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 20,
+      "meta": {
+        "params": "{tenantId:string;orderId:string;step:string}",
+        "body": "{sessionId:string;stepName:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/api/:param/resync",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.resync",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 45,
+      "meta": {
+        "params": "{tenantId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/api/:param/rooms/:param/call",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.call",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{orderId:string}"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 15,
+      "meta": {
+        "params": "{tenantId:string;roomNumber:string}",
+        "body": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/api/:param/tables/:param/merge",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.merge",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 40,
+      "meta": {
+        "params": "{tenantId:string;tableId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/api/:param/tables/:param/move",
+      "to": "desk-api#src/steps/steps.controller.ts:StepsController.moveTable",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/steps/steps.controller.ts",
+      "line": 35,
+      "meta": {
+        "params": "{tenantId:string;tableId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/api/admin/:param/kits/:param/restart",
+      "to": "desk-api#src/kits/kits.controller.ts:KitsController.restart",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/kits/kits.controller.ts",
+      "line": 11,
+      "meta": {
+        "params": "{tenantId:string;kitId:string}"
+      }
+    },
+    {
+      "from": "entry:push-worker:event:session:*:closed",
+      "to": "push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/session/session-audit.service.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:push-worker:event:session:*:paid",
+      "to": "push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/session/session-audit.service.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:push-worker:event:session:*:split",
+      "to": "push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/session/session-audit.service.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:push-worker:event:status_feed",
+      "to": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:push-worker#StatusEvent"
+      ],
+      "returns": "void",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:push-worker:event:tenant:*:events",
+      "to": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{scopeId:string;tableId?:string}"
+      ],
+      "returns": "void",
+      "file": "src/live/live-feed.service.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:push-worker:event:tenant:*:events",
+      "to": "push-worker#src/push/push.service.ts:PushService.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 27
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+      "to": "channel:tenant:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 16
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:16:5",
+      "to": "channel:tenant:*:events#CALL_STAFF",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 16,
+      "params": [
+        "{type:string;roomNumber:string;orderId:string;scopeId:string;ts:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+      "to": "channel:tenant:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string;scopeId:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:20:5",
+      "to": "channel:tenant:*:events#STEP_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 20,
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string;scopeId:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:21:5",
+      "to": "channel:session:*:closed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 21
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:21:5",
+      "to": "channel:session:*:closed#STEP_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 21,
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:22:5",
+      "to": "channel:session:*:paid",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:22:5",
+      "to": "channel:session:*:paid#STEP_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 22,
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:23:5",
+      "to": "channel:session:*:split",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 23
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:23:5",
+      "to": "channel:session:*:split#STEP_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 23,
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+      "to": "channel:status_feed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 24
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:24:5",
+      "to": "channel:status_feed#STEP_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 24,
+      "params": [
+        "{type:string;orderId:string;step:string;stepName:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+      "to": "channel:tenant:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;tableId:string;scopeId:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 28
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:28:5",
+      "to": "channel:tenant:*:events#ORDER_MOVED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 28,
+      "params": [
+        "{type:string;orderId:string;tableId:string;scopeId:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+      "to": "channel:tenant:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;tableId:string;scopeId:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 32
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:32:5",
+      "to": "channel:tenant:*:events#TABLE_MOVED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 32,
+      "params": [
+        "{type:string;tableId:string;scopeId:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+      "to": "channel:tenant:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;tableId:string;scopeId:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 36
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:36:5",
+      "to": "channel:tenant:*:events#TABLE_MERGED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 36,
+      "params": [
+        "{type:string;tableId:string;scopeId:string}"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+      "to": "channel:tenant:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;scopeId:string}"
+      ],
+      "file": "src/steps/steps.service.ts",
+      "line": 40
+    },
+    {
+      "from": "producer:desk-api#src/steps/steps.service.ts:40:5",
+      "to": "channel:tenant:*:events#RESYNC",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/steps/steps.service.ts",
+      "line": 40,
+      "params": [
+        "{type:string;scopeId:string}"
+      ]
+    },
+    {
+      "from": "push-worker#src/bot/chat-bot.service.ts:ChatBot",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 16
+    },
+    {
+      "from": "push-worker#src/bot/chat-bot.service.ts:ChatBot",
+      "to": "push-worker#src/push/push-sender.service.ts:PushSender",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 17
+    },
+    {
+      "from": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "to": "push-worker#src/push/push-sender.service.ts:PushSender.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 28
+    },
+    {
+      "from": "push-worker#src/bot/chat-bot.service.ts:ChatBot.onModuleInit",
+      "to": "push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:push-worker#StatusEvent"
+      ],
+      "returns": "void",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 23
+    },
+    {
+      "from": "push-worker#src/bot/chat-bot.service.ts:ChatBot.onModuleInit",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/bot/chat-bot.service.ts",
+      "line": 21
+    },
+    {
+      "from": "push-worker#src/live/live-feed.service.ts:LiveFeed",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/live/live-feed.service.ts",
+      "line": 18
+    },
+    {
+      "from": "push-worker#src/live/live-feed.service.ts:LiveFeed",
+      "to": "push-worker#src/sync/resync.service.ts:ResyncService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/live/live-feed.service.ts",
+      "line": 19
+    },
+    {
+      "from": "push-worker#src/live/live-feed.service.ts:LiveFeed.onModuleInit",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/live/live-feed.service.ts",
+      "line": 23
+    },
+    {
+      "from": "push-worker#src/live/live-feed.service.ts:LiveFeed.onModuleInit",
+      "to": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{scopeId:string;tableId?:string}"
+      ],
+      "returns": "void",
+      "file": "src/live/live-feed.service.ts",
+      "line": 26
+    },
+    {
+      "from": "push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "to": "push-worker#src/sync/resync.service.ts:ResyncService.resync",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/live/live-feed.service.ts",
+      "line": 31
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 21
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService",
+      "to": "push-worker#src/push/push-sender.service.ts:PushSender",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 22
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService",
+      "to": "push-worker#src/push/room-directory.service.ts:RoomDirectory",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 23
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "push-worker#src/push/push-sender.service.ts:PushSender.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 53
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "push-worker#src/push/push.service.ts:PushService.resolveAssigned",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{orderId?:string}"
+      ],
+      "returns": "string[]",
+      "file": "src/push/push.service.ts",
+      "line": 38
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "push-worker#src/push/room-directory.service.ts:RoomDirectory.findRoom",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:push-worker#Room",
+      "file": "src/push/push.service.ts",
+      "line": 43
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService.onEvent",
+      "to": "push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 33
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService.onModuleInit",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 27
+    },
+    {
+      "from": "push-worker#src/push/push.service.ts:PushService.onModuleInit",
+      "to": "push-worker#src/push/push.service.ts:PushService.onEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 27
+    },
+    {
+      "from": "push-worker#src/session/session-audit.service.ts:SessionAudit",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/session/session-audit.service.ts",
+      "line": 11
+    },
+    {
+      "from": "push-worker#src/session/session-audit.service.ts:SessionAudit.onModuleInit",
+      "to": "push-worker#src/bus/tenant-bus.service.ts:TenantBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/session/session-audit.service.ts",
+      "line": 14
+    },
+    {
+      "from": "push-worker#src/session/session-audit.service.ts:SessionAudit.onModuleInit",
+      "to": "push-worker#src/session/session-audit.service.ts:SessionAudit.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/session/session-audit.service.ts",
+      "line": 14
+    },
+    {
+      "from": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "to": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 25
+    },
+    {
+      "from": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent",
+      "to": "staff-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 11,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent",
+      "to": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 10,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "to": "ui_api_call:staff-web#src/app/steps/call-board.component.ts:22:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 22
+    },
+    {
+      "from": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "to": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 15
+    },
+    {
+      "from": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "to": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 17
+    },
+    {
+      "from": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent",
+      "to": "staff-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 15,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent",
+      "to": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 14,
+      "meta": {
+        "via": "field-inject"
+      }
+    },
+    {
+      "from": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+      "to": "ui_api_call:staff-web#src/app/steps/staff-steps.component.ts:24:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 24
+    },
+    {
+      "from": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "to": "staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 19
+    },
+    {
+      "from": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "to": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 20
+    },
+    {
+      "from": "ui_action:staff-web#src/app/steps/call-board.component.ts:14:3",
+      "to": "staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:staff-web#src/app/steps/staff-steps.component.ts:18:3",
+      "to": "staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+      "to": "consumer:staff-web#src/app/live/desk-stream.service.ts:DeskStreamService.connect",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 26
+    },
+    {
+      "from": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+      "to": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+      "to": "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 20
+    },
+    {
+      "from": "ui_api_call:staff-web#src/app/live/desk-stream.service.ts:25:19",
+      "to": "entry:desk-api:http:GET:/api/:param/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live/desk-stream.service.ts",
+      "line": 25,
+      "meta": {
+        "via": "api-target",
+        "targetService": "desk-api"
+      }
+    },
+    {
+      "from": "ui_api_call:staff-web#src/app/steps/call-board.component.ts:22:5",
+      "to": "entry:desk-api:http:GET:/api/:param/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/steps/call-board.component.ts",
+      "line": 22,
+      "returns": "{id:string;steps:string[]}",
+      "meta": {
+        "via": "api-target",
+        "targetService": "desk-api"
+      }
+    },
+    {
+      "from": "ui_api_call:staff-web#src/app/steps/staff-steps.component.ts:24:5",
+      "to": "entry:desk-api:http:GET:/api/:param/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/steps/staff-steps.component.ts",
+      "line": 24,
+      "returns": "{id:string;steps:string[]}",
+      "meta": {
+        "via": "api-target",
+        "targetService": "desk-api"
+      }
+    }
+  ],
+  "types": {
+    "type:push-worker#Room": {
+      "name": "Room",
+      "kind": "object",
+      "declaredIn": "push-worker#src/push/room-directory.service.ts",
+      "structuralHash": "481d4897d7dc7619",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "number",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:push-worker#StatusEvent": {
+      "name": "StatusEvent",
+      "kind": "object",
+      "declaredIn": "push-worker#src/bot/chat-bot.service.ts",
+      "structuralHash": "7eba45cda755c90f",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "stepName",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "desk-api"
+    },
+    {
+      "file": "src/steps/steps.controller.ts",
+      "line": 58,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "StepsController.stream",
+      "service": "desk-api"
+    },
+    {
+      "file": "src/bus/tenant-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "push-worker"
+    }
+  ]
+}

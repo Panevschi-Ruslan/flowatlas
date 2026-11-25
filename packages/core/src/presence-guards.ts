@@ -204,3 +204,71 @@ export const presenceChecked = (value: TsNode, depth: number): boolean => {
   }
   return false;
 };
+
+/** What code does where a field it checks for is absent, where the check leaves the function (P405). */
+export type AbsenceExit = 'returns' | 'throws';
+
+/** Whether a condition is true where the value at `path` is absent: `!p`, `p == null`, `p === undefined`, either side of `||`. */
+const testsAbsence = (condition: TsNode, paths: ReadonlySet<string>): boolean => {
+  let node = condition;
+  while (Node.isParenthesizedExpression(node)) node = node.getExpression();
+  if (Node.isPrefixUnaryExpression(node) && node.getOperatorToken() === SyntaxKind.ExclamationToken) {
+    const text = pathText(node.getOperand());
+    return text !== undefined && paths.has(text);
+  }
+  if (!Node.isBinaryExpression(node)) return false;
+  const operator = node.getOperatorToken().getKind();
+  if (operator === SyntaxKind.BarBarToken) return testsAbsence(node.getLeft(), paths) || testsAbsence(node.getRight(), paths);
+  if (operator !== SyntaxKind.EqualsEqualsToken && operator !== SyntaxKind.EqualsEqualsEqualsToken) return false;
+  const [left, right] = [node.getLeft(), node.getRight()];
+  const text = isNothing(right) ? pathText(left) : isNothing(left) ? pathText(right) : undefined;
+  return text !== undefined && paths.has(text);
+};
+
+/** How a statement leaves, where it always does: a `return` or a `throw`, alone or last in a block. */
+const leavesBy = (statement: TsNode): AbsenceExit | undefined => {
+  if (Node.isReturnStatement(statement)) return 'returns';
+  if (Node.isThrowStatement(statement)) return 'throws';
+  if (Node.isBlock(statement)) {
+    const last = statement.getStatements().at(-1);
+    return last === undefined ? undefined : leavesBy(last);
+  }
+  return undefined;
+};
+
+/**
+ * What the code does where the field read at `value` (a path `depth` fields
+ * deep) is absent, where an `if` testing its absence - the field itself or a
+ * part of the path above it - leaves the function before the read, or is the
+ * read (P405): `if (!evt.roomId) return;` makes a message without `roomId`
+ * end the handler early, not fail it. Undefined where no such check is
+ * written (a fallback, `?.`, or a check that does not leave).
+ */
+export const absenceExit = (value: TsNode, depth: number): AbsenceExit | undefined => {
+  const scope = outermostFunction(value);
+  if (scope === undefined) return undefined;
+  const paths = new Set<string>();
+  let at: TsNode = value;
+  let left = depth;
+  while (left > 0) {
+    const text = pathText(at);
+    if (text !== undefined) paths.add(text);
+    const step = innerOf(at);
+    if (step === undefined) break;
+    at = step.inner;
+    if (step.field) left -= 1;
+  }
+  if (paths.size === 0) return undefined;
+  for (const check of scope.getDescendantsOfKind(SyntaxKind.IfStatement)) {
+    if (check.getElseStatement() !== undefined) continue;
+    // The check stands in a block around the read: one in another branch guards nothing here.
+    const block = check.getParent();
+    if (block === undefined || block.getStart() > value.getStart() || value.getEnd() > block.getEnd()) continue;
+    const condition = check.getExpression();
+    const before = check.getEnd() <= value.getStart() || (condition.getStart() <= value.getStart() && value.getEnd() <= condition.getEnd());
+    if (!before || !testsAbsence(condition, paths)) continue;
+    const exit = leavesBy(check.getThenStatement());
+    if (exit !== undefined) return exit;
+  }
+  return undefined;
+};

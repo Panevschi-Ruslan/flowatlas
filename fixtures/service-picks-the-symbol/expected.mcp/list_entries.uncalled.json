@@ -6,7 +6,8 @@
       "label": "DELETE /books/:param/hold",
       "loc": "src/books.controller.ts:33",
       "service": "lending-api",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/books/:bookId/hold"
     },
     {
       "id": "entry:lending-api:http:POST:/books/:param/extend",
@@ -14,7 +15,8 @@
       "label": "POST /books/:param/extend",
       "loc": "src/books.controller.ts:38",
       "service": "lending-api",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/books/:bookId/extend"
     }
   ],
   "total": 2,

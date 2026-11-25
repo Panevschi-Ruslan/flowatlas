@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:35:44.275Z",
+  "builtAt": "2026-11-25T21:19:58.496Z",
   "services": [
     {
       "name": "shop",
@@ -788,11 +788,18 @@
           ],
           "returns": "{statusCode:201;body:string}"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 4,
-            "why": "handed to JSON.parse"
+            "field": "id",
+            "line": 5
+          },
+          {
+            "field": "total",
+            "line": 5
+          },
+          {
+            "field": "id",
+            "line": 6
           }
         ]
       }
@@ -833,11 +840,10 @@
           ],
           "returns": "{statusCode:202;body:''}"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 5,
-            "why": "handed to JSON.parse"
+            "field": "carrier",
+            "line": 5
           }
         ]
       }
@@ -878,11 +884,14 @@
           ],
           "returns": "{statusCode:202;body:''}"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 7,
-            "why": "handed to JSON.parse"
+            "field": "amount",
+            "line": 7
+          },
+          {
+            "field": "orderId",
+            "line": 7
           }
         ]
       }
@@ -904,11 +913,10 @@
           ],
           "returns": "{statusCode:200;body:string}"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 2,
-            "why": "handed to JSON.parse"
+            "field": "items.length",
+            "line": 3
           }
         ]
       }

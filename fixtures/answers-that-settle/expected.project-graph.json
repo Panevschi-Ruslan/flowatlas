@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T16:00:46.103Z",
+  "builtAt": "2026-11-25T21:11:13.093Z",
   "services": [
     {
       "name": "rooms-api",
@@ -614,7 +614,8 @@
             "line": 28,
             "when": [
               "ROOM_READY"
-            ]
+            ],
+            "guarded": true
           }
         ]
       }
@@ -1385,14 +1386,18 @@
             "line": 44,
             "when": [
               "CALL_STAFF"
-            ]
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
           },
           {
             "field": "roomId",
             "line": 45,
             "when": [
               "CALL_STAFF"
-            ]
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
           },
           {
             "field": "note",
@@ -1407,7 +1412,8 @@
             "line": 62,
             "when": [
               "ORDER_READY"
-            ]
+            ],
+            "guarded": true
           }
         ]
       }

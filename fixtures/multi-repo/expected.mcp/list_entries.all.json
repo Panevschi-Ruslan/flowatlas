@@ -22,7 +22,8 @@
       "label": "GET /invoices/:param",
       "loc": "src/invoices/invoices.controller.ts:26",
       "service": "billing",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/invoices/:id"
     },
     {
       "id": "entry:billing:http:POST:/invoices",
@@ -38,7 +39,8 @@
       "label": "GET /orders/:param",
       "loc": "src/orders/orders.controller.ts:30",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/cancel",
@@ -46,7 +48,8 @@
       "label": "POST /orders/:param/cancel",
       "loc": "src/orders/orders.controller.ts:35",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id/cancel"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
@@ -54,7 +57,8 @@
       "label": "POST /orders/:param/invoice",
       "loc": "src/orders/orders.controller.ts:40",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id/invoice"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/refund",
@@ -62,7 +66,8 @@
       "label": "POST /orders/:param/refund",
       "loc": "src/orders/orders.controller.ts:65",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id/refund"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/resume",
@@ -70,7 +75,8 @@
       "label": "POST /orders/:param/resume",
       "loc": "src/orders/orders.controller.ts:71",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id/resume"
     },
     {
       "id": "entry:gateway:http:POST:/orders/:param/ship",
@@ -78,7 +84,8 @@
       "label": "POST /orders/:param/ship",
       "loc": "src/orders/orders.controller.ts:60",
       "service": "gateway",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id/ship"
     },
     {
       "id": "entry:gateway:http:POST:/orders/charge",
@@ -102,7 +109,8 @@
       "label": "GET /a/:param",
       "loc": "src/aliases/current-aliases.controller.ts:11",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/a/:slug"
     },
     {
       "id": "entry:orders:http:GET:/orders/:param",
@@ -110,7 +118,8 @@
       "label": "GET /orders/:param",
       "loc": "src/orders/orders.controller.ts:25",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id"
     },
     {
       "id": "entry:orders:http:GET:/orders/latest",
@@ -134,7 +143,8 @@
       "label": "POST /orders/:param/archive",
       "loc": "src/orders/orders.controller.ts:42",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id/archive"
     }
   ],
   "total": 17,

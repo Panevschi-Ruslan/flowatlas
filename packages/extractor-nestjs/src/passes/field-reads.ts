@@ -89,6 +89,24 @@ const startsOf = (fn: FunctionLike, route: boolean): { starts: FieldStart[]; pic
   return { starts, picked };
 };
 
+/**
+ * Whether a choice of a type for `consumer`, as its chooser records it, is
+ * written inside `fn` (P405): the function then holds the choice, and is
+ * handed the message it chooses on.
+ */
+const choiceWrittenIn = (chooser: GraphNode, consumer: string, fn: FunctionLike): boolean => {
+  const selects = chooser.meta?.['selects'];
+  if (!Array.isArray(selects)) return false;
+  const file = fn.getSourceFile().getFilePath();
+  const first = fn.getStartLineNumber();
+  const last = fn.getEndLineNumber();
+  return selects.some((selection: { consumer?: unknown; line?: unknown; file?: unknown }) => {
+    if (selection.consumer !== consumer || typeof selection.line !== 'number') return false;
+    const written = typeof selection.file === 'string' ? selection.file : chooser.file;
+    return written !== undefined && file.endsWith(`/${written}`) && selection.line >= first && selection.line <= last;
+  });
+};
+
 export const fieldReadsPass = definePass('field-reads', (ctx) => {
   const { builder, repo, repoDir } = ctx;
   const root = resolve(repoDir);
@@ -143,8 +161,8 @@ export const fieldReadsPass = definePass('field-reads', (ctx) => {
     return owner === undefined ? undefined : memberOf(owner.declaration, node.id.slice(dot + 1));
   };
 
-  const write = (node: GraphNode, fn: FunctionLike, starts: readonly FieldStart[], picked: ReadonlyArray<{ field: string; line: number }>): void => {
-    const found = readFields(fn, starts, { idOf, isOwn, rootId: node.id });
+  const write = (node: GraphNode, fn: FunctionLike, starts: readonly FieldStart[], picked: ReadonlyArray<{ field: string; line: number }>, guards = false): void => {
+    const found = readFields(fn, starts, { idOf, isOwn, rootId: node.id, ...(guards ? { guards: true } : {}) });
     const reads: FieldRead[] = [...picked.map((row) => ({ field: row.field, line: row.line })), ...found.reads];
     const unread = [...found.unread, ...(found.cut === undefined ? [] : [{ line: fn.getStartLineNumber(), why: `cut: ${found.cut}` }])];
     node.meta = {
@@ -171,8 +189,26 @@ export const fieldReadsPass = definePass('field-reads', (ctx) => {
     const fn = node === undefined ? undefined : functionOf(node);
     if (node === undefined || fn === undefined || fn.getBody() === undefined) continue;
     const { starts, picked } = startsOf(fn, route);
-    write(node, fn, starts, picked);
+    // A message handler's reads say whether it checks a field is there first, and what it does without it (P405).
+    write(node, fn, starts, picked, !route);
     done.add(id);
+  }
+
+  // A consumer chosen by another's dispatch whose handler holds the choice itself (P405): `onEvent` parses and hands
+  // the message to `dispatch(scopeId, raw)`, whose `switch` on a local made by a cast chose it. Its reads were its
+  // chooser's alone, lost where the chooser could not follow the message; the function holding the choice is handed
+  // the message whole, so it is read on its own, each read under the case it is written in.
+  for (const edge of builder.edges) {
+    if (edge.type !== 'handles' || done.has(edge.to)) continue;
+    const from = builder.getNode(edge.from);
+    const chooser = typeof from?.meta?.['selectedBy'] === 'string' ? builder.getNode(from.meta['selectedBy']) : undefined;
+    const node = builder.getNode(edge.to);
+    const fn = node === undefined ? undefined : functionOf(node);
+    if (from === undefined || chooser === undefined || node === undefined || fn === undefined || fn.getBody() === undefined) continue;
+    if (!choiceWrittenIn(chooser, from.id, fn)) continue;
+    const { starts, picked } = startsOf(fn, false);
+    write(node, fn, starts, picked, true);
+    done.add(edge.to);
   }
 
   // What runs in front of a route: a class's method by its layer, or a function.

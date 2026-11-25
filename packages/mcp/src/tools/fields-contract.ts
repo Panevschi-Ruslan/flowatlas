@@ -43,7 +43,22 @@ interface Missing {
   notSentBy?: string[];
   /** Why the type the read is compared under is not sure: two sources say the consumer's types differently (P397). */
   unsure?: string;
+  /** Every read of it checks first that it is there (P405): a message without it is handled, not a crash. */
+  guarded?: true;
+  /** What the reading code does where it is absent, where every read is checked (P405): `returns early`, `throws`, `goes on without it`. */
+  effect?: string;
 }
+
+/** What a reading does without a field, said on a `missing` row (P405). */
+const ABSENCE_EFFECT: Readonly<Record<string, string>> = { returns: 'returns early', throws: 'throws' };
+
+/** Whether every read of `name` a receiver makes is checked for presence, and what it does without it (P405). */
+const absenceOf = (reading: Reading, name: string): { guarded?: true; effect?: string } => {
+  const sites = reading.reads.filter((site) => topField(unwrapped(site.field) ?? site.field) === name || topField(site.field) === name);
+  if (sites.length === 0 || !sites.every((site) => site.guarded === true)) return {};
+  const exit = sites.find((site) => site.whenAbsent !== undefined)?.whenAbsent;
+  return { guarded: true, effect: exit === undefined ? 'goes on without it' : (ABSENCE_EFFECT[exit] ?? exit) };
+};
 
 /** The reading code a consumer's types rest on, where two sources say them differently (P397): why, by the code's id. */
 const differsByReader = (db: GraphDb, consumers: readonly GraphNode[], type: string | undefined): Map<string, string> => {
@@ -127,6 +142,7 @@ export const compareFields = (
         id: site.id,
         line: site.line,
         ...(lacking.length === known.length ? {} : { notSentBy: lacking.slice(0, MOST_NAMED) }),
+        ...absenceOf(receiver.reading, name),
       });
     }
   }
@@ -253,6 +269,8 @@ export const channelContract = (
       }),
       consumers: shownConsumers.map(({ node, index }) => {
         const reading = receivers[index]!.reading;
+        // Handed nothing of the message (P405): said, where an empty list reads as "not read" once compacted.
+        if (reading.nothing === true) return { ...reader.annotate(projectDetail(node, 1)), readsNothing: true };
         return { ...reader.annotate(projectDetail(node, 1)), ...(reading.known ? { reads: only(fieldNames(reading)) } : {}) };
       }),
       // Consumers taking every type alike: compared with the rest, not listed (P404).

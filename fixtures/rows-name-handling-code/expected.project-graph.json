@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T15:57:35.732Z",
+  "builtAt": "2026-11-25T21:19:20.123Z",
   "services": [
     {
       "name": "shop-api",
@@ -214,6 +214,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "HELP_REQUESTED"
         ]

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T15:52:51.043Z",
+  "builtAt": "2026-11-25T21:14:21.786Z",
   "services": [
     {
       "name": "market-api",
@@ -244,6 +244,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "ITEMS_CHANGED"
         ]

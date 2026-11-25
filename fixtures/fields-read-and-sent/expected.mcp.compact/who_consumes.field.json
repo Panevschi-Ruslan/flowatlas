@@ -1,5 +1,5 @@
 {
-  "settled": "1 consumer of ORDER_READY, all listed",
+  "settled": "1 consumer of ORDER_READY reads label, all listed",
   "channel": {
     "id": "channel:order_updates",
     "loc": "src/orders/orders.service.ts:11",

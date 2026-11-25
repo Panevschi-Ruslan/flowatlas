@@ -8,6 +8,8 @@ import {
   SELECTS_OTHERS_META,
   SELECTS_REST_META,
   SELECTION_DIFFERS_META,
+  READS_NOTHING_META,
+  declarationOf as declarationAcrossFiles,
   definePass,
   evaluateExpression,
   findMethod,
@@ -368,6 +370,9 @@ export interface SelectionLookup {
 /** Fields a message is wrapped in, on its way to a handler: an event's `data`, a request's `body`. */
 const ENVELOPES = new Set(['data', 'payload', 'body', 'detail', 'message']);
 
+/** How many names and spreads deep a list the code writes out is followed (P405). */
+const MOST_LIST_HOPS = 6;
+
 /** The classes a set of values the code writes out is made with. */
 const SET_CLASSES: ReadonlySet<string> = new Set(['Set', 'ReadonlySet']);
 
@@ -625,9 +630,14 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
    * The strings a list or a set the code writes out holds: written in place, or
    * held in a constant of the module or a field of the class - `['A', 'B']`,
    * `new Set(['A', 'B'])`, `new Set<string>([…])`, `['A'] as const` (P362).
+   * Spreads of other sets and lists are followed (P405), and each element is
+   * read wherever it is written - an imported constant, an enum member, an
+   * `as const` list of another file - so `new Set([...OTHER_EVENTS,
+   * RESYNC_EVENT])` is the strings both hold; only an element worked out when
+   * the code runs leaves the list unread.
    */
   const listedValues = (expression: TsNode, depth = 0): string[] | undefined => {
-    if (depth > 3) return undefined;
+    if (depth > MOST_LIST_HOPS) return undefined;
     const node = peel(expression);
     const strings = (value: TsNode): string[] | undefined => {
       const evaluated = evaluateExpression(value);
@@ -635,17 +645,33 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
     };
     if (Node.isNewExpression(node) && SET_CLASSES.has(node.getExpression().getText())) {
       const [list] = node.getArguments();
-      return list === undefined ? undefined : (strings(peel(list)) ?? listedValues(list, depth + 1));
+      return list === undefined ? undefined : listedValues(list, depth + 1);
+    }
+    if (Node.isArrayLiteralExpression(node)) {
+      const out: string[] = [];
+      for (const element of node.getElements()) {
+        if (Node.isSpreadElement(element)) {
+          const spread = listedValues(element.getExpression(), depth + 1);
+          if (spread === undefined) return undefined;
+          out.push(...spread);
+          continue;
+        }
+        const one = evaluateExpression(element);
+        if (!one.resolved || typeof one.value !== 'string') return undefined;
+        out.push(one.value);
+      }
+      return out;
     }
     const direct = strings(node);
     if (direct !== undefined) return direct;
     let held: TsNode | undefined;
     if (Node.isIdentifier(node)) {
-      const declaration = node.getSymbol()?.getDeclarations()[0];
+      // Through an import to the constant another file exports (P405).
+      const declaration = declarationAcrossFiles(node);
       if (declaration !== undefined && Node.isVariableDeclaration(declaration)) held = declaration.getInitializer();
     } else if (Node.isPropertyAccessExpression(node)) {
       const holder = peel(node.getExpression());
-      const declaration = node.getNameNode().getSymbol()?.getDeclarations()[0];
+      const declaration = declarationAcrossFiles(node);
       if ((Node.isThisExpression(holder) || Node.isIdentifier(holder)) && declaration !== undefined && Node.isPropertyDeclaration(declaration)) held = declaration.getInitializer();
     }
     return held === undefined ? undefined : listedValues(held, depth + 1);
@@ -1134,6 +1160,15 @@ const functionOfHandler = (handler: ChosenHandler): { fn: FunctionLike; owner?: 
   return undefined;
 };
 
+/**
+ * Whether a chosen handler takes no parameter at all (P405): `private load():
+ * void`, which refetches what it shows, is handed nothing of the message.
+ */
+const takesNothing = (handler: ChosenHandler): boolean => {
+  const behind = functionOfHandler(handler);
+  return behind !== undefined && behind.fn.getParameters().length === 0;
+};
+
 /** A handler as the one a choice runs, no longer as one to follow into. */
 const withoutArgument = (handler: ChosenHandler): ChosenHandler =>
   handler.kind === 'method' ? { kind: 'method', method: handler.method } : handler.kind === 'function' ? { kind: 'function', fn: handler.fn } : handler;
@@ -1503,6 +1538,8 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
             ...(consumer.kind === undefined ? {} : { kind: consumer.kind }),
             ...(consumer.meta?.['adapter'] === undefined ? {} : { adapter: consumer.meta['adapter'] }),
             [SELECTED_BY_META]: consumer.id,
+            // A handler that takes no parameter is handed nothing of the message (P405): it reads none of its fields.
+            ...(takesNothing(handler) ? { [READS_NOTHING_META]: true } : {}),
             // A handler chosen by code that never runs never runs either.
             ...(typeof consumer.meta?.[UNREACHED_META] === 'string' ? { [UNREACHED_META]: consumer.meta[UNREACHED_META] } : {}),
           },

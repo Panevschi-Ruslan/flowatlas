@@ -135,7 +135,7 @@ export const fieldFindingsOf = (
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (const channel of channels) {
     const answer = channelContract(db, reader, { channel: channel.id, maxNodes: 1000 }) as {
-      missing?: Array<{ field: string; id: string; line: number; type?: string; notSentBy?: string[]; unsure?: string }>;
+      missing?: Array<{ field: string; id: string; line: number; type?: string; notSentBy?: string[]; unsure?: string; effect?: string }>;
       unused?: Array<{ field: string; type?: string }>;
       complete?: boolean;
       left?: string[];
@@ -164,7 +164,9 @@ export const fieldFindingsOf = (
         ...(reading?.file === undefined ? {} : { loc: `${reading.file}:${row.line}` }),
         message:
           `\`${row.field}\` is read by ${reading?.label ?? row.id} on ${crossing} and sent by ` +
-          (row.notSentBy === undefined ? 'none of its publishers' : `only some of its publishers (not ${row.notSentBy.join(', ')})`),
+          (row.notSentBy === undefined ? 'none of its publishers' : `only some of its publishers (not ${row.notSentBy.join(', ')})`) +
+          // What the handler does without it (P405): it checks first, so the message is dropped, not a crash.
+          (row.effect === undefined ? '' : `; it checks for it first and ${row.effect}`),
         precision: precisionOf('field-never-sent'),
         evidence: FIELD_EVIDENCE,
         ...(renamed === undefined ? {} : { fix: `likely renamed: ${renamed} is sent, ${row.field} is read` }),

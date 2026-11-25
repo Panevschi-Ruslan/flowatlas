@@ -3,6 +3,7 @@
   "entries": [
     {
       "id": "entry:shop-api:http:DELETE:/api/reports/:param",
+      "label": "DELETE /api/reports/:id",
       "loc": "src/reports/reports.controller.ts:31",
       "callers": 0
     },

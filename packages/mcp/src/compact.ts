@@ -464,8 +464,27 @@ const compactValue = (value: unknown, depth: number, under: readonly string[], p
   return compactObject(value, depth, under, pass, inList);
 };
 
+/** The longest label a compact row of a way in says with its path's parameter names in place of `:param` (P405). */
+export const RAW_LABEL_MOST = 80;
+
+/**
+ * A way in's row with its path's parameter names in its label where that is
+ * short (P405): `GET /api/admin/:tenantId/kits/auto-stopped` in place of
+ * `GET /api/admin/:param/…` beside `rawPath`, said once. A longer one keeps
+ * both.
+ */
+const rawPathInLabel = (row: Plain): Plain => {
+  if (typeof row.rawPath !== 'string' || typeof row.label !== 'string') return row;
+  const space = row.label.indexOf(' ');
+  if (space < 0) return row;
+  const said = `${row.label.slice(0, space)} ${row.rawPath}`;
+  if (said.length > RAW_LABEL_MOST) return row;
+  const { rawPath: _rawPath, ...rest } = row;
+  return { ...rest, label: said };
+};
+
 const compactObject = (given: Plain, depth: number, under: readonly string[], pass: Pass, inList: boolean): Plain => {
-  const row = flattened(given, pass);
+  const row = rawPathInLabel(flattened(given, pass));
   // A row of a list to choose among, not a step of a tree (P375).
   const listRow = inList && depth > 0 && !isPlain(given.node) && !('children' in given) && typeof row.id === 'string';
   // A step of a tree (get_flow, who_calls), whose types are said as its edge's are (P379).

@@ -104,6 +104,22 @@ const contractSettled = (answer: Plain): string | undefined => {
   return compared ? 'the two ends agree' : 'every field read is sent';
 };
 
+/**
+ * who_consumes and who_emits asked of a field (P405): how many ends read (or
+ * send) it, and the other channels where code does, as `alsoOn` names them.
+ * "no consumer of STEP_READY" said of a type three handlers choose, none of
+ * them reading the field, read as no handler at all.
+ */
+const fieldSettled = (key: 'consumers' | 'producers', answer: Plain, total: number, which: string, field: string): string => {
+  const noun = key.slice(0, -1);
+  const verb = key === 'consumers' ? 'read' : 'send';
+  const here = total === 0 ? `no ${noun}${which} ${verb}s ${field}` : `${plural(total, noun)}${which} ${total === 1 ? `${verb}s` : verb} ${field}, all listed`;
+  const elsewhere = (Array.isArray(answer.alsoOn) ? answer.alsoOn : [])
+    .filter((row): row is Plain => isPlain(row) && typeof row.channel === 'string' && typeof row.count === 'number' && row.count > 0)
+    .map((row) => String(row.channel).replace(/^channel:/, ''));
+  return elsewhere.length === 0 ? here : `${here}; on ${elsewhere.join(', ')} code does (alsoOn)`;
+};
+
 /** who_consumes and who_emits: every consumer (producer) there is, listed. */
 const endsSettled =
   (key: 'consumers' | 'producers') =>
@@ -113,6 +129,8 @@ const endsSettled =
     const which = typeof answer.type === 'string' ? ` of ${answer.type}` : '';
     // A type nothing selects, sure by where its name is written (P404): that sentence is what settles it.
     if (total === 0 && answer.sureness === 'sure' && typeof answer.unselected === 'string') return answer.unselected;
+    // Asked of a field (P405): the rows are the code reading (or sending) it, not every end; another channel's said too.
+    if (typeof answer.field === 'string') return fieldSettled(key, answer, total, which, answer.field);
     return total === 0 ? `no ${key.slice(0, -1)}${which}` : `${plural(total, key.slice(0, -1))}${which}, all listed`;
   };
 

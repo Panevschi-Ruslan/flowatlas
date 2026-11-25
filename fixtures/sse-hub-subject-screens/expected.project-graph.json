@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T15:58:46.018Z",
+  "builtAt": "2026-11-25T21:20:28.646Z",
   "services": [
     {
       "name": "boards-api",
@@ -2155,6 +2155,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "CARD_ARCHIVED"
         ]
@@ -2243,6 +2244,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "CARD_ARCHIVED"
         ]
@@ -2259,6 +2261,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "CARD_ADDED",
           "CARD_MOVED"
@@ -2318,6 +2321,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "CARD_ADDED"
         ]
@@ -2376,6 +2380,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "CARD_MOVED"
         ]
@@ -2428,6 +2433,7 @@
       "meta": {
         "kind": "sse",
         "selectedBy": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+        "readsNothing": true,
         "messageTypes": [
           "CREW_ASSIGNED"
         ]

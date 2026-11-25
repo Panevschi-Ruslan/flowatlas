@@ -1,0 +1,45 @@
+{
+  "channel": {
+    "id": "channel:tenant:*:events",
+    "type": "channel",
+    "label": "tenant:*:events",
+    "loc": "src/steps/steps.controller.ts:58",
+    "service": "desk-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumer",
+      "label": "PushService.dispatch",
+      "loc": "src/push/push.service.ts:36",
+      "service": "push-worker",
+      "kind": "event",
+      "selectedIn": "PushService.onEvent",
+      "via": "switch",
+      "endLine": 54,
+      "reach": "alive",
+      "from": "event tenant:*:events",
+      "readIn": [
+        {
+          "id": "push-worker#src/push/push.service.ts:PushService.dispatch",
+          "line": 49
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "type": "STEP_READY",
+  "field": "step",
+  "alsoOnRest": "4 other channels carry STEP_READY with no handler reading step",
+  "readsNothing": [
+    "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+    "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load"
+  ],
+  "complete": true,
+  "next": [
+    "check_contract({channel: \"channel:tenant:*:events\", type: \"STEP_READY\", field: \"step\"})",
+    "who_emits({channel: \"channel:tenant:*:events\", type: \"STEP_READY\", field: \"step\"})",
+    "impact({symbol: \"consumer:push-worker#src/push/push.service.ts:PushService.dispatch\"})",
+    "get_source({symbol: \"consumer:push-worker#src/push/push.service.ts:PushService.dispatch\"})"
+  ]
+}

@@ -3,6 +3,7 @@
   "entries": [
     {
       "id": "entry:stock-api:http:DELETE:/products/:param",
+      "label": "DELETE /products/:sku",
       "loc": "src/products/products.controller.ts:59",
       "reach": "dead",
       "callers": 0
@@ -16,6 +17,7 @@
     },
     {
       "id": "entry:stock-api:http:GET:/products/:param",
+      "label": "GET /products/:sku",
       "loc": "src/products/products.controller.ts:18",
       "reach": "alive",
       "callers": 1,
@@ -30,6 +32,7 @@
     },
     {
       "id": "entry:stock-api:http:PUT:/products/:param",
+      "label": "PUT /products/:sku",
       "loc": "src/products/products.controller.ts:54",
       "reach": "alive",
       "callers": 1,

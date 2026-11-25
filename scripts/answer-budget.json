@@ -3372,7 +3372,10 @@
           "alsoOn": {
             "channel:staff_feed": {
               "readers": [
-                "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady"
+                {
+                  "id": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+                  "line": 28
+                }
               ]
             }
           }
@@ -3382,7 +3385,7 @@
           "alsoOn"
         ]
       },
-      "note": "P404: no handler reads roomName on venue_events; alsoOn names the reader on staff_feed, the other channel the type is sent on, where an agent took six turns to find it."
+      "note": "P404: no handler reads roomName on venue_events; alsoOn names the reader on staff_feed, the other channel the type is sent on, where an agent took six turns to find it. P405: each reader is named with the line it reads at."
     },
     {
       "id": "get_flow.request-first",
@@ -3408,6 +3411,167 @@
         ]
       },
       "note": "P404: requests first and settled say where the request lands (GET /api/admin/:param/rooms/free-times in rooms-api, RoomsController.freeTimes); the unread step is named off the request's way, where the route sat deep in the tree beside 'unread: 1 step'."
+    },
+    {
+      "id": "who_consumes.field-on-the-fifth-channel",
+      "ask": "which methods read stepName of STEP_READY, asked on the tenant events channel",
+      "fixture": "pilot-left-open",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "STEP_READY",
+        "field": "stepName"
+      },
+      "lists": [
+        "consumers",
+        "alsoOn"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [],
+          "alsoOn": [
+            "channel:status_feed"
+          ]
+        },
+        "rowsSay": {
+          "alsoOn": {
+            "channel:status_feed": {
+              "readers": [
+                {
+                  "id": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+                  "line": 28
+                }
+              ]
+            }
+          }
+        },
+        "exact": [
+          "consumers",
+          "alsoOn"
+        ]
+      },
+      "note": "P405: STEP_READY is sent on five channels; alsoOn ranks them by readers of stepName and keeps status_feed, where ChatBot.handleStepReady reads it at line 28, the three session channels counted in alsoOnRest. P404 named the first three by name, none reading it, and an agent took 11 turns. The two screens that refetch are said in readsNothing, not 'not read'."
+    },
+    {
+      "id": "check_contract.dispatch-through-a-cast",
+      "ask": "does every field the handlers of CALL_STAFF on the tenant events channel read get sent",
+      "fixture": "pilot-left-open",
+      "tool": "check_contract",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "CALL_STAFF"
+      },
+      "lists": [
+        "missing"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "missing": [
+            "roomId"
+          ]
+        },
+        "rowsSay": {
+          "missing": {
+            "roomId": {
+              "guarded": true,
+              "effect": "returns early"
+            }
+          }
+        },
+        "exact": [
+          "missing"
+        ]
+      },
+      "note": "P405: PushService.dispatch holds the message in a local made by a cast and reads roomId under case 'CALL_STAFF' behind a check that returns early; the publisher sends roomNumber. Its reads were [] (its chooser parsed the message with JSON.parse and the reading stopped there)."
+    },
+    {
+      "id": "who_consumes.spread-set",
+      "ask": "which code handles RESYNC on the tenant events channel",
+      "fixture": "pilot-left-open",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "RESYNC"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [
+            "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P405: LiveFeed filters by new Set([...OTHER_EVENTS, ...SEAT_EVENTS, RESYNC_EVENT]), each part written in another file; read as their strings, where it was 'a set the code does not write out', the one open place."
+    },
+    {
+      "id": "list_entries.raw-path",
+      "ask": "which routes does KitsController declare, with the names of their path parameters",
+      "fixture": "pilot-left-open",
+      "tool": "list_entries",
+      "args": {
+        "in": "KitsController"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped",
+            "entry:desk-api:http:POST:/api/admin/:param/kits/:param/restart"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped": {
+              "label": "GET /api/admin/:tenantId/kits/auto-stopped"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P405: the compact row's label says :tenantId, the raw path, where it said :param only and an agent spent 8 turns finding the name; verbose rows say rawPath."
+    },
+    {
+      "id": "who_consumes.reads-nothing",
+      "ask": "which methods read step of STEP_READY on the tenant events channel",
+      "fixture": "pilot-left-open",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "STEP_READY",
+        "field": "step"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [
+            "consumer:push-worker#src/push/push.service.ts:PushService.dispatch"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P405: the two screens choosing STEP_READY call load(), which takes no parameter and refetches; they read nothing of the message, said in readsNothing, where they were 'not read for the fields it reads' and the answer was unsure."
     },
     {
       "id": "findings.that-agree",
@@ -3690,8 +3854,8 @@
       "calls": 1
     },
     "list_entries.class-callers": {
-      "chars": 1164,
-      "tokens": 291,
+      "chars": 1254,
+      "tokens": 314,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -3732,8 +3896,8 @@
       "calls": 1
     },
     "fields.handler-reads": {
-      "chars": 539,
-      "tokens": 135,
+      "chars": 551,
+      "tokens": 138,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3746,8 +3910,8 @@
       "calls": 1
     },
     "fields.missing-unused": {
-      "chars": 782,
-      "tokens": 196,
+      "chars": 822,
+      "tokens": 206,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3795,8 +3959,8 @@
       "calls": 1
     },
     "list_entries.paged": {
-      "chars": 2490,
-      "tokens": 623,
+      "chars": 2797,
+      "tokens": 700,
       "rows": 17,
       "complete": true,
       "calls": 6
@@ -3851,8 +4015,8 @@
       "calls": 1
     },
     "list_entries.class-uncalled": {
-      "chars": 498,
-      "tokens": 125,
+      "chars": 532,
+      "tokens": 133,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3949,15 +4113,15 @@
       "calls": 1
     },
     "list_entries.uncalled": {
-      "chars": 525,
-      "tokens": 132,
+      "chars": 583,
+      "tokens": 146,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "list_entries.dead-not-whole": {
-      "chars": 446,
-      "tokens": 112,
+      "chars": 469,
+      "tokens": 118,
       "rows": 2,
       "complete": false,
       "calls": 1
@@ -3991,8 +4155,8 @@
       "calls": 1
     },
     "check_contract.type-on-two-channels": {
-      "chars": 1354,
-      "tokens": 339,
+      "chars": 1394,
+      "tokens": 349,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -4061,15 +4225,15 @@
       "calls": 1
     },
     "findings.fields-renamed": {
-      "chars": 719,
-      "tokens": 180,
+      "chars": 761,
+      "tokens": 191,
       "rows": 1,
       "complete": null,
       "calls": 1
     },
     "findings.between-services": {
-      "chars": 5234,
-      "tokens": 1309,
+      "chars": 5281,
+      "tokens": 1321,
       "rows": 8,
       "complete": null,
       "calls": 1
@@ -4187,8 +4351,8 @@
       "calls": 0
     },
     "check_change.edited": {
-      "chars": 2549,
-      "tokens": 638,
+      "chars": 2548,
+      "tokens": 637,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -4362,8 +4526,8 @@
       "calls": 1
     },
     "who_consumes.field-on-another-channel": {
-      "chars": 894,
-      "tokens": 224,
+      "chars": 911,
+      "tokens": 228,
       "rows": 1,
       "complete": false,
       "calls": 1
@@ -4373,6 +4537,41 @@
       "tokens": 674,
       "rows": 1,
       "complete": false,
+      "calls": 1
+    },
+    "who_consumes.field-on-the-fifth-channel": {
+      "chars": 704,
+      "tokens": 176,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.dispatch-through-a-cast": {
+      "chars": 1061,
+      "tokens": 266,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.spread-set": {
+      "chars": 369,
+      "tokens": 93,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.raw-path": {
+      "chars": 651,
+      "tokens": 163,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.reads-nothing": {
+      "chars": 790,
+      "tokens": 198,
+      "rows": 1,
+      "complete": true,
       "calls": 1
     },
     "findings.that-agree": {

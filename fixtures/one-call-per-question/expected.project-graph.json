@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T15:56:41.458Z",
+  "builtAt": "2026-11-25T21:18:23.460Z",
   "services": [
     {
       "name": "shop-api",
@@ -719,14 +719,16 @@
             "line": 16,
             "when": [
               "HELP_REQUESTED"
-            ]
+            ],
+            "guarded": true
           },
           {
             "field": "table",
             "line": 16,
             "when": [
               "HELP_REQUESTED"
-            ]
+            ],
+            "guarded": true
           }
         ]
       }
@@ -778,14 +780,18 @@
             "line": 16,
             "when": [
               "HELP_REQUESTED"
-            ]
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
           },
           {
             "field": "deskId",
             "line": 17,
             "when": [
               "HELP_REQUESTED"
-            ]
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
           },
           {
             "field": "note",

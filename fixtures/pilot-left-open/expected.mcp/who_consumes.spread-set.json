@@ -1,0 +1,31 @@
+{
+  "channel": {
+    "id": "channel:tenant:*:events",
+    "type": "channel",
+    "label": "tenant:*:events",
+    "loc": "src/steps/steps.controller.ts:58",
+    "service": "desk-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "type": "consumer",
+      "label": "LiveFeed.redraw",
+      "loc": "src/live/live-feed.service.ts:23",
+      "service": "push-worker",
+      "kind": "event",
+      "via": "guard",
+      "endLine": 27,
+      "reach": "alive",
+      "from": "event tenant:*:events"
+    }
+  ],
+  "total": 1,
+  "type": "RESYNC",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:tenant:*:events\", type: \"RESYNC\"})",
+    "impact({symbol: \"consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw\"})",
+    "get_source({symbol: \"consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw\"})"
+  ]
+}

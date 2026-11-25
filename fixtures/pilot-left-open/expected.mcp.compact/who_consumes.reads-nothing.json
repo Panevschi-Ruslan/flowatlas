@@ -1,0 +1,34 @@
+{
+  "settled": "1 consumer of STEP_READY reads step, all listed",
+  "channel": {
+    "id": "channel:tenant:*:events",
+    "loc": "src/steps/steps.controller.ts:58",
+    "service": "desk-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+      "line": 36,
+      "kind": "event",
+      "selectedIn": "PushService.onEvent",
+      "via": "switch",
+      "reach": "alive",
+      "from": "event tenant:*:events",
+      "readIn": [
+        {
+          "id": "push-worker#src/push/push.service.ts:PushService.dispatch",
+          "line": 49
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "type": "STEP_READY",
+  "field": "step",
+  "alsoOnRest": "4 other channels carry STEP_READY with no handler reading step",
+  "readsNothing": [
+    "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+    "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load"
+  ],
+  "complete": true
+}

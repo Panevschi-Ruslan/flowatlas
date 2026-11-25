@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T15:51:32.723Z",
+  "builtAt": "2026-11-25T21:13:05.750Z",
   "services": [
     {
       "name": "catalog-api",
@@ -1257,7 +1257,8 @@
             "field": "success",
             "in": "ops-web#src/products.ts:productLine",
             "line": 12,
-            "guarded": true
+            "guarded": true,
+            "whenAbsent": "returns"
           },
           {
             "field": "data.costPrice",

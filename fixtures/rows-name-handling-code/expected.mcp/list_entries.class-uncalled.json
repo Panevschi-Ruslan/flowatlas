@@ -8,6 +8,7 @@
       "loc": "src/reports/reports.controller.ts:31",
       "service": "shop-api",
       "kind": "http",
+      "rawPath": "/api/reports/:id",
       "callers": 0
     },
     {

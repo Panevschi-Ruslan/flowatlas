@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:40.000Z",
+  "builtAt": "2026-11-25T21:11:30.221Z",
   "services": [
     {
       "name": "bookings",
@@ -33,11 +33,14 @@
           ],
           "returns": "{statusCode:201;body:string}"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 2,
-            "why": "handed to JSON.parse"
+            "field": "name",
+            "line": 3
+          },
+          {
+            "field": "slot",
+            "line": 3
           }
         ]
       }

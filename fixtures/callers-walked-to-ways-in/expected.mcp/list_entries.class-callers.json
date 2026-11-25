@@ -8,6 +8,7 @@
       "loc": "src/products/products.controller.ts:59",
       "service": "stock-api",
       "kind": "http",
+      "rawPath": "/products/:sku",
       "reach": "dead",
       "callers": 0
     },
@@ -29,6 +30,7 @@
       "loc": "src/products/products.controller.ts:18",
       "service": "stock-api",
       "kind": "http",
+      "rawPath": "/products/:sku",
       "reach": "alive",
       "callers": 1,
       "caller": "ui_api_call:store-web#src/app/products.client.ts:20:12"
@@ -51,6 +53,7 @@
       "loc": "src/products/products.controller.ts:54",
       "service": "stock-api",
       "kind": "http",
+      "rawPath": "/products/:sku",
       "reach": "alive",
       "callers": 1,
       "caller": "ui_api_call:store-web#src/app/products.client.ts:51:12"

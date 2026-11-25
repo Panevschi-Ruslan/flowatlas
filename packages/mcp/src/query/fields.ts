@@ -3,7 +3,9 @@ import {
   FIELDS_READ_META,
   FIELDS_UNREAD_META,
   makeMessageTypeId,
+  READS_NOTHING_META,
   parseTypeRef,
+  type AbsenceExit,
   type FieldRead,
   type FieldSureness,
   type FieldUnread,
@@ -28,6 +30,10 @@ export interface FieldSite {
   sureness?: FieldSureness;
   /** The code switches over the field's value, and what it does with a value no case names (P402). */
   switched?: SwitchedOver;
+  /** The code checks the field is there before it counts on it (P405, for a message's handler). */
+  guarded?: true;
+  /** What the code does where the field is absent, where the check leaves the function (P405). */
+  whenAbsent?: AbsenceExit;
 }
 
 /** One use of the value the reading could not follow. */
@@ -42,6 +48,8 @@ export interface Reading {
   known: boolean;
   reads: FieldSite[];
   unread: UnreadSite[];
+  /** Handed nothing of the message (P405): a handler taking no parameter, run for the types chosen, that refetches. */
+  nothing?: true;
 }
 
 const EMPTY: Reading = { known: false, reads: [], unread: [] };
@@ -100,6 +108,8 @@ export const readingOf = (db: GraphDb, id: string, type?: string): Reading => {
         line: row.line,
         ...(row.sureness === undefined ? {} : { sureness: row.sureness }),
         ...(row.switched === undefined ? {} : { switched: row.switched }),
+        ...(row.guarded === true ? { guarded: true as const } : {}),
+        ...(row.whenAbsent === undefined ? {} : { whenAbsent: row.whenAbsent }),
       })),
     unread: (Array.isArray(unread) ? (unread as FieldUnread[]) : [])
       .filter((row) => underType(row.when, type))
@@ -133,6 +143,8 @@ const handlerOf = (db: GraphDb, id: string): string | undefined => db.edgesFrom(
  * consumer whose dispatch chose it, made under its type.
  */
 export const consumerReading = (db: GraphDb, consumer: GraphNode, type?: string): Reading => {
+  // Handed nothing of the message (P405): it reads none of its fields, said rather than "not read".
+  if (consumer.meta?.[READS_NOTHING_META] === true) return { known: true, reads: [], unread: [], nothing: true };
   const handler = handlerOf(db, consumer.id);
   let reading = handler === undefined ? EMPTY : readingOf(db, handler, type);
   const chooser = consumer.meta?.['selectedBy'];

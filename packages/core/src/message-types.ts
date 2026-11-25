@@ -77,6 +77,12 @@ export const SELECTS_OTHERS_META = 'selectsOthers';
  * this says why a comparison resting on it is not sure.
  */
 export const SELECTION_DIFFERS_META = 'selectionDiffers';
+/**
+ * On a consumer drawn for a selection whose handler takes no parameter (P405):
+ * `private load(): void`, run for the types chosen, refetches what it shows
+ * and is handed nothing of the message, so it reads none of its fields.
+ */
+export const READS_NOTHING_META = 'readsNothing';
 /** On a consumer drawn for a selection: the consumer whose handler selected it. */
 export const SELECTED_BY_META = 'selectedBy';
 /**

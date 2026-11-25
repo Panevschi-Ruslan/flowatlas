@@ -1,0 +1,78 @@
+{
+  "channel": "channel:tenant:*:events",
+  "type": "CALL_STAFF",
+  "producers": [
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:16:5",
+      "type": "producer",
+      "label": "event tenant:*:events",
+      "loc": "src/steps/steps.service.ts:16",
+      "service": "desk-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /api/:param/rooms/:param/call",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "roomNumber",
+        "orderId",
+        "scopeId",
+        "ts"
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": "consumer:push-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumer",
+      "label": "PushService.dispatch",
+      "loc": "src/push/push.service.ts:36",
+      "service": "push-worker",
+      "kind": "event",
+      "endLine": 54,
+      "reach": "alive",
+      "from": "event tenant:*:events",
+      "reads": [
+        "orderId",
+        "roomId",
+        "scopeId",
+        "ts",
+        "type"
+      ]
+    },
+    {
+      "id": "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+      "type": "consumer",
+      "label": "CallBoardComponent.load",
+      "loc": "src/app/steps/call-board.component.ts:21",
+      "service": "staff-web",
+      "kind": "sse",
+      "endLine": 25,
+      "reach": "alive",
+      "from": "POST /api/:param/orders/:param/steps/:param/ready (desk-api)",
+      "ways": 6,
+      "readsNothing": true
+    }
+  ],
+  "missing": [
+    {
+      "field": "roomId",
+      "id": "push-worker#src/push/push.service.ts:PushService.dispatch",
+      "line": 42,
+      "guarded": true,
+      "effect": "returns early"
+    }
+  ],
+  "unused": [
+    {
+      "field": "roomNumber",
+      "sentBy": [
+        "producer:desk-api#src/steps/steps.service.ts:16:5"
+      ]
+    }
+  ],
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:tenant:*:events\", type: \"CALL_STAFF\"})"
+  ]
+}

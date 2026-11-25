@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "nest-redis-pubsub",
-  "generatedAt": "2026-11-25T12:58:10.777Z",
+  "generatedAt": "2026-11-25T21:17:32.675Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
@@ -432,11 +432,10 @@
           ],
           "returns": "void"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 39,
-            "why": "handed to JSON.parse"
+            "field": "id",
+            "line": 40
           }
         ]
       }

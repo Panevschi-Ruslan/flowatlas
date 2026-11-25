@@ -46,6 +46,8 @@ const selectorOutput = reachedNodeOutput.extend({
   readIn: z.array(z.object({ id: z.string(), line: z.number() })).optional(),
   /** The fields of the message it reads, at detail 2 (P368). */
   reads: z.array(z.string()).optional(),
+  /** Handed nothing of the message (P405): its handler takes no parameter, so it reads none of its fields. */
+  readsNothing: z.boolean().optional(),
 });
 
 /** A publish, with the fields it sends at detail 2 (P368). */
@@ -97,7 +99,20 @@ const endsOutput = (key: 'producers' | 'consumers') => ({
    * publishes or handlers counted, and with `field` the handlers reading it:
    * a type asked on one channel is often read on another.
    */
-  alsoOn: z.array(z.object({ channel: z.string(), count: z.number(), readers: z.array(z.string()).optional() })).optional(),
+  alsoOn: z
+    .array(
+      z.object({
+        channel: z.string(),
+        count: z.number(),
+        readers: z.array(z.object({ id: z.string(), line: z.number(), in: z.string().optional() })).optional(),
+        senders: z.array(z.string()).optional(),
+      }),
+    )
+    .optional(),
+  /** The other channels carrying the type with no code reading the field (or choosing the type), counted (P405). */
+  alsoOnRest: z.string().optional(),
+  /** With `field`: the handlers choosing the type that are handed nothing of the message, so read none of its fields (P405). */
+  readsNothing: z.array(z.string()).optional(),
   /** Publishes on the channel whose type was not read: any may send the type asked about. */
   maybe: z.array(nodeOutput).optional(),
   note: z.string().optional(),
@@ -233,12 +248,25 @@ const openLeft = (type: string, count: number, first: OpenRow): string =>
 /** The most code one `alsoOn` row names. */
 const MOST_ALSO_NAMED = 3;
 
+/** One other channel a type is sent on (P404, P405): its publishes or handlers counted, with a field the code there reading or sending it. */
+interface AlsoOnRow {
+  channel: string;
+  count: number;
+  /** The handlers there reading the field (P405): the consumer, the line of the read, and the function it is read in where that is another. */
+  readers?: Array<{ id: string; line: number; in?: string }>;
+  /** The publishes there sending the field (P405). */
+  senders?: string[];
+}
+
 /**
- * The other channels a type is sent on (P404), at most `MAX_CARRIERS`: each
- * with its publishes (who_emits) or the handlers choosing it (who_consumes)
- * counted, and with a field the handlers there that read it, named. A
- * pilot asked who reads a field of a type on the channel it was also sent
- * on, got none, and took six turns to find the reader on the other one.
+ * The other channels a type is sent on (P404): each with its publishes
+ * (who_emits) or the handlers choosing it (who_consumes) counted, and with a
+ * field the code there reading (or sending) it, named with the line. Ranked
+ * by the readers of the field, then by the handlers of the type (P405), and
+ * never cut where a channel has any: a pilot asked who reads a field of a type
+ * sent on five channels and was handed the first three by name, none reading
+ * it, the one that did left out. The channels with none are counted in
+ * `alsoOnRest`, one clause, not listed.
  */
 const alsoCarriedOn = (
   db: GraphDb,
@@ -246,22 +274,46 @@ const alsoCarriedOn = (
   value: string,
   key: 'producers' | 'consumers',
   field: string | undefined,
-): Array<{ channel: string; count: number; readers?: string[] }> =>
-  channelsCarrying(db, value)
+): { rows: AlsoOnRow[]; rest?: string } => {
+  const ranked = channelsCarrying(db, value)
     .filter((one) => one.channel !== asked)
-    .slice(0, MAX_CARRIERS)
-    .flatMap((one) => {
+    .flatMap((one): Array<AlsoOnRow & { handlers: number }> => {
       const typeNode = db.node(makeMessageTypeId(one.channel, one.type));
       if (typeNode === undefined) return [];
       const facts = messageTypeFacts(db, typeNode);
-      if (key === 'producers') return [{ channel: one.channel, count: facts.producers.length }];
+      if (key === 'producers') {
+        const count = facts.producers.length;
+        if (field === undefined) return [{ channel: one.channel, count, handlers: count }];
+        const senders = facts.producers.filter((node) => producerSends(db, node, one.channel, one.type)?.includes(topField(field)) === true).map((node) => node.id).sort();
+        return [{ channel: one.channel, count: senders.length, handlers: count, ...(senders.length === 0 ? {} : { senders: senders.slice(0, MOST_ALSO_NAMED) }) }];
+      }
       const choosing = facts.selectors.filter((selector) => selector.unreached === undefined).map((selector) => selector.consumer);
-      const takers =
-        choosing.length > 0 ? choosing : facts.receivers.filter((receiver) => receiver.takes === 'generic' && receiver.unreached === undefined).map((receiver) => receiver.consumer);
-      if (field === undefined) return [{ channel: one.channel, count: choosing.length }];
-      const readers = takers.filter((node) => consumerReading(db, node, one.type).reads.some((row) => readsField(row.field, field))).map((node) => node.id).sort();
-      return [{ channel: one.channel, count: readers.length, ...(readers.length === 0 ? {} : { readers: readers.slice(0, MOST_ALSO_NAMED) }) }];
-    });
+      if (field === undefined) return [{ channel: one.channel, count: choosing.length, handlers: choosing.length }];
+      // The handlers choosing it and those taking every type alike: either may read the field.
+      const generic = facts.receivers.filter((receiver) => receiver.takes === 'generic' && receiver.unreached === undefined).map((receiver) => receiver.consumer);
+      const takers = [...new Map([...choosing, ...generic].map((node) => [node.id, node])).values()].sort(byId);
+      const readers = takers.flatMap((node) => {
+        const site = consumerReading(db, node, one.type).reads.find((row) => readsField(row.field, field));
+        if (site === undefined) return [];
+        const handler = db.edgesFrom(node.id, ['handles'])[0]?.to;
+        return [{ id: node.id, line: site.line, ...(site.id === handler || site.id === node.id ? {} : { in: site.id }) }];
+      });
+      return [{ channel: one.channel, count: readers.length, handlers: choosing.length, ...(readers.length === 0 ? {} : { readers: readers.slice(0, MOST_ALSO_NAMED) }) }];
+    })
+    .sort((a, b) => b.count - a.count || b.handlers - a.handlers || (a.channel < b.channel ? -1 : a.channel > b.channel ? 1 : 0));
+  const rows = ranked.filter((row) => row.count > 0).map(({ handlers: _handlers, ...row }) => row);
+  const none = ranked.length - rows.length;
+  if (none === 0) return { rows };
+  const without =
+    field !== undefined
+      ? key === 'producers'
+        ? `no publish sending ${field}`
+        : `no handler reading ${field}`
+      : key === 'producers'
+        ? 'no publish read'
+        : 'no handler choosing it';
+  return { rows, rest: `${rows.length === 0 ? '' : 'and '}${none} other channel${none === 1 ? '' : 's'} carr${none === 1 ? 'ies' : 'y'} ${value} with ${without}` };
+};
 
 /** A selector as listed: the consumer, and where and how the choice was made. */
 const selectorRow = (
@@ -316,6 +368,8 @@ interface FieldsOfEnds {
   kept: GraphNode[];
   extra: Map<string, Record<string, unknown>>;
   left: string[];
+  /** With a field: the consumers handed nothing of the message (P405). */
+  nothing: string[];
 }
 
 const fieldsOfEnds = (
@@ -329,15 +383,22 @@ const fieldsOfEnds = (
   roles?: ReadonlyMap<string, string>,
 ): FieldsOfEnds => {
   const extra = new Map<string, Record<string, unknown>>();
-  if (field === undefined && detail < 2) return { kept: [...nodes], extra, left: [] };
+  if (field === undefined && detail < 2) return { kept: [...nodes], extra, left: [], nothing: [] };
   const kept: GraphNode[] = [];
   const left: string[] = [];
+  const nothing: string[] = [];
   for (const node of nodes) {
     if (key === 'consumers') {
       const reading = consumerReading(db, node, type);
       if (field === undefined) {
         kept.push(node);
-        if (reading.known) extra.set(node.id, { reads: fieldNames(reading) });
+        if (reading.nothing === true) extra.set(node.id, { readsNothing: true });
+        else if (reading.known) extra.set(node.id, { reads: fieldNames(reading) });
+        continue;
+      }
+      // Handed nothing of the message (P405): settled for the field, and said, never "not read".
+      if (reading.nothing === true) {
+        nothing.push(node.id);
         continue;
       }
       // Why it may read the field at all (P404): it chooses the type, or takes every type.
@@ -359,7 +420,7 @@ const fieldsOfEnds = (
     if (sends === undefined) left.push(`unsure: ${node.id} sends a shape not read`);
     else if (sends.includes(topField(field))) kept.push(node);
   }
-  return { kept, extra, left };
+  return { kept, extra, left, nothing };
 };
 
 export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
@@ -468,7 +529,8 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
         ]);
         const ends = fieldsOfEnds(db, key, candidates.filter(inService(input.service)).sort(byId), parent.id, wanted, field, detail, roles);
         // The other channels the type is sent on (P404): the field may be read there and not here.
-        const alsoOn = alsoCarriedOn(db, parent.id, wanted, key, field);
+        const also = alsoCarriedOn(db, parent.id, wanted, key, field);
+        const alsoOn = also.rows;
         const nodes = ends.kept;
         const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
         const said = key === 'consumers' ? unselectedSaid(facts) : undefined;
@@ -494,6 +556,8 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
             ...(said === undefined ? {} : { unselected: said.said, sureness: said.sureness }),
             ...(unreadNamed.length === 0 ? {} : { selectionUnread: unreadNamed }),
             ...(alsoOn.length === 0 ? {} : { alsoOn }),
+            ...(also.rest === undefined ? {} : { alsoOnRest: also.rest }),
+            ...(ends.nothing.length === 0 ? {} : { readsNothing: ends.nothing.slice(0, MOST_UNREAD_NAMED) }),
             ...(key === 'producers' && facts.producers.length === 0
               ? {
                   note:

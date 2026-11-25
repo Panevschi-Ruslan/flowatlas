@@ -77,7 +77,8 @@ describe('who reads a field of a request body', () => {
 describe('whether a publish sends what its handlers read', () => {
   it('names the field read and not sent, and the one sent and never read', async () => {
     const answer = await call('check_contract', { channel: 'desk_events', type: 'HELP_REQUESTED' });
-    expect(answer.missing).toEqual([{ field: 'deskId', id: `${NOTIFY}.onDeskEvent`, line: 16 }]);
+    // Read behind `if (!evt.deskId) return;` (P405): the handler drops the message, it does not fail.
+    expect(answer.missing).toEqual([{ field: 'deskId', id: `${NOTIFY}.onDeskEvent`, line: 16, guarded: true, effect: 'returns early' }]);
     expect(answer.unused).toEqual([{ field: 'deskNumber', sentBy: ['producer:shop-api#src/desk/desk.service.ts:10:11'] }]);
     expect(answer.producers[0].sends).toEqual(['type', 'deskNumber', 'note']);
     expect(answer.complete).toBe(true);

@@ -42,7 +42,9 @@
         {
           "field": "deskId",
           "id": "ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent",
-          "line": 16
+          "line": 16,
+          "guarded": true,
+          "effect": "returns early"
         }
       ],
       "unused": [

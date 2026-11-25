@@ -1,6 +1,6 @@
 import { Node, SyntaxKind, type ArrayBindingPattern, type CallExpression, type Node as TsNode, type ObjectBindingPattern } from 'ts-morph';
 import { isDiscriminatorField } from './message-types.js';
-import { presenceChecked } from './presence-guards.js';
+import { absenceExit, presenceChecked, type AbsenceExit } from './presence-guards.js';
 import { switchedOver, type SwitchedOver } from './switch-cases.js';
 import { functionLikeOf, type FunctionLike } from './types/signatures.js';
 
@@ -57,6 +57,13 @@ export interface FieldRead {
   file?: string;
   /** The code checks the field is there before it counts on it (`?.`, `??`, `if (x)`, `== null`, `'k' in o`): it handles its absence (P395). */
   guarded?: true;
+  /**
+   * What the code does where the field is absent, where a check before the
+   * read leaves the function (P405): `returns` early (`if (!evt.roomId)
+   * return;`) or `throws`. A message missing the field then ends the handler,
+   * it does not fail it.
+   */
+  whenAbsent?: AbsenceExit;
   /**
    * The code switches over the field's value (P402): whether a `default`
    * handles a value no case names, and the values the cases name, so a type
@@ -283,9 +290,16 @@ const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readon
     line,
     ...(when === undefined || when.length === 0 ? {} : { when: [...when] }),
     ...(sureness === undefined ? {} : { sureness }),
-    ...(walk.options.guards === true && presenceChecked(value, path.length) ? { guarded: true as const } : {}),
+    ...guardOf(walk, value, path.length),
     ...switchedAt(value),
   });
+};
+
+/** Whether a read is checked for presence first, and what the code does without it, where guards are read (P395, P405). */
+const guardOf = (walk: Walk, value: TsNode, depth: number): { guarded?: true; whenAbsent?: AbsenceExit } => {
+  if (walk.options.guards !== true || !presenceChecked(value, depth)) return {};
+  const exit = absenceExit(value, depth);
+  return { guarded: true, ...(exit === undefined ? {} : { whenAbsent: exit }) };
 };
 
 /** The switch over a field's value, where the code switches over it (P402). */
@@ -808,6 +822,11 @@ const settle = (
     return;
   }
   if (Node.isCallExpression(parent) && parent.getArguments().includes(node as never)) {
+    // A message handed over as text and parsed (P405): what `JSON.parse` answers is the message itself.
+    if (state.kind === 'payload' && parent.getArguments()[0] === node && isJsonParse(parent)) {
+      followValue(walk, fn, bindings, parent, state, depth, when);
+      return;
+    }
     handOff(walk, parent, parent.getArguments().indexOf(node as never), state, depth, when, fn, node);
     return;
   }
@@ -852,6 +871,9 @@ const settle = (
     }
   }
 };
+
+/** `JSON.parse(text)`, the call that turns a message handed over as text into the message. */
+const isJsonParse = (call: CallExpression): boolean => call.getExpression().getText().replace(/\s+/g, '') === 'JSON.parse';
 
 /** The local a value is assigned to, where the left of an `=` names one declared in the function itself. */
 const localAssigned = (left: TsNode, fn: FunctionLike): (TsNode & { getNameNode(): TsNode }) | undefined => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:25:04.707Z",
+  "builtAt": "2026-11-25T21:19:32.144Z",
   "services": [
     {
       "name": "ledger",
@@ -564,11 +564,22 @@
           ],
           "returns": "{statusCode:201;body:string}"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 6,
-            "why": "handed to JSON.parse"
+            "field": "amount",
+            "line": 10
+          },
+          {
+            "field": "id",
+            "line": 10
+          },
+          {
+            "field": "team",
+            "line": 10
+          },
+          {
+            "field": "id",
+            "line": 13
           }
         ]
       }

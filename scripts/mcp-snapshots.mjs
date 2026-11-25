@@ -318,6 +318,22 @@ const ANSWERS_SETTLE_CASES = [
 ];
 const ANSWERS_SETTLE_COMPACT_CASES = ANSWERS_SETTLE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
+/**
+ * What a pilot left open after P404 (P405): the channel whose handler reads
+ * the field kept in `alsoOn`, a dispatcher read through its cast, a set built
+ * by spreading others, a route's parameter names on a list's rows, and
+ * screens that refetch said to read nothing.
+ */
+const PILOT_LEFT_OPEN_CASES = [
+  ['who_consumes.field-on-the-fifth-channel', 'who_consumes', { channel: 'tenant:*:events', type: 'STEP_READY', field: 'stepName' }],
+  ['who_emits.other-channels-ranked', 'who_emits', { channel: 'tenant:*:events', type: 'STEP_READY' }],
+  ['check_contract.dispatch-through-a-cast', 'check_contract', { channel: 'tenant:*:events', type: 'CALL_STAFF' }],
+  ['who_consumes.spread-set', 'who_consumes', { channel: 'tenant:*:events', type: 'RESYNC' }],
+  ['list_entries.raw-path', 'list_entries', { in: 'KitsController' }],
+  ['who_consumes.reads-nothing', 'who_consumes', { channel: 'tenant:*:events', type: 'STEP_READY', field: 'step' }],
+];
+const PILOT_LEFT_OPEN_COMPACT_CASES = PILOT_LEFT_OPEN_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+
 /** The same impact, compact (P365), at both levels of detail: what an agent is handed. */
 const CALLING_SIDE_COMPACT_CASES = [
   ['impact.calling-side', 'impact', { symbol: CALLING_SIDE_TARGET, verbose: false }],
@@ -1237,6 +1253,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'answers-that-settle'),
     outDir: join(root, 'fixtures', 'answers-that-settle', 'expected.mcp.compact'),
     cases: ANSWERS_SETTLE_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'pilot-left-open'),
+    outDir: join(root, 'fixtures', 'pilot-left-open', 'expected.mcp'),
+    cases: PILOT_LEFT_OPEN_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'pilot-left-open'),
+    outDir: join(root, 'fixtures', 'pilot-left-open', 'expected.mcp.compact'),
+    cases: PILOT_LEFT_OPEN_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'angular-rendered-reach'),

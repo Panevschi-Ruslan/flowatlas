@@ -29,7 +29,8 @@
       "via": "filter",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
-      "ways": 8
+      "ways": 8,
+      "readsNothing": true
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
@@ -44,7 +45,8 @@
       "via": "if",
       "reach": "alive",
       "from": "POST /boards/:param/cards/:param/move (boards-api)",
-      "ways": 8
+      "ways": 8,
+      "readsNothing": true
     },
     {
       "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:09.477Z",
+  "builtAt": "2026-11-25T21:19:35.804Z",
   "services": [
     {
       "name": "shop",
@@ -553,11 +553,26 @@
           ],
           "returns": "{statusCode:201;body:string}"
         },
-        "fieldsRead": [],
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 9
+          },
+          {
+            "field": "id",
+            "in": "shop#src/repository.ts:Repository.save",
+            "line": 10
+          }
+        ],
         "fieldsUnread": [
           {
-            "line": 7,
-            "why": "handed to JSON.parse"
+            "line": 10,
+            "why": "handed to JSON.stringify"
+          },
+          {
+            "in": "shop#src/repository.ts:Repository.save",
+            "line": 10,
+            "why": "handed to JSON.stringify"
           }
         ]
       }
@@ -635,11 +650,11 @@
           ],
           "returns": "{statusCode:204}"
         },
-        "fieldsRead": [],
-        "fieldsUnread": [
+        "fieldsRead": [
           {
-            "line": 4,
-            "why": "handed to JSON.parse"
+            "field": "id",
+            "in": "shop#src/repository.ts:Store.put",
+            "line": 19
           }
         ]
       }
