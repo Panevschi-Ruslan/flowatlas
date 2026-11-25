@@ -1,4 +1,5 @@
 {
+  "settled": "its request lands on GET /api/admin/:param/catalog/grouped (shop-api), AdminCatalogController.grouped; 1 way in reaches it, all listed",
   "target": {
     "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
     "line": 17,
@@ -41,9 +42,5 @@
       "by": "shop-admin#src/app/catalog.component.ts:CatalogComponent"
     }
   ],
-  "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:shop-admin:screen:/catalog\"})",
-    "describe_for_prompt({id: \"entry:shop-admin:screen:/catalog\"})"
-  ]
+  "complete": true
 }

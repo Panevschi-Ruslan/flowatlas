@@ -5,6 +5,7 @@ import {
   impactOf,
   projectDetail,
   projectEdge,
+  settledAnswer,
   staleFor,
   throughByConsumer,
   type FlowNode,
@@ -217,11 +218,11 @@ const answerImpact = (symbol: string, options: ImpactOptions, io: QueryIo): void
     });
 
     if (settings.format === 'json') {
-      // What an agent is handed, compact as the tool's (P365); `--verbose` prints it whole.
+      // What an agent is handed, compact as the tool's (P365) and settled where it is whole (P403); `--verbose` prints it whole.
       const stale = staleFor(handle.path, of.answer);
       if (stale !== undefined) io.err(`${staleLine(stale)}\n`);
       const said = stale === undefined ? of.answer : { ...of.answer, stale };
-      const text = `${options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(compactAnswer(said, { tool: 'impact' }))}\n`;
+      const text = `${options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(settledAnswer('impact', compactAnswer(said, { tool: 'impact' })))}\n`;
       io.out(text);
       noteAnswer(said, text.length);
       return;

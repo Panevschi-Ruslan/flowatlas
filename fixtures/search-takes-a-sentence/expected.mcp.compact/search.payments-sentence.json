@@ -87,6 +87,6 @@
   ],
   "next": [
     "get_flow({entry: \"entry:shop-api:http:POST:/payments\"})",
-    "describe_for_prompt({id: \"entry:shop-api:http:POST:/payments\"})"
+    "impact({symbol: \"entry:shop-api:http:POST:/payments\"})"
   ]
 }

@@ -133,10 +133,10 @@ Read, a turn of its own.
   `.mcp.json` entry saying `"alwaysLoad": false` or `--no-always-load`), the
   line is the one call that loads them, the `select:` line written out under
   the name the server is registered as there (`mcp__flowatlas__who_calls`, …);
-- an answer that says `complete: true` is the whole answer: check only what it
-  lists as unread or unsure, not its rows; keep its `reach: "maybe"` rows when
-  asked what breaks: they sit behind an unread call (`gap`), not nowhere
-  (P367);
+- an answer that says `settled` or `complete: true` is the whole answer:
+  check only what it lists as unread or unsure, not its rows; keep its
+  `reach: "maybe"` rows when asked what breaks: they sit behind an unread call
+  (`gap`), not nowhere (P367);
 - several in one call, under each tool's own key: who_calls and impact
   `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`;
   calls that do not need each other together;
@@ -791,6 +791,48 @@ question is answered in the call that asked it.
   shows `reach`, no `who_calls` or `search` for a row that shows `from`; the
   call that pages or walks on from a cut stays first. `dead` on a node with
   several ways in suggests `impact`, which lists them all.
+
+#### Answers that end the question (P403)
+
+A pilot's costly sessions took a call the answer itself suggested, or doubted
+an answer that was right: turns, not answer size, are what a session pays for.
+
+- **`settled`.** A compact answer that settles what its tool is asked says so
+  first, in one short field, and names no `next`: `impact` with `complete:
+  true` (`"3 ways in break, all listed; more beyond a channel, counted in
+  throughChannels"`), `who_calls` with `complete: true` (`"its request lands
+  on GET /api/orders/:param (shop-api), OrdersController.findOne; 1 way in
+  reaches it, all listed"`), `check_contract` on a call whose ends were compared
+  or on a channel with nothing left unread (`"the two ends agree"`, `"every
+  field read is sent"`, `"1 field read and sent by none: missing"`), and
+  `who_consumes` / `who_emits` with `complete: true` (`"3 consumers of
+  ORDER_READY, all listed"`). An answer that is not whole, an error or a page
+  with more never settles and keeps its `next`; `verbose: true` answers as the
+  tool wrote it. `flowatlas impact --format json` says it too.
+- **Through a channel, counted.** `impact` and `who_calls` name the impact
+  across a channel in `next` only where `throughChannels` could not count the
+  ways in beyond it (its walk stopped at its bound, `walkCut`); counted, they
+  are in the answer, and the channel's impact repeated them at length.
+  `describe_for_prompt` on the flow `get_flow` just drew, or names in `next`,
+  is left out of a compact `next` too: the same steps written as a prompt.
+- **Each unread choice named.** `who_consumes` of a type no code that runs
+  selects lists, under `selectionUnread`, every consumer whose choice was not
+  read (at most ten, the rest counted in `left`): its id, the line of its
+  handler, where the choice would be written, and what was not read
+  (`this.kept.has(event.type) tests the type against a set the code does not
+  write out`, or that it takes every type without choosing). `left` points at
+  them; `complete` is true only where every consumer's choice was read.
+- **Every answer held to a size.** Past `MAX_ANSWER_CHARS` (12,000
+  characters), compact or verbose, an answer's longest list keeps the rows
+  that fit in the order the tool ranked them, and the answer says
+  `complete: false`, a `cap:` line in `left` and the call for the rest: the
+  same call at the next `offset` (with `nextOffset`) where the tool pages, the
+  same call without `verbose` for a verbose one, else a narrower question:
+  `maxNodes` counts rows, not what each row says.
+- **A common name searched as its call.** A `maybe` row's `confirm` (verbose
+  only) names a method whose name another method or function of its
+  repository shares by its call, `.start(`, searched as written; the bare word
+  met every one of them.
 
 #### Answers never falsely complete (P381)
 

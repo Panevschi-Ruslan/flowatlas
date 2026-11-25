@@ -1,4 +1,5 @@
 {
+  "settled": "3 ways in break, all listed",
   "target": {
     "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
     "line": 17,
@@ -85,9 +86,5 @@
   "servicesWithoutEntry": [],
   "channels": [],
   "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
-    "describe_for_prompt({id: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})"
-  ],
   "note": "rows of a list leave out their structured facts (access, fails): get_flow({entry: id}) or impact({symbol: id}) at detail 2 gives one node's, verbose: true every row's"
 }

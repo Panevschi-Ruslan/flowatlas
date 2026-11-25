@@ -53,7 +53,7 @@ export interface RowShown {
 const CALL = /^(\w+)\(\{(\w+): ("(?:[^"\\]|\\.)*")/;
 
 /** The tool a hint calls and the first value it hands, or nothing for a hint written another way. */
-const calledWith = (hint: string): { tool: string; key: string; value: string } | undefined => {
+export const calledWith = (hint: string): { tool: string; key: string; value: string } | undefined => {
   const found = CALL.exec(hint);
   if (found === null) return undefined;
   try {

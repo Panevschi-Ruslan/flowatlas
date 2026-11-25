@@ -65,7 +65,8 @@ export const AGENT_HABITS: readonly string[] = Object.freeze([
   'Before changing a route, handler, body type or message payload: `impact` first.',
   // P396: a question about text in code went to find_symbol first and then to a grep anyway, a turn for nothing.
   TEXT_IS_A_GREP,
-  'A `complete: true` answer is whole, rows need no check; keep `reach: "maybe"` rows when asked what breaks.',
+  // P403: `settled` says what a whole answer adds up to; a right answer doubted cost a get_flow and a Read.
+  'A `settled` or `complete: true` answer is whole: check no row; keep `reach: "maybe"` rows for what breaks.',
   // P382: each tool's own key, where one `ids` was named for all and who_calls refused it.
   'Several in one call: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`; independent calls in one turn.',
   'Answers are compact: `verbose: true` gives every field.',
@@ -81,7 +82,7 @@ export const AGENT_HABITS: readonly string[] = Object.freeze([
 export const AGENT_TERMINAL_HABITS: readonly string[] = Object.freeze([
   'Before changing a route, handler, body type or message payload: `flowatlas impact <symbol>` first.',
   TEXT_IS_A_GREP,
-  'An answer with `complete: true` is the whole answer: check only what it lists as unread or unsure; keep `reach: "maybe"` rows when asked what breaks.',
+  'An answer with `settled` or `complete: true` is the whole answer: check only what it lists as unread or unsure; keep `reach: "maybe"` rows when asked what breaks.',
   'Answers are compact: `--verbose` gives every field; run independent commands in one turn.',
 ]);
 

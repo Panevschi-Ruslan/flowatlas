@@ -26,6 +26,6 @@
   "complete": true,
   "next": [
     "get_flow({entry: \"entry:angular-basic:screen:/reports\"})",
-    "describe_for_prompt({id: \"entry:angular-basic:screen:/reports\"})"
+    "impact({symbol: \"entry:angular-basic:screen:/reports\"})"
   ]
 }

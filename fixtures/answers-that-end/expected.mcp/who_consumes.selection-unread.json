@@ -1,0 +1,34 @@
+{
+  "channel": {
+    "id": "channel:packing_events",
+    "type": "channel",
+    "label": "packing_events",
+    "loc": "src/orders/orders.service.ts:20",
+    "service": "shop-api"
+  },
+  "consumers": [],
+  "total": 0,
+  "type": "ORDER_DELAYED",
+  "unselected": "no code that runs selects ORDER_DELAYED on packing_events: 2 consumers choose other types (PackBoard.onEvent, Receipts.onEvent); CourierPager.onEvent passes every type on without choosing, and what takes them past it is not read; AuditFeed.onEvent not read (this.kept.has(event.type) tests the type against a set the code does not write out.)",
+  "sureness": "unsure",
+  "selectionUnread": [
+    {
+      "id": "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+      "loc": "src/packing/audit-feed.service.ts:27",
+      "why": "this.kept.has(event.type) tests the type against a set the code does not write out."
+    },
+    {
+      "id": "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+      "loc": "src/packing/courier-pager.service.ts:26",
+      "why": "takes every type without choosing; what takes them past it is not read"
+    }
+  ],
+  "complete": false,
+  "left": [
+    "unsure: 2 consumers whose choice was not read: selectionUnread"
+  ],
+  "next": [
+    "who_emits({channel: \"channel:packing_events\", type: \"ORDER_DELAYED\"})",
+    "who_consumes({channel: \"channel:packing_events\"})"
+  ]
+}

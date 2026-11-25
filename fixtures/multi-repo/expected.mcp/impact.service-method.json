@@ -130,7 +130,6 @@
   ],
   "complete": true,
   "next": [
-    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", channel: \"order.created\"})",
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",
     "impact({symbol: \"entry:billing:event:invoice.requested\"})"

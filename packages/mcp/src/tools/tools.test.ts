@@ -375,7 +375,9 @@ describe('the tools a session is offered', () => {
     // P384 findings, P387 check_change and P391 answer fields: 20,225 of output schemas, which the model never reads.
     // P393 says where a row's code ends (`endLine`), how to confirm a maybe (`confirm`, in every reached row) and one
     // `requests` list: 21,457, which the model never reads either. P395's findings `warnings`: 21,561.
-    expect(output.length).toBeLessThan(21600);
+    // P403 declares on every output schema what the boundary may add (a size cut's `complete`, `left`, `next`,
+    // `nextOffset`, and `settled` on who_consumes and who_emits) and who_consumes' `selectionUnread`: 22,409.
+    expect(output.length).toBeLessThan(22450);
   });
 
   /**

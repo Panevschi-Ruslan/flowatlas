@@ -106,8 +106,9 @@ describe('what lies only beyond a channel is counted apart, and listed on asking
       },
     ]);
     expect(answer.channels).toEqual(CHANNELS.map((channel) => `channel:${channel}`));
-    // A consumer on several channels is listed by the consumer.
-    expect(answer.next[0]).toBe(`impact({symbol: "${ITEMS}", channel: "${BOT}"})`);
+    // Counted whole, the ways beyond are in the answer: no call lists them again (P403); asked, a consumer on
+    // several channels is listed by the consumer.
+    expect(answer.next.some((hint: string) => hint.includes('channel:'))).toBe(false);
   });
 
   it('lists the ways in beyond the channel when it is asked for, each through it', async () => {
@@ -159,12 +160,13 @@ describe('a row counts the ways in whose code reaches it', () => {
 });
 
 describe('who_calls counts what lies past a channel (P378)', () => {
-  it('says the bot once, its channels and how many ways in lie past them, no sample, and names the impact call listing them', async () => {
+  it('says the bot once, its channels and how many ways in lie past them, no sample, and no call listing them again', async () => {
     const answer = await call('who_calls', { symbol: ITEMS });
     expect(answer.throughChannels).toEqual([{ consumer: BOT, channels: CHANNELS, ways: 5 }]);
     expect(answer.waysIn.map((row: { id: string }) => row.id)).not.toContain('entry:store-web:screen:/orders');
     expect(answer.complete).toBe(true);
-    expect(answer.next).toContain(`impact({symbol: "${ITEMS}", channel: "${BOT}"})`);
+    // The count is whole (no walk beyond stopped at its bound), so the impact listing them adds nothing (P403).
+    expect(answer.next).not.toContain(`impact({symbol: "${ITEMS}", channel: "${BOT}"})`);
   });
 
   it('the compact answer keeps the row whole', async () => {

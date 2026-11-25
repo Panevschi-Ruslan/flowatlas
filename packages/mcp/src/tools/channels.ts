@@ -73,6 +73,11 @@ const endsOutput = (key: 'producers' | 'consumers') => ({
   /** "No code selects this type", with who receives the channel instead and how sure that is. */
   unselected: z.string().optional(),
   sureness: z.string().optional(),
+  /**
+   * Each consumer whose choice of type was not read (P403): where it is and
+   * what was not read, so one Read settles "nothing selects it".
+   */
+  selectionUnread: z.array(z.object({ id: z.string(), loc: z.string().optional(), line: z.number().optional(), why: z.string() })).optional(),
   /** Publishes on the channel whose type was not read: any may send the type asked about. */
   maybe: z.array(nodeOutput).optional(),
   note: z.string().optional(),
@@ -99,6 +104,30 @@ const byId = (a: { id: string }, b: { id: string }): number => (a.id < b.id ? -1
 /** The values of the types read on a channel, in order. */
 const typeValues = (db: GraphDb, channel: string): string[] =>
   messageTypesOn(db, channel).map((node) => String(node.meta?.['messageType'] ?? node.label));
+
+/** The most consumers `selectionUnread` names; the rest are counted in `left`. */
+const MOST_UNREAD_NAMED = 10;
+
+/** Why a consumer that passes every type on leaves the choice unread. */
+const PASSES_ON = 'takes every type without choosing; what takes them past it is not read';
+
+/**
+ * The consumers of a channel whose choice of type was not read (P403), each
+ * where it is - its handler's line, where the choice would be written, else
+ * its own - and what was not read. "2 choose types the graph could not read
+ * (A.f, B.g)" sent agents grepping across repositories; a file, a line and a
+ * reason is one Read.
+ */
+const selectionUnreadOf = (db: GraphDb, facts: MessageTypeFacts): Array<{ id: string; loc?: string; why: string }> =>
+  facts.receivers
+    .filter((receiver) => receiver.unreached === undefined && receiver.takes !== 'selects')
+    .map((receiver) => {
+      const [handles] = db.edgesFrom(receiver.consumer.id, ['handles']);
+      const handler = handles === undefined ? undefined : db.node(handles.to);
+      const at = handler?.file !== undefined ? handler : receiver.consumer;
+      const loc = at.file === undefined ? undefined : at.line === undefined ? at.file : `${at.file}:${at.line}`;
+      return { id: receiver.consumer.id, ...(loc === undefined ? {} : { loc }), why: receiver.takes === 'generic' ? PASSES_ON : (receiver.why ?? 'its choice was not read') };
+    });
 
 /** A selector as listed: the consumer, and where and how the choice was made. */
 const selectorRow = (
@@ -300,6 +329,8 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
         const nodes = ends.kept;
         const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
         const said = key === 'consumers' ? unselectedSaid(facts) : undefined;
+        const selectionUnread = said?.sureness === 'unsure' ? selectionUnreadOf(db, facts) : [];
+        const unreadNamed = selectionUnread.slice(0, MOST_UNREAD_NAMED);
         const maybe = key === 'producers' && facts.producers.length === 0 ? facts.unreadProducers : [];
         const args = { channel: parent.id, type: wanted, field, service: input.service, detail: input.detail, maxNodes };
         const rows = items.map((node) => ({
@@ -316,6 +347,7 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
             type: wanted,
             ...(field === undefined ? {} : { field }),
             ...(said === undefined ? {} : { unselected: said.said, sureness: said.sureness }),
+            ...(unreadNamed.length === 0 ? {} : { selectionUnread: unreadNamed }),
             ...(key === 'producers' && facts.producers.length === 0
               ? {
                   note:
@@ -329,7 +361,10 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
             ...completeOf([
               pageLeft(total, items.length, input.offset, nextOffset),
               key === 'producers' && unreadSaid(facts.unreadProducers.length, parent.label, wanted),
-              said?.sureness === 'unsure' && `unsure: ${said.said}`,
+              said?.sureness === 'unsure' &&
+                (selectionUnread.length === 0
+                  ? `unsure: ${said.said}`
+                  : `unsure: ${selectionUnread.length} consumer${selectionUnread.length === 1 ? '' : 's'} whose choice was not read: selectionUnread${selectionUnread.length > unreadNamed.length ? ` names ${unreadNamed.length}` : ''}`),
               filterLeft(elsewhere, key, input.service),
               ...ends.left,
               ...reader.left(),

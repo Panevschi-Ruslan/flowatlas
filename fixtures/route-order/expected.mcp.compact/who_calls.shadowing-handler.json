@@ -1,4 +1,5 @@
 {
+  "settled": "2 ways in reach it, all listed",
   "target": {
     "id": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
     "line": 14,
@@ -69,9 +70,5 @@
     }
   ],
   "unreached": 1,
-  "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:shop-api:http:GET:/orders/:param\"})",
-    "describe_for_prompt({id: \"entry:shop-api:http:GET:/orders/:param\"})"
-  ]
+  "complete": true
 }

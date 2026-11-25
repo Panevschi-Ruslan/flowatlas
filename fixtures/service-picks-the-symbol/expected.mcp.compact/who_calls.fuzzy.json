@@ -70,6 +70,6 @@
   ],
   "next": [
     "get_flow({entry: \"entry:lending-api:http:GET:/books/:param\"})",
-    "describe_for_prompt({id: \"entry:lending-api:http:GET:/books/:param\"})"
+    "impact({symbol: \"entry:lending-api:http:GET:/books/:param\"})"
   ]
 }

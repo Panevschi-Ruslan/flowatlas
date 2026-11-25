@@ -84,7 +84,7 @@
   "unresolvedOnPath": 0,
   "complete": true,
   "next": [
-    "describe_for_prompt({id: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})",
-    "impact({symbol: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})"
+    "impact({symbol: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})",
+    "get_source({symbol: \"shop-admin#src/app/admin-api.service.ts:AdminApiService.get\"})"
   ]
 }

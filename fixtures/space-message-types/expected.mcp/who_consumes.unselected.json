@@ -26,9 +26,16 @@
   "type": "QUOTA_WARNING",
   "unselected": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
   "sureness": "unsure",
+  "selectionUnread": [
+    {
+      "id": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "loc": "src/stream/stream-relay.service.ts:29",
+      "why": "takes every type without choosing; what takes them past it is not read"
+    }
+  ],
   "complete": false,
   "left": [
-    "unsure: no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read"
+    "unsure: 1 consumer whose choice was not read: selectionUnread"
   ],
   "next": [
     "who_emits({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",

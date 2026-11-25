@@ -1,4 +1,5 @@
 {
+  "settled": "every field read is sent",
   "channel": "channel:order_updates",
   "type": "ORDER_READY",
   "producers": [
@@ -39,8 +40,5 @@
       ]
     }
   ],
-  "complete": true,
-  "next": [
-    "who_consumes({channel: \"channel:order_updates\", type: \"ORDER_READY\"})"
-  ]
+  "complete": true
 }

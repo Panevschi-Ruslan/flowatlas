@@ -1,4 +1,5 @@
 {
+  "settled": "1 way in reaches it, all listed",
   "target": {
     "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
     "type": "ui_component",
@@ -30,9 +31,5 @@
       "hops": 1
     }
   ],
-  "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:angular-basic:screen:/reports\"})",
-    "describe_for_prompt({id: \"entry:angular-basic:screen:/reports\"})"
-  ]
+  "complete": true
 }

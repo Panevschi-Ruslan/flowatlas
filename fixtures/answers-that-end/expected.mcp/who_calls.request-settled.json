@@ -1,0 +1,75 @@
+{
+  "target": {
+    "id": "web#src/api/orders-api.ts:fetchOrder",
+    "type": "function",
+    "label": "fetchOrder",
+    "loc": "src/api/orders-api.ts:9",
+    "service": "web",
+    "reach": "alive",
+    "from": "screen /orders/:param",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:GET:/api/orders/:param",
+        "by": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "web#src/screens/OrderPage.tsx:OrderPage",
+        "type": "ui_component",
+        "label": "OrderPage",
+        "loc": "src/screens/OrderPage.tsx:6",
+        "kind": "function",
+        "endLine": 14,
+        "reach": "alive",
+        "from": "screen /orders/:param"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "type:web#Order"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:web:screen:/orders/:param",
+            "type": "entry",
+            "label": "/orders/:param",
+            "loc": "src/main.tsx:10",
+            "kind": "screen",
+            "reach": "outside"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:web:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "loc": "src/main.tsx:10",
+      "service": "web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 2,
+      "by": "web#src/screens/OrderPage.tsx:OrderPage"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:web:screen:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:web:screen:/orders/:param\"})",
+    "impact({symbol: \"entry:web:screen:/orders/:param\"})"
+  ]
+}

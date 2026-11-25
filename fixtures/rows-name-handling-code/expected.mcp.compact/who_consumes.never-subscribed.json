@@ -1,4 +1,5 @@
 {
+  "settled": "3 consumers of HELP_REQUESTED, all listed",
   "channel": {
     "id": "channel:desk_alerts",
     "loc": "src/desk/desk.service.ts:10",
@@ -37,9 +38,5 @@
   ],
   "total": 3,
   "type": "HELP_REQUESTED",
-  "complete": true,
-  "next": [
-    "who_emits({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})",
-    "impact({symbol: \"consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.pageStaff\"})"
-  ]
+  "complete": true
 }

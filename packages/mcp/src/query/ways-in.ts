@@ -80,6 +80,8 @@ export interface RowReach {
   /**
    * On a `maybe` row (P393): how to confirm it, a whole-word search (`grep -rnw`) for the name of the code an
    * unread call could reach, in the repository (service) it is in; a hit other than its declaration is a call.
+   * A method whose name another method or function of the repository shares is searched as its call, `.start(`,
+   * as written (P403): the bare word met every one of them.
    */
   confirm?: { grep: string; repo: string };
   /** Code calls it, but every way in that reaches it is judged dead (P381): its `reach` is `dead`. */
@@ -88,11 +90,41 @@ export interface RowReach {
 
 /**
  * The search that settles a `maybe` row (P393): the name the code is called by (a method's or a function's own
- * name, a class's), in the repository it is in. None for a name that is not a plain identifier.
+ * name, a class's), in the repository it is in. None for a name that is not a plain identifier. Where `shared`
+ * says another method or function of the repository has the same name (`start`, `load`), a method's search is its
+ * call with the receiver's dot, `.start(` (P403), which no declaration and no other word holds.
  */
-export const confirmOf = (node: Pick<GraphNode, 'label' | 'repo'>): { grep: string; repo: string } | undefined => {
+export const confirmOf = (
+  node: Pick<GraphNode, 'label' | 'repo'> & Partial<Pick<GraphNode, 'type'>>,
+  shared: (repo: string, name: string) => boolean = () => false,
+): { grep: string; repo: string } | undefined => {
   const name = node.label.replace(/\(.*$/, '').split(/[.#]/).pop()?.trim() ?? '';
-  return /^[A-Za-z_$][\w$]*$/.test(name) && node.repo !== '' ? { grep: name, repo: node.repo } : undefined;
+  if (!/^[A-Za-z_$][\w$]*$/.test(name) || node.repo === '') return undefined;
+  const method = node.type === 'method' || (node.type === undefined && node.label.includes('.'));
+  return { grep: method && shared(node.repo, name) ? `.${name}(` : name, repo: node.repo };
+};
+
+/** The name code is called by: a method's or a function's own, the last part of its label. */
+const calledName = (label: string): string => label.replace(/\(.*$/, '').split(/[.#]/).pop()?.trim() ?? '';
+
+/**
+ * Whether more than one method or function of a repository is called by a name (P403), each repository's names
+ * counted once, when a `maybe` row first asks.
+ */
+const sharedNames = (db: Pick<GraphDb, 'nodesByType'>): ((repo: string, name: string) => boolean) => {
+  let counts: Map<string, number> | undefined;
+  return (repo, name) => {
+    if (counts === undefined) {
+      counts = new Map();
+      for (const type of ['method', 'function']) {
+        for (const node of db.nodesByType(type)) {
+          const key = `${node.repo}\u0000${calledName(node.label)}`;
+          counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+      }
+    }
+    return (counts.get(`${repo}\u0000${name}`) ?? 0) > 1;
+  };
 };
 
 /** What `from` says on a `maybe` row when no way in beyond the unread call is known. */
@@ -381,6 +413,8 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
   const endOf = endLineReader(handle);
   const judge = deadJudge(db, db.report(), deadOptionsOf(handle));
   const graph = readOnce(db);
+  // Whether a maybe row's name is shared in its repository, so its search is the call (P403).
+  const shared = sharedNames(db);
   const verdicts = new Map<string, DeadAnswer | undefined>();
   const verdictOf = (id: string): DeadAnswer | undefined => {
     if (!verdicts.has(id)) verdicts.set(id, judge(id));
@@ -745,7 +779,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
           ...(reach !== 'maybe' || behind === undefined ? {} : { behind }),
         };
         // How to settle it (P393): the name of the code an unread call could reach, to look for in its repository.
-        const confirm = row.reach === 'maybe' ? confirmOf(maybe?.top ?? node) : undefined;
+        const confirm = row.reach === 'maybe' ? confirmOf(maybe?.top ?? node, shared) : undefined;
         if (confirm !== undefined) row = { ...row, confirm };
       }
     }
@@ -754,7 +788,7 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     // A maybe nothing was walked back from (a way in, a walk cut short) says why `dead` says it may be called; a walked
     // one says it with `from`, and with `gap` and `behind` where an unread call or another chain end was met.
     if (row.reach === 'maybe' && row.from === undefined && judgedReach !== undefined) {
-      const confirm = row.confirm ?? (node.type === 'entry' ? undefined : confirmOf(node));
+      const confirm = row.confirm ?? (node.type === 'entry' ? undefined : confirmOf(node, shared));
       row = { ...row, behind: judgedReach.answer.reason, ...(confirm === undefined ? {} : { confirm }) };
     }
     done.set(id, row);

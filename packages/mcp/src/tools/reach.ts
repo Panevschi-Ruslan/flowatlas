@@ -894,7 +894,7 @@ const impactOn = (
   const walkCut = walked.cut
     ? `reachability stopped at the walk limit of ${IMPACT_WALK_NODES} nodes; entries past it are not listed`
     : undefined;
-  const acrossCut = (asked ?? []).filter((through) => through.cut).map((through) => through.channel);
+  const askedCut = (asked ?? []).filter((through) => through.cut).map((through) => through.channel);
   const cuts = [...(nextOffset === undefined ? [] : [truncated!]), ...(walkCut === undefined ? [] : [walkCut])];
   // No way in, said rather than left as an empty list, with where to look (P94).
   const entriesNone =
@@ -909,8 +909,10 @@ const impactOn = (
             : reached > 0
               ? 'nothing in the graph reaches this from a way in; the callers may be behind a gap'
               : 'nothing reaches this';
-  // The ways in beyond the first channel, one call away (P372).
-  const across = asked === undefined && folded.length > 0 ? [acrossCall(symbolArgs, folded[0]!)] : [];
+  // The ways in beyond a channel, one call away (P372), only where `throughChannels` could not count them all: its walk
+  // stopped at its bound (P403). Counted, they are in the answer; the channel's impact repeated them at length.
+  const acrossCut = folded.find((through) => through.cut);
+  const across = asked === undefined && acrossCut !== undefined ? [acrossCall(symbolArgs, acrossCut)] : [];
   // What the filter left out, one call away: the same symbols with no filter (P381).
   const unfiltered = elsewhere > 0 ? [callOf('impact', symbolArgs)] : [];
   const leads =
@@ -969,7 +971,7 @@ const impactOn = (
       pageLeft(total, items.length, input.offset ?? 0, nextOffset),
       asked === undefined && filterLeft(elsewhere, rowsIn, input.callersIn),
       walkCut !== undefined && `walk: stopped at ${IMPACT_WALK_NODES} nodes; ways in past it not listed`,
-      acrossCut.length > 0 && `walk: stopped at ${CHANNEL_WALK_NODES} nodes beyond ${acrossCut.join(', ')}; ways in past it not listed`,
+      askedCut.length > 0 && `walk: stopped at ${CHANNEL_WALK_NODES} nodes beyond ${askedCut.join(', ')}; ways in past it not listed`,
       listedMaybes.length > 0 &&
         `gaps: ${listedMaybes.length} chain${listedMaybes.length === 1 ? ' stops' : 's stop'} at an unread call before any way in: the maybe row${listedMaybes.length === 1 ? '' : 's'}`,
       entriesNone !== undefined &&
@@ -1201,7 +1203,7 @@ const callersWaysInSaid = (
     ],
     ...(found.ways[0] === undefined ? {} : { first: found.ways[0].item.node }),
     ...(found.maybes[0] === undefined ? (found.ends[0] === undefined ? {} : { maybeTop: found.ends[0] }) : { maybeTop: found.maybes[0].item.node }),
-    ...(found.throughs[0] === undefined ? {} : { through: found.throughs[0].item }),
+    ...(found.throughs[0] === undefined ? {} : { through: (found.throughs.find((each) => each.item.cut) ?? found.throughs[0]).item }),
   };
 };
 
@@ -1291,8 +1293,8 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
       [
         ...withoutShown(
           [
-            // The ways in past a channel, one call away (P372).
-            ...(ways?.through === undefined ? [] : [acrossCall({ symbol: target.id }, ways.through)]),
+            // The ways in past a channel, one call away (P372), where their count is a floor (P403).
+            ...(ways?.through?.cut !== true ? [] : [acrossCall({ symbol: target.id }, ways.through)]),
             // What the filter left out, one call away: the same symbol with no filter (P381).
             ...(rowsIn !== undefined && (ways?.left ?? []).some((item) => item.startsWith('filter:'))
               ? [callOf('who_calls', { symbol: target.id, depth: input.depth }, defaults)]
@@ -1334,7 +1336,7 @@ export const registerReach = (server: McpServer, ctx: ToolContext): void => {
     const ways = callersWaysInSaid(callersWaysIn(db, reader, groups, inService(rowsIn)), reader, detail, { rowsIn, callersIn: input.callersIn });
     const left = [...(each.left ?? []), ...ways.left, ...reader.left()];
     const leads = [
-      ...(ways.through === undefined || groups.length !== 1 ? [] : [acrossCall({ symbol: groups[0]!.start.id }, ways.through)]),
+      ...(ways.through?.cut !== true || groups.length !== 1 ? [] : [acrossCall({ symbol: groups[0]!.start.id }, ways.through)]),
       ...(ways.maybeTop === undefined ? [] : gapLeads(ways.maybeTop)),
       ...nextFor(ways.first),
     ];

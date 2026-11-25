@@ -1,0 +1,50 @@
+{
+  "settled": "its request lands on GET /api/orders/:param (shop-api), OrdersController.findOne; 1 way in reaches it, all listed",
+  "target": {
+    "id": "web#src/api/orders-api.ts:fetchOrder",
+    "type": "function",
+    "line": 9,
+    "reach": "alive",
+    "from": "screen /orders/:param",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:GET:/api/orders/:param",
+        "by": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "id": "web#src/screens/OrderPage.tsx:OrderPage",
+      "type": "ui_component",
+      "line": 6,
+      "kind": "function",
+      "reach": "alive",
+      "from": "screen /orders/:param",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "type:web#Order"
+      },
+      "children": [
+        {
+          "id": "entry:web:screen:/orders/:param",
+          "loc": "src/main.tsx:10",
+          "reach": "outside",
+          "edge": "handles"
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:web:screen:/orders/:param",
+      "reach": "outside",
+      "hops": 2,
+      "by": "web#src/screens/OrderPage.tsx:OrderPage"
+    }
+  ],
+  "complete": true
+}

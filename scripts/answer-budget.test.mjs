@@ -143,3 +143,13 @@ test('holds a plain-text answer to what its text must and must not say (P382)', 
   assert.deepEqual(wrongIn({ says: ['ready()'] }, result), ['the text does not say "ready()"']);
   assert.deepEqual(wrongIn({ saysNot: ['cancel'] }, result), ['the text says "cancel", which it must not']);
 });
+
+test('fails an answer that settles its question without saying so, or says so beside a further call (P403)', () => {
+  const measured = { complete: true, calls: 1 };
+  const plain = { entries: [{ id: 'route' }], complete: true };
+  assert.deepEqual(wrongIn({ settled: true }, { first: plain, lists: rowsByList([plain], ['entries']), measured }), ['does not say settled where the answer settles the question']);
+  const both = { settled: '1 way in breaks, all listed', entries: [{ id: 'route' }], complete: true, next: ['get_flow({entry: "route"})'] };
+  assert.deepEqual(wrongIn({ settled: true }, { first: both, lists: rowsByList([both], ['entries']), measured }), ['says settled, yet names a further call in next']);
+  const settled = { settled: '1 way in breaks, all listed', entries: [{ id: 'route' }], complete: true };
+  assert.deepEqual(wrongIn({ settled: true }, { first: settled, lists: rowsByList([settled], ['entries']), measured }), []);
+});

@@ -166,6 +166,9 @@ export const wrongIn = (expect, { first, lists, measured }) => {
   if (expect.complete === false && first.complete === true) wrong.push('says complete: true where the right answer is not complete');
   // An answer that says it is complete is the whole answer: the question took the one call.
   if (first.complete === true && measured.calls !== 1) wrong.push(`answered complete, yet took ${measured.calls} calls`);
+  // An answer that settles its question says so, and names no further call beside it (P403).
+  if (expect.settled === true && typeof first.settled !== 'string') wrong.push('does not say settled where the answer settles the question');
+  if (typeof first.settled === 'string' && first.next !== undefined) wrong.push('says settled, yet names a further call in next');
   return wrong;
 };
 

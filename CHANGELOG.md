@@ -3057,6 +3057,27 @@ only one of them moved.
 
 ### Changed
 
+- **Answers that end the question (P403).** A pilot's costly sessions took a
+  call the answer suggested, or doubted an answer that was right. A compact
+  answer that settles its question says so in `settled`, first, with no
+  `next`: `impact` and `who_calls` with `complete: true` (where a request
+  lands, and that every way in is listed), `check_contract` on a call whose
+  ends were compared or a channel with nothing unread, `who_consumes` and
+  `who_emits` with `complete: true`; `flowatlas impact --format json` too.
+  `impact` and `who_calls` suggest the impact across a channel only where
+  `throughChannels` could not count the ways in beyond it, and a compact
+  `next` drops `describe_for_prompt` on a flow `get_flow` drew or names.
+  `who_consumes` of a type no code that runs selects names, under
+  `selectionUnread`, each consumer whose choice was not read with its
+  handler's line and why, where it said "not read (A.f, B.g)" and agents
+  grepped. Every answer, compact or verbose, is held to 12,000 characters
+  (`MAX_ANSWER_CHARS`): its longest list keeps the rows that fit and the
+  answer says the cut in `left` and the call for the rest (the next `offset`
+  where the tool pages). A `maybe` row's `confirm` searches a method whose
+  name its repository shares by its call, `.start(`. The instructions and the
+  guide say `settled` is the whole answer, at no more characters. The answer
+  budget's 98 questions of the base run to 141,101 characters (145,173), the
+  text every turn carries to 9,380 (9,385).
 - **Fewer turns per question (P396).** A pilot after P381 to P394 kept its
   right answers and spent more turns and characters on them; each cause is
   fixed. The instructions, the guide and the skill's description say text in

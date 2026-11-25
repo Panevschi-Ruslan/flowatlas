@@ -58,6 +58,6 @@
   ],
   "next": [
     "get_flow({entry: \"entry:catalog-api:http:GET:/items/:param\"})",
-    "describe_for_prompt({id: \"entry:catalog-api:http:GET:/items/:param\"})"
+    "impact({symbol: \"entry:catalog-api:http:GET:/items/:param\"})"
   ]
 }

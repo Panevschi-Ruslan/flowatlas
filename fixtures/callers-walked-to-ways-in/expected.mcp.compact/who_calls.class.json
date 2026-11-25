@@ -1,4 +1,5 @@
 {
+  "settled": "6 ways in reach it, all listed",
   "target": {
     "id": "stock-api#src/stock/stock.service.ts:StockService",
     "type": "provider",
@@ -175,9 +176,5 @@
       ]
     }
   ],
-  "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:stock-api:cron:StockJobs.nightly\"})",
-    "describe_for_prompt({id: \"entry:stock-api:cron:StockJobs.nightly\"})"
-  ]
+  "complete": true
 }

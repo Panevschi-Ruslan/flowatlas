@@ -1,4 +1,5 @@
 {
+  "settled": "2 ways in reach it, all listed",
   "answers": [
     {
       "asked": "entry:stock-api:http:GET:/products",
@@ -122,9 +123,5 @@
     }
   ],
   "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:store-web:screen:/catalog\"})",
-    "describe_for_prompt({id: \"entry:store-web:screen:/catalog\"})"
-  ],
   "note": "a long type written inline is said by its field count: verbose: true gives it whole"
 }

@@ -114,8 +114,8 @@
   "unresolvedOnPath": 0,
   "complete": true,
   "next": [
-    "describe_for_prompt({id: \"store-web#src/app/catalog.component.ts:CatalogComponent.add\"})",
-    "impact({symbol: \"store-web#src/app/catalog.component.ts:CatalogComponent.add\"})"
+    "impact({symbol: \"store-web#src/app/catalog.component.ts:CatalogComponent.add\"})",
+    "get_source({symbol: \"store-web#src/app/products.client.ts:ProductsClient.create\"})"
   ],
   "note": "a long type written inline is said by its field count: verbose: true gives it whole"
 }

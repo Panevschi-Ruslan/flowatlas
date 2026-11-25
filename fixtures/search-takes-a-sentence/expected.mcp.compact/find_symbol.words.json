@@ -63,6 +63,6 @@
   ],
   "next": [
     "get_flow({entry: \"entry:shop-api:http:POST:/orders/:param/cancel\"})",
-    "describe_for_prompt({id: \"entry:shop-api:http:POST:/orders/:param/cancel\"})"
+    "impact({symbol: \"entry:shop-api:http:POST:/orders/:param/cancel\"})"
   ]
 }

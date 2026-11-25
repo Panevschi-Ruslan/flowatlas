@@ -1,0 +1,30 @@
+{
+  "target": {
+    "id": "packing-worker#src/packing/audit-feed.service.ts:AuditFeed.start",
+    "type": "method",
+    "label": "AuditFeed.start",
+    "loc": "src/packing/audit-feed.service.ts:19",
+    "service": "packing-worker",
+    "reach": "maybe",
+    "from": "behind",
+    "confirm": {
+      "grep": ".start(",
+      "repo": "packing-worker"
+    }
+  },
+  "topOfChain": true,
+  "gapsInFile": 1,
+  "callers": [],
+  "waysIn": [],
+  "waysInNone": "nothing reaches this",
+  "complete": false,
+  "left": [
+    "gaps: 1 unread in its file, any may call it"
+  ],
+  "next": [
+    "cant_follow({service: \"packing-worker\"})",
+    "search({query: \"src/packing/audit-feed.service.ts\", kinds: [\"gaps\"]})",
+    "impact({symbol: \"packing-worker#src/packing/audit-feed.service.ts:AuditFeed.start\"})",
+    "get_source({symbol: \"packing-worker#src/packing/audit-feed.service.ts:AuditFeed.start\"})"
+  ]
+}

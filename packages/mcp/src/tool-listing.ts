@@ -6,7 +6,9 @@ import { CallToolRequestSchema, ListToolsRequestSchema, type GetPromptResult } f
 import { withInputAliases } from './input-aliases.js';
 import { listedTools } from './listed-schema.js';
 import { plainTextOf } from './plain-text.js';
+import { cappedAnswer, MAX_ANSWER_CHARS } from './capped.js';
 import { compactAnswer, compactOutputSchema, FULL_ANSWER_TOOLS } from './compact.js';
+import { nextWithoutRepeats, SETTLING_TOOLS, settledAnswer } from './settled.js';
 import { offeredOnly, offeredText, type Offer } from './offered.js';
 import type { DbHandle } from './query/db.js';
 import { loggedCall, questionLogSettings, type QuestionLogSettings } from './query/questions.js';
@@ -118,12 +120,34 @@ const withVerbose = <T extends { inputSchema?: Record<string, unknown> }>(name: 
 /** A `tools/list` answer whose output schemas a compact answer fits (P365): see `compactOutputSchema`. */
 const listedCompact = (listed: unknown): unknown => {
   if (listed instanceof Promise) return listed.then(listedCompact);
-  const answer = listed as { tools?: Array<{ outputSchema?: unknown }> } | undefined;
+  const answer = listed as { tools?: Array<{ name: string; outputSchema?: unknown }> } | undefined;
   if (answer?.tools === undefined) return listed;
   return {
     ...answer,
-    tools: answer.tools.map((tool) => (tool.outputSchema === undefined ? tool : { ...tool, outputSchema: compactOutputSchema(tool.outputSchema) })),
+    tools: answer.tools.map((tool) =>
+      tool.outputSchema === undefined ? tool : { ...tool, outputSchema: withBoundaryFields(compactOutputSchema(tool.outputSchema), SETTLING_TOOLS.has(tool.name)) },
+    ),
   };
+};
+
+/**
+ * The fields the boundary may add to any answer (P403), each declared where
+ * the tool's own schema does not: what a cut at the answer's size says
+ * (`complete`, `left`, `next`, `nextOffset`), and `settled` on a tool whose
+ * answer can settle its question.
+ */
+const BOUNDARY_FIELDS: Readonly<Record<string, unknown>> = {
+  complete: { type: 'boolean' },
+  left: { type: 'array', items: { type: 'string' } },
+  next: { type: 'array', items: { type: 'string' } },
+  nextOffset: { type: 'number' },
+};
+
+const withBoundaryFields = (schema: unknown, settles: boolean): unknown => {
+  const root = schema as { properties?: Record<string, unknown> } | undefined;
+  if (root?.properties === undefined) return schema;
+  const added = Object.entries({ ...(settles ? { settled: { type: 'string' } } : {}), ...BOUNDARY_FIELDS }).filter(([name]) => !(name in root.properties!));
+  return added.length === 0 ? schema : { ...root, properties: { ...root.properties, ...Object.fromEntries(added) } };
 };
 
 /** Whether a configuration holds an architecture rule, which `check_rules` needs (read once: the configuration is not read again). */
@@ -201,6 +225,8 @@ export class ToolListing {
   #refreshing = false;
   #stamp = '';
   #timer: ReturnType<typeof setInterval> | undefined;
+  /** The tools that take `offset`, whose answer cut at its size goes on at the next page (P403). */
+  readonly #paged = new Set<string>();
 
   constructor(server: McpServer, options: ListingOptions) {
     this.#server = server;
@@ -228,6 +254,7 @@ export class ToolListing {
       setRequestHandler.call(sdk, schema as never, this.#guard(schema, handler) as never)) as typeof sdk.setRequestHandler;
     this.#server.registerTool = ((name: string, config: { inputSchema?: Record<string, unknown> }, ...rest: unknown[]) => {
       if (!isToolName(name)) throw new Error(`tool ${name} has no row in TOOL_NEEDS (tool-needs.ts)`);
+      if (config?.inputSchema !== undefined && 'offset' in config.inputSchema) this.#paged.add(name);
       const tool = (registerTool as (...args: unknown[]) => RegisteredTool).call(this.#server, name, this.#upfront(name, withVerbose(name, config)), ...rest);
       this.#tools.set(name, tool);
       return tool;
@@ -440,7 +467,9 @@ export class ToolListing {
         const notNamed = named !== undefined && 'error' in named ? named : callersIn !== undefined && 'error' in callersIn ? callersIn : undefined;
         const toTool = request.params.arguments === undefined ? request : { ...request, params: { ...request.params, arguments: asked } };
         const answered = () =>
-          notNamed !== undefined ? respond(notNamed) : this.#offered(handler(toTool as never, extra), compact, request.params.name);
+          notNamed !== undefined
+            ? respond(notNamed)
+            : this.#offered(handler(toTool as never, extra), compact, request.params.name, request.params.arguments ?? {});
         if (!this.#log.enabled) return answered();
         // Logged here, once for every tool, so a tool added later is logged too (P235).
         const handle = this.#handle;
@@ -459,14 +488,18 @@ export class ToolListing {
    * An answer with no suggestion of a tool not listed (P360), and compact
    * unless it was asked `verbose` (P365), whichever tool wrote it: the one
    * place every answer passes, so a tool added later is held to both too.
-   * The text and `structuredContent` stay one document.
+   * Held to its size, compact or not, and a compact answer that settles its
+   * question says so with no further call (P403). The text and
+   * `structuredContent` stay one document.
    */
-  #offered(result: unknown, compact: boolean, tool: string): unknown {
-    if (result instanceof Promise) return result.then((settled: unknown) => this.#offered(settled, compact, tool));
+  #offered(result: unknown, compact: boolean, tool: string, args: Record<string, unknown>): unknown {
+    if (result instanceof Promise) return result.then((settled: unknown) => this.#offered(settled, compact, tool, args));
     const offer = this.offer();
     const answer = result as { content?: Array<{ type: string; text?: string }>; structuredContent?: Record<string, unknown> } | undefined;
     const first = answer?.content?.[0];
-    if ((offer === undefined && !compact) || answer === undefined || first?.type !== 'text' || typeof first.text !== 'string') return result;
+    if (answer === undefined || first?.type !== 'text' || typeof first.text !== 'string') return result;
+    // A verbose answer within its size, with nothing to keep from it, is handed on as written.
+    if (offer === undefined && !compact && first.text.length <= MAX_ANSWER_CHARS) return result;
     let document: unknown;
     try {
       document = answer.structuredContent ?? JSON.parse(first.text);
@@ -478,7 +511,8 @@ export class ToolListing {
     // Code and Markdown are handed on as the text they are, with no structured content to escape them into (P382).
     const plain = compact ? plainTextOf(tool, offered) : undefined;
     if (plain !== undefined) return { content: [{ type: 'text' as const, text: plain }] };
-    const kept = compact ? compactAnswer(offered, { tool }) : offered;
+    const asked = { tool, args, paged: this.#paged.has(tool) };
+    const kept = compact ? settledAnswer(tool, cappedAnswer(compactAnswer(nextWithoutRepeats(tool, offered), { tool }), asked)) : cappedAnswer(offered, asked);
     if (kept === document) return result;
     const text = JSON.stringify(kept);
     return {

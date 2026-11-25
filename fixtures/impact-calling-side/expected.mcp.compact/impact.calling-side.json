@@ -75,6 +75,6 @@
   ],
   "next": [
     "get_flow({entry: \"entry:backoffice-web:screen:/board\"})",
-    "describe_for_prompt({id: \"entry:backoffice-web:screen:/board\"})"
+    "impact({symbol: \"entry:backoffice-web:screen:/board\"})"
   ]
 }

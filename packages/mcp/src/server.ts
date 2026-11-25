@@ -56,7 +56,7 @@ const INSTRUCTION_LINES: readonly string[] = [
   // The same questions the files `flowatlas agents install` writes list (P227), each with its call (P382).
   agentQuestionsLine(),
   'A symbol is an id, a `Class.method` or a route said aloud ("GET /orders/:id"); `service` picks among same-named ones. Before changing a route, handler, body type or message payload: impact first.',
-  'Rows of code carry `reach` (alive; maybe: behind an unread call, `gap`, `behind`; unreached; dead; outside: called from outside the project) and `from`, the nearest way in: no need to check them; keep maybe rows when asked what breaks. `complete: true` is the whole answer, else `left` says what was cut. Several at once: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`.',
+  'Rows of code carry `reach` (alive; maybe: behind an unread call, `gap`, `behind`; unreached; dead; outside: called from outside) and `from`, the nearest way in: no need to check; keep maybe rows for what breaks. `settled` or `complete: true` is the whole answer: stop; else `left` says what was cut. Several at once: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`.',
   "A row's `id` goes into the next tool as is; `next` names the calls.",
   'More: search({query}) any node by name or words; list_entries the ways in; find_symbol a symbol; get_source({symbol: id}) a step\'s code; get_type({type: id}) -> type_usage; get_spec({service}); findings() what looks broken; test_pattern a draft rule; start_here a project you do not know.',
   'Run time: hot_paths -> slow_steps or trace_for({entry: id}); undeclared_failures; never_seen.',

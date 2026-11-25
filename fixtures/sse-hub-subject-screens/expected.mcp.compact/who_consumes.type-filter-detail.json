@@ -1,4 +1,5 @@
 {
+  "settled": "3 consumers of CARD_MOVED, all listed",
   "channel": {
     "id": "channel:board:*:events",
     "loc": "src/boards/boards.service.ts:15",
@@ -65,9 +66,5 @@
   "total": 3,
   "type": "CARD_MOVED",
   "complete": true,
-  "next": [
-    "who_emits({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})",
-    "impact({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
-  ],
   "note": "rows of a list leave out their structured facts (routes, selects, subscriptions): get_flow({entry: id}) or impact({symbol: id}) at detail 2 gives one node's, verbose: true every row's"
 }

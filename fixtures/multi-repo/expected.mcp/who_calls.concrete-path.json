@@ -247,8 +247,8 @@
   "complete": true,
   "next": [
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
-    "impact({symbol: \"entry:orders:http:GET:/orders/:param\", channel: \"order.created\"})",
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
-    "get_flow({entry: \"entry:billing:event:invoice.requested\"})"
+    "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})"
   ]
 }

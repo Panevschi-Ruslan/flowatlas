@@ -1,4 +1,5 @@
 {
+  "settled": "3 ways in break, all listed",
   "target": {
     "id": "entry:lending-api:http:GET:/books/:param",
     "loc": "src/books.controller.ts:23",
@@ -57,9 +58,5 @@
   },
   "servicesWithoutEntry": [],
   "channels": [],
-  "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:desk-bot:bot_command:book\"})",
-    "describe_for_prompt({id: \"entry:desk-bot:bot_command:book\"})"
-  ]
+  "complete": true
 }

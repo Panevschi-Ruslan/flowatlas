@@ -24,7 +24,7 @@
   "unresolvedOnPath": 0,
   "complete": true,
   "next": [
-    "describe_for_prompt({id: \"entry:catalog-web:screen:/catalog\"})",
-    "impact({symbol: \"entry:catalog-web:screen:/catalog\"})"
+    "impact({symbol: \"entry:catalog-web:screen:/catalog\"})",
+    "get_source({symbol: \"catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent\"})"
   ]
 }

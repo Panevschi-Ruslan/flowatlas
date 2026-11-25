@@ -1,4 +1,5 @@
 {
+  "settled": "2 ways in reach it, all listed",
   "target": {
     "id": "catalog-api#src/item-extras.routes.ts:listNewest",
     "type": "function",
@@ -42,9 +43,5 @@
       "by": "shop-web#src/app/dashboard.component.ts:DashboardComponent"
     }
   ],
-  "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:catalog-api:http:GET:/items/new\"})",
-    "describe_for_prompt({id: \"entry:catalog-api:http:GET:/items/new\"})"
-  ]
+  "complete": true
 }

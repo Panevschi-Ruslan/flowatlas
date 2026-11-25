@@ -144,7 +144,8 @@ describe('the card a prompt gets, from the built fixture (P386)', () => {
     const index = readCardNamesAt(cards)!;
     const card = await promptCard('Who calls GET /api/orders/{orderId}?', cards, { now: Date.parse(index.builtAt) + 120_000 });
     expect(card.text).toMatch(/^flowatlas, from the graph of every repository \(built 2 minutes ago\)/);
-    expect(card.text).toContain('who_calls({symbol: "entry:shop-api:http:GET:/api/orders/:param"}):\n{"target":');
+    // The tool's compact answer, settled where it is whole (P403).
+    expect(card.text).toContain('who_calls({symbol: "entry:shop-api:http:GET:/api/orders/:param"}):\n{"settled":"1 way in reaches it, all listed","target":');
     expect(card.text).toContain('"entry:shop-web:screen:/orders"');
     expect(card.keys).toEqual(['entry:shop-api:http:GET:/api/orders/:param']);
     expect(card.text!.length).toBeLessThanOrEqual(MAX_CARD_CHARS);

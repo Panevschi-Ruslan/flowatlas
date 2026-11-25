@@ -443,9 +443,9 @@
   ],
   "complete": true,
   "next": [
-    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", channel: \"order.created\"})",
     "cant_follow({service: \"web\"})",
     "search({query: \"src/app/orders-api.service.ts\", kinds: [\"gaps\"]})",
-    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})"
   ]
 }

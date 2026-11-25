@@ -13,6 +13,6 @@
   "complete": true,
   "next": [
     "get_flow({entry: \"entry:lending-api:http:DELETE:/books/:param/hold\"})",
-    "describe_for_prompt({id: \"entry:lending-api:http:DELETE:/books/:param/hold\"})"
+    "impact({symbol: \"entry:lending-api:http:DELETE:/books/:param/hold\"})"
   ]
 }

@@ -1,4 +1,5 @@
 {
+  "settled": "14 consumers, all listed",
   "channel": {
     "id": "channel:board:*:events",
     "loc": "src/boards/boards.service.ts:15",
@@ -126,9 +127,5 @@
     "CARD_PINNED",
     "CREW_ASSIGNED"
   ],
-  "complete": true,
-  "next": [
-    "who_consumes({channel: \"channel:board:*:events\", type: \"BOARD_RENAMED\"})",
-    "who_emits({channel: \"channel:board:*:events\"})"
-  ]
+  "complete": true
 }

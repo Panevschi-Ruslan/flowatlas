@@ -30,7 +30,8 @@
           "entries": [
             "entry:orders:http:POST:/orders"
           ]
-        }
+        },
+        "settled": true
       },
       "note": "P372: POST /orders reaches the method only across the order.created channel, so it is counted under throughChannels, not listed in entries."
     },
@@ -494,7 +495,7 @@
                   "params": [
                     {
                       "name": "product",
-                      "type": "{…22 fields}"
+                      "type": "{\u202622 fields}"
                     }
                   ],
                   "returns": "string"
@@ -586,7 +587,8 @@
         },
         "exact": [
           "consumers"
-        ]
+        ],
+        "settled": true
       }
     },
     {
@@ -1402,7 +1404,8 @@
         },
         "exact": [
           "waysIn"
-        ]
+        ],
+        "settled": true
       },
       "note": "P377: the target says the route its request lands on and the handler there, built through the base client and the global prefix."
     },
@@ -1865,9 +1868,9 @@
       ],
       "expect": {
         "says": [
-          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
-          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
-          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
           "whole: true"
         ],
         "saysNot": [
@@ -2785,7 +2788,7 @@
           "rows": {
             "consumer:web#src/app/live.service.ts:LiveService.onReady": {
               "precision": "high",
-              "fix": "listen with addEventListener(\"order-ready\", …), or send the frames with no event name"
+              "fix": "listen with addEventListener(\"order-ready\", \u2026), or send the frames with no event name"
             }
           }
         },
@@ -3142,6 +3145,85 @@
         ]
       },
       "note": "P399: the prefixes of a listener's table are ways in with their callback data, so view_order_${id} and set_status_${id} are handled and archive_order_${id} is named; behind the one callback_query way in every button was held back."
+    },
+    {
+      "id": "who_calls.request-settled",
+      "ask": "which route does the order screen's fetchOrder land on, and who calls it",
+      "fixture": "answers-that-end",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "fetchOrder"
+      },
+      "lists": [
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "waysIn": [
+            "entry:web:screen:/orders/:param"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P403: settled says where the request lands (GET /api/orders/:param, OrdersController.findOne) and that every way in is listed, with no next; an agent ran get_flow and a Read to confirm the same answer."
+    },
+    {
+      "id": "impact.through-channel-settled",
+      "ask": "which ways in could break if OrdersService.findOne changes",
+      "fixture": "answers-that-end",
+      "tool": "impact",
+      "args": {
+        "symbol": "OrdersService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:event:packing_events",
+            "entry:shop-api:http:GET:/api/orders/:param",
+            "entry:web:screen:/orders/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P403: the publishers beyond packing_events are counted in throughChannels with a sample; no impact on the channel in next, which repeated them at length."
+    },
+    {
+      "id": "who_consumes.selection-unread",
+      "ask": "which code handles ORDER_DELAYED on packing_events",
+      "fixture": "answers-that-end",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "packing_events",
+        "type": "ORDER_DELAYED"
+      },
+      "lists": [
+        "consumers",
+        "selectionUnread"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "selectionUnread": [
+            "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+            "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent"
+          ]
+        },
+        "exact": [
+          "selectionUnread"
+        ]
+      },
+      "note": "P403: no code that runs selects it; the two consumers whose choice was not read are named with their line and why, one Read each, where 'not read (A.f, B.g)' sent agents grepping."
     }
   ],
   "fixed": {
@@ -3839,6 +3921,27 @@
       "tokens": 262,
       "rows": 3,
       "complete": true,
+      "calls": 1
+    },
+    "who_calls.request-settled": {
+      "chars": 880,
+      "tokens": 220,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.through-channel-settled": {
+      "chars": 1890,
+      "tokens": 473,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.selection-unread": {
+      "chars": 1147,
+      "tokens": 287,
+      "rows": 2,
+      "complete": false,
       "calls": 1
     },
     "dead.lifecycle-setup": {

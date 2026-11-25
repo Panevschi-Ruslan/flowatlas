@@ -284,6 +284,22 @@ const TABLE_CASES = [
 ];
 const TABLE_COMPACT_CASES = TABLE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
+/**
+ * Answers that end the question (P403): who_calls on a screen's fetch says
+ * where its request lands, impact on the method behind it lists every way in
+ * and counts those beyond the channel, each `settled` with no `next` when
+ * compact; who_consumes of a type nothing selects names each consumer whose
+ * choice was not read with its line and why.
+ */
+const ANSWERS_END_CASES = [
+  ['who_calls.request-settled', 'who_calls', { symbol: 'web#src/api/orders-api.ts:fetchOrder' }],
+  ['impact.through-channel-settled', 'impact', { symbol: 'shop-api#src/orders/orders.service.ts:OrdersService.findOne' }],
+  ['who_consumes.selection-unread', 'who_consumes', { channel: 'packing_events', type: 'ORDER_DELAYED' }],
+];
+const ANSWERS_END_COMPACT_CASES = ANSWERS_END_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+// A maybe whose name another class shares: confirmed by its call, `.start(`, said in verbose answers only.
+ANSWERS_END_CASES.push(['who_calls.common-name-maybe', 'who_calls', { symbol: 'packing-worker#src/packing/audit-feed.service.ts:AuditFeed.start' }]);
+
 /** The same impact, compact (P365), at both levels of detail: what an agent is handed. */
 const CALLING_SIDE_COMPACT_CASES = [
   ['impact.calling-side', 'impact', { symbol: CALLING_SIDE_TARGET, verbose: false }],
@@ -1117,6 +1133,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'handler-table-dispatch'),
     outDir: join(root, 'fixtures', 'handler-table-dispatch', 'expected.mcp.compact'),
     cases: TABLE_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'answers-that-end'),
+    outDir: join(root, 'fixtures', 'answers-that-end', 'expected.mcp'),
+    cases: ANSWERS_END_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'answers-that-end'),
+    outDir: join(root, 'fixtures', 'answers-that-end', 'expected.mcp.compact'),
+    cases: ANSWERS_END_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'angular-rendered-reach'),

@@ -1,4 +1,5 @@
 {
+  "settled": "3 ways in break, all listed",
   "target": {
     "id": "store-api#src/tickets.service.ts:TicketsService.acknowledge",
     "line": 6,
@@ -52,9 +53,5 @@
   },
   "servicesWithoutEntry": [],
   "channels": [],
-  "complete": true,
-  "next": [
-    "get_flow({entry: \"entry:store-api:http:POST:/api/hooks/chat\"})",
-    "describe_for_prompt({id: \"entry:store-api:http:POST:/api/hooks/chat\"})"
-  ]
+  "complete": true
 }

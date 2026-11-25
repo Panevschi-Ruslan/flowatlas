@@ -1,4 +1,5 @@
 {
+  "settled": "7 ways in reach it, all listed; more beyond a channel, counted in throughChannels",
   "target": {
     "id": "store-api#src/items.service.ts:ItemsService.listByShop",
     "line": 6,
@@ -94,9 +95,5 @@
       "ways": 5
     }
   ],
-  "complete": true,
-  "next": [
-    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\", channel: \"consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent\"})",
-    "get_flow({entry: \"entry:store-api:http:GET:/api/shops/items\"})"
-  ]
+  "complete": true
 }

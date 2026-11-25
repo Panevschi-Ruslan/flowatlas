@@ -359,7 +359,7 @@
   "unresolvedOnPath": 0,
   "complete": true,
   "next": [
-    "describe_for_prompt({id: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
-    "impact({symbol: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})"
+    "impact({symbol: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
+    "get_source({symbol: \"shop-api#src/orders/orders.controller.ts:OrdersController.cancel\"})"
   ]
 }

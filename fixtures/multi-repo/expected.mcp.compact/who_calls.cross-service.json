@@ -1,4 +1,5 @@
 {
+  "settled": "6 ways in reach it, all listed; more beyond a channel, counted in throughChannels",
   "target": {
     "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
     "line": 25,
@@ -271,9 +272,5 @@
       "ways": 1
     }
   ],
-  "complete": true,
-  "next": [
-    "impact({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", channel: \"order.created\"})",
-    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
-  ]
+  "complete": true
 }

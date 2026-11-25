@@ -2309,7 +2309,8 @@ symbol runs behind apart (`changing`, P381): a bot's webhook is a bot and a
 the routes other rows request it through (P396).
 
 `--format json` prints the tool's answer, compact on one line as an agent is
-handed it; with `--verbose` the whole answer, pretty-printed. `--max-nodes` is
+handed it, `settled` first and no `next` where every way in is listed (P403);
+with `--verbose` the whole answer, pretty-printed. `--max-nodes` is
 the page of rows and `--offset` the row to start at, as the answer's
 `nextOffset` says; `--depth` draws the chains that many hops back, the rows past
 it still listed under the tree.

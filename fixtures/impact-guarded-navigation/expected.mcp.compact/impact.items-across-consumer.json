@@ -1,4 +1,5 @@
 {
+  "settled": "5 ways in break, all listed",
   "target": {
     "id": "store-api#src/items.service.ts:ItemsService.listByShop",
     "line": 6,
@@ -58,8 +59,5 @@
     "channel:shop:*:orders",
     "channel:shop:*:paid"
   ],
-  "complete": true,
-  "next": [
-    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\"})"
-  ]
+  "complete": true
 }

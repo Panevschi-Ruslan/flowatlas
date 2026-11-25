@@ -104,7 +104,7 @@
   ],
   "next": [
     "get_flow({entry: \"entry:backoffice-web:screen:/board\"})",
-    "describe_for_prompt({id: \"entry:backoffice-web:screen:/board\"})"
+    "impact({symbol: \"entry:backoffice-web:screen:/board\"})"
   ],
   "note": "rows of a list leave out their structured facts (fails, signature): get_flow({entry: id}) or impact({symbol: id}) at detail 2 gives one node's, verbose: true every row's"
 }
