@@ -118,10 +118,13 @@ Read, a turn of its own.
   first (P382), the one habit that saves a broken caller in a repository the
   agent never opened;
 
-- text in code (a constant, a log line, a string) is a grep (P396): the graph
-  holds how code connects, and a plain-text question asked of it first
-  answered nothing and went to grep a turn later; the server's instructions
-  and the skill's description say it too;
+- a constant's value or a log line is a grep; who sends, handles or calls is
+  not (P396, said narrowly since P398): the graph holds how code connects, and
+  a plain-text question asked of it first answered nothing and went to grep a
+  turn later, while "text in code" read as "a literal string" sent an agent
+  asked who handles a message type to grep for its name instead of trusting
+  who_consumes; the server's instructions and the skill's description say it
+  too;
 
 - in Claude Code the core tools are loaded already (P380, [below](#the-core-tools-loaded-upfront)):
   no ToolSearch call for them; any other tool loads in one ToolSearch call with

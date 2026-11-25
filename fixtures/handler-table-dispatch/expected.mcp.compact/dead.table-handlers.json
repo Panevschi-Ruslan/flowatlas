@@ -1,0 +1,41 @@
+{
+  "answers": [
+    {
+      "asked": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+      "line": 67,
+      "verdict": "alive",
+      "reason": "called",
+      "evidence": {
+        "callers": 1,
+        "caller": "staff-bot#src/staff-bot.ts:on callback_query@43"
+      },
+      "from": "bot_event callback_query"
+    },
+    {
+      "asked": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+      "line": 72,
+      "verdict": "alive",
+      "reason": "called",
+      "evidence": {
+        "callers": 2,
+        "caller": "entry:staff-bot:bot_command:orders"
+      },
+      "from": "bot_command orders"
+    },
+    {
+      "asked": "staff-bot#src/replies.ts:replyStock",
+      "id": "staff-bot#src/replies.ts:replyStock",
+      "type": "function",
+      "line": 11,
+      "verdict": "alive",
+      "reason": "called",
+      "evidence": {
+        "callers": 1,
+        "caller": "staff-bot#src/text-router.ts:TextRouter.route"
+      },
+      "from": "bot_event text"
+    }
+  ]
+}

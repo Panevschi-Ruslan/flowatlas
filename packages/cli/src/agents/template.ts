@@ -87,7 +87,7 @@ const others = (guide: AgentGuide): string[] => guide.services.map((service) => 
 
 /** The description an assistant reads to decide whether to load the guide: the questions, and why a search is not enough. */
 export const guideDescription = (guide: AgentGuide): string =>
-  `Use for questions that cross this project's repositories (${guide.services.map((service) => service.name).join(', ')}): who calls this, what breaks if it changes, who handles a message, how a request flows, is it dead. A search of one checkout cannot see the others; the flowatlas graph joins them. A constant's value is a grep.`;
+  `Use for questions that cross this project's repositories (${guide.services.map((service) => service.name).join(', ')}): who calls this, what breaks if it changes, who handles a message, how a request flows, is it dead. A search of one checkout cannot see the others. A constant's value is a grep; who sends or handles it is not.`;
 
 /** The name the graph server is registered under when a repository's `.mcp.json` says nothing else. */
 export const DEFAULT_SERVER = 'flowatlas';

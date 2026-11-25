@@ -4,8 +4,11 @@ import {
   lineOf,
   methodBodies,
   resolveReceiver,
+  tableDispatchOf,
+  tableTargetOf,
+  type ClassMethod,
 } from '@flowatlas/core';
-import type { ClassDeclaration } from 'ts-morph';
+import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { definePass } from './types.js';
 
@@ -29,9 +32,40 @@ export const callsPass = definePass('calls', (ctx) => {
       if (fromId === undefined) continue;
       let fromCreated = false;
 
+      const edgeTo = (target: ClassMethod, call: TsNode, meta: Record<string, string>): void => {
+        const toId = ctx.methodIdOf(target);
+        if (toId === undefined) return;
+        if (!fromCreated) {
+          ctx.ensureMethodNode(method);
+          fromCreated = true;
+        }
+        ctx.ensureMethodNode(target);
+        ctx.builder.addEdge({ from: fromId, to: toId, type: 'calls', confidence: 'static', file: indexed.file, line: lineOf(call), meta });
+      };
+
       forEachCall(body, (call) => {
         const callee = call.getExpression();
         if (!Node.isPropertyAccessExpression(callee)) return;
+
+        // `action.run()` where `action` is an element of a table the class
+        // writes out: a call of each element's method (P398).
+        const dispatch = tableDispatchOf(callee.getExpression(), callee.getName(), call);
+        if (dispatch !== undefined) {
+          for (const row of dispatch.rows) {
+            const target = tableTargetOf(row.value);
+            const meta = { via: 'table', ...(row.selectedBy === undefined ? {} : { selectedBy: row.selectedBy }) };
+            if (target?.kind === 'method') edgeTo(target.method, call, meta);
+            if (target?.kind !== 'inline' || target.owner === undefined) continue;
+            const inlineOwner = target.owner;
+            forEachCall(target.fn.getBody() ?? target.fn, (inner) => {
+              const innerCallee = inner.getExpression();
+              if (!Node.isPropertyAccessExpression(innerCallee) || !Node.isThisExpression(innerCallee.getExpression())) return;
+              const found = findMethod(inlineOwner, innerCallee.getName()).method;
+              if (found !== undefined) edgeTo(found, call, meta);
+            });
+          }
+          return;
+        }
 
         const calledName = callee.getName();
         const receiver = resolveReceiver(callee.getExpression(), owner, ctx.di);

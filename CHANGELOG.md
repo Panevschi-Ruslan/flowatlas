@@ -3194,6 +3194,34 @@ only one of them moved.
 
 ### Fixed
 
+- **A table of handlers is followed (P398).** `route.handler(ctx, data)`,
+  where `route` is an element of a table the code writes out (an array of
+  object literals or a record of them, in a field, a `const`, a static, or
+  returned by a method or a getter; picked by `find`, `filter(...)[i]`,
+  `table[i]`, `for...of`, `forEach` and the like, or destructured), was a
+  `call-dynamic-receiver` gap, so the handlers were `maybe` in who_calls,
+  impact and dead; on a real project nearly every costly session began at
+  such a row. It is now an edge to what each element's member runs (a
+  method, `this.h.bind(this)`, a function declared or imported, or the calls
+  of an arrow written in the element), `meta.via: "table"`, with
+  `meta.selectedBy` where the selection names a key (`prefix set_status_`,
+  `equals stock`, `pattern /re/`). Elements not written out keep the gap,
+  cause `table-rows-unread`, saying how many; a `.bind` in a table the file
+  dispatches is no longer a row of its own. A bot registering a table in a
+  loop (`bot.action(route.pattern, (ctx) => route.handler(ctx))`) opens one
+  way in per element, handled by its handler (`handlerVia: "table"`), where
+  it opened none. A table call inside a function a way in names as its
+  handler is drawn from that function, not again from the method it is
+  written in, which nothing but the framework may call. Read in Nest's and
+  Angular's call walks and by the telegraf reader.
+- **Message types off the grep line (P398).** The instructions, the guide
+  and the skill's description said "text in code is a grep"; an agent read a
+  message type's name as text and grepped for its handlers. They now say a
+  constant's value or a log line is a grep, and who sends, handles or calls
+  is not. The text every turn carries goes to 9,385 characters (9,388); the
+  answer budget's questions that were there before go to 143,383 (143,729),
+  with two new ones on a table of handlers (1,791).
+
 - **A handler's reads are compared under the types it is chosen for (P397).**
   `check_contract` on a channel and `field-never-sent` set every handler of a
   channel against every type's publishes, so two handlers marked

@@ -1,0 +1,69 @@
+{
+  "target": {
+    "id": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+    "type": "method",
+    "label": "StaffBot.showOrder",
+    "loc": "src/staff-bot.ts:67",
+    "service": "staff-bot",
+    "reach": "alive",
+    "from": "bot_event callback_query"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "staff-bot#src/staff-bot.ts:on callback_query@43",
+        "type": "function",
+        "label": "on callback_query@43",
+        "loc": "src/staff-bot.ts:43",
+        "endLine": 48,
+        "reach": "alive",
+        "from": "bot_event callback_query"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "type:telegraf#Context",
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:staff-bot:bot_event:callback_query",
+            "type": "entry",
+            "label": "bot_event callback_query",
+            "loc": "src/staff-bot.ts:43",
+            "kind": "bot_event",
+            "reach": "outside"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:staff-bot:bot_event:callback_query",
+      "type": "entry",
+      "label": "bot_event callback_query",
+      "loc": "src/staff-bot.ts:43",
+      "service": "staff-bot",
+      "kind": "bot_event",
+      "reach": "outside",
+      "hops": 2,
+      "by": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:staff-bot:bot_event:callback_query\"})",
+    "describe_for_prompt({id: \"entry:staff-bot:bot_event:callback_query\"})",
+    "impact({symbol: \"entry:staff-bot:bot_event:callback_query\"})"
+  ]
+}

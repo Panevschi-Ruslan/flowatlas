@@ -43,8 +43,13 @@ export const AGENT_QUESTIONS: readonly AgentQuestion[] = Object.freeze([
  * value, a log message, a string, a config value - is a grep. The graph holds
  * how code connects; a plain-text question asked of it first answers nothing
  * and the grep follows anyway, one turn more than a grep alone.
+ *
+ * Said narrowly (P398): "text in code" read as "a literal string" sent an
+ * agent asked who handles a message type to grep for the type's name instead
+ * of trusting who_consumes. A value is a grep; who sends, handles or calls
+ * something - a message type, a route, a method - is the graph's.
  */
-export const TEXT_IS_A_GREP = 'Text in code (a constant, a log line, a string) is a grep.';
+export const TEXT_IS_A_GREP = "A constant's value or log line is a grep; who sends, handles or calls is not.";
 
 /**
  * How to spend as few turns as an answer allows (P366): what every rendering
@@ -60,7 +65,7 @@ export const AGENT_HABITS: readonly string[] = Object.freeze([
   'Before changing a route, handler, body type or message payload: `impact` first.',
   // P396: a question about text in code went to find_symbol first and then to a grep anyway, a turn for nothing.
   TEXT_IS_A_GREP,
-  'An answer with `complete: true` is the whole answer, its rows need no check; keep `reach: "maybe"` rows when asked what breaks.',
+  'A `complete: true` answer is whole, rows need no check; keep `reach: "maybe"` rows when asked what breaks.',
   // P382: each tool's own key, where one `ids` was named for all and who_calls refused it.
   'Several in one call: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`; independent calls in one turn.',
   'Answers are compact: `verbose: true` gives every field.',

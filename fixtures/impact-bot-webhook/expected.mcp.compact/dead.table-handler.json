@@ -1,0 +1,11 @@
+{
+  "id": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+  "line": 35,
+  "verdict": "alive",
+  "reason": "called",
+  "evidence": {
+    "callers": 2,
+    "caller": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit"
+  },
+  "from": "bot_callback /^delivered:(\\w+)$/"
+}

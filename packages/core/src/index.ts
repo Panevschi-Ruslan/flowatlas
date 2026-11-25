@@ -1121,6 +1121,8 @@ export {
   whyUntyped,
 } from './follow-cause.js';
 export type { FollowCause } from './follow-cause.js';
+export { isDispatchedTableMember, tableDispatchOf, tableDispatchOfName, tableKeyOf, tableMemberOf, tableTargetOf, tableUnreadHint } from './handler-tables.js';
+export type { TableDispatch, TableRow, TableTarget } from './handler-tables.js';
 export { importOf, statedOrigin } from './stated-origin.js';
 export type { StatedOrigin } from './stated-origin.js';
 export { conditionsHold } from './adapters/conditions.js';

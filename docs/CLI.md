@@ -4010,7 +4010,9 @@ by the project, by a package or by the language (`any-typed`, `language-any`),
 a parameter nobody typed (`untyped-parameter`, `callback-param`), a method
 picked by key (`dynamic-member`), a receiver typed by an interface or a union
 (`interface-type`, `union-receiver`), a field given its function from elsewhere
-(`function-field`), a value provided through a token (`untyped-di-token`), and a
+(`function-field`), a call through a table of handlers some of whose elements
+are not written out (`table-rows-unread`, P398: the ones written out are
+followed), a value provided through a token (`untyped-di-token`), and a
 receiver of a data layer named by spelling only (`data-layer-unnamed`). A row
 with no finer cause counts under its own reason, so the total is always the
 report's `sites`. Most places first, each cause with what to do and a few

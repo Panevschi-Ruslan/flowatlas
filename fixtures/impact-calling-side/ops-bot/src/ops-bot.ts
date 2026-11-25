@@ -9,9 +9,9 @@ interface BotRoute {
 }
 
 /**
- * Buttons registered in a loop over a table of routes: the reading cannot say
- * which handler `route.handler` is, so the call is a gap in this file and
- * `handleStatus` is called by nothing the graph holds.
+ * Buttons registered in a loop over routes kept in a Map, not a table written
+ * out (P398 reads one): the reading cannot say which handler `route.handler`
+ * is, so the call is a gap in this file and `handleStatus` is called by nothing.
  */
 @Injectable()
 export class OpsBot implements OnModuleInit {
@@ -31,6 +31,6 @@ export class OpsBot implements OnModuleInit {
   }
 
   private routes(): BotRoute[] {
-    return [{ pattern: /^status:(\w+):(\w+)$/, handler: this.handleStatus.bind(this) }];
+    return [...new Map([['status', { pattern: /^status:(\w+):(\w+)$/, handler: this.handleStatus.bind(this) }]]).values()];
   }
 }

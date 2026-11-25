@@ -1,4 +1,4 @@
-import { agentQuestionsLine } from '@flowatlas/core';
+import { agentQuestionsLine, TEXT_IS_A_GREP } from '@flowatlas/core';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerPrompts } from './prompts.js';
@@ -50,8 +50,9 @@ export const SERVER_NAME = 'flowatlas';
  * before Claude Code v2.1.296 kept only the first 2,048 characters.
  */
 const INSTRUCTION_LINES: readonly string[] = [
-  // P396: text in code is a grep, so a plain-text question (a constant's value) costs no graph call before the grep.
-  "How the code of every repository here connects, already joined: ask it, not a search. Text in code (a constant, a log line, a string) is a grep. Each question is one call:",
+  // P396: a constant's value is a grep, so a plain-text question costs no graph call before the grep.
+  // P398: narrowly - who sends, handles or calls something (a message type, a route) is the graph's, never a grep.
+  `How every repository here connects, joined: ask it, not a search. ${TEXT_IS_A_GREP} Each question is one call:`,
   // The same questions the files `flowatlas agents install` writes list (P227), each with its call (P382).
   agentQuestionsLine(),
   'A symbol is an id, a `Class.method` or a route said aloud ("GET /orders/:id"); `service` picks among same-named ones. Before changing a route, handler, body type or message payload: impact first.',

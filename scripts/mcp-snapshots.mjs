@@ -245,19 +245,34 @@ const CALLING_SIDE_CASES = [
 ];
 /**
  * Every way in counted by what it is (P396): a bot's webhook handled by the
- * bot's class is a bot, a maybe row of another bot is a bot marked maybe, and
- * `changing` holds the API alone; `dead` on the maybe handler says `maybe`
- * with the gap impact names.
+ * bot's class is a bot, and `changing` holds the API alone. The courier bot's
+ * buttons, registered in a loop over a table, are ways in since P398, so its
+ * handler is alive and a bot's, no longer a maybe row.
  */
 const BOT_WEBHOOK_TARGET = 'shop-api#src/orders.service.ts:OrdersService.updateStatus';
 const BOT_WEBHOOK_CASES = [
   ['impact.bot-webhook', 'impact', { symbol: BOT_WEBHOOK_TARGET }],
-  ['dead.maybe-handler', 'dead', { id: 'courier-bot#src/courier-bot.ts:CourierBot.handleDelivered' }],
+  ['dead.table-handler', 'dead', { id: 'courier-bot#src/courier-bot.ts:CourierBot.handleDelivered' }],
 ];
 const BOT_WEBHOOK_COMPACT_CASES = [
   ['impact.bot-webhook', 'impact', { symbol: BOT_WEBHOOK_TARGET, verbose: false }],
-  ['dead.maybe-handler', 'dead', { id: 'courier-bot#src/courier-bot.ts:CourierBot.handleDelivered', verbose: false }],
+  ['dead.table-handler', 'dead', { id: 'courier-bot#src/courier-bot.ts:CourierBot.handleDelivered', verbose: false }],
 ];
+
+/**
+ * A bot whose buttons, commands and text go through tables of handlers the
+ * code writes out (P398): who_calls on a button's handler names the
+ * dispatcher, impact on the API method behind it counts the bot under bots
+ * with no maybe row, and dead on the handler says alive.
+ */
+const TABLE_TARGET = 'staff-bot#src/staff-bot.ts:StaffBot.showOrder';
+const TABLE_API = 'shop-api#src/orders.service.ts:OrdersService.listActive';
+const TABLE_CASES = [
+  ['who_calls.table-handler', 'who_calls', { symbol: TABLE_TARGET }],
+  ['impact.table-api', 'impact', { symbol: TABLE_API }],
+  ['dead.table-handlers', 'dead', { ids: [TABLE_TARGET, 'staff-bot#src/staff-bot.ts:StaffBot.listOrders', 'staff-bot#src/replies.ts:replyStock'] }],
+];
+const TABLE_COMPACT_CASES = TABLE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 
 /** The same impact, compact (P365), at both levels of detail: what an agent is handed. */
 const CALLING_SIDE_COMPACT_CASES = [
@@ -1082,6 +1097,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'impact-bot-webhook'),
     outDir: join(root, 'fixtures', 'impact-bot-webhook', 'expected.mcp.compact'),
     cases: BOT_WEBHOOK_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'handler-table-dispatch'),
+    outDir: join(root, 'fixtures', 'handler-table-dispatch', 'expected.mcp'),
+    cases: TABLE_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'handler-table-dispatch'),
+    outDir: join(root, 'fixtures', 'handler-table-dispatch', 'expected.mcp.compact'),
+    cases: TABLE_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'angular-rendered-reach'),

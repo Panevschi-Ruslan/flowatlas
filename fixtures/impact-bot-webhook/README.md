@@ -32,17 +32,22 @@ Type-checked, never executed:
 
 ## The courier bot - `courier-bot` (Nest, telegraf)
 
-- `CourierBot` registers `help` and, in a loop over a table, its buttons:
-  the handler of `route.handler(ctx)` is not read (`call-dynamic-receiver`).
+- `CourierBot` registers `help` and, in a loop over a table written out, its
+  buttons: `this.bot.action(route.pattern, (ctx) => route.handler(ctx))`
+  over `routes()`, whose one element holds `/^delivered:(\w+)$/` and
+  `this.handleDelivered.bind(this)`. Since P398 that is one way in per
+  element (`bot_callback /^delivered:(\w+)$/`, handled by `handleDelivered`)
+  and `route.handler(ctx)` is a call of `handleDelivered` (`via: "table"`);
+  until then the handler was not read (`call-dynamic-receiver`).
 - `handleDelivered` requests `PATCH /api/orders/status` through
-  `ShopClient.updateStatus`, and nothing the graph holds calls it.
+  `ShopClient.updateStatus`.
 
 ## What the answers say
 
 - `impact` on the method: `byKind` names the screen and both bots,
-  `bots: {"courier-bot": ["src/courier-bot.ts (maybe)"], "shop-api":
+  `bots: {"courier-bot": ["src/courier-bot.ts"], "shop-api":
   ["src/desk-bot.ts"]}` - the webhook and the command by the bot's file, the
-  courier bot's handler as a maybe row of a bot; `changing` holds only
-  `PATCH /api/orders/status`, never the webhook.
-- `dead` on `CourierBot.handleDelivered`: `verdict: "maybe"`, with the same
-  gap impact's row names (`gap:courier-bot|src/courier-bot.ts|call-dynamic-receiver`).
+  courier bot's button by its file, a way in, no maybe row; `changing` holds
+  only `PATCH /api/orders/status`, never the webhook.
+- `dead` on `CourierBot.handleDelivered`: `alive`, reached from the button.
+  Until P398 it said `maybe`, behind the gap the table left.

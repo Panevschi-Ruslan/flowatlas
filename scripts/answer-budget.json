@@ -494,7 +494,7 @@
                   "params": [
                     {
                       "name": "product",
-                      "type": "{\u202622 fields}"
+                      "type": "{…22 fields}"
                     }
                   ],
                   "returns": "string"
@@ -1865,9 +1865,9 @@
       ],
       "expect": {
         "says": [
-          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
-          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
-          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
           "whole: true"
         ],
         "saysNot": [
@@ -2785,7 +2785,7 @@
           "rows": {
             "consumer:web#src/app/live.service.ts:LiveService.onReady": {
               "precision": "high",
-              "fix": "listen with addEventListener(\"order-ready\", \u2026), or send the frames with no event name"
+              "fix": "listen with addEventListener(\"order-ready\", …), or send the frames with no event name"
             }
           }
         },
@@ -2936,27 +2936,25 @@
         "lists": {
           "entries": [
             "entry:backoffice-web:screen:/board",
+            "entry:courier-bot:bot_callback:/^delivered:(\\w+)$/",
             "entry:shop-api:bot_command:ready",
             "entry:shop-api:http:PATCH:/api/orders/status",
-            "entry:shop-api:http:POST:/bot/desk/webhook",
-            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered"
+            "entry:shop-api:http:POST:/bot/desk/webhook"
           ]
         },
-        "rowsSay": {
-          "entries": {
-            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered": {
-              "reach": "maybe"
-            }
-          }
+        "notListed": {
+          "entries": [
+            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered"
+          ]
         },
         "exact": [
           "entries"
         ]
       },
-      "note": "P396: byKind left the bots out and changing held the bot's webhook; now bots names both bots (the courier bot's handler marked maybe) and changing the API alone."
+      "note": "P396: byKind left the bots out and changing held the bot's webhook; now bots names both bots (the courier bot's handler marked maybe) and changing the API alone. P398: the courier bot registers its buttons in a loop over a table written out, so its button is a way in of its own and the handler no maybe row."
     },
     {
-      "id": "dead.maybe-handler",
+      "id": "dead.table-handler",
       "ask": "is CourierBot.handleDelivered dead, and DeskBot.onButton",
       "fixture": "impact-bot-webhook",
       "tool": "dead",
@@ -2973,8 +2971,7 @@
         "rowsSay": {
           "answers": {
             "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered": {
-              "verdict": "maybe",
-              "gap": "gap:courier-bot|src/courier-bot.ts|call-dynamic-receiver"
+              "verdict": "alive"
             },
             "shop-api#src/desk-bot.ts:DeskBot.onButton": {
               "verdict": "alive"
@@ -2982,18 +2979,84 @@
           }
         }
       },
-      "note": "P396: dead answered likely-dead where impact said maybe, and the agent spent 13 turns finding out which; both say maybe with the same gap."
+      "note": "P396: dead answered likely-dead where impact said maybe, and the agent spent 13 turns finding out which; both say maybe with the same gap. P398: the handler a table holds is reached from the button the loop registers, so it is alive (it was maybe behind the gap the table left)."
+    },
+    {
+      "id": "who_calls.table-handler",
+      "ask": "who calls StaffBot.showOrder, a button handler a table of prefixes holds",
+      "fixture": "handler-table-dispatch",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "staff-bot#src/staff-bot.ts:on callback_query@43"
+          ],
+          "waysIn": [
+            "entry:staff-bot:bot_event:callback_query"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ],
+        "notListed": {
+          "callers": [
+            "staff-bot#src/staff-bot.ts:StaffBot.setup",
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
+          ]
+        }
+      },
+      "note": "P398: route.handler(ctx, data) on this.buttonRoutes.find(...) was a gap and the handler maybe, the row a pilot dug into for turns; the callback_query handler that dispatches calls it, reached from the bot."
+    },
+    {
+      "id": "impact.table-api",
+      "ask": "which ways in could break if OrdersService.listActive changes",
+      "fixture": "handler-table-dispatch",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders.service.ts:OrdersService.listActive"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:http:GET:/api/orders/active",
+            "entry:staff-bot:bot_command:orders",
+            "entry:staff-bot:bot_event:callback_query"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+            "staff-bot#src/staff-bot.ts:StaffBot.listOrders"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P398: the bot is counted under bots by its ways in, a button through a table of prefixes and a command a loop over a table registers; no maybe row."
     }
   ],
   "fixed": {
-    "instructions": 2390,
-    "instructionsDb": 2450,
-    "guideBlock": 1054,
+    "instructions": 2372,
+    "instructionsDb": 2432,
+    "guideBlock": 1028,
     "guideBlockClaude": 366,
-    "skillDescription": 268,
-    "listingCore": 5685,
-    "listingDefault": 10601,
-    "listingAll": 13731
+    "skillDescription": 298,
+    "listingCore": 5687,
+    "listingDefault": 10603,
+    "listingAll": 13733
   },
   "recorded": {
     "impact.multi-repo": {
@@ -3004,8 +3067,8 @@
       "calls": 1
     },
     "impact.calling-side": {
-      "chars": 1441,
-      "tokens": 361,
+      "chars": 1453,
+      "tokens": 364,
       "rows": 4,
       "complete": false,
       "calls": 1
@@ -3025,43 +3088,43 @@
       "calls": 1
     },
     "impact.rendered-reach": {
-      "chars": 1303,
-      "tokens": 326,
+      "chars": 1297,
+      "tokens": 325,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "who_calls.multi-repo": {
-      "chars": 1891,
-      "tokens": 473,
+      "chars": 1886,
+      "tokens": 472,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "who_calls.helpdesk": {
-      "chars": 1068,
-      "tokens": 267,
+      "chars": 1063,
+      "tokens": 266,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "who_calls.long-chain": {
-      "chars": 2799,
-      "tokens": 700,
+      "chars": 2764,
+      "tokens": 691,
       "rows": 14,
       "complete": true,
       "calls": 1
     },
     "who_calls.class-shared-callers": {
-      "chars": 2897,
-      "tokens": 725,
+      "chars": 2862,
+      "tokens": 716,
       "rows": 13,
       "complete": true,
       "calls": 1
     },
     "who_calls.several-symbols": {
-      "chars": 1532,
-      "tokens": 383,
+      "chars": 1522,
+      "tokens": 381,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -3081,8 +3144,8 @@
       "calls": 1
     },
     "get_flow.inline-type": {
-      "chars": 1705,
-      "tokens": 427,
+      "chars": 1688,
+      "tokens": 422,
       "rows": 6,
       "complete": true,
       "calls": 1
@@ -3102,15 +3165,15 @@
       "calls": 1
     },
     "who_consumes.relayed-type": {
-      "chars": 911,
-      "tokens": 228,
+      "chars": 896,
+      "tokens": 224,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "who_consumes.every-channel": {
-      "chars": 578,
-      "tokens": 145,
+      "chars": 573,
+      "tokens": 144,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3130,8 +3193,8 @@
       "calls": 1
     },
     "fields.handler-reads": {
-      "chars": 690,
-      "tokens": 173,
+      "chars": 685,
+      "tokens": 172,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3144,22 +3207,22 @@
       "calls": 1
     },
     "fields.missing-unused": {
-      "chars": 822,
-      "tokens": 206,
+      "chars": 817,
+      "tokens": 205,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "dead.components": {
-      "chars": 1798,
-      "tokens": 450,
+      "chars": 1812,
+      "tokens": 453,
       "rows": 4,
       "complete": null,
       "calls": 1
     },
     "dead.handler-and-method": {
-      "chars": 818,
-      "tokens": 205,
+      "chars": 812,
+      "tokens": 203,
       "rows": 2,
       "complete": null,
       "calls": 1
@@ -3179,15 +3242,15 @@
       "calls": 1
     },
     "find_symbol.several": {
-      "chars": 1400,
-      "tokens": 350,
+      "chars": 1380,
+      "tokens": 345,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "find_symbol.unreferenced": {
-      "chars": 980,
-      "tokens": 245,
+      "chars": 922,
+      "tokens": 231,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3200,8 +3263,8 @@
       "calls": 6
     },
     "impact.handling-code": {
-      "chars": 1172,
-      "tokens": 293,
+      "chars": 1183,
+      "tokens": 296,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3214,8 +3277,8 @@
       "calls": 1
     },
     "who_consumes.never-subscribed": {
-      "chars": 1089,
-      "tokens": 273,
+      "chars": 1074,
+      "tokens": 269,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3228,15 +3291,15 @@
       "calls": 1
     },
     "impact.detail-2-lean": {
-      "chars": 1733,
-      "tokens": 434,
+      "chars": 1744,
+      "tokens": 436,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.reached-through-route": {
-      "chars": 1172,
-      "tokens": 293,
+      "chars": 1183,
+      "tokens": 296,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3263,8 +3326,8 @@
       "calls": 1
     },
     "who_calls.channels-counted": {
-      "chars": 1900,
-      "tokens": 475,
+      "chars": 1895,
+      "tokens": 474,
       "rows": 8,
       "complete": true,
       "calls": 1
@@ -3284,15 +3347,15 @@
       "calls": 1
     },
     "who_calls.request-lands": {
-      "chars": 972,
-      "tokens": 243,
+      "chars": 967,
+      "tokens": 242,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "find_symbol.request-lands": {
-      "chars": 541,
-      "tokens": 136,
+      "chars": 536,
+      "tokens": 134,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3312,8 +3375,8 @@
       "calls": 1
     },
     "who_calls.service-picks": {
-      "chars": 1733,
-      "tokens": 434,
+      "chars": 1718,
+      "tokens": 430,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3326,8 +3389,8 @@
       "calls": 1
     },
     "who_calls.two-services": {
-      "chars": 3228,
-      "tokens": 807,
+      "chars": 3208,
+      "tokens": 802,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3340,8 +3403,8 @@
       "calls": 1
     },
     "dead.through-dead": {
-      "chars": 878,
-      "tokens": 220,
+      "chars": 872,
+      "tokens": 218,
       "rows": 2,
       "complete": null,
       "calls": 1
@@ -3368,8 +3431,8 @@
       "calls": 1
     },
     "impact.symbols": {
-      "chars": 1675,
-      "tokens": 419,
+      "chars": 1668,
+      "tokens": 417,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -3389,15 +3452,15 @@
       "calls": 1
     },
     "check_contract.type-on-two-channels": {
-      "chars": 1364,
-      "tokens": 341,
+      "chars": 1354,
+      "tokens": 339,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "check_contract.type-as-channel": {
-      "chars": 705,
-      "tokens": 177,
+      "chars": 700,
+      "tokens": 175,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3417,36 +3480,36 @@
       "calls": 1
     },
     "find_symbol.two-words": {
-      "chars": 934,
-      "tokens": 234,
+      "chars": 924,
+      "tokens": 231,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "search.sentence": {
-      "chars": 906,
-      "tokens": 227,
+      "chars": 896,
+      "tokens": 224,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "search.sentence-payments": {
-      "chars": 1567,
-      "tokens": 392,
+      "chars": 1533,
+      "tokens": 384,
       "rows": 8,
       "complete": false,
       "calls": 1
     },
     "find_symbol.camel-words": {
-      "chars": 1193,
-      "tokens": 299,
+      "chars": 1173,
+      "tokens": 294,
       "rows": 5,
       "complete": false,
       "calls": 1
     },
     "search.or": {
-      "chars": 1868,
-      "tokens": 467,
+      "chars": 1828,
+      "tokens": 457,
       "rows": 10,
       "complete": false,
       "calls": 1
@@ -3472,6 +3535,27 @@
       "complete": null,
       "calls": 1
     },
+    "findings.that-hold": {
+      "chars": 4083,
+      "tokens": 1021,
+      "rows": 6,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.hub-screens-types": {
+      "chars": 424,
+      "tokens": 106,
+      "rows": 0,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.handler-types": {
+      "chars": 1349,
+      "tokens": 338,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
     "who_calls.shadowed-handler": {
       "chars": 567,
       "tokens": 142,
@@ -3494,8 +3578,8 @@
       "calls": 1
     },
     "find_symbol.request-lands-shadowed": {
-      "chars": 481,
-      "tokens": 121,
+      "chars": 476,
+      "tokens": 119,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3550,8 +3634,8 @@
       "calls": 0
     },
     "check_change.edited": {
-      "chars": 1848,
-      "tokens": 462,
+      "chars": 1849,
+      "tokens": 463,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3585,8 +3669,8 @@
       "calls": 1
     },
     "findings.deployment-settings": {
-      "chars": 5506,
-      "tokens": 1377,
+      "chars": 5512,
+      "tokens": 1378,
       "rows": 12,
       "complete": null,
       "calls": 1
@@ -3620,52 +3704,45 @@
       "calls": 1
     },
     "who_consumes.type-as-channel": {
-      "chars": 949,
-      "tokens": 238,
+      "chars": 934,
+      "tokens": 234,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.maybe-confirm": {
-      "chars": 1303,
-      "tokens": 326,
+      "chars": 1297,
+      "tokens": 325,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "impact.bot-webhook": {
-      "chars": 1606,
-      "tokens": 402,
+      "chars": 1483,
+      "tokens": 371,
       "rows": 5,
-      "complete": false,
+      "complete": true,
       "calls": 1
     },
-    "dead.maybe-handler": {
-      "chars": 814,
-      "tokens": 204,
+    "dead.table-handler": {
+      "chars": 591,
+      "tokens": 148,
       "rows": 2,
       "complete": null,
       "calls": 1
     },
-    "findings.that-hold": {
-      "chars": 4083,
-      "tokens": 1021,
-      "rows": 6,
-      "complete": null,
+    "who_calls.table-handler": {
+      "chars": 746,
+      "tokens": 187,
+      "rows": 3,
+      "complete": true,
       "calls": 1
     },
-    "findings.hub-screens-types": {
-      "chars": 424,
-      "tokens": 106,
-      "rows": 0,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.handler-types": {
-      "chars": 1349,
-      "tokens": 338,
-      "rows": 1,
-      "complete": null,
+    "impact.table-api": {
+      "chars": 1045,
+      "tokens": 262,
+      "rows": 3,
+      "complete": true,
       "calls": 1
     }
   }

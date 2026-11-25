@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["SHOP_API_URL"]
+    },
+    {
+      "name": "staff-bot",
+      "repo": "./staff-bot",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

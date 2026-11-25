@@ -1,0 +1,73 @@
+{
+  "target": {
+    "id": "shop-api#src/orders.service.ts:OrdersService.listActive",
+    "type": "method",
+    "label": "OrdersService.listActive",
+    "loc": "src/orders.service.ts:8",
+    "service": "shop-api",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:shop-api:http:GET:/api/orders/active",
+      "type": "entry",
+      "label": "GET /api/orders/active",
+      "loc": "src/orders.controller.ts:8",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "by": "shop-api#src/orders.controller.ts:OrdersController.active",
+      "rowsVia": 2
+    },
+    {
+      "id": "entry:staff-bot:bot_command:orders",
+      "type": "entry",
+      "label": "bot_command orders",
+      "loc": "src/staff-bot.ts:50",
+      "service": "staff-bot",
+      "kind": "bot_command",
+      "reach": "outside",
+      "via": "GET /api/orders/active (shop-api)",
+      "by": "staff-bot#src/staff-bot.ts:StaffBot.listOrders"
+    },
+    {
+      "id": "entry:staff-bot:bot_event:callback_query",
+      "type": "entry",
+      "label": "bot_event callback_query",
+      "loc": "src/staff-bot.ts:43",
+      "service": "staff-bot",
+      "kind": "bot_event",
+      "reach": "outside",
+      "via": "GET /api/orders/active (shop-api)",
+      "by": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "bots": {
+      "staff-bot": [
+        "src/staff-bot.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:GET:/api/orders/active"
+  ],
+  "reached": 9,
+  "entriesByService": {
+    "shop-api": 1,
+    "staff-bot": 2
+  },
+  "reachedByService": {
+    "shop-api": 2,
+    "staff-bot": 7
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:GET:/api/orders/active\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:GET:/api/orders/active\"})",
+    "impact({symbol: \"entry:shop-api:http:GET:/api/orders/active\"})"
+  ]
+}

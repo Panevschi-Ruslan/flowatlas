@@ -383,6 +383,7 @@ const CAUSE_HINTS: ReadonlyMap<string, (pkg: string | undefined) => string> = ne
   ['module-namespace', () => 'A module imported whole; call its functions by name to make them visible.'],
   ['generic-receiver', () => 'Typed by a type parameter; the class is whatever each caller passes.'],
   ['function-field', () => 'A field given its function from elsewhere; declare it as a method to make the edge visible.'],
+  ['table-rows-unread', () => 'A call through a table of handlers some of whose elements are not written out (a spread, a value from elsewhere); the elements written out are followed, write the rest out to follow them too.'],
   ['other-type', () => 'The receiver has no single class type; inject a class to make the edge visible.'],
   ['untyped-di-token', () => 'Provided by a token with a value or a factory, so no class is known; provide it with a class.'],
   ['container-lookup', () => 'Resolved through the container at run time; inject the class instead.'],

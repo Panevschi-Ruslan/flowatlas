@@ -1,5 +1,5 @@
 import type { EntryAdapter, EntryHandler, EntryKind, EntryNode, ExtractContext } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId, resolveTypeOrigin, startLineOf } from '@flowatlas/core';
+import { hasAnyDependency, makeEntryId, resolveTypeOrigin, startLineOf, tableDispatchOf, tableKeyOf, tableMemberOf, tableTargetOf } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { resolveTriggerArg } from './nestjs-telegraf/triggers.js';
@@ -7,6 +7,8 @@ import {
   enclosingClass,
   enclosingHandler,
   fileOfNode,
+  handlerOf,
+  handlerOfFunction,
   handlerInside,
   inlineHandlerOf,
   repoSources,
@@ -105,7 +107,69 @@ interface Site {
   text: string;
   /** Class the registration is written in, when it is written in one. */
   updateClass?: string;
+  /** The handler of each key, for a registration made over a table of elements (P398). */
+  handlers?: Map<string, EntryHandler | undefined>;
+  /** Elements of that table whose trigger is not written out, and every element. */
+  unread?: number;
+  total?: number;
 }
+
+/** The member of `element` a call or a reference in the handler names: `handler` of `(ctx) => route.handler(ctx)` or of `route.handler`. */
+const memberCalledOn = (handlerArg: TsNode | undefined, element: string): string | undefined => {
+  if (handlerArg === undefined) return undefined;
+  const named = (access: TsNode): string | undefined =>
+    Node.isPropertyAccessExpression(access) && access.getExpression().getText() === element ? access.getName() : undefined;
+  const direct = named(handlerArg);
+  if (direct !== undefined) return direct;
+  for (const call of handlerArg.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const found = named(call.getExpression());
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
+
+/** What one element of a table runs, as the handler of the way in it opens. */
+const handlerOfTarget = (value: TsNode | undefined, label: string, ctx: ExtractContext): EntryHandler | undefined => {
+  const target = value === undefined ? undefined : tableTargetOf(value);
+  if (target === undefined) return undefined;
+  if (target.kind === 'method') return Node.isMethodDeclaration(target.method) ? handlerOf(target.method, ctx) : undefined;
+  if (target.kind === 'function') return handlerOfFunction(target.fn, ctx);
+  return inlineHandlerOf(target.fn, label, ctx);
+};
+
+/**
+ * A registration made in a loop over a table the code writes out (P398):
+ * `for (const route of this.routes()) bot.action(route.pattern, (ctx) =>
+ * route.handler(ctx))` opens one way in per element, keyed by the element's
+ * trigger and handled by what its handler member runs. Elements whose trigger
+ * is not written out are counted.
+ */
+const tableSiteOf = (
+  call: CallExpression,
+  trigger: TsNode | undefined,
+  handlerArg: TsNode | undefined,
+  name: string,
+  ctx: ExtractContext,
+): { keys: string[]; handlers: Map<string, EntryHandler | undefined>; unread: number; total: number } | undefined => {
+  if (trigger === undefined || !Node.isPropertyAccessExpression(trigger)) return undefined;
+  const element = trigger.getExpression();
+  const dispatch = tableDispatchOf(element, trigger.getName(), call);
+  if (dispatch === undefined) return undefined;
+  const handlerMember = memberCalledOn(handlerArg, element.getText());
+  const keys: string[] = [];
+  const handlers = new Map<string, EntryHandler | undefined>();
+  let unread = dispatch.unread;
+  for (const row of dispatch.rows) {
+    const key = tableKeyOf(row.element, trigger.getName());
+    if (key === undefined) {
+      unread += 1;
+      continue;
+    }
+    keys.push(key);
+    handlers.set(key, handlerMember === undefined ? undefined : handlerOfTarget(tableMemberOf(row.element, handlerMember), `${name} ${key}`, ctx));
+  }
+  return keys.length === 0 ? undefined : { keys, handlers, unread, total: dispatch.total };
+};
 
 const siteOf = (call: CallExpression, ctx: ExtractContext): Site | null => {
   const registration = registrationOf(call);
@@ -113,7 +177,24 @@ const siteOf = (call: CallExpression, ctx: ExtractContext): Site | null => {
   const { name, kind, implied } = registration;
 
   const args = call.getArguments();
-  const keys = implied === undefined ? triggersOf(args[0]) : [implied];
+  // A table written out first: `route.pattern` read as a constant names the first element's alone.
+  const table = implied === undefined ? tableSiteOf(call, args[0], args[1], name, ctx) : undefined;
+  const written = implied === undefined ? (table === undefined ? triggersOf(args[0]) : []) : [implied];
+  if (table !== undefined) {
+    return {
+      method: name,
+      kind,
+      keys: table.keys,
+      handler: undefined,
+      handlers: table.handlers,
+      viaRegistration: false,
+      line: startLineOf(call),
+      text: (args[0]?.getText() ?? '').slice(0, 80),
+      ...(table.unread === 0 ? {} : { unread: table.unread, total: table.total }),
+      ...(enclosingClass(call) === undefined ? {} : { updateClass: enclosingClass(call)?.getName() ?? '<anonymous>' }),
+    };
+  }
+  const keys = written;
   if (keys.length === 0) return null;
 
   const handlerArg = implied === undefined ? args[1] : args[0];
@@ -167,18 +248,20 @@ export const telegrafCallsAdapter: EntryAdapter = {
           continue;
         }
         registrations += 1;
+        if (site.unread !== undefined) reportTableUnread(ctx, call, site.unread, site.total ?? site.unread);
 
         for (const key of site.keys) {
           const id = makeEntryId(ctx.repo, site.kind, key);
           if (seen.has(id)) continue;
           seen.add(id);
+          const handler = site.handlers === undefined ? site.handler : site.handlers.get(key);
 
           entries.push({
             id,
             kind: site.kind,
             label: `${site.kind} ${key}`,
             key,
-            ...(site.handler === undefined ? {} : { handler: site.handler }),
+            ...(handler === undefined ? {} : { handler }),
             file: fileOfNode(call, ctx),
             line: site.line,
             meta: {
@@ -190,7 +273,7 @@ export const telegrafCallsAdapter: EntryAdapter = {
               ...(site.updateClass === undefined ? {} : { updateClass: site.updateClass }),
               // Said plainly, because a walk from this entry is only as narrow
               // as the answer to "which code does the handler run".
-              handlerVia: site.viaRegistration ? 'registration' : site.inline === true ? 'inline' : 'call',
+              handlerVia: site.handlers !== undefined ? 'table' : site.viaRegistration ? 'registration' : site.inline === true ? 'inline' : 'call',
             },
           });
         }
@@ -226,6 +309,21 @@ const reportUnreadable = (ctx: ExtractContext, call: CallExpression): boolean =>
     adapter: ADAPTER,
   });
   return true;
+};
+
+/**
+ * A registration over a table some of whose elements' triggers are not written
+ * out (P398): the ones written out are ways in, the rest a row with the count.
+ */
+const reportTableUnread = (ctx: ExtractContext, call: CallExpression, unread: number, total: number): void => {
+  ctx.builder.addUnresolved({
+    file: fileOfNode(call, ctx),
+    line: startLineOf(call),
+    reason: 'dynamic-bot-trigger',
+    hint: `${unread} of ${total} elements of the table this registers are not written out, so their triggers cannot be named; the rest are ways in.`,
+    symbol: call.getArguments()[0]?.getText().slice(0, 60) ?? 'table',
+    adapter: ADAPTER,
+  });
 };
 
 /**

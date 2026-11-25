@@ -1,0 +1,46 @@
+{
+  "target": {
+    "id": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+    "line": 67,
+    "reach": "alive",
+    "from": "bot_event callback_query"
+  },
+  "callers": [
+    {
+      "id": "staff-bot#src/staff-bot.ts:on callback_query@43",
+      "type": "function",
+      "line": 43,
+      "reach": "alive",
+      "from": "bot_event callback_query",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "type:telegraf#Context",
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "id": "entry:staff-bot:bot_event:callback_query",
+          "loc": "src/staff-bot.ts:43",
+          "reach": "outside",
+          "edge": "handles"
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:staff-bot:bot_event:callback_query",
+      "line": 43,
+      "reach": "outside",
+      "hops": 2
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:staff-bot:bot_event:callback_query\"})",
+    "describe_for_prompt({id: \"entry:staff-bot:bot_event:callback_query\"})"
+  ]
+}

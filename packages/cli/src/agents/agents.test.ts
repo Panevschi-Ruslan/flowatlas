@@ -51,7 +51,7 @@ describe('the guide every assistant is given (P227)', () => {
     expect(sharedBlock(GUIDE)).toContain(TEXT_IS_A_GREP);
     expect(guideBody(GUIDE)).toContain(TEXT_IS_A_GREP);
     expect(guideBody({ ...GUIDE, via: 'terminal' })).toContain(TEXT_IS_A_GREP);
-    expect(guideDescription(GUIDE)).toContain("A constant's value is a grep.");
+    expect(guideDescription(GUIDE)).toContain("A constant's value is a grep; who sends or handles it is not.");
   });
 
   it('writes a skill and a Cursor rule an assistant loads by description, with a mark that tells a hand edit apart', () => {

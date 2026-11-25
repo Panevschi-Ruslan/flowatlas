@@ -35,8 +35,10 @@ Type-checked, never executed:
 
 ## The bot - `ops-bot` (Nest, telegraf)
 
-- `OpsBot` registers its buttons in a loop over a table of routes,
-  `this.bot.action(route.pattern, (ctx) => route.handler(ctx))`: the trigger
+- `OpsBot` registers its buttons in a loop over routes kept in a `Map`,
+  `this.bot.action(route.pattern, (ctx) => route.handler(ctx))`. A table
+  written out is read since P398 (`handler-table-dispatch`); routes spread
+  out of a `Map` are not a table written out, so the trigger
   is dynamic and the call has no single receiver, a `call-dynamic-receiver`
   gap in `src/ops-bot.ts`, so `OpsBot.handleStatus` is called by nothing the
   graph holds and no bot way in is drawn.

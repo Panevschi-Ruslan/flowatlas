@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T23:50:21.340Z",
+  "builtAt": "2026-11-25T12:03:47.051Z",
   "services": [
     {
       "name": "shop-api",
@@ -286,6 +286,23 @@
         "screens": [
           "StatusBoardComponent"
         ]
+      }
+    },
+    {
+      "id": "entry:courier-bot:bot_callback:/^delivered:(\\w+)$/",
+      "type": "entry",
+      "label": "bot_callback /^delivered:(\\w+)$/",
+      "repo": "courier-bot",
+      "file": "src/courier-bot.ts",
+      "line": 26,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "/^delivered:(\\w+)$/",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "route.pattern",
+        "updateClass": "CourierBot",
+        "handlerVia": "table"
       }
     },
     {
@@ -788,6 +805,21 @@
     },
     {
       "from": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit",
+      "to": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{match:string[]}"
+      ],
+      "returns": "void",
+      "file": "src/courier-bot.ts",
+      "line": 26,
+      "meta": {
+        "via": "table"
+      }
+    },
+    {
+      "from": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit",
       "to": "courier-bot#src/courier-bot.ts:CourierBot.help",
       "type": "calls",
       "confidence": "static",
@@ -850,6 +882,18 @@
       "meta": {
         "route": "/board"
       }
+    },
+    {
+      "from": "entry:courier-bot:bot_callback:/^delivered:(\\w+)$/",
+      "to": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{match:string[]}"
+      ],
+      "returns": "void",
+      "file": "src/courier-bot.ts",
+      "line": 35
     },
     {
       "from": "entry:courier-bot:bot_command:help",
@@ -1103,51 +1147,6 @@
       "reason": "module-import-dynamic",
       "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
       "symbol": "AppModule imports ConfigModule",
-      "service": "courier-bot"
-    },
-    {
-      "file": "src/courier-bot.ts",
-      "line": 26,
-      "reason": "call-dynamic-receiver",
-      "level": "info",
-      "sites": 2,
-      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "CourierBot.onModuleInit -> route.handler",
-      "meta": {
-        "causes": [
-          {
-            "cause": "function-value",
-            "sites": 1,
-            "samples": [
-              {
-                "file": "src/courier-bot.ts",
-                "line": 40,
-                "symbol": "CourierBot.routes -> this.handleDelivered.bind"
-              }
-            ]
-          },
-          {
-            "cause": "interface-type",
-            "sites": 1,
-            "samples": [
-              {
-                "file": "src/courier-bot.ts",
-                "line": 26,
-                "symbol": "CourierBot.onModuleInit -> route.handler"
-              }
-            ]
-          }
-        ]
-      },
-      "service": "courier-bot"
-    },
-    {
-      "file": "src/courier-bot.ts",
-      "line": 26,
-      "reason": "dynamic-bot-trigger",
-      "hint": "Register with a string literal or a constant, so the command can be named.",
-      "symbol": "route.pattern",
-      "adapter": "telegraf-calls",
       "service": "courier-bot"
     }
   ]

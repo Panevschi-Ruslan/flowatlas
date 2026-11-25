@@ -10,9 +10,9 @@ interface BotRoute {
 
 /**
  * The couriers' bot: a command read, and buttons registered in a loop over a
- * table, whose handler the reading cannot name. `handleDelivered` requests
- * the route through the client and is called by nothing the graph holds: a
- * maybe row, and still a bot's.
+ * table written out, one way in per element (P398). `handleDelivered`, the
+ * handler of `delivered:<id>`, requests the route through the client: a way
+ * in of a bot, no longer a maybe row.
  */
 @Injectable()
 export class CourierBot implements OnModuleInit {

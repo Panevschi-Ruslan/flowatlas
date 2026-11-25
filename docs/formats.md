@@ -171,7 +171,7 @@ On an `entry`:
 | `stages` | the stages a Terraform API is deployed to; a stage the workspace names lists each workspace's |
 | `implementedBy` | the package whose code answers the way in: a gRPC health or reflection service handed to the server |
 | `protoFieldNames` | as on a request, for the service's contract |
-| `handlerVia` | how the code behind the way in was found (`function`, `method`, `inline`, `named`, ...). Two say it is not the repository's: `framework`, a route the framework's own code answers (a Strapi core route whose controller writes no action), and `package`, one an installed package declares and answers (a Strapi or Gatsby plugin under `node_modules`), drawn at the file that enables it with `package` and `declaredIn` naming the package and its file |
+| `handlerVia` | how the code behind the way in was found (`function`, `method`, `inline`, `named`, ...; `table`, P398: one way in per element of a table written out that a loop registers, `bot.action(route.pattern, ...)` over `for (const route of routes)`). Two say it is not the repository's: `framework`, a route the framework's own code answers (a Strapi core route whose controller writes no action), and `package`, one an installed package declares and answers (a Strapi or Gatsby plugin under `node_modules`), drawn at the file that enables it with `package` and `declaredIn` naming the package and its file |
 
 A type the tool read from a `.proto` contract carries `declaredBy: protobuf`
 with `protoMessage` or `protoEnum`, and each field `protoName` where its name
@@ -217,6 +217,17 @@ is from, `(its default)`, `(a file nothing is read loading)` where that file
 only offers the value, the merge it is read through, the write not read it is
 from before, the call the port is handed at, and the mapping or the cluster's
 service it is reached through.
+
+A call through an element of a table of handlers the code writes out
+(`route.handler(ctx)` where `route` is `this.routes.find(...)`, a `for...of`
+element, a `forEach` parameter, `table[i]` or a destructure, P398) is a
+`calls` edge to what each element's member runs - a method (`this.h`,
+`this.h.bind(this)`), a function declared or imported, or the calls of an
+arrow written in the element - with `meta.via: "table"` and, where the
+selection names a key, `meta.selectedBy` (`prefix set_status_`, `equals
+stock`, `pattern /^done:(\w+)$/`). Elements not written out (a spread of a
+value from elsewhere) keep the call's `call-dynamic-receiver` row, cause
+`table-rows-unread`, its hint saying how many.
 
 A front end's navigations and route guards are `calls` edges. A navigation's
 `meta` gains `alsoNavigates` (the other addresses written to the same page from
