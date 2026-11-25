@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:50:15.283Z",
+  "builtAt": "2026-11-25T13:39:05.586Z",
   "configHash": "0a8241ab0356",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./api",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2271,
+      "durationMs": 2400,
       "packages": {
         "name": "unloaded-env-image-environment-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2232,
+      "durationMs": 2343,
       "packages": {
         "name": "unloaded-env-image-environment-audit",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2248,
+      "durationMs": 2341,
       "packages": {
         "name": "unloaded-env-image-environment-bare",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 3,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2241,
+      "durationMs": 2366,
       "packages": {
         "name": "unloaded-env-image-environment-billing",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2207,
+      "durationMs": 2391,
       "packages": {
         "name": "unloaded-env-image-environment-catalog",
         "runtime": [
@@ -98,11 +98,11 @@
       "repo": "./inventory",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2233,
+      "durationMs": 2338,
       "packages": {
         "name": "unloaded-env-image-environment-inventory",
         "runtime": [
@@ -116,11 +116,11 @@
       "repo": "./ledger",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2206,
+      "durationMs": 2408,
       "packages": {
         "name": "unloaded-env-image-environment-ledger",
         "runtime": [
@@ -134,11 +134,11 @@
       "repo": "./loaded",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2207,
+      "durationMs": 2340,
       "packages": {
         "name": "unloaded-env-image-environment-loaded",
         "runtime": [
@@ -153,11 +153,11 @@
       "repo": "./orders",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2232,
+      "durationMs": 2347,
       "packages": {
         "name": "unloaded-env-image-environment-orders",
         "runtime": [
@@ -171,11 +171,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2120,
+      "durationMs": 2299,
       "packages": {
         "name": "unloaded-env-image-environment-stock",
         "runtime": [
@@ -193,7 +193,7 @@
       "edges": 20,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2225,
+      "durationMs": 2343,
       "packages": {
         "name": "unloaded-env-image-environment-web",
         "runtime": [],
@@ -337,7 +337,7 @@
     }
   ],
   "totals": {
-    "nodes": 55,
+    "nodes": 61,
     "edges": 33,
     "types": 2,
     "missed": 2,

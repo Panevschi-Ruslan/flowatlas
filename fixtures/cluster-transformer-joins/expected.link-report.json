@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:18.230Z",
+  "builtAt": "2026-11-25T13:17:30.111Z",
   "configHash": "a20a8bb09035",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1160,
+      "durationMs": 1085,
       "packages": {
         "name": "cluster-transformer-joins-jobs",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./orders",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1164,
+      "durationMs": 1059,
       "packages": {
         "name": "cluster-transformer-joins-orders",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1095,
+      "durationMs": 1078,
       "packages": {
         "name": "cluster-transformer-joins-payments",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1156,
+      "durationMs": 1056,
       "packages": {
         "name": "cluster-transformer-joins-stock",
         "runtime": [
@@ -140,7 +140,7 @@
     }
   ],
   "totals": {
-    "nodes": 15,
+    "nodes": 16,
     "edges": 10,
     "types": 2,
     "missed": 3,

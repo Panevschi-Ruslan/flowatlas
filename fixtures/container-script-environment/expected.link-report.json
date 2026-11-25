@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:29.241Z",
+  "builtAt": "2026-11-25T13:17:39.068Z",
   "configHash": "c1dfa39278cb",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./accounts",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2612,
+      "durationMs": 2433,
       "packages": {
         "name": "container-script-environment-accounts",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./admin",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2693,
+      "durationMs": 2446,
       "packages": {
         "name": "container-script-environment-admin",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./api",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2694,
+      "durationMs": 2447,
       "packages": {
         "name": "container-script-environment-api",
         "runtime": [
@@ -62,11 +62,11 @@
       "repo": "./billing",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2412,
+      "durationMs": 2454,
       "packages": {
         "name": "container-script-environment-billing",
         "runtime": [
@@ -80,11 +80,11 @@
       "repo": "./catalog",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2655,
+      "durationMs": 2349,
       "packages": {
         "name": "container-script-environment-catalog",
         "runtime": [
@@ -98,11 +98,11 @@
       "repo": "./jobs",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2670,
+      "durationMs": 2415,
       "packages": {
         "name": "container-script-environment-jobs",
         "runtime": [
@@ -116,11 +116,11 @@
       "repo": "./ledger",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2754,
+      "durationMs": 2423,
       "packages": {
         "name": "container-script-environment-ledger",
         "runtime": [
@@ -134,11 +134,11 @@
       "repo": "./orders",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2649,
+      "durationMs": 2439,
       "packages": {
         "name": "container-script-environment-orders",
         "runtime": [
@@ -152,11 +152,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2577,
+      "durationMs": 2470,
       "packages": {
         "name": "container-script-environment-stock",
         "runtime": [
@@ -174,7 +174,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2499,
+      "durationMs": 2426,
       "packages": {
         "name": "container-script-environment-web",
         "runtime": [],
@@ -261,7 +261,7 @@
     }
   ],
   "totals": {
-    "nodes": 44,
+    "nodes": 53,
     "edges": 25,
     "types": 2,
     "missed": 0,

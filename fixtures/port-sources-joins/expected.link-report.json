@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:46:10.572Z",
+  "builtAt": "2026-11-25T13:29:42.094Z",
   "configHash": "7c602655c404",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2414,
+      "durationMs": 5420,
       "packages": {
         "name": "port-sources-joins-admin",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./audit",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2395,
+      "durationMs": 5290,
       "packages": {
         "name": "port-sources-joins-audit",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2737,
+      "durationMs": 5731,
       "packages": {
         "name": "port-sources-joins-billing",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2266,
+      "durationMs": 5282,
       "packages": {
         "name": "port-sources-joins-catalog",
         "runtime": [
@@ -82,11 +82,11 @@
       "repo": "./jobs",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 9,
+      "nodes": 10,
       "edges": 7,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 962,
+      "durationMs": 1416,
       "packages": {
         "name": "port-sources-joins-jobs",
         "runtime": [
@@ -100,11 +100,11 @@
       "repo": "./ledger",
       "type": "koa",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 2277,
+      "durationMs": 5128,
       "packages": {
         "name": "port-sources-joins-ledger",
         "runtime": [
@@ -124,7 +124,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2298,
+      "durationMs": 5227,
       "packages": {
         "name": "port-sources-joins-notify",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2320,
+      "durationMs": 5260,
       "packages": {
         "name": "port-sources-joins-orders",
         "runtime": [
@@ -156,11 +156,11 @@
       "repo": "./search",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2200,
+      "durationMs": 5292,
       "packages": {
         "name": "port-sources-joins-search",
         "runtime": [
@@ -178,7 +178,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2343,
+      "durationMs": 5300,
       "packages": {
         "name": "port-sources-joins-shop",
         "runtime": [],
@@ -198,7 +198,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2340,
+      "durationMs": 5378,
       "packages": {
         "name": "port-sources-joins-stock",
         "runtime": [
@@ -216,7 +216,7 @@
       "edges": 33,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2159,
+      "durationMs": 5148,
       "packages": {
         "name": "port-sources-joins-web",
         "runtime": [
@@ -280,7 +280,7 @@
     }
   ],
   "totals": {
-    "nodes": 67,
+    "nodes": 71,
     "edges": 53,
     "types": 3,
     "missed": 1,

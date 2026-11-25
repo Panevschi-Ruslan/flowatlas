@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:36:14.698Z",
+  "builtAt": "2026-11-25T13:19:55.175Z",
   "configHash": "7286652157e2",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1747,
+      "durationMs": 1444,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1676,
+      "durationMs": 1448,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1719,
+      "durationMs": 1466,
       "packages": {
         "name": "legacy",
         "runtime": [
@@ -62,11 +62,11 @@
       "repo": "./orders",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1667,
+      "durationMs": 1455,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -85,7 +85,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1686,
+      "durationMs": 1424,
       "packages": {
         "name": "search",
         "runtime": [
@@ -103,7 +103,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1666,
+      "durationMs": 1384,
       "packages": {
         "name": "site",
         "runtime": [
@@ -152,7 +152,7 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 30,
+    "nodes": 31,
     "edges": 17,
     "types": 0,
     "missed": 7,

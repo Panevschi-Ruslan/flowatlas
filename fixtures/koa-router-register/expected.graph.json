@@ -1,8 +1,21 @@
 {
   "schemaVersion": 8,
   "repo": "koa-router-register",
-  "generatedAt": "2026-11-23T14:37:06.265Z",
+  "generatedAt": "2026-11-25T13:21:01.072Z",
   "nodes": [
+    {
+      "id": "config_key:koa-router-register#JOB_VERBS",
+      "type": "config_key",
+      "label": "JOB_VERBS",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 30,
+      "meta": {
+        "key": "JOB_VERBS",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
     {
       "id": "entry:koa-router-register:http:GET:/api/jobs.:interval",
       "type": "entry",

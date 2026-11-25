@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:48:22.290Z",
+  "builtAt": "2026-11-25T13:35:58.059Z",
   "configHash": "cac24acbc169",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4655,
+      "durationMs": 848,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4719,
+      "durationMs": 846,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./web",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 32,
+      "nodes": 33,
       "edges": 30,
       "types": 0,
       "unresolved": 6,
-      "durationMs": 5134,
+      "durationMs": 923,
       "packages": {
         "name": "settings-branches-helpers-web",
         "runtime": [
@@ -93,7 +93,7 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 44,
+    "nodes": 45,
     "edges": 47,
     "types": 0,
     "missed": 8,

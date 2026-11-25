@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:36:37.281Z",
+  "builtAt": "2026-11-25T13:20:33.899Z",
   "services": [
     {
       "name": "api",
@@ -279,6 +279,19 @@
             "line": 16
           }
         ]
+      }
+    },
+    {
+      "id": "config_key:stock#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 14,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

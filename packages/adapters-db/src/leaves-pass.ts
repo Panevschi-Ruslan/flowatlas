@@ -20,6 +20,9 @@ import {
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
+  branchTestsOf,
+  takenAlong,
+  testsAVerb,
   optionVerbAlong,
   optionVerbOf,
   type OptionVerb,
@@ -882,7 +885,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return name;
   };
 
-  const emitConfig = (node: TsNode, holder: Holder): void => {
+  /**
+   * A read of a setting, held by the body it is written in, or by none where
+   * it is written in a module's own statements (P401): `export const settings
+   * = { region: process.env.LEDGER_REGION }` runs once, when the module is
+   * imported, and is the read every user of `settings` relies on. The key is
+   * recorded all the same, with no body to draw it from, so a setting read
+   * only there is not a setting read nowhere.
+   */
+  const emitConfig = (node: TsNode, holder: Holder | { file: string; id?: undefined }): void => {
     const { id: holderId, file } = holder;
     const read = readConfig(node);
     if (read === null) return;
@@ -899,6 +910,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     }
     const id = makeConfigKeyId(ctx.repo, read.key);
     const marker = `${holderId} ${id}`;
+    // A key a body reads too is that body's: the module's own read adds nothing to it.
+    if (holderId === undefined && ctx.builder.has(id)) return;
     ctx.builder.addNode({
       id,
       type: 'config_key',
@@ -912,8 +925,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(read.defaultValue === undefined ? {} : { defaultValue: read.defaultValue }),
         // A read that goes on without it (P388): said only where no default is written out.
         ...(read.defaultValue === undefined && read.fallback === true ? { fallback: true } : {}),
+        ...(holderId === undefined ? { moduleLevel: true } : {}),
       },
     });
+    if (holderId === undefined || !('ensure' in holder)) return;
     if (seenConfig.has(marker)) return;
     seenConfig.add(marker);
     holder.ensure();
@@ -2225,8 +2240,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         },
         sureness: ({ info }) => surenessOf(info),
       });
+      // The branches of the helper this request is written under, where they
+      // test what a caller hands it (P401): a caller that does not take the
+      // branch does not make this request, and one whose argument is not read
+      // makes a request whose verb is not known.
+      const branches = branchTestsOf(call);
       for (const { site, reading, hops } of forwarding.callers) {
         if (!Node.isCallExpression(site)) continue;
+        const taken = branches.length === 0 ? true : takenAlong(call, branches, hops);
+        if (taken === false) continue;
         // What the request states is the request's; a caller's argument, and
         // then its name, only stand in for a verb the request leaves open.
         // Read along the calls the address came out through, so the verb and
@@ -2241,7 +2263,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         // body the request's settings take from a parameter is read along
         // the hops instead (P128).
         const handedHere = along !== undefined && verbAlongHops(hops.slice(0, -1)) === undefined;
-        recordHttp(site, reading.info, verb, reading.owner, {
+        // A verb chosen by a branch this caller's argument does not settle is not known (P401):
+        // the request is recorded with none, and joins nothing until it is read.
+        const chosen = taken === 'unread' && testsAVerb(branches) ? null : verb;
+        recordHttp(site, reading.info, chosen, reading.owner, {
           readsSite: stated?.settings !== true && !handedHere,
           ...through,
           ...bodyAlong(hops),
@@ -2355,6 +2380,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
 
+  /** A body of its own, read as a scope: what a walk of a module's own statements leaves to it. */
+  const opensOwnBody = (node: TsNode): boolean =>
+    Node.isFunctionDeclaration(node) ||
+    Node.isFunctionExpression(node) ||
+    Node.isArrowFunction(node) ||
+    Node.isMethodDeclaration(node) ||
+    Node.isClassDeclaration(node) ||
+    Node.isClassExpression(node);
+
   /**
    * A query written where there is no body to hang it off.
    *
@@ -2374,13 +2408,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // A body of its own, read as a scope above. `forEachDescendant` never
     // visits the node it was called on, so a statement that is itself a
     // function has to be turned away here rather than in the walk below.
-    const isBody = (node: TsNode): boolean =>
-      Node.isFunctionDeclaration(node) ||
-      Node.isFunctionExpression(node) ||
-      Node.isArrowFunction(node) ||
-      Node.isMethodDeclaration(node) ||
-      Node.isClassDeclaration(node) ||
-      Node.isClassExpression(node);
+    const isBody = opensOwnBody;
 
     for (const statement of source.getStatements()) {
       if (isBody(statement)) continue;
@@ -2432,6 +2460,24 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         emitConfig(node, scope);
       }
     });
+  }
+
+  // The settings a module reads in its own statements, outside every body (P401),
+  // after the bodies, so a key a body reads is recorded as that body's.
+  for (const source of repoFiles()) {
+    const file = ctx.fileOf(source);
+    for (const statement of source.getStatements()) {
+      if (opensOwnBody(statement)) continue;
+      statement.forEachDescendant((node, traversal) => {
+        if (opensOwnBody(node)) {
+          traversal.skip();
+          return;
+        }
+        if (Node.isCallExpression(node) || Node.isPropertyAccessExpression(node) || Node.isElementAccessExpression(node)) {
+          emitConfig(node, { file });
+        }
+      });
+    }
   }
 
   // A place the calls reader could not follow is followed now: a description

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:37.987Z",
+  "builtAt": "2026-11-25T13:35:44.275Z",
   "services": [
     {
       "name": "shop",
@@ -72,6 +72,19 @@
         ],
         "producers": 1,
         "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:shop#LEDGER_URL",
+      "type": "config_key",
+      "label": "LEDGER_URL",
+      "repo": "shop",
+      "file": "src/stock/reserve.ts",
+      "line": 3,
+      "meta": {
+        "key": "LEDGER_URL",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

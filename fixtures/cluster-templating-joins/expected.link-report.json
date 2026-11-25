@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:11.462Z",
+  "builtAt": "2026-11-25T13:17:25.147Z",
   "configHash": "e91e37df0d41",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1344,
+      "durationMs": 1149,
       "packages": {
         "name": "cluster-templating-joins-jobs",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1354,
+      "durationMs": 1166,
       "packages": {
         "name": "cluster-templating-joins-orders",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1312,
+      "durationMs": 1184,
       "packages": {
         "name": "cluster-templating-joins-payments",
         "runtime": [
@@ -62,11 +62,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1321,
+      "durationMs": 1203,
       "packages": {
         "name": "cluster-templating-joins-stock",
         "runtime": [
@@ -122,7 +122,7 @@
     }
   ],
   "totals": {
-    "nodes": 16,
+    "nodes": 17,
     "edges": 12,
     "types": 2,
     "missed": 0,

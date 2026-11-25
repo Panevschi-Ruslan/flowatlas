@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:11.462Z",
+  "builtAt": "2026-11-25T13:17:25.147Z",
   "services": [
     {
       "name": "orders",
@@ -28,6 +28,20 @@
     }
   ],
   "nodes": [
+    {
+      "id": "config_key:stock#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
     {
       "id": "entry:jobs:http:POST:/jobs/run",
       "type": "entry",

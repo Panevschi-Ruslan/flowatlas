@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:25:47.248Z",
+  "builtAt": "2026-11-25T13:36:20.700Z",
   "configHash": "462b9b0bf7ba",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./returns",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 19,
+      "nodes": 20,
       "edges": 16,
       "types": 4,
       "unresolved": 3,
-      "durationMs": 1416,
+      "durationMs": 1396,
       "packages": {
         "name": "lending-library-returns",
         "runtime": [
@@ -66,7 +66,7 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 21,
+    "nodes": 22,
     "edges": 20,
     "types": 4,
     "missed": 0,

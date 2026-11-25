@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:36:05.696Z",
+  "builtAt": "2026-11-25T13:19:44.994Z",
   "configHash": "1272a2a2a3d7",
   "services": [
     {
@@ -12,18 +12,18 @@
       "edges": 1,
       "types": 6,
       "unresolved": 0,
-      "durationMs": 4
+      "durationMs": 3
     },
     {
       "name": "stock",
       "repo": "./stock",
       "type": "grpc",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 9,
+      "nodes": 10,
       "edges": 2,
       "types": 7,
       "unresolved": 0,
-      "durationMs": 964,
+      "durationMs": 808,
       "packages": {
         "name": "grpc-contract-messages-stock",
         "runtime": [
@@ -44,7 +44,7 @@
       "edges": 16,
       "types": 4,
       "unresolved": 1,
-      "durationMs": 1052,
+      "durationMs": 848,
       "packages": {
         "name": "grpc-contract-messages-web",
         "runtime": [
@@ -120,7 +120,7 @@
     }
   ],
   "totals": {
-    "nodes": 29,
+    "nodes": 30,
     "edges": 22,
     "types": 17,
     "missed": 3,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:44.253Z",
+  "builtAt": "2026-11-25T13:16:52.304Z",
   "configHash": "1d893611b805",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./api",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2576,
+      "durationMs": 2420,
       "packages": {
         "name": "claimants-nested-chain-env-port-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2660,
+      "durationMs": 2433,
       "packages": {
         "name": "claimants-nested-chain-env-port-archive",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2717,
+      "durationMs": 2526,
       "packages": {
         "name": "claimants-nested-chain-env-port-audit",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2745,
+      "durationMs": 2417,
       "packages": {
         "name": "claimants-nested-chain-env-port-catalog",
         "runtime": [
@@ -80,11 +80,11 @@
       "repo": "./jobs",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 24,
+      "nodes": 26,
       "edges": 16,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2674,
+      "durationMs": 2557,
       "packages": {
         "name": "claimants-nested-chain-env-port-jobs",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2661,
+      "durationMs": 2482,
       "packages": {
         "name": "claimants-nested-chain-env-port-legacy",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2743,
+      "durationMs": 2479,
       "packages": {
         "name": "claimants-nested-chain-env-port-orders",
         "runtime": [
@@ -134,11 +134,11 @@
       "repo": "./reports",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2607,
+      "durationMs": 2438,
       "packages": {
         "name": "claimants-nested-chain-env-port-reports",
         "runtime": [
@@ -156,7 +156,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2649,
+      "durationMs": 2391,
       "packages": {
         "name": "claimants-nested-chain-env-port-stock",
         "runtime": [
@@ -225,7 +225,7 @@
     }
   ],
   "totals": {
-    "nodes": 49,
+    "nodes": 53,
     "edges": 29,
     "types": 2,
     "missed": 4,

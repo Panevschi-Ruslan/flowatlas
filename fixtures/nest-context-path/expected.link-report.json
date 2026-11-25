@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:41:43.095Z",
+  "builtAt": "2026-11-25T13:24:23.042Z",
   "configHash": "5058ec93d4d4",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 7,
+      "nodes": 8,
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1115,
+      "durationMs": 1946,
       "packages": {
         "name": "nest-context-path-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 831,
+      "durationMs": 1404,
       "packages": {
         "name": "nest-context-path-web",
         "runtime": [
@@ -108,7 +108,7 @@
     }
   ],
   "totals": {
-    "nodes": 14,
+    "nodes": 15,
     "edges": 5,
     "types": 0,
     "missed": 4,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:45.852Z",
+  "builtAt": "2026-11-25T13:18:04.805Z",
   "configHash": "08997398466e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./billing",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1945,
+      "durationMs": 2915,
       "packages": {
         "name": "billing",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2004,
+      "durationMs": 2918,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1879,
+      "durationMs": 2856,
       "packages": {
         "name": "cms",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2011,
+      "durationMs": 2925,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -81,11 +81,11 @@
       "repo": "./inventory",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1918,
+      "durationMs": 2784,
       "packages": {
         "name": "inventory",
         "runtime": [
@@ -103,7 +103,7 @@
       "edges": 14,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1895,
+      "durationMs": 2808,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -117,11 +117,11 @@
       "repo": "./orders",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1903,
+      "durationMs": 2946,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -139,7 +139,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2028,
+      "durationMs": 2988,
       "packages": {
         "name": "search",
         "runtime": [
@@ -157,7 +157,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1896,
+      "durationMs": 2802,
       "packages": {
         "name": "site",
         "runtime": [
@@ -177,7 +177,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1941,
+      "durationMs": 2745,
       "packages": {
         "name": "worker",
         "runtime": [
@@ -222,7 +222,7 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 39,
+    "nodes": 42,
     "edges": 21,
     "types": 0,
     "missed": 8,

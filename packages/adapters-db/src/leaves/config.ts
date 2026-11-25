@@ -95,7 +95,13 @@ export const readConfig = (node: TsNode): ConfigRead | null => {
   if (Node.isElementAccessExpression(node)) {
     const target = node.getExpression().getText();
     if (target === 'process.env' || target.endsWith('.env') || target === 'env') {
-      return { key: node.getArgumentExpression()?.getText() ?? '?', source: 'process.env', dynamic: true };
+      // `process.env['JOB_VERBS']` names its key as plainly as `process.env.JOB_VERBS` (P401).
+      const argument = node.getArgumentExpression();
+      const key = argument === undefined ? undefined : evaluateExpression(argument);
+      if (key?.resolved === true && typeof key.value === 'string' && (target === 'process.env' || ENV_KEY.test(key.value))) {
+        return { key: key.value, source: target === 'process.env' ? 'process.env' : 'binding', ...(goesOnWithout(node) ? { fallback: true as const } : {}) };
+      }
+      return { key: argument?.getText() ?? '?', source: 'process.env', dynamic: true };
     }
     return null;
   }

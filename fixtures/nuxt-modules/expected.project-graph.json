@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:19:36.897Z",
+  "builtAt": "2026-11-25T13:28:33.199Z",
   "services": [
     {
       "name": "shop",
@@ -10,6 +10,20 @@
     }
   ],
   "nodes": [
+    {
+      "id": "config_key:shop#EXTRA_MODULE",
+      "type": "config_key",
+      "label": "EXTRA_MODULE",
+      "repo": "shop",
+      "file": "nuxt.config.ts",
+      "line": 10,
+      "meta": {
+        "key": "EXTRA_MODULE",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
     {
       "id": "entry:shop:http:GET:/api/catalog",
       "type": "entry",

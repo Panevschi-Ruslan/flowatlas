@@ -1128,6 +1128,8 @@ export { isDispatchedTableMember, tableDispatchOf, tableDispatchOfName, tableKey
 export type { TableDispatch, TableRow, TableSelection, TableTarget } from './handler-tables.js';
 export { FRAMEWORK_CALLS_META, frameworkCallOf, frameworkCallSaid } from './framework-calls.js';
 export type { FrameworkCall, FrameworkCallTime } from './framework-calls.js';
+export { branchTestsOf, takenAlong, testsAVerb } from './parameter-branches.js';
+export type { BranchTest, Taken as BranchTaken } from './parameter-branches.js';
 export { importOf, statedOrigin } from './stated-origin.js';
 export type { StatedOrigin } from './stated-origin.js';
 export { conditionsHold } from './adapters/conditions.js';

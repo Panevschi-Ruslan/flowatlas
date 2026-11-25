@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:36:08.801Z",
+  "builtAt": "2026-11-25T13:19:47.382Z",
   "services": [
     {
       "name": "storefront",
@@ -133,6 +133,58 @@
           ],
           "returns": "void"
         }
+      }
+    },
+    {
+      "id": "config_key:payments#PAYMENTS_PORT",
+      "type": "config_key",
+      "label": "PAYMENTS_PORT",
+      "repo": "payments",
+      "file": "index.js",
+      "line": 21,
+      "meta": {
+        "key": "PAYMENTS_PORT",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:storefront#LEDGER_ADDR",
+      "type": "config_key",
+      "label": "LEDGER_ADDR",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 24,
+      "meta": {
+        "key": "LEDGER_ADDR",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:storefront#PAYMENTS_ADDR",
+      "type": "config_key",
+      "label": "PAYMENTS_ADDR",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 18,
+      "meta": {
+        "key": "PAYMENTS_ADDR",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:storefront#SHIPPING_ADDR",
+      "type": "config_key",
+      "label": "SHIPPING_ADDR",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 22,
+      "meta": {
+        "key": "SHIPPING_ADDR",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

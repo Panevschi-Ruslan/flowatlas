@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:44:14.463Z",
+  "builtAt": "2026-11-25T13:27:08.522Z",
   "services": [
     {
       "name": "api",
@@ -77,6 +77,20 @@
           "returns": "string"
         },
         "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:api#API_CONTEXT_PATH",
+      "type": "config_key",
+      "label": "API_CONTEXT_PATH",
+      "repo": "api",
+      "file": "src/config.ts",
+      "line": 8,
+      "meta": {
+        "key": "API_CONTEXT_PATH",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {

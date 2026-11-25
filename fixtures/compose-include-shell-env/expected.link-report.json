@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:22.212Z",
+  "builtAt": "2026-11-25T13:17:32.823Z",
   "configHash": "824d3cd40a8b",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./audit",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2459,
+      "durationMs": 1440,
       "packages": {
         "name": "compose-include-shell-env-audit",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./billing",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2457,
+      "durationMs": 1426,
       "packages": {
         "name": "compose-include-shell-env-billing",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./catalog",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2454,
+      "durationMs": 1438,
       "packages": {
         "name": "compose-include-shell-env-catalog",
         "runtime": [
@@ -62,11 +62,11 @@
       "repo": "./ledger",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2570,
+      "durationMs": 1437,
       "packages": {
         "name": "compose-include-shell-env-ledger",
         "runtime": [
@@ -80,11 +80,11 @@
       "repo": "./orders",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2498,
+      "durationMs": 1413,
       "packages": {
         "name": "compose-include-shell-env-orders",
         "runtime": [
@@ -98,11 +98,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2556,
+      "durationMs": 1425,
       "packages": {
         "name": "compose-include-shell-env-stock",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2346,
+      "durationMs": 1445,
       "packages": {
         "name": "compose-include-shell-env-web",
         "runtime": [],
@@ -179,7 +179,7 @@
     }
   ],
   "totals": {
-    "nodes": 31,
+    "nodes": 37,
     "edges": 18,
     "types": 2,
     "missed": 0,

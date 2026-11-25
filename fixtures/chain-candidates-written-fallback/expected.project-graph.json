@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:12:29.985Z",
+  "builtAt": "2026-11-25T13:16:41.860Z",
   "services": [
     {
       "name": "jobs",
@@ -119,6 +119,20 @@
       }
     },
     {
+      "id": "config_key:api#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 14,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:jobs#LEGACY_URL",
       "type": "config_key",
       "label": "LEGACY_URL",
@@ -128,6 +142,19 @@
       "meta": {
         "key": "LEGACY_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:jobs#NODE_ENV",
+      "type": "config_key",
+      "label": "NODE_ENV",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 2,
+      "meta": {
+        "key": "NODE_ENV",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

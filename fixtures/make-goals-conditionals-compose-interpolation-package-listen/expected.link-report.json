@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:38:09.008Z",
+  "builtAt": "2026-11-25T13:22:30.767Z",
   "configHash": "b5a0426b1e92",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4737,
+      "durationMs": 2414,
       "packages": {
         "name": "alerts",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./billing",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4457,
+      "durationMs": 2501,
       "packages": {
         "name": "billing",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4464,
+      "durationMs": 2449,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -62,11 +62,11 @@
       "repo": "./inventory",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4623,
+      "durationMs": 2439,
       "packages": {
         "name": "@shop/inventory",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 24,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4671,
+      "durationMs": 2477,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4482,
+      "durationMs": 2449,
       "packages": {
         "name": "notices",
         "runtime": [
@@ -116,11 +116,11 @@
       "repo": "./orders",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4432,
+      "durationMs": 2490,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -138,7 +138,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4321,
+      "durationMs": 2496,
       "packages": {
         "name": "pricing",
         "runtime": [
@@ -156,7 +156,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4532,
+      "durationMs": 2417,
       "packages": {
         "name": "search",
         "runtime": [
@@ -174,7 +174,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 4445,
+      "durationMs": 2414,
       "packages": {
         "name": "tickets",
         "runtime": [
@@ -239,7 +239,7 @@
     }
   ],
   "totals": {
-    "nodes": 52,
+    "nodes": 55,
     "edges": 33,
     "types": 0,
     "missed": 10,

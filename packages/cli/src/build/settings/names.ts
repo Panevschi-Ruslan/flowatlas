@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { parseJsonc, readWorkerToml, type SettingNames } from '@flowatlas/core';
 import { parseAllDocuments } from 'yaml';
-import { envFileReading, isComposeFile } from './files.js';
+import { envFileReading, isComposeFile, isExampleEnvFile } from './files.js';
 
 /**
  * Every setting a service's own deployment files give a value, or name for
@@ -145,6 +145,87 @@ const schemaIn = (dir: string): string | undefined => {
   return undefined;
 };
 
+/**
+ * A tool that starts a service with its settings handed in from a secret
+ * store (P401): what it sets, no file in the checkout names.
+ */
+const INJECTOR = /\b(doppler run|infisical run|op run|chamber exec|aws-vault exec|envconsul|sops exec-env|dotenvx run|teller run|berglas exec|secrethub run)\b/;
+
+/** An environment file the code loads itself, and the path it names where it names one (P401). */
+const ENV_LOADS: ReadonlyArray<{ test: RegExp; path?: RegExp }> = [
+  // `import 'dotenv/config'`, `require('dotenv').config({ path })`, `dotenv.config()`, `config({ path })` from dotenv.
+  { test: /['"]dotenv\/config['"]/ },
+  { test: /\bdotenv['"]\s*\)?\s*\.config\s*\(|\bdotenv\.config\s*\(|from\s+['"]dotenv['"]/, path: /\bpath\s*:\s*['"]([^'"]+)['"]/ },
+  { test: /\bprocess\.loadEnvFile\s*\(/, path: /\bprocess\.loadEnvFile\s*\(\s*['"]([^'"]+)['"]/ },
+];
+
+/** A NestJS configuration module reading `.env` unless told not to, and the file it is told to read. */
+const NEST_CONFIG = /ConfigModule\.forRoot\s*\(([\s\S]{0,400}?)\)/;
+
+/** The first source file a test holds of, a few folders deep, and the text it held of. */
+const sourceMatching = (dir: string, test: (text: string) => boolean): { file: string; text: string } | undefined => {
+  const walk = (at: string, depth: number): { file: string; text: string } | undefined => {
+    let entries;
+    try {
+      entries = readdirSync(at, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    } catch {
+      return undefined;
+    }
+    for (const entry of entries) {
+      const path = join(at, entry.name);
+      if (entry.isDirectory()) {
+        if (depth < 4 && entry.name !== 'node_modules' && !entry.name.startsWith('.')) {
+          const found = walk(path, depth + 1);
+          if (found !== undefined) return found;
+        }
+        continue;
+      }
+      if (!/\.(ts|js|mts|mjs|cjs)$/.test(entry.name) || entry.name.endsWith('.d.ts')) continue;
+      const text = textOf(path);
+      if (text !== undefined && test(text)) return { file: relative(dir, path).split(sep).join('/'), text };
+    }
+    return undefined;
+  };
+  for (const source of SOURCE_DIRS) {
+    const found = walk(join(dir, source), 0);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
+
+/** Whether an environment file, or an example of it to copy, is in the checkout. */
+const envFileThere = (dir: string, path: string): boolean => {
+  const full = join(dir, path);
+  if (textOf(full) !== undefined) return true;
+  const name = full.slice(full.lastIndexOf(sep) + 1);
+  const folder = full.slice(0, full.length - name.length);
+  return filesIn(folder).some((other) => other.startsWith(`${name}.`) && isExampleEnvFile(other));
+};
+
+/**
+ * The environment files the code loads itself and the checkout does not hold
+ * (P401): a `.env` is often kept out of a repository, and whatever it sets
+ * is set where the reading does not look.
+ */
+const envFilesLoadedMissing = (dir: string): string[] => {
+  const out: string[] = [];
+  for (const load of ENV_LOADS) {
+    const found = sourceMatching(dir, (text) => load.test.test(text));
+    if (found === undefined) continue;
+    const path = load.path?.exec(found.text)?.[1] ?? '.env';
+    if (!envFileThere(dir, path)) out.push(`${path} (loaded by ${found.file})`);
+  }
+  const nest = sourceMatching(dir, (text) => text.includes('ConfigModule') && NEST_CONFIG.test(text));
+  const options = nest === undefined ? undefined : (NEST_CONFIG.exec(nest.text)?.[1] ?? '');
+  if (nest !== undefined && options !== undefined && !/\bignoreEnvFile\s*:\s*true\b/.test(options)) {
+    const named = /\benvFilePath\s*:\s*(\[[^\]]*\]|['"][^'"]+['"]|[^,}\s]+)/.exec(options)?.[1];
+    const paths = named === undefined ? ['.env'] : [...named.matchAll(/['"]([^'"]+)['"]/g)].map((match) => match[1]!);
+    if (named !== undefined && paths.length === 0) out.push(`the environment file ${nest.file} names at run time (${named})`);
+    else if (!paths.some((path) => envFileThere(dir, path))) out.push(`${paths[0]} (loaded by ${nest.file})`);
+  }
+  return [...new Set(out)];
+};
+
 /** What one service's deployment files name. */
 export const settingNamesOf = (dir: string): SettingNames => {
   const names = new Map<string, Set<string>>();
@@ -158,11 +239,20 @@ export const settingNamesOf = (dir: string): SettingNames => {
   const held = new Set<string>();
   const envFrom: Array<{ name: string; file: string }> = [];
   const at = (path: string): string => relative(dir, path).split(sep).join('/');
-  const readEnvAt = (path: string): void => {
+  const missing: string[] = [];
+  const injected: string[] = [];
+  const readEnvAt = (path: string): boolean => {
     const text = textOf(path);
-    if (text === undefined) return;
+    if (text === undefined) return false;
     files.add(at(path));
     for (const name of envNames(text)) add(name, at(path));
+    return true;
+  };
+  /** A secrets tool a command starts the service through, said once per file. */
+  const injectsIn = (text: string, file: string): void => {
+    // `CMD ["doppler", "run", "--", "node", "main.js"]` read as the words it runs.
+    const tool = INJECTOR.exec(text.replace(/["',[\]]+/g, ' ').replace(/\s+/g, ' '))?.[1];
+    if (tool !== undefined) injected.push(`${tool} in ${file}`);
   };
   for (const folder of ['', ...DEPLOY_DIRS]) {
     const base = folder === '' ? dir : join(dir, folder);
@@ -177,6 +267,24 @@ export const settingNamesOf = (dir: string): SettingNames => {
         if (text === undefined) continue;
         files.add(at(path));
         for (const each of dockerfileNames(text)) add(each, at(path));
+        injectsIn(text, at(path));
+        continue;
+      }
+      if (folder === '' && name === 'package.json') {
+        const text = textOf(path);
+        const scripts = text === undefined ? undefined : (() => {
+          try {
+            const parsed = JSON.parse(text) as unknown;
+            return isRecord(parsed) && isRecord(parsed['scripts']) ? parsed['scripts'] : undefined;
+          } catch {
+            return undefined;
+          }
+        })();
+        // The scripts that start it: a secrets tool there hands its settings in.
+        for (const key of ['start', 'start:prod', 'serve']) {
+          const script = scripts?.[key];
+          if (typeof script === 'string') injectsIn(script, `the ${key} script of package.json`);
+        }
         continue;
       }
       if (name === 'wrangler.toml' || name === 'wrangler.json' || name === 'wrangler.jsonc') {
@@ -209,13 +317,20 @@ export const settingNamesOf = (dir: string): SettingNames => {
         files.add(at(path));
         const [document] = documents;
         const services = isRecord(document) && isRecord(document['services']) ? document['services'] : {};
-        for (const service of Object.values(services)) {
+        for (const [serviceName, service] of Object.entries(services)) {
           if (!isRecord(service)) continue;
           for (const key of environmentKeys(service['environment'])) add(key, at(path));
           const envFiles = typeof service['env_file'] === 'string' ? [service['env_file']] : Array.isArray(service['env_file']) ? service['env_file'] : [];
           for (const each of envFiles) {
             const file = typeof each === 'string' ? each : isRecord(each) && typeof each['path'] === 'string' ? each['path'] : undefined;
-            if (file !== undefined) readEnvAt(join(base, file));
+            // Named and not there (P401): kept out of the checkout, or outside it.
+            if (file !== undefined && !readEnvAt(join(base, file))) missing.push(`${file} (env_file of ${serviceName} in ${at(path)})`);
+          }
+          if (Array.isArray(service['secrets']) && service['secrets'].length > 0) injected.push(`the secrets of ${serviceName} in ${at(path)}`);
+          for (const key of ['command', 'entrypoint']) {
+            const run = service[key];
+            const said = typeof run === 'string' ? run : Array.isArray(run) ? run.filter((part) => typeof part === 'string').join(' ') : '';
+            injectsIn(said, at(path));
           }
         }
         continue;
@@ -241,11 +356,14 @@ export const settingNamesOf = (dir: string): SettingNames => {
   for (const name of [...names.keys()].sort()) sorted[name] = [...names.get(name)!].sort();
   const notWritten = envFrom.filter((each) => !held.has(each.name));
   const schema = schemaIn(dir);
+  missing.push(...envFilesLoadedMissing(dir));
   return {
     names: sorted,
     files: [...files].sort(),
     ...(unread.length === 0 ? {} : { unread: [...new Set(unread)].sort() }),
     ...(notWritten.length === 0 ? {} : { from: [...new Set(notWritten.map((each) => `${each.name} (${each.file})`))].sort() }),
     ...(schema === undefined ? {} : { schema }),
+    ...(missing.length === 0 ? {} : { missing: [...new Set(missing)] }),
+    ...(injected.length === 0 ? {} : { injected: [...new Set(injected)] }),
   };
 };

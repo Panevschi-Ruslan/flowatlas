@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:25:47.248Z",
+  "builtAt": "2026-11-25T13:36:20.700Z",
   "services": [
     {
       "name": "returns",
@@ -72,6 +72,20 @@
         ],
         "producers": 1,
         "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:returns#EVENT_BUS_NAME",
+      "type": "config_key",
+      "label": "EVENT_BUS_NAME",
+      "repo": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 13,
+      "meta": {
+        "key": "EVENT_BUS_NAME",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {

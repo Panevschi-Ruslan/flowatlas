@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:37.987Z",
+  "builtAt": "2026-11-25T13:35:44.275Z",
   "configHash": "7f536a683122",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 40,
+      "nodes": 41,
       "edges": 39,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 4431,
+      "durationMs": 922,
       "packages": {
         "name": "shop",
         "runtime": [
@@ -76,7 +76,7 @@
     }
   ],
   "totals": {
-    "nodes": 40,
+    "nodes": 41,
     "edges": 40,
     "types": 0,
     "missed": 5,

@@ -757,3 +757,31 @@ describe("a server's own requests with no host (P263)", () => {
     expect(graph.nodes.filter((node) => node.meta?.['originless'] === true || node.meta?.['inProcess'] === true)).toEqual([]);
   });
 });
+
+describe('a setting read in a module’s own statements (P401)', () => {
+  it('records the key with no body to draw it from, and keeps a key a body reads as that body’s', async () => {
+    const graph = await graphOf('findings-settings-guards-helper/ledger');
+    const keys = graph.nodes
+      .filter((node) => node.type === 'config_key')
+      .map((node) => [node.label, node.meta?.['moduleLevel'] === true, node.meta?.['fallback'] === true])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+    expect(keys).toEqual([
+      ['CACHE_HOST', true, false],
+      ['LEDGER_REGION', true, false],
+      ['PAYMENT_PROVIDER', true, false],
+      ['PORT', true, true],
+    ]);
+    expect(graph.edges.filter((edge) => edge.type === 'reads_config')).toEqual([]);
+  });
+});
+
+describe('a request a helper makes under a branch on what its caller hands in (P401)', () => {
+  it('credits each caller with the branch it takes, and a caller handing a verb not read with none', async () => {
+    const graph = await graphOf('findings-settings-guards-helper/gateway');
+    const requests = graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node) => `${node.meta?.['method'] ?? '?'} ${node.meta?.['path']}`)
+      .sort();
+    expect(requests).toEqual(['? /notes/:param/flag', 'DELETE /notes/:param', 'GET /notes', 'POST /notes/:param/archive', 'POST /notes/:param/export']);
+  });
+});

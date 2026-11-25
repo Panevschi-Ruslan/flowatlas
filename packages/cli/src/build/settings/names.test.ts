@@ -39,7 +39,36 @@ describe('the settings a service’s deployment files name', () => {
   });
 
   it('says where a configuration module validates the settings with a schema, and reads nothing where there is nothing', () => {
-    const dir = repoOf({ 'src/app.module.ts': 'ConfigModule.forRoot({ isGlobal: true, validationSchema: schema })' });
+    const dir = repoOf({ 'src/app.module.ts': 'ConfigModule.forRoot({ isGlobal: true, validationSchema: schema, ignoreEnvFile: true })' });
     expect(settingNamesOf(dir)).toEqual({ names: {}, files: [], schema: 'src/app.module.ts' });
+  });
+
+  /** P401: a source of the settings named and not read, said, so a key set nowhere is not said to be. */
+  it('says which env files a compose file names or the code loads are not in the checkout', () => {
+    const dir = repoOf({
+      'docker-compose.yml': 'services:\n  api:\n    env_file:\n      - ./api.env\n      - ./present.env\n',
+      'present.env': 'QUEUE_URL=amqp://q\n',
+      'src/main.ts': "import 'dotenv/config';\n",
+      'src/app.module.ts': "ConfigModule.forRoot({ envFilePath: '.env.local' })",
+    });
+    const names = settingNamesOf(dir);
+    expect(names.names).toEqual({ QUEUE_URL: ['present.env'] });
+    expect(names.missing).toEqual(['./api.env (env_file of api in docker-compose.yml)', '.env (loaded by src/main.ts)', '.env.local (loaded by src/app.module.ts)']);
+  });
+
+  it('takes an example of an env file the code loads for it, and an ignored env file for none', () => {
+    const example = repoOf({ '.env.example': 'PORT=3000\n', 'src/app.module.ts': 'ConfigModule.forRoot({ isGlobal: true })' });
+    expect(settingNamesOf(example).missing).toBeUndefined();
+    const ignored = repoOf({ 'src/app.module.ts': 'ConfigModule.forRoot({ ignoreEnvFile: true })' });
+    expect(settingNamesOf(ignored).missing).toBeUndefined();
+  });
+
+  it('says what hands settings in when the service runs: a secrets tool, a compose service’s secrets', () => {
+    const dir = repoOf({
+      Dockerfile: 'FROM node\nCMD ["doppler", "run", "--", "node", "main.js"]\n',
+      'docker-compose.yml': 'services:\n  api:\n    secrets:\n      - db_password\n',
+      'package.json': JSON.stringify({ scripts: { start: 'infisical run -- node dist/main.js', build: 'tsc' } }),
+    });
+    expect(settingNamesOf(dir).injected).toEqual(['doppler run in Dockerfile', 'the secrets of api in docker-compose.yml', 'infisical run in the start script of package.json']);
   });
 });

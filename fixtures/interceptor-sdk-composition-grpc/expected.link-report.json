@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:36:37.281Z",
+  "builtAt": "2026-11-25T13:20:33.899Z",
   "configHash": "1777537e33c3",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 2828,
+      "durationMs": 2397,
       "packages": {
         "name": "interceptor-sdk-composition-grpc-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 10,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2722,
+      "durationMs": 2157,
       "packages": {
         "name": "interceptor-sdk-composition-grpc-api",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2833,
+      "durationMs": 2322,
       "packages": {
         "name": "interceptor-sdk-composition-grpc-checkout",
         "runtime": [
@@ -66,11 +66,11 @@
       "repo": "./stock",
       "type": "grpc",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2387,
+      "durationMs": 2327,
       "packages": {
         "name": "interceptor-sdk-composition-grpc-stock",
         "runtime": [
@@ -89,7 +89,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2509,
+      "durationMs": 2467,
       "packages": {
         "name": "interceptor-sdk-composition-grpc-web",
         "runtime": [
@@ -202,7 +202,7 @@
     }
   ],
   "totals": {
-    "nodes": 45,
+    "nodes": 46,
     "edges": 34,
     "types": 5,
     "missed": 8,

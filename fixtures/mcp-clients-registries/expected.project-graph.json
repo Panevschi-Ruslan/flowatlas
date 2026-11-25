@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:38:20.008Z",
+  "builtAt": "2026-11-25T13:22:35.303Z",
   "services": [
     {
       "name": "assistant",
@@ -226,6 +226,19 @@
           "params": [],
           "returns": "unknown"
         }
+      }
+    },
+    {
+      "id": "config_key:concierge#ASSISTANT_URL",
+      "type": "config_key",
+      "label": "ASSISTANT_URL",
+      "repo": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 5,
+      "meta": {
+        "key": "ASSISTANT_URL",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

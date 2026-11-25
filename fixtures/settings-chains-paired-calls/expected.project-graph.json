@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:48:30.635Z",
+  "builtAt": "2026-11-25T13:36:00.311Z",
   "services": [
     {
       "name": "market",
@@ -38,6 +38,33 @@
       "meta": {
         "key": "LEDGER_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:market#PREVIEW_HOST",
+      "type": "config_key",
+      "label": "PREVIEW_HOST",
+      "repo": "market",
+      "file": "app/lib/urls.ts",
+      "line": 8,
+      "meta": {
+        "key": "PREVIEW_HOST",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:market#PUBLIC_APP_URL",
+      "type": "config_key",
+      "label": "PUBLIC_APP_URL",
+      "repo": "market",
+      "file": "app/lib/urls.ts",
+      "line": 11,
+      "meta": {
+        "key": "PUBLIC_APP_URL",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

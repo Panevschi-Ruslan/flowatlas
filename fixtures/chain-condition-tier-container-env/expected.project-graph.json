@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:12:32.878Z",
+  "builtAt": "2026-11-25T13:16:45.303Z",
   "services": [
     {
       "name": "jobs",
@@ -95,6 +95,34 @@
       }
     },
     {
+      "id": "config_key:billing#BILLING_PORT",
+      "type": "config_key",
+      "label": "BILLING_PORT",
+      "repo": "billing",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "key": "BILLING_PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:inventory#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "inventory",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:jobs#ARCHIVE_URL",
       "type": "config_key",
       "label": "ARCHIVE_URL",
@@ -116,6 +144,19 @@
       "meta": {
         "key": "EAST_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:jobs#NODE_ENV",
+      "type": "config_key",
+      "label": "NODE_ENV",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 2,
+      "meta": {
+        "key": "NODE_ENV",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

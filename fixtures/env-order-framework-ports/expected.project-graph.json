@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:52:43.484Z",
+  "builtAt": "2026-11-25T13:18:04.805Z",
   "services": [
     {
       "name": "catalog",
@@ -110,6 +110,48 @@
           "returns": "void"
         },
         "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:billing#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "billing",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:inventory#INVENTORY_PORT",
+      "type": "config_key",
+      "label": "INVENTORY_PORT",
+      "repo": "inventory",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "key": "INVENTORY_PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:orders#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "orders",
+      "file": "src/main.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {

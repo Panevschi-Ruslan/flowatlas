@@ -151,9 +151,11 @@ export const auditRoutes = (
     .filter((node) => node.type === 'entry' && node.kind === 'http')
     .sort((a, b) => cmp(a.id, b.id));
 
-  for (const entry of entries) {
-    const method = text(entry.meta?.['method']);
-    const path = text(entry.meta?.['path']);
+  /**
+   * What is in front of a route that can refuse a request, and the guards a
+   * decorator on it switches off.
+   */
+  const gatesOf = (entry: GraphNode): { gates: GraphEdge[]; skipped: string[] } => {
     const wrapping = from(entry.id, 'guarded_by');
     const decorators = decoratorNames(entry);
     const skips = options.skipGuardDecorators ?? {};
@@ -184,6 +186,41 @@ export const auditRoutes = (
       }
       return true;
     });
+    return { gates, skipped };
+  };
+
+  /**
+   * Whether a route with nothing in front of it is open by a decision the
+   * source or the configuration says, or checks the request itself: a public
+   * marker, a public decorator or opt-out, a configured public route, an
+   * annotation saying how it checks, a 401 or 403 thrown on its own path, or
+   * middleware for a whole prefix that was not read. None of these is a
+   * route somebody forgot.
+   */
+  const excused = (entry: GraphNode): boolean => {
+    const method = text(entry.meta?.['method']);
+    const path = text(entry.meta?.['path']);
+    const access = accessOf(entry);
+    return (
+      typeof entry.meta?.['publicNote'] === 'string' ||
+      decoratorNames(entry).some((name) => options.publicDecorators.includes(name)) ||
+      (access?.optOuts ?? []).some((item) => item.public || options.publicDecorators.includes(item.decorator)) ||
+      options.publicRoutes.some((pattern) => matchesRoutePattern(pattern, method, path)) ||
+      text(entry.meta?.['authNote']) !== '' ||
+      failuresOf(entry).some((item) => item.source === 'throw' && (failsWithAny(item, REFUSING) || item.family === 'auth')) ||
+      entry.meta?.['middlewareRead'] === false
+    );
+  };
+
+  const deviants = unguardedAmongGuarded(entries, gatesOf, excused, (id) => nodes.get(id)?.label ?? id);
+
+  for (const entry of entries) {
+    const method = text(entry.meta?.['method']);
+    const path = text(entry.meta?.['path']);
+    const wrapping = from(entry.id, 'guarded_by');
+    const decorators = decoratorNames(entry);
+    const access = accessOf(entry);
+    const { gates, skipped } = gatesOf(entry);
     /**
      * The middleware in front of this route, in the order it runs.
      *
@@ -232,6 +269,26 @@ export const auditRoutes = (
     // Middleware is in `gates` already, because it is a `guarded_by` edge with
     // `layer: middleware` whoever read it, which is the point of R109.
     if (gates.length > 0) continue;
+    // The one write of its router left open where every other write is
+    // guarded (P401): the deviance is the evidence, so it is said whether or
+    // not the stored data it reaches could be read.
+    const deviant = deviants.get(entry.id);
+    if (deviant !== undefined) {
+      const reached = dataReached(entry.id);
+      const reaches = reached === undefined ? '' : ` and reaches ${reached.type === 'db_query' ? 'stored data' : reached.label}`;
+      const others = deviant.siblings === 1 ? 'the other write' : `the ${deviant.siblings} other writes`;
+      const why = skipped.length === 0 ? '' : `, because ${skipped.sort(cmp).join(', ')}`;
+      rows.push({
+        service: entry.repo,
+        file: entry.file ?? '',
+        line: entry.line ?? 0,
+        reason: 'route-unguarded-among-guarded',
+        message: `${method} ${path} has no guard in front of it${why}${reaches}, while ${others} of ${deviant.router} ${deviant.siblings === 1 ? 'has' : 'have'} ${deviant.guards.join(', ')} in front.`,
+        hint: `Put ${deviant.guards.join(', ')} in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).`,
+        symbol: `${method} ${path}`,
+      });
+      continue;
+    }
     // Said in so many words on the handler or its controller (P90): open on
     // purpose, and listed so the decision can be reviewed, since a marker that
     // silenced the audit would be a way to hide a hole. Nothing else is read as
@@ -385,6 +442,65 @@ export const auditRoutes = (
     });
   }
   return [...rows, ...auditRouteOrder(entries, nodes, into, madeBy)];
+};
+
+/** The verbs that change something: a route answering one is a write. */
+const WRITES: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/** Why a route is the one open write among guarded ones: how many writes beside it, the guards they carry, their router. */
+interface Deviant {
+  siblings: number;
+  guards: string[];
+  router: string;
+}
+
+/**
+ * The writes left open where every other write of their router, two at
+ * least, is guarded (P401, after "bugs as deviant behaviour"): `DELETE /claims/:id` with nothing
+ * in front of it in a controller whose two other writes carry a guard. The
+ * router is the NestJS controller, or the value routes are registered on, in
+ * one file. A sibling open by a decision the source says (`excused`) counts
+ * neither way; one open with no such decision makes the set mixed, and a
+ * mixed set names nobody. Reads are not asked: a list left open beside
+ * guarded writes is common and often meant. A route whose guard a decorator
+ * switches off is open here, since only a marker saying it is public says
+ * it is meant to be.
+ */
+const unguardedAmongGuarded = (
+  entries: readonly GraphNode[],
+  gatesOf: (entry: GraphNode) => { gates: GraphEdge[]; skipped: string[] },
+  excused: (entry: GraphNode) => boolean,
+  labelOf: (id: string) => string,
+): Map<string, Deviant> => {
+  const groups = new Map<string, GraphNode[]>();
+  for (const entry of entries) {
+    if (!WRITES.has(text(entry.meta?.['method']).toUpperCase())) continue;
+    const key = `${entry.repo}|${entry.file ?? ''}|${routerOf(entry)}`;
+    const group = groups.get(key);
+    if (group === undefined) groups.set(key, [entry]);
+    else group.push(entry);
+  }
+  const out = new Map<string, Deviant>();
+  for (const group of groups.values()) {
+    const state = new Map(
+      group.map((entry) => {
+        const { gates } = gatesOf(entry);
+        return [entry.id, { gates, open: gates.length === 0 && !excused(entry) }] as const;
+      }),
+    );
+    const open = group.filter((entry) => state.get(entry.id)?.open === true);
+    // One open write, among others: two open writes are a pattern, not a slip.
+    if (open.length !== 1) continue;
+    const [lone] = open as [GraphNode];
+    // The same declaration mounted at two addresses is one route, not a sibling.
+    const siblings = group.filter((other) => other !== lone && !(other.file === lone.file && other.line === lone.line) && (state.get(other.id)?.gates.length ?? 0) > 0);
+    // Two guarded writes at least: one guarded write beside one open one says
+    // as much that the guarded one is the odd one as that the open one is.
+    if (siblings.length < 2) continue;
+    const guards = [...new Set(siblings.flatMap((other) => (state.get(other.id)?.gates ?? []).map((edge) => edge.to)))];
+    out.set(lone.id, { siblings: siblings.length, guards: [...new Set(guards.map(labelOf))].sort(cmp), router: routerOf(lone) });
+  }
+  return out;
 };
 
 /**

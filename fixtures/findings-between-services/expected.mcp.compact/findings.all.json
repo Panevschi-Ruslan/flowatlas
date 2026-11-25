@@ -3,8 +3,8 @@
     "call-to-missing-route": 1,
     "field-never-sent": 2,
     "type-never-published": 1,
-    "annotation-to-missing-route": 1,
     "unguarded-among-guarded": 1,
+    "annotation-to-missing-route": 1,
     "message-type-unselected": 1,
     "unguarded": 1
   },
@@ -78,6 +78,24 @@
         "next": "who_emits({channel: \"channel:catalog_events\"})"
       }
     ],
+    "unguarded-among-guarded": [
+      {
+        "kind": "unguarded-among-guarded",
+        "id": "entry:catalog-api:http:DELETE:/products/:param",
+        "method": "catalog-api#src/products/products.controller.ts:ProductsController.remove",
+        "loc": "src/products/products.controller.ts:39",
+        "message": "DELETE /products/:param has no guard in front of it and reaches products, while the 2 other writes of ProductsController have StaffGuard in front.",
+        "precision": "high",
+        "evidence": "every other write of its router is guarded and the routes of src/products/products.controller.ts were read whole; no public marker is on it",
+        "rank": 1,
+        "reach": {
+          "guardedSiblings": 3,
+          "writes": 1,
+          "reads": 0
+        },
+        "next": "get_flow({entry: \"entry:catalog-api:http:DELETE:/products/:param\"})"
+      }
+    ],
     "annotation-to-missing-route": [
       {
         "kind": "annotation-to-missing-route",
@@ -89,24 +107,6 @@
         "fix": "the nearest route: GET /products/:param (one segment off: reviews added)",
         "rank": 1,
         "next": "get_source({symbol: \"http_out:storefront#src/catalog.client.ts:40:34\"})"
-      }
-    ],
-    "unguarded-among-guarded": [
-      {
-        "kind": "unguarded-among-guarded",
-        "id": "entry:catalog-api:http:DELETE:/products/:param",
-        "method": "catalog-api#src/products/products.controller.ts:ProductsController.remove",
-        "loc": "src/products/products.controller.ts:39",
-        "message": "DELETE /products/:param has no guard in front of it and reaches products, while 3 of the 3 other routes of ProductsController have StaffGuard in front",
-        "precision": "medium",
-        "evidence": "the routes beside it in ProductsController are guarded",
-        "rank": 1,
-        "reach": {
-          "guardedSiblings": 3,
-          "writes": 1,
-          "reads": 0
-        },
-        "next": "get_flow({entry: \"entry:catalog-api:http:DELETE:/products/:param\"})"
       }
     ],
     "message-type-unselected": [

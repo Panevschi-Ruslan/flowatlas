@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:46:57.157Z",
+  "builtAt": "2026-11-25T13:32:10.660Z",
   "configHash": "ced28449568d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 862,
+      "durationMs": 9370,
       "packages": {
         "name": "rpc-server-to-server-billing",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 5,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 875,
+      "durationMs": 9404,
       "packages": {
         "name": "rpc-server-to-server-orders",
         "runtime": [
@@ -46,11 +46,11 @@
       "repo": "./worker",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 31,
+      "nodes": 33,
       "edges": 19,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1054,
+      "durationMs": 11209,
       "packages": {
         "name": "rpc-server-to-server-worker",
         "runtime": [
@@ -154,7 +154,7 @@
     }
   ],
   "totals": {
-    "nodes": 55,
+    "nodes": 57,
     "edges": 38,
     "types": 3,
     "missed": 6,

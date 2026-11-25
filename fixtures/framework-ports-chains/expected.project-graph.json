@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:35:11.563Z",
+  "builtAt": "2026-11-25T13:18:45.929Z",
   "services": [
     {
       "name": "web",
@@ -83,6 +83,20 @@
       }
     },
     {
+      "id": "config_key:web#EDGE_HOST",
+      "type": "config_key",
+      "label": "EDGE_HOST",
+      "repo": "web",
+      "file": "lib/constants.ts",
+      "line": 11,
+      "meta": {
+        "key": "EDGE_HOST",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:web#GATEWAY_URL",
       "type": "config_key",
       "label": "GATEWAY_URL",
@@ -95,6 +109,61 @@
       }
     },
     {
+      "id": "config_key:web#PREVIEW_HOST",
+      "type": "config_key",
+      "label": "PREVIEW_HOST",
+      "repo": "web",
+      "file": "lib/constants.ts",
+      "line": 8,
+      "meta": {
+        "key": "PREVIEW_HOST",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:web#PUBLIC_APP_URL",
+      "type": "config_key",
+      "label": "PUBLIC_APP_URL",
+      "repo": "web",
+      "file": "lib/constants.ts",
+      "line": 15,
+      "meta": {
+        "key": "PUBLIC_APP_URL",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:web#PUBLIC_STATUS_URL",
+      "type": "config_key",
+      "label": "PUBLIC_STATUS_URL",
+      "repo": "web",
+      "file": "lib/constants.ts",
+      "line": 23,
+      "meta": {
+        "key": "PUBLIC_STATUS_URL",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:web#REVIEW_APP_NAME",
+      "type": "config_key",
+      "label": "REVIEW_APP_NAME",
+      "repo": "web",
+      "file": "lib/constants.ts",
+      "line": 10,
+      "meta": {
+        "key": "REVIEW_APP_NAME",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:web#SHOP_HOST",
       "type": "config_key",
       "label": "SHOP_HOST",
@@ -104,6 +173,33 @@
       "meta": {
         "key": "SHOP_HOST",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#STAGING_HOST",
+      "type": "config_key",
+      "label": "STAGING_HOST",
+      "repo": "web",
+      "file": "lib/constants.ts",
+      "line": 9,
+      "meta": {
+        "key": "STAGING_HOST",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:web#STATUS_API_URL",
+      "type": "config_key",
+      "label": "STATUS_API_URL",
+      "repo": "web",
+      "file": "lib/constants.ts",
+      "line": 23,
+      "meta": {
+        "key": "STATUS_API_URL",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

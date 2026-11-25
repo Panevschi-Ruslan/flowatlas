@@ -173,6 +173,8 @@ const FINDINGS: readonly string[] = [
   'failure-seen-undeclared',
   // Who may ask (the route audit, linker)
   'route-unguarded',
+  // The one write of its router left open where every other write is guarded (P401)
+  'route-unguarded-among-guarded',
   'route-shadowed',
   // A decision said with no reason to review it by (P90)
   'marker-reason-missing',
@@ -582,7 +584,7 @@ export const RISK_NAMES = ['auth', 'performance', 'wiring'] as const;
 export type Risk = (typeof RISK_NAMES)[number];
 
 const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
-  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing', 'graphql-auth-not-checked', 'graphql-requires-auth-not-carried']],
+  ['auth', ['route-unguarded', 'route-unguarded-among-guarded', 'route-shadowed', 'marker-reason-missing', 'graphql-auth-not-checked', 'graphql-requires-auth-not-carried']],
   ['performance', ['query-in-loop']],
   [
     'wiring',

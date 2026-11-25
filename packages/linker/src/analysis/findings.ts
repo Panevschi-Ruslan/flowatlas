@@ -1,4 +1,4 @@
-import { isMessageTypeNode, rowKindOf, waysInOf, type GraphNode, type Precision } from '@flowatlas/core';
+import { isMessageTypeNode, ROUTES_UNREAD_REASONS, rowKindOf, waysInOf, type GraphNode, type Precision } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
 import type { RuleViolation } from '../rules/types.js';
@@ -61,6 +61,8 @@ export type FindingKindName = (typeof FINDING_KINDS)[number];
 const KIND_OF_REASON: Readonly<Record<string, FindingKindName>> = {
   'query-in-loop': 'n-plus-one',
   'route-unguarded': 'unguarded',
+  // The route audit names the one open write among guarded ones itself (P401).
+  'route-unguarded-among-guarded': 'unguarded-among-guarded',
 };
 
 /** The kind a finding row is listed under: its own name, or its reason. */
@@ -198,7 +200,8 @@ const PRECISION: Readonly<Record<string, Precision>> = {
   'annotation-to-missing-route': 'high',
   // A literal route an earlier parameter route answers never runs (P385).
   'route-shadowed-by-earlier': 'high',
-  'unguarded-among-guarded': 'medium',
+  // The one write of its router open where every other write is guarded, its router read whole (P401).
+  'unguarded-among-guarded': 'high',
   'env-not-set': 'medium',
   'n-plus-one': 'medium',
   // Internal services are often unguarded by design: worth a look, not a verdict.
@@ -282,27 +285,42 @@ const unstopped = (text: string): string => (text.endsWith('.') ? text.slice(0, 
 /** A row of the graph's findings as a finding: the node it is about, where, and what it says. */
 const rowFinding = (db: GraphDb, row: AnchoredUnresolvedRow, unguarded: ReadonlySet<string>): FindingRow => {
   const kind = findingKindOf(row.reason);
-  const route = kind === 'unguarded' ? routeOfRow(db, row) : undefined;
+  const sharp = kind === 'unguarded-among-guarded';
+  const route = kind === 'unguarded' || sharp ? routeOfRow(db, row) : undefined;
   const handler = route === undefined ? undefined : db.edgesFrom(route.id, ['handles'])[0]?.to;
   const loc = locOf(row);
   const ways = waysInOf(row);
   const beside = route === undefined ? undefined : guardedSiblingsOf(db, route, unguarded);
-  const deviant = beside !== undefined && beside.guarded > 0;
-  const named = deviant ? 'unguarded-among-guarded' : kind;
+  // Some of the routes beside it guarded, not every other write (that is the route audit's own row, P401):
+  // said, and ranked first among the unguarded, never the sharp kind.
+  const someGuarded = !sharp && beside !== undefined && beside.guarded > 0;
   return {
-    kind: named,
+    kind,
     id: route?.id ?? row.node ?? `gap:${row.service ?? ''}|${row.file ?? ''}|${row.reason}`,
     ...(handler === undefined ? {} : { method: handler }),
     service: row.service ?? route?.repo ?? '',
     ...(loc === undefined ? {} : { loc }),
-    message: deviant
+    message: someGuarded
       ? `${unstopped(row.message)}, while ${beside.guarded} of the ${beside.siblings} other routes of ${beside.controller} have ${beside.guards.join(', ')} in front`
       : row.message,
-    precision: precisionOf(named),
-    ...(deviant ? { evidence: `the routes beside it in ${beside.controller} are guarded` } : {}),
-    reach: { ...(ways === undefined ? {} : { waysIn: ways }), ...(deviant ? { guardedSiblings: beside.guarded } : {}) },
+    precision: precisionOf(kind),
+    ...(sharp ? { evidence: `every other write of its router is guarded and the routes of ${row.file ?? 'its file'} were read whole; no public marker is on it` } : {}),
+    reach: {
+      ...(ways === undefined ? {} : { waysIn: ways }),
+      ...(beside !== undefined && beside.guarded > 0 ? { guardedSiblings: beside.guarded } : {}),
+    },
     rank: 0,
   };
+};
+
+/**
+ * Why the one open write among guarded ones is not said (P401): a route of
+ * its file, or of its service where the reading of a route has no file, was
+ * not read, so the siblings it is held against may not be all of them.
+ */
+const siblingsUnread = (row: AnchoredUnresolvedRow, all: readonly AnchoredUnresolvedRow[]): string | undefined => {
+  const gap = all.find((other) => other.service === row.service && ROUTES_UNREAD_REASONS.has(other.reason) && (other.file === null || other.file === row.file));
+  return gap === undefined ? undefined : `a route of ${gap.file ?? row.service ?? 'its service'} was not read (${gap.reason}), so its siblings may not all be guarded`;
 };
 
 /** A defect between the services as a finding row. */
@@ -329,7 +347,7 @@ const holdBack = (into: Record<string, { count: number; why: string }>, held: He
 };
 
 /** The reasons the route audit gives a route nothing in front of refuses. */
-const UNGUARDED_REASONS: ReadonlySet<string> = new Set(['route-unguarded', 'route-guard-skipped']);
+const UNGUARDED_REASONS: ReadonlySet<string> = new Set(['route-unguarded', 'route-guard-skipped', 'route-unguarded-among-guarded']);
 
 /**
  * Every finding the sources hold, unranked.
@@ -366,6 +384,11 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
     const held = row.reason === 'message-type-unselected' ? row.meta?.[UNSELECTED_HELD_META] : undefined;
     if (typeof held === 'string') {
       holdBack(heldBack, { kind: row.reason, id: row.node ?? '', why: held });
+      continue;
+    }
+    const unreadSiblings = row.reason === 'route-unguarded-among-guarded' ? siblingsUnread(row, all) : undefined;
+    if (unreadSiblings !== undefined) {
+      holdBack(heldBack, { kind: 'unguarded-among-guarded', id: row.node ?? '', why: unreadSiblings });
       continue;
     }
     findings.push(rowFinding(db, row, unguarded));

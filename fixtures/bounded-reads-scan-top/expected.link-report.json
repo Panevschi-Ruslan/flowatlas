@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:33.070Z",
+  "builtAt": "2026-11-25T13:16:01.307Z",
   "configHash": "bc09a6659954",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./services/ledger",
       "type": "grpc",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 5,
+      "nodes": 6,
       "edges": 2,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 1228,
+      "durationMs": 918,
       "packages": {
         "name": "bounded-reads-scan-top-ledger",
         "runtime": [
@@ -27,11 +27,11 @@
       "repo": "./services/till",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 8,
+      "nodes": 9,
       "edges": 6,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1232,
+      "durationMs": 918,
       "packages": {
         "name": "bounded-reads-scan-top-till",
         "runtime": [
@@ -81,7 +81,7 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 13,
+    "nodes": 15,
     "edges": 10,
     "types": 4,
     "missed": 1,

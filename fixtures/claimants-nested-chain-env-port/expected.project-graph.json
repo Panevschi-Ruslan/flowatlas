@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:44.253Z",
+  "builtAt": "2026-11-25T13:16:52.304Z",
   "services": [
     {
       "name": "jobs",
@@ -155,6 +155,20 @@
       }
     },
     {
+      "id": "config_key:api#API_PORT",
+      "type": "config_key",
+      "label": "API_PORT",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 13,
+      "meta": {
+        "key": "API_PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:jobs#ARCHIVE_URL",
       "type": "config_key",
       "label": "ARCHIVE_URL",
@@ -179,6 +193,32 @@
       }
     },
     {
+      "id": "config_key:jobs#NODE_ENV",
+      "type": "config_key",
+      "label": "NODE_ENV",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 2,
+      "meta": {
+        "key": "NODE_ENV",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:jobs#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:jobs#STOCK_URL",
       "type": "config_key",
       "label": "STOCK_URL",
@@ -188,6 +228,20 @@
       "meta": {
         "key": "STOCK_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:reports#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "reports",
+      "file": "src/app.ts",
+      "line": 13,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {

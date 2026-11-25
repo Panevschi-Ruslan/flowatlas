@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:33:28.051Z",
+  "builtAt": "2026-11-25T13:16:41.860Z",
   "configHash": "01887afcf3aa",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./api",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1486,
+      "durationMs": 1445,
       "packages": {
         "name": "chain-candidates-written-fallback-api",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1565,
+      "durationMs": 1465,
       "packages": {
         "name": "chain-candidates-written-fallback-archive",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./jobs",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 21,
+      "nodes": 22,
       "edges": 14,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1422,
+      "durationMs": 1416,
       "packages": {
         "name": "chain-candidates-written-fallback-jobs",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1506,
+      "durationMs": 1457,
       "packages": {
         "name": "chain-candidates-written-fallback-legacy",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1462,
+      "durationMs": 1417,
       "packages": {
         "name": "chain-candidates-written-fallback-orders",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1989,
+      "durationMs": 1987,
       "packages": {
         "name": "chain-candidates-written-fallback-portal",
         "runtime": [
@@ -122,7 +122,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1576,
+      "durationMs": 1412,
       "packages": {
         "name": "chain-candidates-written-fallback-shop",
         "runtime": [
@@ -199,7 +199,7 @@
     }
   ],
   "totals": {
-    "nodes": 57,
+    "nodes": 59,
     "edges": 37,
     "types": 2,
     "missed": 5,

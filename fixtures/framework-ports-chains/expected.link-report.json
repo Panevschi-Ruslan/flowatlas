@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:35:11.563Z",
+  "builtAt": "2026-11-25T13:18:45.929Z",
   "configHash": "54382dd0cbd9",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1120,
+      "durationMs": 1339,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1090,
+      "durationMs": 1268,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 1338,
+      "durationMs": 1582,
       "packages": {
         "name": "reviews",
         "runtime": [
@@ -70,7 +70,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1092,
+      "durationMs": 1292,
       "packages": {
         "name": "status",
         "runtime": [
@@ -84,11 +84,11 @@
       "repo": "./web",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 30,
+      "nodes": 37,
       "edges": 20,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 1167,
+      "durationMs": 1435,
       "packages": {
         "name": "framework-ports-chains-web",
         "runtime": [
@@ -219,7 +219,7 @@
     }
   ],
   "totals": {
-    "nodes": 51,
+    "nodes": 58,
     "edges": 40,
     "types": 1,
     "missed": 15,

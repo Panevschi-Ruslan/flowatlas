@@ -223,37 +223,61 @@ describe('defects between the services', () => {
     hubbed.close();
   });
 
-  it('lists an unguarded route among guarded siblings as its own kind, ranked above a plain unguarded one', () => {
-    const guard = node('items#src/staff.guard.ts:StaffGuard', { type: 'guard', repo: 'items', label: 'StaffGuard' });
-    const unguarded = (method: string, path: string, line: number) => ({
-      service: 'items',
-      file: 'src/items.controller.ts',
-      line,
-      reason: 'route-unguarded',
-      level: 'action' as const,
-      message: `${method} ${path} has no guard in front of it and reaches items.`,
-      symbol: `${method} ${path}`,
-    });
-    const db = buildTestDb({
+  const guard = node('items#src/staff.guard.ts:StaffGuard', { type: 'guard', repo: 'items', label: 'StaffGuard' });
+  const auditRow = (reason: string, method: string, path: string, line: number, message: string) => ({
+    service: 'items',
+    file: 'src/items.controller.ts',
+    line,
+    reason,
+    level: 'action' as const,
+    message,
+    symbol: `${method} ${path}`,
+  });
+  const itemsDb = (extra: ReturnType<typeof auditRow>[] = []) =>
+    buildTestDb({
       services: ['items'],
       nodes: [
         route('items', 'GET', '/items/:param'),
+        route('items', 'POST', '/items'),
         route('items', 'DELETE', '/items/:param'),
         route('items', 'GET', '/stock/:param', { meta: { method: 'GET', path: '/stock/:param', controller: 'StockController' } }),
         guard,
       ],
-      edges: [edge('entry:items:http:GET:/items/:param', guard.id, { type: 'guarded_by', meta: { layer: 'guard' } })],
-      unresolved: [unguarded('DELETE', '/items/:param', 20), unguarded('GET', '/stock/:param', 30)],
+      edges: [
+        edge('entry:items:http:GET:/items/:param', guard.id, { type: 'guarded_by', meta: { layer: 'guard' } }),
+        edge('entry:items:http:POST:/items', guard.id, { type: 'guarded_by', meta: { layer: 'guard' } }),
+      ],
+      unresolved: [
+        // The route audit's own row for the one open write among guarded ones (P401).
+        auditRow('route-unguarded-among-guarded', 'DELETE', '/items/:param', 20, 'DELETE /items/:param has no guard in front of it, while the other write of ItemsController has StaffGuard in front.'),
+        auditRow('route-unguarded', 'GET', '/stock/:param', 30, 'GET /stock/:param has no guard in front of it and reaches items.'),
+        ...extra,
+      ],
     });
+
+  it('lists the one open write among guarded ones as its own kind at high, the others as unguarded, never both', () => {
+    const db = itemsDb();
     const rows = db.allUnresolved();
     const ranked = rankFindings(db, collectFindings(db, { rows }).findings);
     db.close();
     expect(ranked.map((row) => `${row.kind} ${row.id} ${row.precision}`)).toEqual([
-      'unguarded-among-guarded entry:items:http:DELETE:/items/:param medium',
+      'unguarded-among-guarded entry:items:http:DELETE:/items/:param high',
       'unguarded entry:items:http:GET:/stock/:param low',
     ]);
-    expect(ranked[0]?.message).toBe(
-      'DELETE /items/:param has no guard in front of it and reaches items, while 1 of the 1 other routes of ItemsController have StaffGuard in front',
-    );
+    expect(ranked[0]?.message).toBe('DELETE /items/:param has no guard in front of it, while the other write of ItemsController has StaffGuard in front.');
+    expect(ranked[0]?.evidence).toBe('every other write of its router is guarded and the routes of src/items.controller.ts were read whole; no public marker is on it');
+  });
+
+  it('holds the open write back where a route of its file was not read', () => {
+    const gap = auditRow('route-path-dynamic', 'GET', '/items/:param/x', 40, 'a path built at run time');
+    const db = itemsDb([gap]);
+    const rows = db.allUnresolved();
+    const collected = collectFindings(db, { rows });
+    db.close();
+    expect(collected.findings.map((row) => row.kind)).toEqual(['unguarded']);
+    expect(collected.heldBack['unguarded-among-guarded']).toEqual({
+      count: 1,
+      why: 'a route of src/items.controller.ts was not read (route-path-dynamic), so its siblings may not all be guarded',
+    });
   });
 });

@@ -36,6 +36,35 @@ only one of them moved.
   set, as axios's did.
 
 - **The benchmark measures finding a defect, a change across repositories and
+- **`findings` names the three bugs the benchmark's planted project hid, and
+  drops the false row it showed (P401).** A setting read in a module's own
+  statements (`export const settings = { region: process.env.LEDGER_REGION }`)
+  is a read: the key is recorded (`meta.moduleLevel`), so a setting renamed
+  where it is set is `config-not-set`, and where a name set and read nowhere
+  shares a word with it (`LEDGER_ZONE`), that name is given as the setting
+  likely renamed, with `nearest` (never two roles of one thing, a host and a
+  password). `process.env['NAME']` names its key as `process.env.NAME` does.
+  A key read and set nowhere is held back, with which, where an `env_file` a
+  compose file names or an env file the code loads (`dotenv`,
+  `process.loadEnvFile`, `ConfigModule.forRoot` without `ignoreEnvFile`) is
+  not in the checkout and has no example, or where a secrets tool
+  (`doppler run`, `infisical run`, ...) or a compose service's `secrets`
+  hands settings in when it runs. The route audit names the one write (POST,
+  PUT, PATCH, DELETE) of its controller or router left open while every other
+  write there, two at least, has a guard (`route-unguarded-among-guarded`,
+  listed as `unguarded-among-guarded`, now `high`), whether or not the data it
+  reaches was read and also where a decorator switches the guard off; never a
+  read, a route marked public, one that checks the request itself, or a router
+  with two open writes; held back where a route of its file was not read. It
+  takes the place of that route's `route-unguarded` row, so the two kinds never
+  list one route twice, and `flowatlas accept route-unguarded` accepts it too.
+  A request a helper makes under a branch on what its caller hands in
+  (`method === 'GET' ? http.get(url) : http.post(url, body)`) is credited only
+  to the callers that take the branch, and to one whose argument is not read
+  with no verb, so a POST through the helper is no longer a GET to a missing
+  route (core `branchTestsOf`, `takenAlong`, `testsAVerb`). On the bench's dry
+  project `flowatlas findings` now names all six planted defects and no twin.
+  New fixture `findings-settings-guards-helper`. a change across repositories and
   a question in words, and three more ways to hand an assistant the graph
   (P392).** The generated project gains six planted defects, each beside a
   twin that looks like it and is right: a route renamed on the server with its

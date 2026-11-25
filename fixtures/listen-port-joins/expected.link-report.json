@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:37:55.867Z",
+  "builtAt": "2026-11-25T13:22:20.740Z",
   "configHash": "73b8a22633ac",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2076,
+      "durationMs": 2284,
       "packages": {
         "name": "listen-port-joins-admin",
         "runtime": [
@@ -27,11 +27,11 @@
       "repo": "./audit",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 2110,
+      "durationMs": 2239,
       "packages": {
         "name": "listen-port-joins-audit",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 2064,
+      "durationMs": 2216,
       "packages": {
         "name": "listen-port-joins-catalog",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2459,
+      "durationMs": 2484,
       "packages": {
         "name": "listen-port-joins-jobs",
         "runtime": [
@@ -88,7 +88,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2340,
+      "durationMs": 2497,
       "packages": {
         "name": "listen-port-joins-ledger",
         "runtime": [
@@ -107,7 +107,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 2172,
+      "durationMs": 2219,
       "packages": {
         "name": "listen-port-joins-orders",
         "runtime": [
@@ -121,11 +121,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 5,
+      "nodes": 6,
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2099,
+      "durationMs": 2217,
       "packages": {
         "name": "listen-port-joins-stock",
         "runtime": [
@@ -143,7 +143,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2123,
+      "durationMs": 2336,
       "packages": {
         "name": "listen-port-joins-storefront",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 21,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2253,
+      "durationMs": 2304,
       "packages": {
         "name": "listen-port-joins-web",
         "runtime": [
@@ -212,7 +212,7 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 61,
+    "nodes": 63,
     "edges": 44,
     "types": 4,
     "missed": 0,

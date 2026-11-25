@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:18:28.850Z",
+  "configHash": "ced1e02110d6",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 25,
+      "edges": 21,
+      "types": 3,
+      "unresolved": 3,
+      "durationMs": 1623,
+      "packages": {
+        "name": "gateway",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "axios",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1306,
+      "packages": {
+        "name": "ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "mailer",
+      "repo": "./mailer",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1175,
+      "packages": {
+        "name": "mailer",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 3,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1515,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 6,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1551,
+      "packages": {
+        "name": "reports",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 41,
+      "edges": 27,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1602,
+      "packages": {
+        "name": "shipping",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 5,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 1,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 1
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 26,
+    "called": 3,
+    "uncalled": [
+      "entry:gateway:http:DELETE:/api/notes/:param",
+      "entry:gateway:http:GET:/api/notes",
+      "entry:gateway:http:POST:/api/notes/:param/archive",
+      "entry:gateway:http:POST:/api/notes/:param/export",
+      "entry:ledger:http:GET:/entries",
+      "entry:mailer:http:GET:/relay",
+      "entry:reports:http:GET:/reports/today",
+      "entry:shipping:http:DELETE:/claims/:param",
+      "entry:shipping:http:DELETE:/claims/:param/refunds/:param",
+      "entry:shipping:http:DELETE:/depots/:param",
+      "entry:shipping:http:DELETE:/pickups/:param",
+      "entry:shipping:http:GET:/claims",
+      "entry:shipping:http:GET:/claims/:param/refunds",
+      "entry:shipping:http:PATCH:/depots/:param",
+      "entry:shipping:http:PATCH:/parcels/:param",
+      "entry:shipping:http:POST:/claims",
+      "entry:shipping:http:POST:/claims/:param/notes",
+      "entry:shipping:http:POST:/claims/:param/refunds",
+      "entry:shipping:http:POST:/depots",
+      "entry:shipping:http:POST:/parcels",
+      "entry:shipping:http:POST:/parcels/:param/track",
+      "entry:shipping:http:POST:/pickups",
+      "entry:shipping:http:PUT:/pickups/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 8,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 35,
+      "reason": "target-route-not-found",
+      "message": "target service orders has no route POST /notes/:param/archive",
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:gateway#src/clients/notes.client.ts:35:12"
+    },
+    {
+      "service": "ledger",
+      "file": "docker-compose.yml",
+      "line": 5,
+      "reason": "container-image-unread",
+      "level": "info",
+      "message": "docker-compose.yml runs ledger (ledger) from the image ledger; the Dockerfile compose builds it from is not found, so the environment the image gives is not read: it may set PORT (src/app.ts:9), which ledger's code reads its port from; the port there is taken as 3000, where nothing read gives the setting",
+      "hint": "Build the image in the project (docker build -t, a compose build:, a Skaffold artifact) so its Dockerfile is read, or give the setting in the container's own environment.",
+      "symbol": "ledger:ledger",
+      "meta": {
+        "image": "ledger",
+        "settings": [
+          "PORT"
+        ]
+      }
+    },
+    {
+      "service": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 40,
+      "reason": "route-unguarded-among-guarded",
+      "message": "DELETE /claims/:param has no guard in front of it, while the 2 other writes of ClaimsController have StaffGuard in front.",
+      "hint": "Put StaffGuard in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).",
+      "symbol": "DELETE /claims/:param"
+    },
+    {
+      "service": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 23,
+      "reason": "route-unguarded-among-guarded",
+      "message": "DELETE /pickups/:param has no guard in front of it, because StaffGuard (skipped by @SkipStaffCheck), while the 2 other writes of PickupsController have StaffGuard in front.",
+      "hint": "Put StaffGuard in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).",
+      "symbol": "DELETE /pickups/:param"
+    }
+  ],
+  "totals": {
+    "nodes": 92,
+    "edges": 57,
+    "types": 8,
+    "missed": 4,
+    "sites": 4,
+    "notes": 1,
+    "findings": 2,
+    "unresolved": 4
+  }
+}

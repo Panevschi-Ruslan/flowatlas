@@ -1,0 +1,5 @@
+services:
+  gateway:
+    build: .
+    environment:
+      ORDERS_URL: http://orders:3000

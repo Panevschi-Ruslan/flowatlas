@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:01.418Z",
+  "builtAt": "2026-11-25T13:17:13.064Z",
   "configHash": "2c9afef43aa4",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1721,
+      "durationMs": 2123,
       "packages": {
         "name": "cluster-install-joins-catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 17,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1736,
+      "durationMs": 2007,
       "packages": {
         "name": "cluster-install-joins-jobs",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1725,
+      "durationMs": 2002,
       "packages": {
         "name": "cluster-install-joins-orders",
         "runtime": [
@@ -62,11 +62,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1733,
+      "durationMs": 2051,
       "packages": {
         "name": "cluster-install-joins-stock",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1699,
+      "durationMs": 1821,
       "packages": {
         "name": "cluster-install-joins-web",
         "runtime": [
@@ -148,7 +148,7 @@
     }
   ],
   "totals": {
-    "nodes": 27,
+    "nodes": 28,
     "edges": 26,
     "types": 2,
     "missed": 0,

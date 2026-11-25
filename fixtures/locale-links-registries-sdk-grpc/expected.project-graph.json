@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:53:26.952Z",
+  "builtAt": "2026-11-25T13:22:24.032Z",
   "services": [
     {
       "name": "wiki",
@@ -62,6 +62,19 @@
           "returns": "void"
         },
         "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:stock#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 19,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

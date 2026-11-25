@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:08.469Z",
+  "builtAt": "2026-11-25T13:17:22.182Z",
   "configHash": "997a5f86e60d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1410,
+      "durationMs": 1976,
       "packages": {
         "name": "cluster-route-joins-billing",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1427,
+      "durationMs": 1872,
       "packages": {
         "name": "cluster-route-joins-catalog",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 21,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1457,
+      "durationMs": 1878,
       "packages": {
         "name": "cluster-route-joins-jobs",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1457,
+      "durationMs": 1982,
       "packages": {
         "name": "cluster-route-joins-orders",
         "runtime": [
@@ -80,11 +80,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 7,
+      "nodes": 8,
       "edges": 3,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1453,
+      "durationMs": 1972,
       "packages": {
         "name": "cluster-route-joins-stock",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1353,
+      "durationMs": 1887,
       "packages": {
         "name": "cluster-route-joins-web",
         "runtime": [
@@ -186,7 +186,7 @@
     }
   ],
   "totals": {
-    "nodes": 39,
+    "nodes": 40,
     "edges": 35,
     "types": 2,
     "missed": 3,

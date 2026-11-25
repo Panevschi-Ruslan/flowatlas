@@ -145,6 +145,54 @@ describe('settings read against the settings set', () => {
     expect(findings(unrecorded)).toEqual([]);
     expect(held(unrecorded)).toHaveLength(3);
   });
+
+  /** P401: a setting renamed on one side, named by the word it shares; held back where a source of the settings is not read. */
+  const renamedGraph = (ledger: { names: Record<string, string[]>; files: string[]; missing?: string[]; injected?: string[] }) =>
+    buildTestDb({
+      services: ['ledger'],
+      nodes: [
+        node('config_key:ledger#LEDGER_REGION', { type: 'config_key', repo: 'ledger', label: 'LEDGER_REGION', file: 'src/settings.ts', line: 3, meta: { key: 'LEDGER_REGION', source: 'process.env', moduleLevel: true } }),
+        node('config_key:ledger#CACHE_HOST', { type: 'config_key', repo: 'ledger', label: 'CACHE_HOST', file: 'src/settings.ts', line: 4, meta: { key: 'CACHE_HOST', source: 'process.env', moduleLevel: true } }),
+      ],
+      edges: [],
+      settingNames: { ledger },
+    });
+  const compose = { names: { LEDGER_ZONE: ['docker-compose.yml'], CACHE_PASSWORD: ['docker-compose.yml'] }, files: ['docker-compose.yml'] };
+
+  it('names the set name a key read nowhere shares a word with, never a second role of one thing', () => {
+    const db = renamedGraph(compose);
+    const out = configMismatches(db, db.allUnresolved());
+    db.close();
+    const rows = findings(out);
+    expect(rows.map((each) => [each.kind, each.id, each.nearest])).toEqual([
+      ['config-not-set', 'config_key:ledger#CACHE_HOST', undefined],
+      ['config-not-set', 'config_key:ledger#LEDGER_REGION', ['config_key:ledger#LEDGER_ZONE']],
+      // The cache's password is not the host renamed: said on its own, read by nobody.
+      ['config-never-read', 'config_key:ledger#CACHE_PASSWORD', undefined],
+    ]);
+    expect(rows[1]?.message).toBe(
+      "LEDGER_REGION is read with no default, and none of ledger's deployment files sets it (docker-compose.yml); LEDGER_ZONE, set in docker-compose.yml and read nowhere, is likely the same setting renamed",
+    );
+    expect(rows[1]?.fix).toBe('one setting renamed on one side: read LEDGER_ZONE, or set LEDGER_REGION where LEDGER_ZONE is set');
+  });
+
+  it('holds back where an env file named is not in the checkout, or settings are handed in when it runs', () => {
+    const missing = renamedGraph({ ...compose, missing: ['./ledger.env (env_file of ledger in docker-compose.yml)'] });
+    const out = configMismatches(missing, missing.allUnresolved());
+    missing.close();
+    expect(findings(out).map((each) => each.kind)).toEqual(['config-never-read', 'config-never-read']);
+    expect(held(out).map((each) => each.why)).toEqual([
+      './ledger.env (env_file of ledger in docker-compose.yml) is not in the checkout: it may set it',
+      './ledger.env (env_file of ledger in docker-compose.yml) is not in the checkout: it may set it',
+    ]);
+    const injected = renamedGraph({ ...compose, injected: ['doppler run in Dockerfile'] });
+    const handed = configMismatches(injected, injected.allUnresolved());
+    injected.close();
+    expect(held(handed).map((each) => each.why)).toEqual([
+      'doppler run in Dockerfile hands settings in when it runs, which no file read names',
+      'doppler run in Dockerfile hands settings in when it runs, which no file read names',
+    ]);
+  });
 });
 
 describe('a status the route never answers', () => {

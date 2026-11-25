@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:23:51.189Z",
+  "builtAt": "2026-11-25T13:35:58.059Z",
   "services": [
     {
       "name": "web",
@@ -118,6 +118,19 @@
       "meta": {
         "key": "NEXT_PUBLIC_ORDERS_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:web#NODE_ENV",
+      "type": "config_key",
+      "label": "NODE_ENV",
+      "repo": "web",
+      "file": "lib/env.ts",
+      "line": 2,
+      "meta": {
+        "key": "NODE_ENV",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

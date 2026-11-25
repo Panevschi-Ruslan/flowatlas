@@ -524,6 +524,7 @@ export const PAGE_WORDS = Object.freeze({
     'route-target-unread': 'route target not read',
     'route-target-unresolved': 'no route answers the link',
     'route-unguarded': 'no guard in front',
+    'route-unguarded-among-guarded': 'the one open write among guarded ones',
     'route-verb-unread': 'route file exports no verb',
     'route-wildcard-only': 'only a wildcard route answers',
     'rule-invalid': 'architecture rule not valid',

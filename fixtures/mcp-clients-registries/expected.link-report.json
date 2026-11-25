@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:38:20.008Z",
+  "builtAt": "2026-11-25T13:22:35.303Z",
   "configHash": "684a4f745129",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 6,
       "types": 1,
       "unresolved": 2,
-      "durationMs": 1668,
+      "durationMs": 841,
       "packages": {
         "name": "mcp-registries-assistant",
         "runtime": [
@@ -27,11 +27,11 @@
       "repo": "./concierge",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 13,
+      "nodes": 14,
       "edges": 6,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 1553,
+      "durationMs": 800,
       "packages": {
         "name": "mcp-registries-concierge",
         "runtime": [
@@ -85,7 +85,7 @@
     }
   ],
   "totals": {
-    "nodes": 26,
+    "nodes": 27,
     "edges": 16,
     "types": 1,
     "missed": 10,

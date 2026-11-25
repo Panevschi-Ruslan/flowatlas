@@ -3360,6 +3360,99 @@
         }
       },
       "note": "P400: the webhook hands its request to the chat bot's code, so it is the bot's way in, reached from outside, as impact counts it; the price route nothing calls stays dead."
+    },
+    {
+      "id": "findings.setting-renamed",
+      "ask": "which settings does the ledger read that its deployment never sets",
+      "fixture": "findings-settings-guards-helper",
+      "tool": "findings",
+      "args": {
+        "kind": "config-not-set"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "config_key:ledger#CACHE_HOST",
+            "config_key:ledger#LEDGER_REGION"
+          ]
+        },
+        "notListed": {
+          "rows": [
+            "config_key:ledger#PAYMENT_PROVIDER",
+            "config_key:reports#REPORTS_BUCKET",
+            "config_key:mailer#SMTP_RELAY"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P401: before, a setting read in a module's own statements was no read at all, so the renamed LEDGER_REGION was never named; now it is, with LEDGER_ZONE as the setting likely renamed, and the services whose env file is not in the checkout or whose settings a secrets tool hands in are held back."
+    },
+    {
+      "id": "findings.open-write-among-guarded",
+      "ask": "which write route was left without the guard its siblings carry",
+      "fixture": "findings-settings-guards-helper",
+      "tool": "findings",
+      "args": {
+        "kind": "unguarded-among-guarded"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "entry:shipping:http:DELETE:/claims/:param",
+            "entry:shipping:http:DELETE:/pickups/:param"
+          ]
+        },
+        "notListed": {
+          "rows": [
+            "entry:shipping:http:GET:/claims",
+            "entry:shipping:http:DELETE:/claims/:param/refunds/:param",
+            "entry:shipping:http:POST:/parcels/:param/track",
+            "entry:shipping:http:POST:/depots",
+            "entry:shipping:http:DELETE:/depots/:param"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P401: none of these routes reaches stored data, so no unguarded row named them; the one open write among guarded ones is named on the deviance, never a read, a route marked public or a router with two open writes."
+    },
+    {
+      "id": "findings.missing-route-through-helper",
+      "ask": "which calls from the gateway go to a route the orders service does not serve",
+      "fixture": "findings-settings-guards-helper",
+      "tool": "findings",
+      "args": {
+        "kind": "call-to-missing-route"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "http_out:gateway#src/clients/notes.client.ts:35:12"
+          ]
+        },
+        "notListed": {
+          "rows": [
+            "http_out:gateway#src/clients/notes.client.ts:30:12",
+            "http_out:gateway#src/clients/notes.client.ts:40:12"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P401: before, every caller of the helper took its first branch's GET, so the export, which the route answers under POST, was called missing; now only the archive, which nothing serves, and the call whose verb is not read joins nothing."
     }
   ],
   "fixed": {
@@ -3866,6 +3959,27 @@
     "findings.handler-types": {
       "chars": 1349,
       "tokens": 338,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.setting-renamed": {
+      "chars": 1546,
+      "tokens": 387,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.open-write-among-guarded": {
+      "chars": 1668,
+      "tokens": 417,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.missing-route-through-helper": {
+      "chars": 868,
+      "tokens": 217,
       "rows": 1,
       "complete": null,
       "calls": 1

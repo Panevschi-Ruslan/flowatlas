@@ -13,7 +13,7 @@ import {
   type SettingNames,
 } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '../db/reader.js';
-import { closeSpelling, likelyRenamed, waysInReaching, type BoundaryFinding, type Promoted } from './boundary.js';
+import { closeSpelling, identifierWords, likelyRenamed, waysInReaching, type BoundaryFinding, type Promoted } from './boundary.js';
 
 /**
  * Protocol, validation, settings, status and CORS mismatches across the
@@ -376,6 +376,22 @@ export const botButtonMismatches = (db: GraphDb, all: readonly AnchoredUnresolve
 const PLATFORM_SETTING =
   /^(NODE_ENV|NODE_OPTIONS|PORT|HOST|HOSTNAME|HOME|PATH|PWD|TZ|LANG|CI|DEBUG|npm_.*|AWS_(REGION|DEFAULT_REGION|EXECUTION_ENV|LAMBDA_.*)|LAMBDA_TASK_ROOT|_HANDLER|K_SERVICE|K_REVISION|VERCEL.*|NETLIFY.*|CF_PAGES.*|GITHUB_.*|RUNNER_.*|DATABASE_URL|DIRECT_URL|SHADOW_DATABASE_URL|COMPOSE_.*|DOCKER_.*)$/;
 
+/**
+ * The last word of a setting's name that says which part of a thing it is: a
+ * host and a password of one store are two settings, never one renamed
+ * (`REDIS_HOST` read, `REDIS_PASSWORD` set).
+ */
+const ROLE_WORDS: ReadonlySet<string> = new Set([
+  'host', 'hostname', 'port', 'url', 'uri', 'endpoint', 'user', 'username', 'password', 'pass', 'key', 'secret', 'token',
+  'name', 'id', 'db', 'database', 'path', 'dir', 'file', 'timeout', 'ttl', 'enabled', 'level', 'size', 'limit', 'version',
+]);
+
+/** Whether two names end in two different role words: two settings of one thing, not one renamed. */
+const twoRoles = (a: string, b: string): boolean => {
+  const last = (name: string): string => identifierWords(name).at(-1) ?? '';
+  return ROLE_WORDS.has(last(a)) && ROLE_WORDS.has(last(b)) && last(a) !== last(b);
+};
+
 interface ConfigRead {
   node: GraphNode;
   key: string;
@@ -398,6 +414,9 @@ const notSetWhy = (service: string, ledger: SettingNames | undefined, deployed: 
   if (ledger.schema !== undefined) return `the configuration module in ${ledger.schema} validates the settings with a schema, which may give it a default`;
   if (ledger.from !== undefined && ledger.from.length > 0) return `a manifest takes every setting of ${ledger.from[0]}, which no file read writes`;
   if (ledger.unread !== undefined && ledger.unread.length > 0) return `${ledger.unread[0]} could not be parsed`;
+  // A source of its settings named and not in the checkout, or one handed in when it runs (P401).
+  if (ledger.missing !== undefined && ledger.missing.length > 0) return `${ledger.missing[0]} is not in the checkout: it may set it`;
+  if (ledger.injected !== undefined && ledger.injected.length > 0) return `${ledger.injected[0]} hands settings in when it runs, which no file read names`;
   return undefined;
 };
 
@@ -437,6 +456,13 @@ export const configMismatches = (db: GraphDb, all: readonly AnchoredUnresolvedRo
       const near = nearOf(read.key);
       const one = near.length === 1 ? near[0]! : undefined;
       if (one !== undefined) named.add(one);
+      // Not spelled a letter or two apart, but sharing a word with one name set and read nowhere (P401):
+      // `LEDGER_REGION` read where `LEDGER_ZONE` is set, most likely one setting renamed on one side.
+      const renamed =
+        one === undefined && near.length === 0
+          ? likelyRenamed(read.key, unsetUnread.filter((name) => !named.has(name) && !twoRoles(read.key, name)))
+          : undefined;
+      if (renamed !== undefined) named.add(renamed);
       const firstReader = db
         .edgesTo(read.node.id, ['reads_config'])
         .flatMap((edge) => db.node(edge.from) ?? [])
@@ -452,13 +478,20 @@ export const configMismatches = (db: GraphDb, all: readonly AnchoredUnresolvedRo
           message:
             one !== undefined
               ? `${read.key} is read with no default${by} and set nowhere, while ${one} is set in ${(ledger?.names[one] ?? []).join(', ')} and read nowhere`
-              : `${read.key} is read with no default${by}, and none of ${service}'s deployment files sets it (${files.slice(0, 3).join(', ')}${files.length > 3 ? `, ${files.length - 3} more` : ''})`,
+              : `${read.key} is read with no default${by}, and none of ${service}'s deployment files sets it (${files.slice(0, 3).join(', ')}${files.length > 3 ? `, ${files.length - 3} more` : ''})` +
+                (renamed === undefined ? '' : `; ${renamed}, set in ${(ledger?.names[renamed] ?? []).join(', ')} and read nowhere, is likely the same setting renamed`),
           precision: one === undefined ? 'medium' : 'high',
           evidence:
             one !== undefined
               ? 'one name is read and set nowhere, the other set and read nowhere, a letter or two apart'
               : 'every deployment file of the service was read for the names it sets; a value given outside the files (a secret store, a console, the shell) is what would make this wrong',
-          fix: one !== undefined ? `one name spelled two ways: read ${one}, or set ${read.key}` : `set ${read.key} where ${service} is deployed, or give the read a default`,
+          fix:
+            one !== undefined
+              ? `one name spelled two ways: read ${one}, or set ${read.key}`
+              : renamed !== undefined
+                ? `one setting renamed on one side: read ${renamed}, or set ${read.key} where ${renamed} is set`
+                : `set ${read.key} where ${service} is deployed, or give the read a default`,
+          ...(renamed === undefined ? {} : { nearest: [`config_key:${service}#${renamed}`] }),
           ...(firstReader === undefined ? {} : metBy(db, firstReader.id)),
         },
       });
@@ -467,7 +500,7 @@ export const configMismatches = (db: GraphDb, all: readonly AnchoredUnresolvedRo
     if (ledger === undefined || ledger.files.length === 0) continue;
     const dynamic = all.some((row) => row.service === service && row.reason === 'dynamic-config-key');
     for (const name of unsetUnread.sort(byText)) {
-      // Said already, as the other half of a name spelled two ways.
+      // Said already, as the other half of a name spelled two ways or renamed.
       if (named.has(name)) continue;
       const id = `config_key:${service}#${name}`;
       if (dynamic) {

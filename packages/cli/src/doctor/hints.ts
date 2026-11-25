@@ -737,6 +737,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'An architecture rule names a service the build read in part (skipped, or with packages not installed), so a crossing it makes may be missing from the answer. Install its dependencies and rebuild for a full answer.',
   'route-unguarded': () =>
     'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".',
+  'route-unguarded-among-guarded': () =>
+    'This write route has nothing in front of it that can refuse a request, while every other write of its controller or router, two at least, has a guard: the one left out, whether or not the data it reaches was read. Put the same guard in front of it, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or doctor.publicRoutes). A decorator that only switches the guard off is not a public marker. Accepted with: flowatlas accept route-unguarded-among-guarded --service <name> --path "<METHOD> /path" --note "<why>".',
   'route-checked-in-body': () =>
     'No guard is in front of this route, and its own code throws a 401 or a 403, so it checks who is asking in the body. The exception may be built by a helper that chooses it at run time (throw toHttpError(result)): then the statuses listed are what the helper\'s table can give, or, where the table cannot be read, the test before the throw is of what a check of who is asking answered. Nothing is missing if that check runs before the data is read, which this cannot tell. A guard makes the check visible to every reader; /** @flowatlas-auth <how> */ says it in words.',
   'route-public-declared': () =>
@@ -984,6 +986,7 @@ export const nearestReasons = (text: string, known: readonly string[] = KNOWN_RE
 export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many: string]>> = Object.freeze({
   'query-in-loop': ['likely N+1', 'likely N+1s'],
   'route-unguarded': ['route with no guard', 'routes with no guard'],
+  'route-unguarded-among-guarded': ['write left open among guarded ones', 'writes left open among guarded ones'],
   'marker-reason-missing': ['public marker with no reason', 'public markers with no reason'],
   'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
   'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],

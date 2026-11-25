@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T15:56:34.349Z",
+  "builtAt": "2026-11-25T13:18:26.052Z",
   "configHash": "7910b7e92ac2",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 43,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1195,
       "packages": {
         "name": "catalog-api",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1166,
       "packages": {
         "name": "legacy-api",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 35,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1285,
       "packages": {
         "name": "storefront",
         "runtime": [
@@ -118,9 +118,9 @@
       "service": "catalog-api",
       "file": "src/products/products.controller.ts",
       "line": 39,
-      "reason": "route-unguarded",
-      "message": "DELETE /products/:param has no guard in front of it and reaches products.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "reason": "route-unguarded-among-guarded",
+      "message": "DELETE /products/:param has no guard in front of it and reaches products, while the 2 other writes of ProductsController have StaffGuard in front.",
+      "hint": "Put StaffGuard in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).",
       "symbol": "DELETE /products/:param"
     },
     {

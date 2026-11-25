@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:34:08.469Z",
+  "builtAt": "2026-11-25T13:17:22.182Z",
   "services": [
     {
       "name": "orders",
@@ -110,6 +110,19 @@
           "returns": "void"
         },
         "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:stock#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

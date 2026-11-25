@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:50:15.283Z",
+  "builtAt": "2026-11-25T13:39:05.586Z",
   "services": [
     {
       "name": "web",
@@ -191,6 +191,19 @@
       }
     },
     {
+      "id": "config_key:api#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:billing#CATALOG_URL",
       "type": "config_key",
       "label": "CATALOG_URL",
@@ -200,6 +213,75 @@
       "meta": {
         "key": "CATALOG_URL",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:inventory#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "inventory",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:ledger#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "ledger",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:loaded#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "loaded",
+      "file": "src/app.ts",
+      "line": 12,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:orders#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:stock#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {

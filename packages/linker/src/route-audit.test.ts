@@ -402,3 +402,79 @@ describe('a route a router trying routes in order never reaches (P385)', () => {
     expect(rows.map((row) => [row.reason, row.level])).toEqual([['route-order-unread', 'info']]);
   });
 });
+
+describe('the one write of its router left open among guarded ones (P401)', () => {
+  /** A controller's routes: each `[method, path, guarded, decorators?]`, none reaching stored data. */
+  const controller = (routes: ReadonlyArray<readonly [string, string, boolean, string[]?]>) => {
+    const nodes: GraphNode[] = [node('api#StaffGuard', 'provider', { label: 'StaffGuard' })];
+    const edges: GraphEdge[] = [];
+    routes.forEach(([method, path, guarded, decorators = []], index) => {
+      const id = `entry:api:http:${method}:${path}`;
+      nodes.push(
+        node(id, 'entry', {
+          kind: 'http',
+          file: 'src/claims.controller.ts',
+          line: 10 + index * 5,
+          meta: { method, path, controller: 'ClaimsController', decorators: decorators.map((name) => ({ name, args: [] })) },
+        }),
+      );
+      if (guarded) edges.push(edge(id, 'guarded_by', 'api#StaffGuard', { meta: { layer: 'guard' } }));
+    });
+    return { nodes: new Map(nodes.map((item) => [item.id, item])), edges };
+  };
+
+  it('names the open delete beside two guarded writes, though it reaches no stored data, and never the open read', () => {
+    const claims = controller([
+      ['GET', '/claims', false],
+      ['POST', '/claims', true],
+      ['POST', '/claims/:param/notes', true],
+      ['DELETE', '/claims/:param', false],
+    ]);
+    const rows = auditRoutes(claims.nodes, claims.edges, OPTIONS);
+    expect(rows.map((row) => [row.reason, row.symbol])).toEqual([['route-unguarded-among-guarded', 'DELETE /claims/:param']]);
+    expect(rows[0]?.message).toBe('DELETE /claims/:param has no guard in front of it, while the 2 other writes of ClaimsController have StaffGuard in front.');
+    expect(rows[0]).not.toHaveProperty('level');
+  });
+
+  it('names a write whose guard a decorator switches off with no word that it is public, never one marked public', () => {
+    const skip = { ...OPTIONS, skipGuardDecorators: { SkipStaffCheck: ['StaffGuard'] } };
+    const skipped = controller([
+      ['POST', '/claims', true],
+      ['PUT', '/claims/:param', true],
+      ['DELETE', '/claims/:param', true, ['SkipStaffCheck']],
+    ]);
+    const [row] = auditRoutes(skipped.nodes, skipped.edges, skip);
+    expect(row).toMatchObject({ reason: 'route-unguarded-among-guarded', symbol: 'DELETE /claims/:param' });
+    expect(row?.message).toContain('because StaffGuard (skipped by @SkipStaffCheck)');
+    const marked = controller([
+      ['POST', '/claims', true],
+      ['PUT', '/claims/:param', true],
+      ['DELETE', '/claims/:param', false, ['Public']],
+    ]);
+    expect(auditRoutes(marked.nodes, marked.edges, OPTIONS)).toEqual([]);
+  });
+
+  it('names nobody where two writes are open, every write is guarded, or fewer than two other writes are', () => {
+    const one = controller([
+      ['PATCH', '/claims/:param', true],
+      ['DELETE', '/claims/:param', false],
+    ]);
+    expect(auditRoutes(one.nodes, one.edges, OPTIONS)).toEqual([]);
+    const two = controller([
+      ['POST', '/claims', false],
+      ['DELETE', '/claims/:param', false],
+      ['PATCH', '/claims/:param', true],
+    ]);
+    expect(auditRoutes(two.nodes, two.edges, OPTIONS)).toEqual([]);
+    const all = controller([
+      ['POST', '/claims', true],
+      ['DELETE', '/claims/:param', true],
+    ]);
+    expect(auditRoutes(all.nodes, all.edges, OPTIONS)).toEqual([]);
+    const alone = controller([
+      ['GET', '/claims', true],
+      ['DELETE', '/claims/:param', false],
+    ]);
+    expect(auditRoutes(alone.nodes, alone.edges, OPTIONS)).toEqual([]);
+  });
+});

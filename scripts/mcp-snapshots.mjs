@@ -665,6 +665,24 @@ const BETWEEN_COMPACT_CASES = [
 ];
 
 /**
+ * The three bugs the bench's planted project hid from findings (P401): a
+ * setting renamed in a compose file beside the module that reads it, held
+ * back where an env file is not in the checkout or a secrets tool hands
+ * settings in; the one open write among guarded ones, never a read, a route
+ * marked public or a router with two open writes; and a helper choosing its
+ * verb by a branch on what its caller hands in, so no route that exists is
+ * called missing through it.
+ */
+const SETTINGS_GUARDS_HELPER_CASES = [
+  ['findings.all', 'findings', {}],
+  ['findings.config-not-set', 'findings', { kind: 'config-not-set' }],
+  ['findings.unguarded-among-guarded', 'findings', { kind: 'unguarded-among-guarded' }],
+  ['findings.call-to-missing-route', 'findings', { kind: 'call-to-missing-route' }],
+];
+/** The same, compact: what an agent is handed. */
+const SETTINGS_GUARDS_HELPER_COMPACT_CASES = [['findings.all', 'findings', { verbose: false }]];
+
+/**
  * Findings that hold on a real project (P395): a screen fed through a stream
  * relaying two channels checked against both, one fed through a stream whose
  * relays are not all read held back, an answer field read behind a presence
@@ -1261,6 +1279,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'findings-that-agree'),
     outDir: join(root, 'fixtures', 'findings-that-agree', 'expected.mcp.compact'),
     cases: AGREE_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-settings-guards-helper'),
+    outDir: join(root, 'fixtures', 'findings-settings-guards-helper', 'expected.mcp'),
+    cases: SETTINGS_GUARDS_HELPER_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'findings-settings-guards-helper'),
+    outDir: join(root, 'fixtures', 'findings-settings-guards-helper', 'expected.mcp.compact'),
+    cases: SETTINGS_GUARDS_HELPER_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'boundary-mismatches'),

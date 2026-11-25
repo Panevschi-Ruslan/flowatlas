@@ -7,9 +7,9 @@
       "method": "catalog-api#src/products/products.controller.ts:ProductsController.remove",
       "service": "catalog-api",
       "loc": "src/products/products.controller.ts:39",
-      "message": "DELETE /products/:param has no guard in front of it and reaches products, while 3 of the 3 other routes of ProductsController have StaffGuard in front",
-      "precision": "medium",
-      "evidence": "the routes beside it in ProductsController are guarded",
+      "message": "DELETE /products/:param has no guard in front of it and reaches products, while the 2 other writes of ProductsController have StaffGuard in front.",
+      "precision": "high",
+      "evidence": "every other write of its router is guarded and the routes of src/products/products.controller.ts were read whole; no public marker is on it",
       "rank": 1,
       "reach": {
         "guardedSiblings": 3,

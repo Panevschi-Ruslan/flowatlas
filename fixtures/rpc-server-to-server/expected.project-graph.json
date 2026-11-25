@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:46:57.157Z",
+  "builtAt": "2026-11-25T13:32:10.660Z",
   "services": [
     {
       "name": "orders",
@@ -184,6 +184,32 @@
       "meta": {
         "key": "DISCOVERY_HOST",
         "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:worker#LEGACY_URL",
+      "type": "config_key",
+      "label": "LEGACY_URL",
+      "repo": "worker",
+      "file": "src/refunds.ts",
+      "line": 15,
+      "meta": {
+        "key": "LEGACY_URL",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:worker#PAYMENTS_URL",
+      "type": "config_key",
+      "label": "PAYMENTS_URL",
+      "repo": "worker",
+      "file": "src/refunds.ts",
+      "line": 10,
+      "meta": {
+        "key": "PAYMENTS_URL",
+        "source": "process.env",
+        "moduleLevel": true
       }
     },
     {

@@ -292,6 +292,18 @@ export interface SettingNames {
   readonly from?: readonly string[];
   /** A source file whose configuration module validates the settings with a schema, which may give a key a default. */
   readonly schema?: string;
+  /**
+   * Sources of settings named and not in the checkout (P401): an `env_file`
+   * a compose file names, or an environment file the code loads, that is not
+   * there (and no example of it is), each with who names it.
+   */
+  readonly missing?: readonly string[];
+  /**
+   * What hands settings in when the service runs, whose names no file read
+   * says (P401): a secrets tool the image or a script starts the service
+   * through, a compose service's `secrets`.
+   */
+  readonly injected?: readonly string[];
 }
 
 export const NO_SETTINGS: RepoSettings = { values: {}, namedOnly: {}, hosts: [] };
