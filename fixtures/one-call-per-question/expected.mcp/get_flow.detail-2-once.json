@@ -208,7 +208,15 @@
                                 "fieldsRead": [
                                   {
                                     "field": "type",
-                                    "line": 13
+                                    "line": 13,
+                                    "switched": {
+                                      "has": "default",
+                                      "cases": [
+                                        "'ORDER_READY'",
+                                        "'ORDER_CANCELLED'"
+                                      ],
+                                      "line": 13
+                                    }
                                   },
                                   {
                                     "field": "orderId",

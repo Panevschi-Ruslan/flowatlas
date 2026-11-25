@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:16:26.655Z",
+  "builtAt": "2026-11-25T13:02:41.066Z",
   "services": [
     {
       "name": "orders",
@@ -1111,6 +1111,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "ky",
         "client": "ky",
         "baseFrom": "interceptor",
@@ -1134,6 +1135,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "ky",
         "client": "ky",
         "baseFrom": "interceptor",

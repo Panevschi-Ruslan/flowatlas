@@ -39,7 +39,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createFlowatlasServer, DbHandle } from '@flowatlas/mcp';
 import { loadConfig } from '@flowatlas/core';
 import { changeCheckerFor, editContextFor, missingCandidatesFor, reasonCatalog, testPatternText, trafficHook } from '../packages/cli/dist/index.js';
-import { diffFixtureProject } from './diff-fixture.mjs';
+import { clientChecksFixtureProject, diffFixtureProject } from './diff-fixture.mjs';
 import { editedFixtureProject } from './edit-fixture.mjs';
 import { checkedDeployedProject } from './deployed-fixture.mjs';
 import { readGraphFile, resolveNodeId } from './fixture-nodes.mjs';
@@ -568,6 +568,28 @@ const ANSWER_CASES = [
 ];
 /** The same, compact: what an agent is handed. */
 const ANSWER_COMPACT_CASES = ANSWER_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+
+/**
+ * What clients already check (P402): a template that checks `promo` and
+ * `badge` before reading them and reads `legacyCode` plainly, an item and its
+ * counts gathered by `forkJoin` and by `Promise.all`, each answer read at its
+ * own place, and a ky instance whose settings reach every request.
+ */
+const CLIENT_CHECKS_CASES = [
+  ['check_contract.item-route', 'check_contract', { edge: 'GET /api/items/:param' }],
+  ['check_contract.stats-route', 'check_contract', { edge: 'GET /api/items/:param/stats' }],
+  ['findings.answer-field-never-returned', 'findings', { kind: 'answer-field-never-returned' }],
+];
+
+/**
+ * A branch that makes a query key and a header required and widens a status
+ * and a message kind (P402): `what_changed` says the spec diff's verdicts
+ * from use in its words, and an API change a consumer feels makes it unsafe.
+ */
+const CLIENT_VERDICT_CASES = [
+  ['what_changed.verdict', 'what_changed', { verdict: true }],
+  ['what_changed.dashboard', 'what_changed', { verdict: true, service: 'dashboard' }],
+];
 
 /** The same impact and a flow through the rendered child, compact (P370). */
 const RENDERED_REACH_COMPACT_CASES = [
@@ -1346,6 +1368,17 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'multi-repo-rules'),
     outDir: join(root, 'fixtures', 'multi-repo-rules', 'expected.mcp'),
     cases: RULES_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'client-checks-read'),
+    outDir: join(root, 'fixtures', 'client-checks-read', 'expected.mcp'),
+    cases: CLIENT_CHECKS_CASES,
+  },
+  {
+    outDir: join(root, 'fixtures', 'client-checks-verdicts', 'expected.mcp'),
+    cases: CLIENT_VERDICT_CASES,
+    // Made, built and diffed with its API documents each run, and removed after.
+    setup: () => clientChecksFixtureProject(root),
   },
   {
     outDir: join(root, 'fixtures', 'multi-repo-diff', 'expected.mcp'),

@@ -50,7 +50,7 @@ import {
   runExport,
 } from '../packages/cli/dist/index.js';
 import { catalogProblems, dslProblems } from '../packages/linker/dist/index.js';
-import { diffFixtureProject, verdictsFixtureProject } from './diff-fixture.mjs';
+import { clientChecksFixtureProject, diffFixtureProject, verdictsFixtureProject } from './diff-fixture.mjs';
 import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -1107,6 +1107,26 @@ const verdictsComment = async (io) => {
   io.out(run.text.split(scratch).join('<scratch>'));
 };
 
+/**
+ * What clients already check, weighed in the verdicts (P402): over
+ * `fixtures/client-checks-verdicts`, a query key every caller sends, a header
+ * one does not, a status a switch with a default meets and a message kind a
+ * switch with none left over does not handle. The project is made once.
+ */
+let clientChecksProject;
+const clientChecksSpecDiff = (options) => async (io) => {
+  clientChecksProject ??= await clientChecksFixtureProject(root);
+  const { scratch, config: checksConfig } = clientChecksProject;
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  const said = options.format === undefined ? (text) => io.err(placed(text)) : () => undefined;
+  await runSpecDiff('HEAD~1', undefined, { config: checksConfig, service: ['catalog'], ...options }, { out: (text) => io.out(placed(text)), err: said, tty: false });
+};
+
+const CLIENT_CHECK_CASES = [
+  ['spec-diff.txt', clientChecksSpecDiff({})],
+  ['spec-diff.json', clientChecksSpecDiff({ format: 'json' })],
+];
+
 const VERDICT_CASES = [
   ['spec-diff.txt', verdictsSpecDiff({})],
   ['spec-diff.md', verdictsSpecDiff({ format: 'markdown' })],
@@ -1344,6 +1364,7 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
   { dir: join(root, 'fixtures', 'api-change-verdicts', 'expected.cli'), owned: true, cases: VERDICT_CASES },
+  { dir: join(root, 'fixtures', 'client-checks-verdicts', 'expected.cli'), owned: true, cases: CLIENT_CHECK_CASES },
   { dir: join(root, 'fixtures', 'missing-repo', 'expected.cli'), owned: true, cases: MISSING_REPO_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.cli'), owned: true, cases: DEPLOYED_CASES },
@@ -1408,6 +1429,7 @@ for (const [file, ask] of CASES) {
 
 if (diffProject !== undefined) rmSync(diffProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 if (verdictsProject !== undefined) rmSync(verdictsProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+if (clientChecksProject !== undefined) rmSync(clientChecksProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 if (deployedProject !== undefined) rmSync(deployedProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 
 for (const { dir, owned, cases } of SUITES) {

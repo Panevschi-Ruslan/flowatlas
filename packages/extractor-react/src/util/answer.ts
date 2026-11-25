@@ -5,6 +5,14 @@ import { AXIOS, FETCH, KY, OFETCH, UNFETCH, type RequestClient } from '../client
 import type { ReactExtractContext } from '../context.js';
 
 /**
+ * Whether a client is one described: itself, or an instance of it holding a
+ * base of its own (`ky.create({ prefixUrl })`, `axios.create({ baseURL })`),
+ * which is a copy of the description with its base (P402).
+ */
+export const isClient = (client: RequestClient, described: RequestClient): boolean =>
+  client === described || (client.name === described.name && client.package === described.package);
+
+/**
  * How a client's answer comes back, for the fields its caller reads (P391):
  * the platform's `fetch` and ky hand a response whose body is `json()`,
  * axios one whose body is `data`, ofetch the body itself (its `raw` a
@@ -12,9 +20,9 @@ import type { ReactExtractContext } from '../context.js';
  * not followed; the request then says its answer was not read.
  */
 export const answerAsOf = (client: RequestClient, network: CallExpression): Pick<AnswerStart, 'comes' | 'state'> | undefined => {
-  if (client === FETCH || client === UNFETCH || client === KY) return { comes: 'promise', state: { kind: 'response', bodyKeys: [], bodyCalls: ['json'] } };
-  if (client === AXIOS) return { comes: 'promise', state: { kind: 'response', bodyKeys: ['data'], bodyCalls: [] } };
-  if (client === OFETCH) {
+  if (isClient(client, FETCH) || isClient(client, UNFETCH) || isClient(client, KY)) return { comes: 'promise', state: { kind: 'response', bodyKeys: [], bodyCalls: ['json'] } };
+  if (isClient(client, AXIOS)) return { comes: 'promise', state: { kind: 'response', bodyKeys: ['data'], bodyCalls: [] } };
+  if (isClient(client, OFETCH)) {
     const callee = network.getExpression();
     return Node.isPropertyAccessExpression(callee) && callee.getName() === 'raw'
       ? { comes: 'promise', state: { kind: 'response', bodyKeys: ['_data'], bodyCalls: [] } }

@@ -2243,6 +2243,58 @@
       "note": "P397: four rows before, three of them a handler's reads set against another type's publishes (the relay's if/else and each parameter say the type); now priority under JOB_QUEUED, and the handler whose parameter and caller disagree held back."
     },
     {
+      "id": "findings.client-checks",
+      "ask": "which fields of an item do the shop's screens read that the API never returns",
+      "fixture": "client-checks-read",
+      "tool": "findings",
+      "args": {
+        "kind": "answer-field-never-returned"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "shop-app#src/api.ts:loadItem",
+            "shop-web#src/app/item-page.component.ts:ItemPageComponent"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P402: legacyCode, read plainly by the page's template and by the app's loadItem through a ky instance; promo, badge and shares are read behind a check (the template's @if, ?. and ??, the app's ternary) and held back. Before, the template's checks were not read and the app's answer was not read at all."
+    },
+    {
+      "id": "check_contract.gathered-answer",
+      "ask": "which fields of the item counts do the clients read, asked for together with the item",
+      "fixture": "client-checks-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/items/:param/stats"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "missing": [
+            "shares"
+          ],
+          "unused": [
+            "saves"
+          ]
+        },
+        "exact": [
+          "missing",
+          "unused"
+        ]
+      },
+      "note": "P402: forkJoin({ item, stats }) and Promise.all([item, stats]) each tie the counts' reads to their own request: views by both clients, shares guarded by the page's ??, saves read by none. Before, both requests said their answer was gathered and not followed."
+    },
+    {
       "id": "who_calls.shadowed-handler",
       "ask": "who calls OrdersController.latest, declared below a parameter route of its controller",
       "fixture": "route-order",
@@ -3651,8 +3703,8 @@
       "calls": 1
     },
     "get_flow.detail-2-once": {
-      "chars": 5231,
-      "tokens": 1308,
+      "chars": 5316,
+      "tokens": 1329,
       "rows": 17,
       "complete": true,
       "calls": 1
@@ -3734,6 +3786,20 @@
       "complete": null,
       "calls": 1
     },
+    "findings.client-checks": {
+      "chars": 1920,
+      "tokens": 480,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "check_contract.gathered-answer": {
+      "chars": 1125,
+      "tokens": 282,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
     "who_calls.shadowed-handler": {
       "chars": 567,
       "tokens": 142,
@@ -3812,15 +3878,15 @@
       "calls": 0
     },
     "check_change.edited": {
-      "chars": 1849,
-      "tokens": 463,
+      "chars": 2549,
+      "tokens": 638,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "check_change.one-service": {
-      "chars": 707,
-      "tokens": 177,
+      "chars": 749,
+      "tokens": 188,
       "rows": 0,
       "complete": true,
       "calls": 1

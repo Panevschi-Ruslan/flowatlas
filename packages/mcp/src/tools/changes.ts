@@ -17,6 +17,8 @@ import {
   type GapRef,
   type GraphDb,
   type LostJoin,
+  type SpecChange,
+  type SpecChangeLevel,
 } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -115,6 +117,8 @@ export interface WhatChanged {
     lostJoins: number;
     /** Ways in whose flow changed (format 3). */
     flows: number;
+    /** API and message changes by their level from use, where the diff compared the documents (`--spec`, `check_change`; P402). */
+    api?: { errors: number; warnings: number; infos: number };
   };
   nodes: {
     added: string[];
@@ -124,6 +128,12 @@ export interface WhatChanged {
   types: { added: string[]; removed: string[]; changed: string[] };
   /** The ways in a change reaches; left out when `verdict` ranks them under `retest`. */
   entries?: ChangedEntry[];
+  /**
+   * Each API or message change a consumer feels or may feel, with its verdict
+   * from use (P390), in the words `flowatlas diff --spec` gives it, errors
+   * first (P402); the infos are counted under `counts.api`.
+   */
+  api?: ApiChangeSaid[];
   breaks: Array<{ message: string; edge: { from: string; to: string; type: string }; field: string }>;
   warnings: string[];
   /** Rows left past this page, over every list, and where the next page starts. */
@@ -139,6 +149,40 @@ export interface WhatChanged {
   retest?: RetestEntry[];
   newFindings?: NewFinding[];
 }
+
+/**
+ * One API or message change as the spec diff judged it by what the code on
+ * the other end does (P390): its level from use, the operation and field,
+ * and the verdict sentence `diff --spec` prints after `api break:`.
+ */
+export interface ApiChangeSaid {
+  level: SpecChangeLevel;
+  operation: string;
+  field?: string;
+  /** The verdict from use, or the document comparison's message where it was not judged by use. */
+  verdict: string;
+  /** Who ships first, where some consumer meets the change. */
+  deploy?: string;
+}
+
+const API_LEVELS: Readonly<Record<SpecChangeLevel, number>> = { error: 0, warning: 1, info: 2 };
+
+/** The level a change was given: by use where it was judged so, else by its kind and callers. */
+const apiLevel = (change: SpecChange): SpecChangeLevel => change.use?.level ?? change.level;
+
+/** The spec diff's changes a service is in: as the one that changed, or as a consumer of it. */
+const apiChangesOf = (report: DiffReport, service: string | undefined): SpecChange[] =>
+  (report.spec?.changes ?? [])
+    .filter((change) => service === undefined || change.service === service || change.callers.some((caller) => caller.service === service))
+    .sort((a, b) => API_LEVELS[apiLevel(a)] - API_LEVELS[apiLevel(b)] || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+
+const apiSaid = (change: SpecChange): ApiChangeSaid => ({
+  level: apiLevel(change),
+  operation: change.operation,
+  ...(change.field === null ? {} : { field: change.field }),
+  verdict: change.use?.verdict ?? change.message,
+  ...(change.use?.deployOrder === undefined ? {} : { deploy: change.use.deployOrder.said }),
+});
 
 /* ── The verdict (P96) ── */
 
@@ -398,6 +442,12 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
   if (scoped.breaks.length > 0) {
     unsafe.push(`${plural(scoped.breaks.length, 'new contract error')}${firstOf(scoped.breaks, (finding) => finding.message)}`);
   }
+  // An API or message change a consumer in the project feels, as `diff --fail-on-api-break` fails on it (P402).
+  const apiChanges = apiChangesOf(report, service);
+  const apiBreaks = apiChanges.filter((change) => apiLevel(change) === 'error');
+  if (apiBreaks.length > 0) {
+    unsafe.push(`${plural(apiBreaks.length, 'API change')} a consumer in the project feels, listed under api`);
+  }
   if (scoped.ruleBreaks.length > 0) {
     unsafe.push(
       `${plural(scoped.ruleBreaks.length, 'new violation')} of an architecture rule${firstOf(scoped.ruleBreaks, (item) => `${quoted(item.rule)}: ${item.message}`)}`,
@@ -514,6 +564,10 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
   if (newFindings.length > 0) {
     because.push(`${plural(newFindings.length, 'new finding')}, listed under newFindings, which do not decide the verdict`);
   }
+  const apiToCheck = apiChanges.filter((change) => apiLevel(change) === 'warning');
+  if (apiToCheck.length > 0) {
+    because.push(`${plural(apiToCheck.length, 'API change')} to check, listed under api, which ${apiToCheck.length === 1 ? 'does' : 'do'} not decide the verdict`);
+  }
   return {
     verdict,
     because,
@@ -582,6 +636,8 @@ export const summariseChanges = (
       : entry;
 
   const scoped = scopeOf(report, service, options.serviceOf);
+  const apiChanges = apiChangesOf(report, service);
+  const apiFelt = apiChanges.filter((change) => apiLevel(change) !== 'info');
   const result: WhatChanged = {
     base: said(report.base),
     head: said(report.head),
@@ -595,6 +651,15 @@ export const summariseChanges = (
       gaps: { added: scoped.gapsAdded.length, removed: scoped.gapsRemoved.length },
       lostJoins: scoped.lost.length,
       flows: scoped.flows.length,
+      ...(report.spec === null || report.spec === undefined
+        ? {}
+        : {
+            api: {
+              errors: apiChanges.filter((change) => apiLevel(change) === 'error').length,
+              warnings: apiChanges.filter((change) => apiLevel(change) === 'warning').length,
+              infos: apiChanges.filter((change) => apiLevel(change) === 'info').length,
+            },
+          }),
     },
     nodes: {
       added: bounded(scoped.added),
@@ -607,6 +672,8 @@ export const summariseChanges = (
       changed: bounded(scoped.types.changed),
     },
     ...(options.verdict === undefined ? { entries: bounded([...scoped.entries.values()]).map(changedEntry) } : {}),
+    // A change no consumer feels is counted under counts.api, not listed.
+    ...(apiFelt.length === 0 ? {} : { api: bounded(apiFelt).map(apiSaid) }),
     breaks: bounded(scoped.breaks).map((finding) => ({ message: finding.message, edge: finding.edge, field: finding.field })),
     warnings: report.warnings.map((warning) => warning.message),
   };

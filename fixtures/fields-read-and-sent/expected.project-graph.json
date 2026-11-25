@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T16:35:14.896Z",
+  "builtAt": "2026-11-25T12:55:05.656Z",
   "services": [
     {
       "name": "shop-api",
@@ -463,7 +463,15 @@
         "fieldsRead": [
           {
             "field": "type",
-            "line": 13
+            "line": 13,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'ORDER_READY'",
+                "'ORDER_CANCELLED'"
+              ],
+              "line": 13
+            }
           },
           {
             "field": "orderId",

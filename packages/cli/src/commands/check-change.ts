@@ -185,6 +185,8 @@ export const checkWorkingTree = async (loaded: LoadedConfig, input: Omit<ChangeC
       sequenceDetail: sequenceDetailOf(undefined),
       generatedAt: new Date().toISOString(),
       started,
+      // Each API or message change judged by what its consumers do (P390), as `diff --spec` does (P402).
+      spec: true,
     });
     return { report, read: found.changed, unchecked: found.unchecked, ms: Date.now() - started };
   } finally {

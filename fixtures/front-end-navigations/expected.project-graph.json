@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:14:12.042Z",
+  "builtAt": "2026-11-25T12:57:04.141Z",
   "services": [
     {
       "name": "storefront",
@@ -1606,6 +1606,13 @@
           "x-storefront"
         ],
         "headersUnread": true,
+        "answerRead": [
+          {
+            "field": "id",
+            "in": "storefront#src/pages/Home.tsx:Home",
+            "line": 11
+          }
+        ],
         "package": "axios",
         "client": "axios",
         "via": "literal",

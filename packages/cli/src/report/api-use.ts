@@ -23,7 +23,7 @@
  * - a deploy order, and where on the head side it is placed, since a pull
  *   request is annotated only on lines it holds.
  */
-import { isEntryId, MESSAGE_TYPES_META, type GraphNode } from '@flowatlas/core';
+import { HEADERS_META, isEntryId, MESSAGE_TYPES_META, type GraphNode, type SwitchedOver } from '@flowatlas/core';
 import {
   SPEC_CHANGE_KINDS,
   type GraphDb,
@@ -41,7 +41,7 @@ import {
   type SpecUseContext,
   type SpecUseReader,
 } from '@flowatlas/linker';
-import { answerReadingOf, consumerReading, FORWARD_EDGES, readsField, shapeFields, topField, type Reading } from '@flowatlas/mcp';
+import { answerReadingOf, consumerReading, FORWARD_EDGES, readsField, shapeFields, topField, type FieldSite, type Reading } from '@flowatlas/mcp';
 
 /** Both sides' graphs, open while the documents are compared. */
 export interface UseGraphs {
@@ -172,6 +172,91 @@ const responseReading = (graphs: UseGraphs, caller: string): (Reading & { files:
 /** A response field as a client's reads name it: a list's element is read at the list's path (`[].sku` is `sku`, `items[].sku` is `items.sku`). */
 const answerField = (field: string): string => field.replace(/\[\]/g, '').replace(/^\./, '');
 
+/** The read of a field whose value the code switches over (P402): the one naming the field itself first. */
+const switchedRead = (reads: readonly FieldSite[], field: string): { row: FieldSite; over: SwitchedOver } | undefined => {
+  const rows = reads.filter((row) => row.switched !== undefined && readsField(row.field, field));
+  const row = rows.find((each) => each.field === field) ?? rows[0];
+  return row?.switched === undefined ? undefined : { row, over: row.switched };
+};
+
+/**
+ * What a switch over a field does with the values a widened type gains
+ * (P402): a value a case names is handled; one no case names goes to the
+ * `default` (a warning: whether that suits it is not read), or, with no
+ * `default` or one that proves no value is left, is handled by nothing (an
+ * error).
+ */
+const switchVerdict = (field: string, over: SwitchedOver, widened: readonly string[]): Pick<SpecUseReader, 'how' | 'said' | 'level'> => {
+  const missing = widened.filter((value) => !over.cases.includes(value));
+  const at = `switches over ${code(field)}, line ${over.line}`;
+  if (missing.length === 0) return { how: 'reads', said: `${at}, with a case for ${widened.join(', ')}`, level: 'info' };
+  if (over.has === 'none') return { how: 'reads', said: `${at}, with no default: ${missing.join(', ')} is handled by no case`, level: 'error' };
+  if (over.has === 'never') return { how: 'reads', said: `${at}, exhaustively (its default proves no value is left): ${missing.join(', ')} is handled by no case`, level: 'error' };
+  return { how: 'reads', said: `${at}, with a default: ${missing.join(', ')} goes to it; whether that suits ${missing.length === 1 ? 'it' : 'them'} is not read`, level: 'warning' };
+};
+
+/**
+ * The keys of a request's query, the names of its headers, or the
+ * parameters of its path, as the browser reader read them off the call
+ * (P258, P388); undefined where that part of the request was not read: a
+ * server's request, or one whose part is written as code.
+ */
+const partSent = (node: GraphNode, place: string): { keys: string[] } | { unknown: string } => {
+  const meta = node.meta ?? {};
+  if (node.type !== 'ui_api_call') return { unknown: `what it sends in its ${place} is not read` };
+  if (place === 'query') {
+    if (meta['queryUnread'] === true) return { unknown: 'its query is written as code, so which keys it sends is not read' };
+    const written = Array.isArray(meta['queryKeys']) ? (meta['queryKeys'] as string[]) : [];
+    const address = String(meta['url'] ?? meta['path'] ?? '');
+    const inAddress = [...address.slice(address.indexOf('?') + 1 || address.length).matchAll(/(?:^|&)([^=&${}]+)=/g)].map((match) => match[1] as string);
+    return { keys: [...new Set([...written, ...inAddress])].sort() };
+  }
+  if (place === 'header') {
+    const names = [...(Array.isArray(meta['headerKeys']) ? (meta['headerKeys'] as string[]) : []), ...(Array.isArray(meta[HEADERS_META]) ? (meta[HEADERS_META] as string[]) : [])];
+    const keys = [...new Set(names.map((name) => name.toLowerCase()))].sort();
+    if (meta['headersUnread'] === true) return { unknown: `its headers may be set where they are not read${keys.length === 0 ? '' : ` (it sends ${keys.join(', ')})`}` };
+    return { keys };
+  }
+  return { unknown: `what it sends in its ${place} is not read` };
+};
+
+/**
+ * One caller's verdict on a change to a query key, a header or a path
+ * parameter (P402), from what its request was read to send: a path parameter
+ * is in every address that reaches the route; a query key or a header is
+ * sent where the call writes it, here or in the settings every request of its
+ * client carries.
+ */
+const parameterReader = (graphs: UseGraphs, change: SpecChange, caller: SpecChange['callers'][number], narrowed: boolean): SpecUseReader => {
+  const found = either(graphs, caller.id);
+  const at = { id: caller.id, service: caller.service, ...placeOf(found?.node) };
+  const field = change.field ?? '';
+  const dot = field.indexOf('.');
+  const place = dot < 0 ? field : field.slice(0, dot);
+  const name = dot < 0 ? '' : field.slice(dot + 1);
+  const required = change.kind === 'request-property-added-required' || change.kind === 'request-property-became-required';
+  if (place === 'path') {
+    return required
+      ? { ...at, how: 'sends', said: 'its address reaches the route, so it fills the path parameter', level: 'info' }
+      : { ...at, how: 'unknown', said: `what it sends in ${code(field)} is not read`, level: 'warning' };
+  }
+  if (found === undefined) return { ...at, how: 'unread', said: 'not in either graph', level: 'warning' };
+  const sent = partSent(found.node, place);
+  if ('unknown' in sent) return { ...at, how: 'unknown', said: sent.unknown, level: 'warning' };
+  const key = place === 'header' ? name.toLowerCase() : name;
+  const sends = sent.keys.includes(key);
+  const said = sent.keys.length === 0 ? `sends no ${place === 'header' ? 'header' : 'query key'}` : `sends ${place} ${sent.keys.join(', ')}`;
+  if (required) return sends ? { ...at, how: 'sends', said: `sends ${code(field)}`, level: 'info' } : { ...at, how: 'omits', said: `${said}; no ${code(field)}`, level: 'error' };
+  if (!sends) return { ...at, how: 'ignores', said: `does not send ${code(field)}`, level: 'info' };
+  if (change.kind === 'request-property-removed') return { ...at, how: 'sends', said: `sends ${code(field)}; it lands nowhere, or is refused where unknown keys are`, level: 'warning' };
+  if (change.kind === 'request-property-type-changed') {
+    return narrowed
+      ? { ...at, how: 'sends', said: `sends ${code(field)} as ${code(change.base ?? 'the old type')}`, level: 'error' }
+      : { ...at, how: 'sends', said: `sends ${code(field)}`, level: 'info' };
+  }
+  return { ...at, how: 'sends', said: `sends ${code(field)}`, level: 'info' };
+};
+
 /** One consumer's verdict on a message change, from what it reads (P368). */
 const messageReader = (
   graphs: UseGraphs,
@@ -188,9 +273,10 @@ const messageReader = (
   const read = reading.reads.find((row) => readsField(row.field, field));
   if (read !== undefined) {
     const where = { ...at, ...placeOf(found.db.node(read.id)), line: read.line };
-    return widened === undefined
-      ? { ...where, how: 'reads', said: `reads ${code(field)}, line ${read.line}`, level: 'error' }
-      : { ...where, how: 'reads', said: `reads ${code(field)}, line ${read.line}; whether it handles ${widened.join(', ')} is not read`, level: 'warning' };
+    if (widened === undefined) return { ...where, how: 'reads', said: `reads ${code(field)}, line ${read.line}`, level: 'error' };
+    const switched = switchedRead(reading.reads, field);
+    if (switched !== undefined) return { ...where, ...placeOf(found.db.node(switched.row.id)), line: switched.over.line, ...switchVerdict(field, switched.over, widened) };
+    return { ...where, how: 'reads', said: `reads ${code(field)}, line ${read.line}; whether it handles ${widened.join(', ')} is not read`, level: 'warning' };
   }
   const opaque = reading.unread[0];
   if (opaque !== undefined) {
@@ -245,9 +331,19 @@ const responseReader = (graphs: UseGraphs, change: SpecChange, caller: SpecChang
     const place = { ...where, ...(file === undefined ? {} : { file }) };
     const label = reading.db.node(read.id)?.label;
     const said = `reads ${code(read.field)}${label === undefined ? '' : ` in ${label}`}, line ${read.line}${file === undefined ? '' : ` of ${file}`}`;
-    return widened === undefined
-      ? { ...place, how: 'reads', said, level: 'error' }
-      : { ...place, how: 'reads', said: `${said}; whether it handles ${widened.join(', ')} is not read`, level: 'warning' };
+    if (widened === undefined) return { ...place, how: 'reads', said, level: 'error' };
+    const switched = switchedRead(reading.reads, field);
+    if (switched !== undefined) {
+      const switchFile = reading.files.get(`${switched.row.field}|${switched.row.id}|${switched.row.line}`);
+      return {
+        ...where,
+        ...placeOf(reading.db.node(switched.row.id)),
+        ...(switchFile === undefined ? {} : { file: switchFile }),
+        line: switched.over.line,
+        ...switchVerdict(field, switched.over, widened),
+      };
+    }
+    return { ...place, how: 'reads', said: `${said}; whether it handles ${widened.join(', ')} is not read`, level: 'warning' };
   }
   const opaque = reading.unread[0];
   if (opaque !== undefined) {
@@ -275,7 +371,7 @@ const readersOf = (graphs: UseGraphs, change: SpecChange, at: SpecUseContext, di
       case 'guards':
         return { ...at0, how: 'unknown', said: `whether it has what ${change.head ?? 'the guard'} asks for is not read`, level: 'warning' };
       case 'parameter':
-        return { ...at0, how: 'unknown', said: `what it sends in ${code(change.field ?? 'the request')} is not read`, level: 'warning' };
+        return parameterReader(graphs, change, caller, literal?.how !== 'widened');
       case 'channel':
         return change.kind === 'channel-removed'
           ? { ...at0, how: 'joined', said: 'takes what is published there', level: 'error' }
@@ -305,7 +401,7 @@ const verdictOf = (change: SpecChange, at: SpecUseContext, level: SpecChangeLeve
           ? `every ${noun} sends ${what}, among ${among}`
           : readers.every((reader) => reader.how === 'joined')
             ? `nothing a ${noun} relied on changed, among ${among}`
-            : `no ${noun} ${partOf(change) === 'body' ? 'sends' : 'reads'} ${what}, among ${among}`;
+            : `no ${noun} ${partOf(change) === 'body' || partOf(change) === 'parameter' ? 'sends' : 'reads'} ${what}, among ${among}`;
     return publicNote ? `${base}; it is public, so callers outside the project are not read` : base;
   }
   const loudest = readers.filter((reader) => reader.level === level);
@@ -344,6 +440,11 @@ const deployOrderOf = (change: SpecChange, at: SpecUseContext, direction: SpecCh
       return { first: 'callers', said: `callers first: give each what the guard asks for, then ${service}` };
     case 'response-status-added':
       return { first: 'callers', said: `callers first: handle the new status, then ${service}` };
+    case 'response-property-type-changed':
+      // An answer that gains values: the callers learn them first (P402).
+      return literal?.how === 'widened'
+        ? { first: 'callers', said: `callers first: handle ${literal.values.join(', ')}, then ${service}` }
+        : { first: 'callers', said: `callers first: stop relying on ${what || 'it'}, then ${service}` };
     case 'endpoint-removed':
     case 'method-removed':
     case 'path-param-added':

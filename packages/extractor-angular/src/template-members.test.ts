@@ -44,4 +44,48 @@ describe('readTemplateMembers', () => {
     expect(found.reads.map((row) => row.path.join('.'))).toEqual(['total']);
     expect(found.unread.map((row) => row.why)).toEqual(['handed to the json pipe']);
   });
+
+  it('marks the longest part of a read the template checks is there first: ?., @if, *ngIf, ??, &&, !, a ternary, == null (P402)', () => {
+    const found = rows(
+      [
+        '<h1>{{ item?.name }}</h1>',
+        '@if (item.promo) { <p>{{ item.promo.text }}</p> }',
+        '<span>{{ item.badge?.label }}</span>',
+        '<p *ngIf="item.note">{{ item.note.body }}</p>',
+        '<b>{{ item.tag ?? "" }} {{ item.flag && item.flag.on }} {{ !item.gone }}</b>',
+        '<i>{{ item.size ? item.size.cm : 0 }} {{ item.kind == null ? "" : item.kind.name }}</i>',
+        '<u>{{ item.plain.text }}</u>',
+      ].join('\n'),
+    );
+    expect(found.reads.map((row) => `${row.path.join('.')}${row.checked === undefined ? '' : `:${row.checked}`}`)).toEqual([
+      'name:0',
+      'promo:1',
+      'promo.text:1',
+      'badge.label:1',
+      'note:1',
+      'note.body:1',
+      'tag:1',
+      'flag:1',
+      'flag.on:1',
+      'gone:1',
+      'size:1',
+      'size.cm:1',
+      'kind:1',
+      'kind.name:1',
+      'plain.text:0',
+    ]);
+  });
+
+  it('reads a @switch over a field with what it does past its @case blocks (P402)', () => {
+    const found = rows(
+      [
+        "@switch (item.status) { @case ('draft') { <em>d</em> } @case ('live') { <em>l</em> } }",
+        "@switch (item.tier) { @case ('gold') { <em>g</em> } @default { <em>-</em> } }",
+      ].join('\n'),
+    );
+    expect(found.reads.map((row) => [row.path.join('.'), row.switched])).toEqual([
+      ['status', { has: 'none', cases: ["'draft'", "'live'"], line: 1 }],
+      ['tier', { has: 'default', cases: ["'gold'"], line: 2 }],
+    ]);
+  });
 });

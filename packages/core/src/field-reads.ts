@@ -1,6 +1,7 @@
-import { Node, SyntaxKind, type CallExpression, type Node as TsNode, type ObjectBindingPattern } from 'ts-morph';
+import { Node, SyntaxKind, type ArrayBindingPattern, type CallExpression, type Node as TsNode, type ObjectBindingPattern } from 'ts-morph';
 import { isDiscriminatorField } from './message-types.js';
 import { presenceChecked } from './presence-guards.js';
+import { switchedOver, type SwitchedOver } from './switch-cases.js';
 import { functionLikeOf, type FunctionLike } from './types/signatures.js';
 
 /**
@@ -56,6 +57,12 @@ export interface FieldRead {
   file?: string;
   /** The code checks the field is there before it counts on it (`?.`, `??`, `if (x)`, `== null`, `'k' in o`): it handles its absence (P395). */
   guarded?: true;
+  /**
+   * The code switches over the field's value (P402): whether a `default`
+   * handles a value no case names, and the values the cases name, so a type
+   * that gains a value is judged by whether the switch handles it.
+   */
+  switched?: SwitchedOver;
 }
 
 /** How a read was settled where it is not plainly written: through a key held as a default (P374). */
@@ -277,7 +284,14 @@ const addRead = (walk: Walk, path: readonly string[], node: TsNode, when: readon
     ...(when === undefined || when.length === 0 ? {} : { when: [...when] }),
     ...(sureness === undefined ? {} : { sureness }),
     ...(walk.options.guards === true && presenceChecked(value, path.length) ? { guarded: true as const } : {}),
+    ...switchedAt(value),
   });
+};
+
+/** The switch over a field's value, where the code switches over it (P402). */
+const switchedAt = (value: TsNode): { switched?: SwitchedOver } => {
+  const found = switchedOver(value);
+  return found === undefined ? {} : { switched: found };
 };
 
 /** A string a key settles to, and how: plainly written, or a default the options may replace. */
@@ -584,6 +598,7 @@ const listUse = (
   depth: number,
   when: readonly string[] | undefined,
   fresh: boolean,
+  field: TsNode = node,
 ): TsNode | 'stop' | undefined => {
   const name = access.getName();
   const call = access.getParent();
@@ -595,11 +610,11 @@ const listUse = (
   // `name.length`, `name.trim()`: what is read off a string or a number is no field of it.
   const kept = node.getType().getNonNullableType();
   if (kept.isString() || kept.isNumber() || kept.isBoolean() || kept.isStringLiteral() || kept.isNumberLiteral()) {
-    if (fresh) addRead(walk, state.prefix, access, when, state.sureness, node);
+    if (fresh) addRead(walk, state.prefix, access, when, state.sureness, field);
     return 'stop';
   }
   if (!isList(node)) return undefined;
-  if (fresh) addRead(walk, state.prefix, access, when, state.sureness, node);
+  if (fresh) addRead(walk, state.prefix, access, when, state.sureness, field);
   if (!isCall) return 'stop';
   const at = ELEMENT_CALLBACKS.get(name);
   if (at !== undefined) intoCallback(walk, callbackOf(walk, call.getArguments()[0]), at, state, depth, when);
@@ -677,6 +692,8 @@ const followValue = (
   inherited: readonly string[] | undefined,
 ): void => {
   let node = value;
+  // The expression the field's value is, before a fallback or a branch hands it on: where its presence checks are judged (P402).
+  let field = value;
   let current = state;
   // A name that holds a field already read is not a new read of it: only a key past it is.
   const known = state.kind === 'payload' ? state.prefix.length : -1;
@@ -697,10 +714,11 @@ const followValue = (
       const call = parent.getParent();
       const isCall = call !== undefined && Node.isCallExpression(call) && call.getExpression() === parent;
       if (walk.options.followLists === true && current.kind === 'payload') {
-        const listed = listUse(walk, node, parent, current, depth, whenOf(parent, fn, bindings) ?? inherited, fresh(current));
+        const listed = listUse(walk, node, parent, current, depth, whenOf(parent, fn, bindings) ?? inherited, fresh(current), field);
         if (listed === 'stop') return;
         if (listed !== undefined) {
           node = listed;
+          field = listed;
           continue;
         }
       }
@@ -709,11 +727,12 @@ const followValue = (
         (current.kind === 'request' && isCall && bodyByArgument(call) ? ({ kind: 'payload', prefix: [] } as const) : undefined);
       if (next === undefined) {
         // A method called on a part of the payload reads that part: `evt.label.trim()`.
-        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness, node);
+        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness, field);
         return;
       }
       current = next;
       node = isCall ? (call as TsNode) : parent;
+      field = node;
       continue;
     }
     if (Node.isCallExpression(parent) && parent.getExpression() === node) {
@@ -730,16 +749,27 @@ const followValue = (
         if (next === undefined) return;
         current = next;
         node = parent;
+        field = node;
+        continue;
+      }
+      // An element of a gathered tuple, `results[0]` of `Promise.all([...])` (P402): the one at this request's index.
+      if (current.kind === 'holder' && argument !== undefined && Node.isNumericLiteral(argument)) {
+        const next = through(current, String(argument.getLiteralValue()), false);
+        if (next === undefined) return;
+        current = next;
+        node = parent;
+        field = node;
         continue;
       }
       // An element of a list keeps the path; any other key is a field the reading cannot name.
       // A number written out (`items[0]`) is a number literal's type, taken as an element where lists are followed (P391).
       if (argument !== undefined && (argument.getType().isNumber() || (walk.options.followLists === true && argument.getType().isNumberLiteral()))) {
         node = parent;
+        field = node;
         continue;
       }
       if (current.kind === 'payload') {
-        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness, node);
+        if (fresh(current)) addRead(walk, current.prefix, parent, whenOf(parent, fn, bindings) ?? inherited, current.sureness, field);
         addUnread(walk, parent, `indexed by ${argument?.getText().slice(0, 40) ?? 'a value'}`, whenOf(parent, fn, bindings) ?? inherited);
       }
       return;
@@ -747,7 +777,7 @@ const followValue = (
     break;
   }
   const when = whenOf(node, fn, bindings) ?? inherited;
-  if (fresh(current)) addRead(walk, current.prefix, node, when, current.sureness);
+  if (fresh(current)) addRead(walk, current.prefix, node, when, current.sureness, field);
   settle(walk, fn, bindings, node, current, depth, when);
 };
 
@@ -772,6 +802,8 @@ const settle = (
       followName(walk, fn, bindings, parent, state, depth, when);
     } else if (Node.isObjectBindingPattern(name)) {
       destructure(walk, fn, bindings, name, state, depth, when);
+    } else if (Node.isArrayBindingPattern(name)) {
+      destructureTuple(walk, fn, bindings, name, state, depth, when);
     }
     return;
   }
@@ -893,8 +925,42 @@ const destructure = (
       followName(walk, fn, bindings, element, next, depth, at);
     } else if (Node.isObjectBindingPattern(name)) {
       destructure(walk, fn, bindings, name, next, depth, at);
+    } else if (Node.isArrayBindingPattern(name)) {
+      destructureTuple(walk, fn, bindings, name, next, depth, at);
     }
   }
+};
+
+/**
+ * `const [orders, user] = await Promise.all([...])` (P402): each element of a
+ * gathered tuple at its index. Only a tuple of gathered answers is read so;
+ * an element of a list destructured is not followed here.
+ */
+const destructureTuple = (
+  walk: Walk,
+  fn: FunctionLike,
+  bindings: Bindings,
+  pattern: ArrayBindingPattern,
+  state: ValueState,
+  depth: number,
+  when: readonly string[] | undefined,
+): void => {
+  if (state.kind !== 'holder') return;
+  pattern.getElements().forEach((element, index) => {
+    if (!Node.isBindingElement(element) || element.getDotDotDotToken() !== undefined) return;
+    const next = through(state, String(index), false);
+    if (next === undefined) return;
+    const at = whenOf(element, fn, bindings) ?? when;
+    const name = element.getNameNode();
+    if (Node.isIdentifier(name)) {
+      bindings.states.set(element, next);
+      followName(walk, fn, bindings, element, next, depth, at);
+    } else if (Node.isObjectBindingPattern(name)) {
+      destructure(walk, fn, bindings, name, next, depth, at);
+    } else if (Node.isArrayBindingPattern(name)) {
+      destructureTuple(walk, fn, bindings, name, next, depth, at);
+    }
+  });
 };
 
 /** A value handed to a call: followed into the repository's own function, said where it cannot be. */
@@ -954,6 +1020,8 @@ const readParameter = (
     followName(walk, fn, bindings, parameter, state, depth, when);
   } else if (Node.isObjectBindingPattern(name)) {
     destructure(walk, fn, bindings, name, state, depth, when);
+  } else if (Node.isArrayBindingPattern(name)) {
+    destructureTuple(walk, fn, bindings, name, state, depth, when);
   }
 };
 

@@ -61,7 +61,7 @@ import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
 import { placedOut, receiverValues, valuesAlong } from '../util/receiver-values.js';
 import { sentThrough } from '../util/sent-later.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
-import { answerAsOf, answerMetaOf, throughOf } from '../util/answer.js';
+import { answerAsOf, answerMetaOf, isClient, throughOf } from '../util/answer.js';
 import { definePass } from './types.js';
 
 /** One request found in the source, before its address has been worked out. */
@@ -507,9 +507,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * body, and its `.raw` with the response.
    */
   const answersWithResponse = (client: RequestClient, network: CallExpression): boolean => {
-    if (client === FETCH || client === AXIOS || client === KY) return true;
+    if (isClient(client, FETCH) || isClient(client, AXIOS) || isClient(client, KY)) return true;
     const callee = network.getExpression();
-    return client === OFETCH && Node.isPropertyAccessExpression(callee) && callee.getName() === 'raw';
+    return isClient(client, OFETCH) && Node.isPropertyAccessExpression(callee) && callee.getName() === 'raw';
   };
 
   /** The operation a `fetch` in a helper sends, read from the document its caller hands it; reported where it cannot be read. */

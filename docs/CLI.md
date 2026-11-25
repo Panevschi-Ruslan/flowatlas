@@ -4975,7 +4975,20 @@ consumer of a message reads (P368) - and the change gets:
   not followed or a request's client was not read at all (a server's request,
   a client whose answer no reader follows), said so, never an error or an info
   guessed. A list's element's field (`response[].sku`) is matched to the reads
-  of each element. A public route's change is never under `warning`;
+  of each element. A public route's change is never under `warning`. A type
+  that gains literal values (a status, a message's kind) is weighed by how the
+  code switches over the field (P402): `error` where a `switch` names no case
+  for a new value and has no `default`, or a `default` that only proves no
+  value is left (`const x: never = v`, `assertNever(v)`); `warning` where a
+  `default` takes it (`switches over \`status\`, line 6, with a default:
+  'sold' goes to it`); `info` where a case already names it. An Angular
+  `@switch` with or without `@default` is read the same way. A query key or a
+  header now required is weighed by what each browser request was read to
+  send (its options' `params`, `HttpParams.set`, `URLSearchParams`, its
+  headers and the ones its client's instance, interceptors and hooks give
+  every request): `error` where a caller does not send it, `info` where every
+  caller does, `warning` where the request writes them as code or is a
+  server's; a path parameter is in every address that reaches the route;
 - a **verdict** (`1 of 1 consumer: reads \`label\`, line 16`), each consumer
   under `readers` with what it does and where, and a **deploy order** where
   someone meets it (`consumers first: stop reading \`label\`, then catalog`;

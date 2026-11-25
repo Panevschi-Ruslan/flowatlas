@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T15:56:34.349Z",
+  "builtAt": "2026-11-25T12:55:20.595Z",
   "services": [
     {
       "name": "catalog-api",
@@ -1420,7 +1420,15 @@
         "fieldsRead": [
           {
             "field": "type",
-            "line": 21
+            "line": 21,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'PRODUCT_CREATED'",
+                "'LISTING_CANCELED'"
+              ],
+              "line": 21
+            }
           },
           {
             "field": "productId",
@@ -1792,7 +1800,15 @@
         "fieldsRead": [
           {
             "field": "type",
-            "line": 19
+            "line": 19,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'STOCK_LOW'",
+                "'STOCK_RESTOCKED'"
+              ],
+              "line": 19
+            }
           },
           {
             "field": "sku",

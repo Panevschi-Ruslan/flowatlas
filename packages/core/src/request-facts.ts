@@ -2,6 +2,8 @@ import { resolve as resolvePath, sep } from 'node:path';
 import type { CallExpression, NewExpression, Node as TsNode, ObjectLiteralExpression, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
+import { PLATFORM_HEADERS } from './built-query.js';
+import { headersAHookAdds, type HookHanded } from './hook-headers.js';
 import type { GraphNode } from './model/nodes.js';
 import { definePass, type ExtractorPass } from './passes.js';
 
@@ -85,10 +87,27 @@ export interface EveryRequestSettings {
    * set. Its options' `setHeaders` and `headers` name the headers.
    */
   readonly perRequest?: string;
-  /** A factory making an instance with options: its method's name, and the text of what it is called on. */
-  readonly instance?: { readonly method: string; readonly receiver: RegExp };
+  /**
+   * A factory making an instance with options: its method's name, and the
+   * text of what it is called on; several where a client makes them in more
+   * than one way (`ky.create`, `api.extend`, P402).
+   */
+  readonly instance?: InstanceMade | readonly InstanceMade[];
   /** Assignments to `<client>.defaults.withCredentials` and `<client>.defaults.headers[.common]…`. */
   readonly defaults?: boolean;
+}
+
+/** One way a client makes an instance whose options reach every request it sends. */
+export interface InstanceMade {
+  readonly method: string;
+  readonly receiver: RegExp;
+  /**
+   * Where among the options the functions it runs before each request are
+   * written (`hooks.beforeRequest`, `onRequest`), a function or a list of
+   * them, and how each is handed the request: the headers they add are the
+   * instance's too (P402).
+   */
+  readonly hooks?: { readonly at: readonly string[]; readonly handed: HookHanded };
 }
 
 /**
@@ -410,8 +429,10 @@ const everyRequestOf = (host: RequestFactsHost, clients: readonly RequestClient[
         const object = objectOf(node.getArguments()[0]);
         if (object === undefined) return;
         const receiver = callee.getExpression().getText();
+        const madeBy = (every: EveryRequestSettings): InstanceMade | undefined =>
+          instancesOf(every).find((made) => made.method === name && made.receiver.test(receiver));
         const viaOf = (every: EveryRequestSettings): CredentialsSaid['via'] | undefined =>
-          every.perRequest === name ? 'interceptor' : every.instance !== undefined && every.instance.method === name && every.instance.receiver.test(receiver) ? 'instance' : undefined;
+          every.perRequest === name ? 'interceptor' : madeBy(every) !== undefined ? 'instance' : undefined;
         const match = described.find(({ every }) => viaOf(every) !== undefined);
         const via = match === undefined ? undefined : viaOf(match.every);
         if (match === undefined || via === undefined) return;
@@ -419,6 +440,9 @@ const everyRequestOf = (host: RequestFactsHost, clients: readonly RequestClient[
         const said = saysCredentials(object);
         if (said !== undefined && target.credentials === undefined) target.credentials = { at: where(said), via };
         for (const header of [...headerNamesIn(propertyOf(object, 'setHeaders')), ...headerNamesIn(propertyOf(object, 'headers'))]) target.headers.add(header);
+        // The headers the functions it runs before each request add (P402).
+        const hooks = via === 'instance' ? madeBy(match.every)?.hooks : undefined;
+        if (hooks !== undefined) for (const header of hookHeadersIn(object, hooks)) target.headers.add(header);
         return;
       }
       if (byDefaults.length === 0) return;
@@ -433,6 +457,38 @@ const everyRequestOf = (host: RequestFactsHost, clients: readonly RequestClient[
     });
   }
   return found;
+};
+
+/** The ways a client's description says it makes instances. */
+const instancesOf = (every: EveryRequestSettings): readonly InstanceMade[] =>
+  every.instance === undefined ? [] : Array.isArray(every.instance) ? (every.instance as readonly InstanceMade[]) : [every.instance as InstanceMade];
+
+/** A function written in place, or the one a name holds: a hook the options hand the client. */
+const hookFunctionOf = (node: TsNode): TsNode | undefined => {
+  const at = bare(node);
+  if (Node.isArrowFunction(at) || Node.isFunctionExpression(at)) return at;
+  if (!Node.isIdentifier(at)) return undefined;
+  const declaration = at.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined) return undefined;
+  if (Node.isFunctionDeclaration(declaration)) return declaration;
+  const value = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+  return value !== undefined && (Node.isArrowFunction(bare(value)) || Node.isFunctionExpression(bare(value))) ? bare(value) : undefined;
+};
+
+/** The header names the hooks written among an instance's options set unconditionally (P402). */
+const hookHeadersIn = (object: ObjectLiteralExpression, hooks: NonNullable<InstanceMade['hooks']>): string[] => {
+  let at: TsNode | undefined = object;
+  for (const key of hooks.at) {
+    const holder: ObjectLiteralExpression | undefined = at === undefined ? undefined : objectOf(at);
+    at = holder === undefined ? undefined : propertyOf(holder, key);
+  }
+  if (at === undefined) return [];
+  const written = bare(at);
+  const fns = (Node.isArrayLiteralExpression(written) ? written.getElements() : [written]).flatMap((each) => {
+    const fn = hookFunctionOf(each);
+    return fn === undefined ? [] : [fn];
+  });
+  return fns.flatMap((fn) => [...headersAHookAdds(fn, hooks.handed, [PLATFORM_HEADERS]).keys]);
 };
 
 /** The request ids each node calls, and who calls each node. */

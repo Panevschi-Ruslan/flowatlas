@@ -8,6 +8,7 @@ import {
   type FieldSureness,
   type FieldUnread,
   type GraphNode,
+  type SwitchedOver,
   type TypeRefAst,
 } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
@@ -25,6 +26,8 @@ export interface FieldSite {
   id: string;
   line: number;
   sureness?: FieldSureness;
+  /** The code switches over the field's value, and what it does with a value no case names (P402). */
+  switched?: SwitchedOver;
 }
 
 /** One use of the value the reading could not follow. */
@@ -91,7 +94,13 @@ export const readingOf = (db: GraphDb, id: string, type?: string): Reading => {
     known: true,
     reads: (reads as FieldRead[])
       .filter((row) => underType(row.when, type))
-      .map((row) => ({ field: row.field, id: row.in ?? id, line: row.line, ...(row.sureness === undefined ? {} : { sureness: row.sureness }) })),
+      .map((row) => ({
+        field: row.field,
+        id: row.in ?? id,
+        line: row.line,
+        ...(row.sureness === undefined ? {} : { sureness: row.sureness }),
+        ...(row.switched === undefined ? {} : { switched: row.switched }),
+      })),
     unread: (Array.isArray(unread) ? (unread as FieldUnread[]) : [])
       .filter((row) => underType(row.when, type))
       .map((row) => ({ id: row.in ?? id, line: row.line, why: row.why })),

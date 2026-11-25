@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:25:07.757Z",
+  "builtAt": "2026-11-25T13:16:06.376Z",
   "services": [
     {
       "name": "api",
@@ -405,6 +405,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -427,6 +428,7 @@
         "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",

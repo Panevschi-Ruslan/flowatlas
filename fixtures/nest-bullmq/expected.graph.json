@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-11-23T14:41:33.603Z",
+  "generatedAt": "2026-11-25T13:05:18.555Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -397,7 +397,15 @@
         "fieldsRead": [
           {
             "field": "name",
-            "line": 17
+            "line": 17,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'send-email'",
+                "'send-digest'"
+              ],
+              "line": 17
+            }
           },
           {
             "field": "data",

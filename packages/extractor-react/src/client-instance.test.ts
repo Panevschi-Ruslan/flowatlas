@@ -519,3 +519,20 @@ describe('a fetch wrapper that puts a constant in front (P239)', () => {
     expect(addresses(graph)).toEqual(['GET ${NEXT_PUBLIC_API_URL}/users', 'POST /api/orders']);
   });
 });
+
+describe('the answer to a request through an instance with a base of its own (P402)', () => {
+  it('is read as the client it was made from answers: ky through json(), axios through data', () => {
+    const graph = read({
+      '/src/api.ts': [
+        `import ky from 'ky';`,
+        `import axios from 'axios';`,
+        `export const shop = ky.create({ prefixUrl: import.meta.env.VITE_SHOP_URL });`,
+        `export const admin = axios.create({ baseURL: import.meta.env.VITE_ADMIN_URL });`,
+        `export const loadItem = async () => { const item: any = await shop.get('api/item').json(); return item.name; };`,
+        `export const loadUser = async () => { const response = await admin.get('/user'); return response.data.email; };`,
+      ].join('\n'),
+    });
+    const said = requests(graph).map((node) => (node.meta?.['answerRead'] as Array<{ field: string }> | undefined)?.map((row) => row.field));
+    expect(said).toEqual([['name'], ['email']]);
+  });
+});

@@ -1,5 +1,6 @@
 import { Node, SyntaxKind, type CallExpression, type ClassDeclaration, type Node as TsNode } from 'ts-morph';
 import { walkFields, type FieldEscape, type FieldReadOptions, type FieldsRead, type FieldWalk, type ValueState } from './field-reads.js';
+import type { SwitchedOver } from './switch-cases.js';
 import { functionLikeOf, type FunctionLike } from './types/signatures.js';
 
 /**
@@ -19,9 +20,11 @@ import { functionLikeOf, type FunctionLike } from './types/signatures.js';
  * data hook hands back (`useQuery`'s and `useSWR`'s `data`). Inside code the
  * reading is P368's walk, which here also follows a list element by element.
  *
+ * An answer gathered with others (`Promise.all([a(), b()])`, `forkJoin([...])`,
+ * `forkJoin({ x: a$, y: b$ })`) is the element at its own index or key (P402).
+ *
  * A use it cannot follow is said, never dropped: an operator it does not know,
- * the answer gathered with others (`forkJoin`, `Promise.all`), handed to a
- * function outside the repository, bound to a child it cannot name.
+ * handed to a function outside the repository, bound to a child it cannot name.
  */
 
 /** The node meta key the fields of the answer a request's client reads are written under. */
@@ -40,8 +43,12 @@ export type AnswerComes = 'promise' | 'observable';
 export interface AnswerMemberUse {
   /** The id rows name the template by: the component's. */
   in: string;
-  /** Reads of the member's value, by the path under it, an async pipe and a signal's call taken off. */
-  reads: ReadonlyArray<{ path: readonly string[]; line: number; file: string }>;
+  /**
+   * Reads of the member's value, by the path under it, an async pipe and a
+   * signal's call taken off; `checked`, the longest part of the path the
+   * template checks is there first, in keys under the member (P402).
+   */
+  reads: ReadonlyArray<{ path: readonly string[]; line: number; file: string; checked?: number; switched?: SwitchedOver }>;
   /** The value, or a part, handed to a method of the component: `(click)="open(order)"`. */
   handed: ReadonlyArray<{ method: string; index: number; path: readonly string[] }>;
   /** The value, or a part, bound to a member of a child component: `<app-row [order]="o">`. */
@@ -110,6 +117,29 @@ const DATA_HOOKS: ReadonlyMap<string, { argument: number; property?: string }> =
   ['useSWR', { argument: 1 }],
   ['useSWRImmutable', { argument: 1 }],
 ]);
+
+/**
+ * The calls that gather several requests into one (P402), and how the
+ * gathered value comes: each element's answer at its own index or key
+ * (`[orders, user]`, `{ orders, user }`), or under `value` at its index
+ * (`allSettled`), or the first to come (`race`, `any`), whichever it is.
+ */
+const GATHERS: ReadonlyMap<string, { comes: AnswerComes; how: 'each' | 'settled' | 'first' }> = new Map([
+  ['Promise.all', { comes: 'promise', how: 'each' }],
+  ['Promise.allSettled', { comes: 'promise', how: 'settled' }],
+  ['Promise.race', { comes: 'promise', how: 'first' }],
+  ['Promise.any', { comes: 'promise', how: 'first' }],
+  ['forkJoin', { comes: 'observable', how: 'each' }],
+  ['combineLatest', { comes: 'observable', how: 'each' }],
+  ['zip', { comes: 'observable', how: 'each' }],
+  ['race', { comes: 'observable', how: 'first' }],
+]);
+
+/** The gathering a call is, by its name with `rxjs.` or `rx.` taken off. */
+const gatherOf = (call: CallExpression): { comes: AnswerComes; how: 'each' | 'settled' | 'first' } | undefined => {
+  const text = call.getExpression().getText().replace(/\s+/g, '');
+  return GATHERS.get(text) ?? (text.startsWith('Promise.') ? undefined : GATHERS.get(calleeName(call)));
+};
 
 /** How many functions out an answer handed back is followed to its callers. */
 const RETURN_DEPTH = 4;
@@ -243,7 +273,17 @@ export const answerFieldsRead = (start: AnswerStart, options: AnswerReadOptions)
         for (const read of use.reads) {
           const path = [...prefix, ...read.path];
           if (path.length === 0) continue;
-          walk.addRead({ field: path.slice(0, 3).join('.'), in: use.in, line: read.line, file: read.file, ...(state.kind === 'payload' && state.sureness !== undefined ? { sureness: state.sureness } : {}) });
+          // A check on a member holding the whole answer is a check on the answer, not on a field of it.
+          const guarded = read.checked !== undefined && prefix.length + read.checked >= 1;
+          walk.addRead({
+            field: path.slice(0, 3).join('.'),
+            in: use.in,
+            line: read.line,
+            file: read.file,
+            ...(state.kind === 'payload' && state.sureness !== undefined ? { sureness: state.sureness } : {}),
+            ...(guarded ? { guarded: true as const } : {}),
+            ...(read.switched === undefined ? {} : { switched: read.switched }),
+          });
         }
         for (const handed of use.handed) {
           const method = owner.getMethod(handed.method);
@@ -438,6 +478,44 @@ export const answerFieldsRead = (start: AnswerStart, options: AnswerReadOptions)
     follow(pipe, 'observable', state, depth);
   };
 
+  /**
+   * A request gathered with others (P402): `Promise.all([a(), b()])`,
+   * `forkJoin([a$, b$])`, `forkJoin({ orders: a$, user: b$ })`. The answer is
+   * the element at its own index or key of what the gathering hands on, so
+   * what is read off the other elements is not this request's. True where
+   * `at` is one element of a gathering.
+   */
+  const gathered = (at: TsNode, parent: TsNode, state: ValueState, depth: number): boolean => {
+    let key: string | undefined;
+    let call: TsNode | undefined;
+    if (Node.isArrayLiteralExpression(parent)) {
+      const index = parent.getElements().indexOf(at as never);
+      if (index < 0 || parent.getElements().slice(0, index + 1).some((each) => Node.isSpreadElement(each))) return false;
+      key = String(index);
+      call = usedAs(parent).getParent();
+      if (call === undefined || !Node.isCallExpression(call) || call.getArguments()[0] !== usedAs(parent)) return false;
+    } else if (Node.isPropertyAssignment(parent) && parent.getInitializer() === at) {
+      const object = parent.getParent();
+      const name = parent.getNameNode();
+      if (!Node.isObjectLiteralExpression(object) || !(Node.isIdentifier(name) || Node.isStringLiteral(name))) return false;
+      key = Node.isStringLiteral(name) ? name.getLiteralValue() : name.getText();
+      call = usedAs(object).getParent();
+      if (call === undefined || !Node.isCallExpression(call) || call.getArguments()[0] !== usedAs(object)) return false;
+    } else if (Node.isShorthandPropertyAssignment(parent)) {
+      return false;
+    } else if (Node.isCallExpression(parent) && parent.getArguments().includes(at as never) && parent.getExpression() !== at) {
+      // `forkJoin(a$, b$)`: the elements as arguments.
+      key = String(parent.getArguments().indexOf(at as never));
+      call = parent;
+    } else return false;
+    if (!Node.isCallExpression(call)) return false;
+    const gathering = gatherOf(call);
+    if (gathering === undefined) return false;
+    const inner: ValueState = gathering.how === 'settled' ? { kind: 'holder', key: 'value', inner: state } : state;
+    follow(call, gathering.comes, gathering.how === 'first' ? state : { kind: 'holder', key, inner }, depth);
+    return true;
+  };
+
   const inAt = (node: TsNode): { in?: string } => {
     const at = walk.inOf(node);
     return at === undefined ? {} : { in: at };
@@ -485,6 +563,7 @@ export const answerFieldsRead = (start: AnswerStart, options: AnswerReadOptions)
       unread(parent, `the ${held} stored in ${short(parent.getLeft())}`);
       return;
     }
+    if (held !== 'signal' && gathered(at, parent, state, depth)) return;
     if (held === 'signal') {
       if (Node.isCallExpression(parent) && parent.getExpression() === at) value(parent, state, depth);
       return;

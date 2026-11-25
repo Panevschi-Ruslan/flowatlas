@@ -74,6 +74,28 @@ const VERDICTS = {
   },
 };
 
+/**
+ * `fixtures/client-checks-verdicts` (P402): a catalog whose head revision
+ * makes a query key and a header required and widens a status and a message
+ * kind, a dashboard that sends one and not the other and switches over the
+ * status with a default, and a notifier that switches over the kind with
+ * none left over; only the catalog is edited.
+ */
+const CLIENT_CHECKS = {
+  fixture: 'client-checks-verdicts',
+  repos: ['catalog', 'notifier', 'dashboard'],
+  edited: ['catalog'],
+  config: {
+    services: [
+      { name: 'catalog', repo: './catalog', type: 'nestjs' },
+      { name: 'notifier', repo: './notifier', type: 'nestjs' },
+      { name: 'dashboard', repo: './dashboard', type: 'react', apiBaseEnv: ['VITE_CATALOG_URL'], apiTarget: { VITE_CATALOG_URL: 'catalog' } },
+    ],
+    adapters: VERDICTS.config.adapters,
+    output: '.flowatlas',
+  },
+};
+
 const MULTI_REPO_DIFF = { fixture: 'multi-repo-diff', repos: REPOS, edited: EDITED, config: CONFIG };
 
 /**
@@ -121,3 +143,6 @@ export const diffFixtureProject = (root) => makeDiffProject(root, MULTI_REPO_DIF
 
 /** `fixtures/api-change-verdicts`, made, built and diffed with its API documents (P390). */
 export const verdictsFixtureProject = (root) => makeDiffProject(root, VERDICTS);
+
+/** `fixtures/client-checks-verdicts`, made, built and diffed with its API documents (P402). */
+export const clientChecksFixtureProject = (root) => makeDiffProject(root, CLIENT_CHECKS);

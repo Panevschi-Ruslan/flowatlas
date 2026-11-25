@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:24:14.736Z",
+  "builtAt": "2026-11-25T13:14:46.934Z",
   "services": [
     {
       "name": "boards-api",
@@ -2964,7 +2964,15 @@
         "fieldsRead": [
           {
             "field": "type",
-            "line": 18
+            "line": 18,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'SCHEDULED_ALERT'",
+                "'ORDER_PLACED'"
+              ],
+              "line": 18
+            }
           },
           {
             "field": "orderId",

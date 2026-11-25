@@ -1,0 +1,34 @@
+spec diff HEAD~1 -> working tree
+
+error   request-property-became-required  catalog  GET /items/search  header.x-tenant
+        `header.x-tenant` could be left out in base and is required in head
+        callers: dashboard src/api.ts:30 (static)
+        use: 1 of 1 caller: sends header accept; no `header.x-tenant` (breaking: narrows the request: a caller must now send it)
+        deploy callers first: send `header.x-tenant`, then catalog
+error   message-property-type-changed  catalog  send item.changed  payload.kind
+        `payload.kind` was `'created' | 'updated'` in base and is `'archived' | 'created' | 'updated'` in head
+        callers: notifier src/notify.service.ts:16 (static)
+        use: 1 of 1 consumer: switches over `kind`, line 18, exhaustively (its default proves no value is left): 'archived' is handled by no case (breaking: gains 'archived': a reader that handles every value meets one it does not know)
+        deploy consumers first: handle 'archived', then catalog
+error   message-property-type-changed  catalog  send item.changed#created  payload.kind
+        `payload.kind` was `'created' | 'updated'` in base and is `'archived' | 'created' | 'updated'` in head
+        callers: notifier src/notify.service.ts:19 (static)
+        use: 1 of 1 consumer: switches over `kind`, line 18, exhaustively (its default proves no value is left): 'archived' is handled by no case (breaking: gains 'archived': a reader that handles every value meets one it does not know)
+        deploy consumers first: handle 'archived', then catalog
+warning response-property-type-changed  catalog  GET /items/{id}  response.status
+        `response.status` was `'draft' | 'live'` in base and is `'draft' | 'live' | 'sold'` in head
+        callers: dashboard src/api.ts:18 (static)
+        use: 1 of 1 caller: switches over `status`, line 6, with a default: 'sold' goes to it; whether that suits it is not read (breaking: gains 'sold': a reader that handles every value meets one it does not know)
+        deploy callers first: handle 'sold', then catalog
+info    request-property-became-required  catalog  GET /items  query.page
+        `query.page` could be left out in base and is required in head
+        callers: dashboard src/api.ts:24 (static)
+        use: every caller sends `query.page`, among 1 (breaking: narrows the request: a caller must now send it)
+info    response-property-type-changed  catalog  POST /items  response.status
+        `response.status` was `'draft' | 'live'` in base and is `'draft' | 'live' | 'sold'` in head (no caller in this project)
+        use: nothing in the 3 repositories read calls it (breaking: gains 'sold': a reader that handles every value meets one it does not know)
+
+3 errors, 1 warning, 2 infos · 6 breaking by kind, 1 of them with no caller in this project
+judged by use: 5 consumers in 3 repositories; consumers outside them unknown
+--- stderr ---
+spec diff: 3 errors, 1 warning, 2 infos · 6 breaking by kind, 1 of them with no caller in this project · <scratch>/project/.flowatlas/spec-diff.json

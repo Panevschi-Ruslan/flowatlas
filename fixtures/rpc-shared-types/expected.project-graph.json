@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:22:48.167Z",
+  "builtAt": "2026-11-25T13:13:13.344Z",
   "services": [
     {
       "name": "api",
@@ -2033,6 +2033,7 @@
         "headerKeys": [
           "x-tenant"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -2126,6 +2127,7 @@
         "headerKeys": [
           "x-tenant"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",

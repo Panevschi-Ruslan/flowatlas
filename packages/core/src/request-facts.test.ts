@@ -139,4 +139,29 @@ describe('what a browser request says about itself', () => {
     const { list } = read(service, '', [client]);
     expect(list).toMatchObject({ credentials: { at: 'src/orders.service.ts:6', via: 'instance' }, headers: ['x-tenant'] });
   });
+
+  it('takes what an instance made in either of two ways gives every request: its credentials, its headers and the headers its hooks set (P402)', () => {
+    const client: RequestClient = {
+      drawnWith: { key: 'client', value: 'json-client' },
+      every: {
+        marks: /makeClient|\.extend\(/,
+        instance: [
+          { method: 'create', receiver: /^makeClient$/, hooks: { at: ['hooks', 'beforeRequest'], handed: 'request' } },
+          { method: 'extend', receiver: /^[\w$.]+$/, hooks: { at: ['hooks', 'beforeRequest'], handed: 'request' } },
+        ],
+      },
+    };
+    const service = [
+      'export class OrdersService { constructor(private http: any) {}',
+      "  list() { return this.http.get('/orders'); }",
+      "  cancel(id: string) { return this.http.post('/orders', 'text'); }",
+      '}',
+      'declare const makeClient: any;',
+      "const stamp = (request: Request): void => { request.headers.set('X-Trace', '1'); };",
+      "const api = makeClient.create({ credentials: 'include', headers: { 'X-Shop': 'web' }, hooks: { beforeRequest: [stamp] } });",
+      "api.extend({ hooks: { beforeRequest: [(request: Request) => request.headers.set('X-Tenant', 't')] } });",
+    ].join('\n');
+    const { list } = read(service, '', [client]);
+    expect(list).toMatchObject({ credentials: { at: 'src/orders.service.ts:7', via: 'instance' }, headers: ['x-shop', 'x-tenant', 'x-trace'] });
+  });
 });

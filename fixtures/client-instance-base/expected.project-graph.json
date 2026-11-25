@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:12:41.423Z",
+  "builtAt": "2026-11-25T12:52:51.263Z",
   "services": [
     {
       "name": "orders",
@@ -621,6 +621,7 @@
         "baseUrlEnv": "VITE_ORDERS_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -646,6 +647,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "template-env",
@@ -720,6 +722,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": null,
         "client": "ofetch",
         "via": "template-env",
@@ -763,6 +766,7 @@
         "baseUrlEnv": "VITE_ORDERS_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -788,6 +792,7 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
         "package": "axios",
         "client": "axios",
         "via": "template-env",
@@ -810,6 +815,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "ky",
         "client": "ky",
         "via": "literal",

@@ -50,7 +50,7 @@ export const answerReadingOf = (db: GraphDb, call: string): Reading & { files: M
       const id = row.in ?? call;
       if (row.file !== undefined) files.set(`${row.field}|${id}|${row.line}`, row.file);
       if (row.guarded === true) guarded.add(`${row.field}|${id}|${row.line}`);
-      return { field: row.field, id, line: row.line };
+      return { field: row.field, id, line: row.line, ...(row.switched === undefined ? {} : { switched: row.switched }) };
     }),
     unread: (Array.isArray(unread) ? (unread as FieldUnread[]) : []).map((row) => ({ id: row.in ?? call, line: row.line, why: row.why })),
     files,

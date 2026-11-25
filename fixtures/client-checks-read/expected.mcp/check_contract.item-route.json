@@ -1,0 +1,156 @@
+{
+  "entry": "entry:shop-api:http:GET:/api/items/:param",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:shop-api#ItemView",
+    "reads": [
+      {
+        "field": "promo",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 36,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44",
+        "guarded": true
+      },
+      {
+        "field": "promo.text",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 36,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44",
+        "guarded": true
+      },
+      {
+        "field": "status",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 37,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44"
+      },
+      {
+        "field": "name",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 39,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44"
+      },
+      {
+        "field": "name",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 41,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44"
+      },
+      {
+        "field": "price",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 41,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44"
+      },
+      {
+        "field": "legacyCode",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 43,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44"
+      },
+      {
+        "field": "name",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 43,
+        "call": "ui_api_call:shop-app#src/api.ts:35:44"
+      },
+      {
+        "field": "name",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 14,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:28:12"
+      },
+      {
+        "field": "price",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 15,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:28:12"
+      },
+      {
+        "field": "promo",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 16,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+        "guarded": true
+      },
+      {
+        "field": "promo.text",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 17,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+        "guarded": true
+      },
+      {
+        "field": "badge.label",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 19,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+        "guarded": true
+      },
+      {
+        "field": "legacyCode",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 20,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:28:12"
+      },
+      {
+        "field": "status",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 21,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:28:12"
+      }
+    ],
+    "missing": [
+      {
+        "field": "promo",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 36,
+        "guarded": true
+      },
+      {
+        "field": "legacyCode",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 43
+      },
+      {
+        "field": "promo",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 16,
+        "file": "src/app/item-page.component.ts",
+        "guarded": true
+      },
+      {
+        "field": "badge",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 19,
+        "file": "src/app/item-page.component.ts",
+        "guarded": true
+      },
+      {
+        "field": "legacyCode",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 20,
+        "file": "src/app/item-page.component.ts"
+      }
+    ],
+    "unused": [
+      {
+        "field": "id"
+      }
+    ]
+  },
+  "callers": 2,
+  "complete": true,
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-app#src/api.ts:35:44\", to: \"entry:shop-api:http:GET:/api/items/:param\"})",
+    "check_contract({from: \"ui_api_call:shop-web#src/app/items.service.ts:28:12\", to: \"entry:shop-api:http:GET:/api/items/:param\"})"
+  ]
+}

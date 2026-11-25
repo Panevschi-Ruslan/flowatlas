@@ -147,4 +147,126 @@ describe('answerFieldsRead', () => {
     expect(guarded).toEqual(['address', 'changes', 'changes.added', 'distance', 'hours', 'phone', 'tags']);
     expect(plain).toEqual(['name', 'rating']);
   });
+
+  it('marks a read through a branch of a ternary or a fallback guarded where the key is asked of its holder (P402)', () => {
+    const found = read(
+      [
+        'type Store = { name: string; phone?: string; meta: { k?: string } };',
+        'declare function request(url: string): Promise<Store>;',
+        'function phone(s: Store): string { return `${"phone" in s ? s.phone : ""}`; }',
+        'function key(s: Store): string { return "k" in s.meta ? s.meta.k ?? "" : ""; }',
+        'async function show(): Promise<string> {',
+        "  const store = await request('/stores/1');",
+        '  return `${store.name}${phone(store)}${key(store)}`;',
+        '}',
+      ].join('\n'),
+      PAYLOAD,
+    );
+    expect(found.reads.map((row) => `${row.field}${row.guarded === true ? ' guarded' : ''}`).sort()).toEqual(['meta', 'meta.k guarded', 'name', 'phone guarded']);
+  });
+
+  it("ties each answer gathered by Promise.all or forkJoin to its own place, and reads nothing of the others' (P402)", () => {
+    const promised = read(
+      [
+        'type Item = { name: string; price: number };',
+        'type User = { email: string };',
+        'declare function request(url: string): Promise<Item>;',
+        'declare function other(url: string): Promise<User>;',
+        'async function show(): Promise<string> {',
+        "  const [user, item] = await Promise.all([other('/me'), request('/items/1')]);",
+        "  const all = await Promise.all([request('/items/2'), other('/me')]);",
+        '  return `${user.email}${item.name}${all[1].email}`;',
+        '}',
+      ].join('\n'),
+      PAYLOAD,
+    );
+    expect(said(promised)).toEqual(['name@show:8']);
+    expect(promised.unread).toEqual([]);
+    const joined = read(
+      [
+        'type Item = { name: string; price: number };',
+        'type Stats = { views: number };',
+        'declare function forkJoin<T>(sources: T): { subscribe(fn: (value: any) => void): void };',
+        'class ItemPage {',
+        '  http = { get: (url: string) => ({ url }) };',
+        '  load() {',
+        "    forkJoin({ item: this.http.get('/items/1'), stats: this.other('/stats') }).subscribe(({ item, stats }) => {",
+        '      console.log(item.price, stats.views);',
+        '    });',
+        '  }',
+        '  other(url: string) { return { url }; }',
+        '}',
+      ].join('\n'),
+      { comes: 'observable', state: { kind: 'payload', prefix: [] } },
+    );
+    expect(said(joined)).toEqual(['price@ItemPage.load:8']);
+  });
+
+  it('records a switch over a field: no default, a default, or one that proves no value is left (P402)', () => {
+    const found = read(
+      [
+        "type Item = { status: 'draft' | 'live'; kind: 'a' | 'b'; tier: 'x' | 'y' };",
+        'declare function request(url: string): Promise<Item>;',
+        'declare function assertNever(value: never): never;',
+        'async function show(): Promise<string> {',
+        "  const item = await request('/items/1');",
+        "  switch (item.status) { case 'draft': return 'd'; }",
+        '  const kind = item.kind;',
+        "  switch (kind) { case 'a': return 'a'; case 'b': return 'b'; default: return assertNever(kind); }",
+        "  switch (item.tier) { case 'x': return 'x'; default: return '?'; }",
+        '}',
+      ].join('\n'),
+      PAYLOAD,
+    );
+    expect(found.reads.map((row) => [row.field, row.switched])).toEqual([
+      ['status', { has: 'none', cases: ["'draft'"], line: 6 }],
+      ['kind', { has: 'never', cases: ["'a'", "'b'"], line: 8 }],
+      ['tier', { has: 'default', cases: ["'x'"], line: 9 }],
+    ]);
+  });
+
+  it("marks a template's read guarded where the template checks a field on its path, never the member holding the whole answer alone (P402)", () => {
+    const found = read(
+      [
+        'type Item = { name: string; promo?: { text: string } };',
+        'class ItemPage {',
+        '  item: Item | undefined;',
+        '  http = { get: (url: string) => ({ subscribe: (fn: (o: Item) => void) => fn }) };',
+        "  load() { this.http.get('/item').subscribe((item) => { this.item = item; }); }",
+        '}',
+      ].join('\n'),
+      { comes: 'observable', state: { kind: 'payload', prefix: [] } },
+      (owner, member) =>
+        owner === 'ItemPage' && member === 'item'
+          ? {
+              in: 'ItemPage',
+              reads: [
+                { path: ['name'], line: 2, file: 'page.html', checked: 0 },
+                { path: ['promo', 'text'], line: 3, file: 'page.html', checked: 1 },
+              ],
+              handed: [],
+              bound: [],
+              unread: [],
+            }
+          : undefined,
+    );
+    expect(found.reads.map((row) => `${row.field}${row.guarded === true ? ' guarded' : ''}`)).toEqual(['name', 'promo.text guarded']);
+  });
+
+  it("marks a read inside a component's markup guarded where the markup checks it first (P402)", () => {
+    const found = read(
+      [
+        'type Item = { name: string; promo?: { text: string }; badge?: { label: string } };',
+        'declare function request(url: string): Promise<Item>;',
+        'declare function useState<T>(initial: T): [T, (next: T) => void];',
+        'function ItemCard() {',
+        '  const [item, setItem] = useState<Item | undefined>(undefined);',
+        "  request('/items/1').then(setItem);",
+        '  return <div>{item?.name}{item?.promo && <b>{item.promo.text}</b>}{item?.badge?.label}</div>;',
+        '}',
+      ].join('\n'),
+      PAYLOAD,
+    );
+    expect(found.reads.map((row) => `${row.field}${row.guarded === true ? ' guarded' : ''}`).sort()).toEqual(['badge.label guarded', 'name', 'promo guarded', 'promo.text guarded']);
+  });
 });

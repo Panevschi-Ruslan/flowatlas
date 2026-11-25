@@ -38,9 +38,37 @@ const AXIOS: RequestClient = {
   every: { marks: /withCredentials|defaults|axios\.create/, instance: { method: 'create', receiver: /axios/i }, defaults: true },
 };
 
-/** ky and ofetch: an object body goes as JSON. Settings shared by every request are not read for either. */
-const KY: RequestClient = { drawnWith: { key: 'client', value: 'ky' }, jsonByDefault: true };
-const OFETCH: RequestClient = { drawnWith: { key: 'client', value: 'ofetch' }, jsonByDefault: true };
+/**
+ * ky: an object body goes as JSON; an instance made by `ky.create` or by
+ * `extend` on ky or on an instance (`api.extend`) gives every request it sends
+ * its `credentials`, its `headers` and what its `hooks.beforeRequest` set on
+ * the request (P402).
+ */
+const KY: RequestClient = {
+  drawnWith: { key: 'client', value: 'ky' },
+  jsonByDefault: true,
+  every: {
+    marks: /\bky\b|\.extend\(/,
+    instance: [
+      { method: 'create', receiver: /^ky$/, hooks: { at: ['hooks', 'beforeRequest'], handed: 'request' } },
+      { method: 'extend', receiver: /^[\w$.]+$/, hooks: { at: ['hooks', 'beforeRequest'], handed: 'request' } },
+    ],
+  },
+};
+
+/**
+ * ofetch: an object body goes as JSON; an instance made by `ofetch.create`
+ * (or Nuxt's `$fetch.create`) gives every request its `credentials`, its
+ * `headers` and what its `onRequest` sets on the options (P402).
+ */
+const OFETCH: RequestClient = {
+  drawnWith: { key: 'client', value: 'ofetch' },
+  jsonByDefault: true,
+  every: {
+    marks: /ofetch|\$fetch/,
+    instance: { method: 'create', receiver: /^(?:ofetch|\$fetch)$/, hooks: { at: ['onRequest'], handed: 'context' } },
+  },
+};
 
 /** Every client described, in the order a call that fits two descriptions is given to the first. */
 export const REQUEST_CLIENTS: readonly RequestClient[] = [ANGULAR_HTTP_CLIENT, AXIOS, KY, OFETCH];

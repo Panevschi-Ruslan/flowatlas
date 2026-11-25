@@ -100,7 +100,13 @@ export const answerReader = (ctx: AngularExtractContext): AnswerReader => {
     }
     return {
       in: id,
-      reads: rows.reads.filter((row) => row.member === member).map((row) => ({ path: row.path, line: row.line, file })),
+      reads: rows.reads.filter((row) => row.member === member).map((row) => ({
+        path: row.path,
+        line: row.line,
+        file,
+        ...(row.checked === undefined ? {} : { checked: row.checked }),
+        ...(row.switched === undefined ? {} : { switched: row.switched }),
+      })),
       handed: rows.handed.filter((row) => row.member === member).map((row) => ({ method: row.method, index: row.index, path: row.path })),
       bound,
       unread,

@@ -1,0 +1,102 @@
+{
+  "base": {
+    "ref": "HEAD~1",
+    "label": "HEAD~1 (catalog ebf84e36; dashboard, notifier from the working tree)"
+  },
+  "head": {
+    "ref": null,
+    "label": "working tree"
+  },
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "counts": {
+    "nodes": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0,
+      "moved": 0
+    },
+    "edges": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0
+    },
+    "types": {
+      "added": 0,
+      "removed": 0,
+      "changed": 0
+    },
+    "entries": 0,
+    "contracts": {
+      "new": 1,
+      "breaks": 1,
+      "fixed": 0
+    },
+    "gaps": {
+      "added": 0,
+      "removed": 0
+    },
+    "lostJoins": 0,
+    "flows": 0,
+    "api": {
+      "errors": 1,
+      "warnings": 1,
+      "infos": 1
+    }
+  },
+  "nodes": {
+    "added": [],
+    "removed": [],
+    "changed": []
+  },
+  "types": {
+    "added": [],
+    "removed": [],
+    "changed": []
+  },
+  "api": [
+    {
+      "level": "error",
+      "operation": "GET /items/search",
+      "field": "header.x-tenant",
+      "verdict": "1 of 1 caller: sends header accept; no `header.x-tenant`",
+      "deploy": "callers first: send `header.x-tenant`, then catalog"
+    },
+    {
+      "level": "warning",
+      "operation": "GET /items/{id}",
+      "field": "response.status",
+      "verdict": "1 of 1 caller: switches over `status`, line 6, with a default: 'sold' goes to it; whether that suits it is not read",
+      "deploy": "callers first: handle 'sold', then catalog"
+    }
+  ],
+  "breaks": [
+    {
+      "message": "sender catalog sends `status` as `'draft'|'live'|'sold'`; receiver dashboard declares it `'draft'|'live'`; 'sold' is not among the values the receiver accepts",
+      "edge": {
+        "from": "ui_api_call:dashboard#src/api.ts:18:26",
+        "to": "entry:catalog:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "field": "status"
+    }
+  ],
+  "warnings": [
+    "catalog: no node_modules to resolve against at ebf84e36, so imported shapes may be unread",
+    "notifier: ref HEAD~1 not found, so it was read as it stands and assumed unchanged",
+    "dashboard: ref HEAD~1 not found, so it was read as it stands and assumed unchanged"
+  ],
+  "verdict": "unsafe",
+  "because": [
+    "1 new contract error: sender catalog sends `status` as `'draft'|'live'|'sold'`; receiver dashboard declares it `'draft'|'live'`; 'sold' is not among the values the receiver accepts",
+    "1 API change a consumer in the project feels, listed under api",
+    "dashboard was not read at the base ref, so it is reported unchanged without being compared",
+    "1 API change to check, listed under api, which does not decide the verdict"
+  ],
+  "newGaps": [],
+  "vanishedTargets": [],
+  "retest": [],
+  "newFindings": [],
+  "next": [
+    "check_contract({from: \"ui_api_call:dashboard#src/api.ts:18:26\", to: \"entry:catalog:http:GET:/items/:param\"})"
+  ]
+}

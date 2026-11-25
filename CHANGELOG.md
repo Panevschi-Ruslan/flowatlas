@@ -8,6 +8,33 @@ only one of them moved.
 
 ### Added
 
+- **What clients already check is read (P402).** An Angular template's reads
+  are `guarded` where the template checks a field on their path first (`?.`,
+  `@if`, `*ngIf`, `??`, `||`, `&&`, `!`, a ternary, `== null`), so
+  `answer-field-never-returned` and `check_contract` hold back what the page
+  copes without; a read handed on through a ternary's branch or a fallback
+  (`'k' in o ? o.k : ''`) is judged at the field. An answer gathered by
+  `Promise.all`, `allSettled`, `forkJoin` (a list or an object),
+  `combineLatest` or `zip` is the element at its own index or key, read
+  through a destructured tuple, `results[1]`, or a callback's `([a, b])` or
+  `({ item })`, where it was said unread. A request through a ky or axios
+  instance made with a base of its own had its answer not read at all; it is
+  read as the client's. A field a `switch` (or an Angular `@switch`) is over
+  records `switched` (`has: none | default | never`, the cases, the line), and
+  `spec diff` weighs a type that gains a literal value by it: an error where no
+  case names it and there is no `default` or the default proves `never`, a
+  warning where a `default` takes it, an info where a case names it. A query
+  key or a header now required is an error where a caller's browser request
+  does not send it (its `params`, `HttpParams`, `URLSearchParams`, headers,
+  and what its client's instance, interceptors and hooks give every request),
+  an info where every caller does. `what_changed` lists the spec diff's
+  errors and warnings under `api` in the words `diff --spec` prints, counts
+  every change under `counts.api`, and an API change a consumer feels makes the verdict
+  `unsafe`; `check_change` compares the API documents too. ky's instances
+  (`ky.create`, `extend`) and ofetch's (`ofetch.create`, `$fetch.create`) give
+  every request their `credentials`, `headers` and the headers their hooks
+  set, as axios's did.
+
 - **The benchmark measures finding a defect, a change across repositories and
   a question in words, and three more ways to hand an assistant the graph
   (P392).** The generated project gains six planted defects, each beside a

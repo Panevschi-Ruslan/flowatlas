@@ -1,0 +1,10 @@
+{
+  "name": "client-checks-read-shop-app",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "ky": "^1.7.0",
+    "react": "^18.3.0",
+    "react-router-dom": "^6.28.0"
+  }
+}

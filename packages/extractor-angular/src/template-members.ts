@@ -36,6 +36,7 @@ import {
   type AST,
   type TmplAstNode,
 } from '@angular/compiler';
+import type { SwitchedOver } from '@flowatlas/core';
 
 /**
  * What a component's template does with each of the component's members
@@ -63,7 +64,12 @@ interface Resolved {
 }
 
 export interface TemplateMemberRows {
-  reads: Array<{ member: string; path: string[]; line: number }>;
+  /**
+   * `checked`: the longest part of the path, counted in keys under the member,
+   * the template checks is there before it counts on it (P402): `?.` past it,
+   * `@if`, `*ngIf`, `??`, `||`, `&&`, `!`, a ternary on it, `== null`.
+   */
+  reads: Array<{ member: string; path: string[]; line: number; checked?: number; switched?: SwitchedOver }>;
   /** The value handed to a method of the component, at an argument. */
   handed: Array<{ member: string; path: string[]; method: string; index: number; line: number }>;
   /** The value bound to a property of an element (a child component's input, it may be), or written to a member. */
@@ -120,11 +126,59 @@ const isChain = (node: AST): boolean =>
   node instanceof SafeCall ||
   node instanceof BindingPipe;
 
+/** The operators whose left side is a presence check: a fallback or a guard. */
+const CHECKING_OPERATORS: ReadonlySet<string> = new Set(['&&', '||', '??']);
+const EQUALITY_OPERATORS: ReadonlySet<string> = new Set(['==', '!=', '===', '!==']);
+
+/** `null` or `undefined` written out. */
+const isNothing = (ast: AST): boolean => {
+  const node = unwrap(ast);
+  if (node instanceof LiteralPrimitive) return node.value === null || node.value === undefined;
+  return node instanceof PropertyRead && node.receiver instanceof ImplicitReceiver && !(node.receiver instanceof ThisReceiver) && node.name === 'undefined';
+};
+
+/** The key a checked path is held under: the member and the path, `length` taken off. */
+const checkKey = (member: string, path: readonly string[]): string => `${member}|${fieldPath(path).join('.')}`;
+
 /** Reads every expression of a template against its component's members. */
 class MemberScan {
   readonly rows: TemplateMemberRows = { reads: [], handed: [], bound: [], unread: [] };
+  /**
+   * The paths the template checks are there (P402), anywhere in it, as P395
+   * takes a check anywhere in the functions around a read in code.
+   */
+  readonly #checked = new Set<string>();
 
   constructor(private readonly startLine: number) {}
+
+  /** An expression used to tell whether its value is there: the path it resolves to is checked. */
+  #check(ast: AST | null | undefined, scope: Scope): void {
+    if (ast === null || ast === undefined) return;
+    const found = resolve(ast, scope);
+    if (found !== undefined) this.#checked.add(checkKey(found.member, found.path));
+  }
+
+  /** `a?.b`, `a?.[k]`, `a?.()` along a chain: what is before the `?.` is checked. */
+  #safeChecks(ast: AST, scope: Scope): void {
+    for (let node: AST | undefined = unwrap(ast); node !== undefined; ) {
+      if (node instanceof SafePropertyRead || node instanceof SafeKeyedRead || node instanceof SafeCall) this.#check(node.receiver, scope);
+      if (node instanceof PropertyRead || node instanceof SafePropertyRead || node instanceof KeyedRead || node instanceof SafeKeyedRead || node instanceof Call || node instanceof SafeCall) {
+        node = unwrap(node.receiver);
+      } else if (node instanceof BindingPipe) node = unwrap(node.exp);
+      else node = undefined;
+    }
+  }
+
+  /** Each read marked with the longest part of its path checked anywhere in the template. */
+  settleChecks(): void {
+    for (const read of this.rows.reads) {
+      for (let depth = read.path.length; depth >= 0; depth -= 1) {
+        if (!this.#checked.has(checkKey(read.member, read.path.slice(0, depth)))) continue;
+        read.checked = depth;
+        break;
+      }
+    }
+  }
 
   #read(found: Resolved, line: number): void {
     const path = fieldPath(found.path);
@@ -161,17 +215,24 @@ class MemberScan {
       return;
     }
     if (node instanceof Binary) {
+      if (CHECKING_OPERATORS.has(node.operation)) this.#check(node.left, scope);
+      if (EQUALITY_OPERATORS.has(node.operation)) {
+        if (isNothing(node.right)) this.#check(node.left, scope);
+        else if (isNothing(node.left)) this.#check(node.right, scope);
+      }
       this.expression(node.left, scope, line);
       this.expression(node.right, scope, line);
       return;
     }
     if (node instanceof Conditional) {
+      this.#check(node.condition, scope);
       this.expression(node.condition, scope, line);
       this.expression(node.trueExp, scope, line);
       this.expression(node.falseExp, scope, line);
       return;
     }
     if (node instanceof PrefixNot || node instanceof TypeofExpression) {
+      if (node instanceof PrefixNot) this.#check(node.expression, scope);
       this.expression(node.expression, scope, line);
       return;
     }
@@ -184,6 +245,7 @@ class MemberScan {
 
   /** A chain: read where it resolves, and what is handed in along it read too. */
   #chain(node: AST, scope: Scope, line: number): void {
+    this.#safeChecks(node, scope);
     const found = resolve(node, scope);
     if (found !== undefined) {
       this.#read(found, line);
@@ -282,6 +344,8 @@ class MemberScan {
       const attribute = (name: string): TmplAstBoundAttribute | undefined =>
         node.templateAttrs.find((each): each is TmplAstBoundAttribute => each instanceof TmplAstBoundAttribute && each.name === name);
       for (const each of node.templateAttrs) if (each instanceof TmplAstBoundAttribute) this.expression(each.value, scope, this.#line(each.sourceSpan));
+      // `*ngIf="order.discount"`: the value is checked before the element shows.
+      this.#check(attribute('ngIf')?.value, scope);
       for (const variable of node.variables) {
         // `*ngFor="let line of lines"`: the element; `*ngIf="x as y"`: the value tested.
         const list = variable.value === '$implicit' ? attribute('ngForOf') : undefined;
@@ -300,6 +364,7 @@ class MemberScan {
     }
     if (node instanceof TmplAstIfBlock) {
       for (const branch of node.branches) {
+        this.#check(branch.expression, scope);
         this.expression(branch.expression, scope, this.#line(branch.sourceSpan));
         const inner = new Map(scope);
         if (branch.expressionAlias !== null && branch.expression !== null) inner.set(branch.expressionAlias.name, resolve(branch.expression, scope) ?? null);
@@ -321,7 +386,20 @@ class MemberScan {
       return;
     }
     if (node instanceof TmplAstSwitchBlock) {
-      this.expression(node.expression, scope, this.#line(node.sourceSpan));
+      const line = this.#line(node.sourceSpan);
+      const over = resolve(node.expression, scope);
+      const path = over === undefined ? [] : fieldPath(over.path);
+      if (over !== undefined && path.length > 0) {
+        // `@switch (order.status)`: what it does with a value no `@case` names (P402).
+        const cases = node.cases.flatMap((each) => {
+          const value = each.expression === null ? undefined : unwrap(each.expression);
+          return value instanceof LiteralPrimitive && (typeof value.value === 'string' || typeof value.value === 'number')
+            ? [typeof value.value === 'string' ? `'${value.value}'` : String(value.value)]
+            : [];
+        });
+        const has = node.cases.some((each) => each.expression === null) ? 'default' : 'none';
+        this.rows.reads.push({ member: over.member, path, line, switched: { has, cases, line } });
+      } else this.expression(node.expression, scope, line);
       for (const each of node.cases) {
         this.expression(each.expression, scope, this.#line(each.sourceSpan));
         this.nodes(each.children, scope);
@@ -346,5 +424,6 @@ export const readTemplateMembers = (source: string, file: string, startLine = 1)
   const parsed = parseTemplate(source, file, { preserveWhitespaces: false });
   const scan = new MemberScan(startLine);
   scan.nodes(parsed.nodes, new Map());
+  scan.settleChecks();
   return scan.rows;
 };

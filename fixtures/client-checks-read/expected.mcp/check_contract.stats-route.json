@@ -1,0 +1,51 @@
+{
+  "entry": "entry:shop-api:http:GET:/api/items/:param/stats",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:shop-api#ItemStats",
+    "reads": [
+      {
+        "field": "views",
+        "id": "shop-app#src/api.ts:loadItem",
+        "line": 41,
+        "call": "ui_api_call:shop-app#src/api.ts:35:85"
+      },
+      {
+        "field": "shares",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 25,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:32:12",
+        "guarded": true
+      },
+      {
+        "field": "views",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 25,
+        "file": "src/app/item-page.component.ts",
+        "call": "ui_api_call:shop-web#src/app/items.service.ts:32:12"
+      }
+    ],
+    "missing": [
+      {
+        "field": "shares",
+        "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "line": 25,
+        "file": "src/app/item-page.component.ts",
+        "guarded": true
+      }
+    ],
+    "unused": [
+      {
+        "field": "saves"
+      }
+    ]
+  },
+  "callers": 2,
+  "complete": true,
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-app#src/api.ts:35:85\", to: \"entry:shop-api:http:GET:/api/items/:param/stats\"})",
+    "check_contract({from: \"ui_api_call:shop-web#src/app/items.service.ts:32:12\", to: \"entry:shop-api:http:GET:/api/items/:param/stats\"})"
+  ]
+}

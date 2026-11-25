@@ -1,6 +1,7 @@
 {
   "verdict": "unsafe",
   "because": [
+    "3 API changes a consumer in the project feels, listed under api",
     "1 call lost its target: `http_out:storefront#src/catalog.client.ts:25:26` joined `entry:catalog-api:http:PATCH:/items/:param/archive` and is now target-route-not-found",
     "1 removed way in is still called from another service: `entry:catalog-api:http:PATCH:/items/:param/archive` (called from storefront)"
   ],
@@ -37,7 +38,12 @@
       "removed": 0
     },
     "lostJoins": 1,
-    "flows": 3
+    "flows": 3,
+    "api": {
+      "errors": 3,
+      "warnings": 0,
+      "infos": 1
+    }
   },
   "nodes": {
     "added": [
@@ -53,6 +59,28 @@
     "removed": [],
     "changed": []
   },
+  "api": [
+    {
+      "level": "error",
+      "operation": "PATCH /items/{id}/archive",
+      "verdict": "1 of 1 caller: requests it",
+      "deploy": "callers first: move them off it, then catalog-api"
+    },
+    {
+      "level": "error",
+      "operation": "send stock_events#STOCK_LOW",
+      "field": "payload.sku",
+      "verdict": "1 of 1 consumer: reads `sku`, line 16",
+      "deploy": "consumers first: stop reading `sku` (or cope without it), then catalog-api"
+    },
+    {
+      "level": "error",
+      "operation": "send stock_events",
+      "field": "payload.sku",
+      "verdict": "1 of 1 consumer: reads `sku`, line 16",
+      "deploy": "consumers first: stop reading `sku` (or cope without it), then catalog-api"
+    }
+  ],
   "breaks": [],
   "newGaps": [
     {
