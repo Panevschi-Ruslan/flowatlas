@@ -16,7 +16,7 @@
       {
         "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
         "type": "ui_component",
-        "line": "4-8",
+        "line": 4,
         "kind": "standalone",
         "reach": "alive",
         "from": "screen /reports"

@@ -11,7 +11,7 @@
       "callers": [
         {
           "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
-          "line": "9-13",
+          "line": 9,
           "reach": "alive",
           "from": "POST /checkout",
           "edge": {
@@ -36,7 +36,7 @@
       "callers": [
         {
           "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
-          "line": "10-13",
+          "line": 10,
           "reach": "alive",
           "from": "cron StockJobs.nightly",
           "edge": {

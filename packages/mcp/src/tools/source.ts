@@ -27,6 +27,25 @@ import { READ_ONLY, withDb, type ToolContext } from './common.js';
 export const MAX_LINES = 400;
 
 /**
+ * The most characters of code one answer holds (P396). Four hundred lines of
+ * a wide file ran to 16,262 characters for one `whole: true` on a real
+ * project, every one of them re-sent on each later turn. Past it the window
+ * ends at the last whole line under it and says, as a long declaration does,
+ * the `fromLine` to read on from.
+ */
+export const MAX_CODE_CHARS = 6000;
+
+/** The last line index of a window from `from` to `to` whose lines, joined, stay within `MAX_CODE_CHARS`; at least `from`. */
+export const lastWithinChars = (lines: readonly string[], from: number, to: number, most = MAX_CODE_CHARS): number => {
+  let chars = 0;
+  for (let index = from; index <= to; index += 1) {
+    chars += (lines[index]?.length ?? 0) + (index === from ? 0 : 1);
+    if (chars > most) return Math.max(index - 1, from);
+  }
+  return to;
+};
+
+/**
  * A line a decorator ends on and nothing follows: `@Guard({ a: 1 })`, the `})`
  * closing one written over several lines, or a bare `@Optional`.
  */
@@ -248,24 +267,30 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
           );
         }
 
+        // At most MAX_CODE_CHARS of code (P396): a window cut there goes on from the next line, as a long one does.
+        const to = past ? window.to : lastWithinChars(lines, window.from, window.to);
+        const cut = to < window.to;
+        const continues = window.continues || cut;
         return withNext(
           {
             id: node.id,
             file: node.file,
             line: window.from + 1,
-            endLine: past ? window.end + 1 : window.to + 1,
-            code: lines.slice(window.from, window.to + 1).join('\n'),
-            ...(window.continues
-              ? { truncated: `declaration continues past line ${window.to + 1}; ask with fromLine ${window.to + 2}` }
+            endLine: past ? window.end + 1 : to + 1,
+            code: lines.slice(window.from, to + 1).join('\n'),
+            ...(continues
+              ? {
+                  truncated: cut
+                    ? `cut at ${MAX_CODE_CHARS} characters: declaration continues past line ${to + 1}, to line ${window.end + 1}; ask with fromLine ${to + 2}`
+                    : `declaration continues past line ${to + 1}; ask with fromLine ${to + 2}`,
+                }
               : {}),
             ...(past ? { note: `the declaration ends at line ${window.end + 1}` } : {}),
             // Where the requests it sends land (P377), so the address need not be rebuilt from the code.
             ...requestsOf(db, node),
           },
           [
-            ...(window.continues
-              ? [`get_source({symbol: ${JSON.stringify(node.id)}, fromLine: ${window.to + 2}})`]
-              : []),
+            ...(continues ? [`get_source({symbol: ${JSON.stringify(node.id)}, fromLine: ${to + 2}})`] : []),
             ...nextFor(node).filter((hint) => !hint.startsWith('get_source')),
           ].slice(0, MAX_NEXT),
         );

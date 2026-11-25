@@ -50,13 +50,14 @@ export const SERVER_NAME = 'flowatlas';
  * before Claude Code v2.1.296 kept only the first 2,048 characters.
  */
 const INSTRUCTION_LINES: readonly string[] = [
-  'A map of every repository in this project, already joined: ask it, not a search of the files. Each question is one call:',
+  // P396: text in code is a grep, so a plain-text question (a constant's value) costs no graph call before the grep.
+  "How the code of every repository here connects, already joined: ask it, not a search. Text in code (a constant, a log line, a string) is a grep. Each question is one call:",
   // The same questions the files `flowatlas agents install` writes list (P227), each with its call (P382).
   agentQuestionsLine(),
   'A symbol is an id, a `Class.method` or a route said aloud ("GET /orders/:id"); `service` picks among same-named ones. Before changing a route, handler, body type or message payload: impact first.',
   'Rows of code carry `reach` (alive; maybe: behind an unread call, `gap`, `behind`; unreached; dead; outside: called from outside the project) and `from`, the nearest way in: no need to check them; keep maybe rows when asked what breaks. `complete: true` is the whole answer, else `left` says what was cut. Several at once: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`.',
-  'Each row\'s `id` goes into the next tool as it is; `next` lists the calls that take them.',
-  'More: search({query}) any node by name or words; list_entries the ways in; find_symbol a symbol; get_source({symbol: id}) a step\'s code; get_type({type: id}) -> type_usage; get_spec({service}); findings() what looks broken between the services; test_pattern a draft rule; start_here a project you do not know (counts, gaps, entry ids).',
+  "A row's `id` goes into the next tool as is; `next` names the calls.",
+  'More: search({query}) any node by name or words; list_entries the ways in; find_symbol a symbol; get_source({symbol: id}) a step\'s code; get_type({type: id}) -> type_usage; get_spec({service}); findings() what looks broken; test_pattern a draft rule; start_here a project you do not know.',
   'Run time: hot_paths -> slow_steps or trace_for({entry: id}); undeclared_failures; never_seen.',
   "Shared inputs: `detail` 0 ids only, 1 (the default) adds file:line, service and kind, 2 a list row's plain facts, one node's all; `service` names where the thing is (a list: the one it keeps); `maxNodes` caps rows (150 unless said); a cut list says `nextOffset`: pass it as `offset`.",
   'Answers are compact; `verbose: true` gives every field.',

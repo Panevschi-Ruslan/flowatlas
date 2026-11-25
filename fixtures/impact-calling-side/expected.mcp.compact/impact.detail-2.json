@@ -59,24 +59,29 @@
       "reach": "maybe",
       "from": "behind",
       "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
-      "confirm": {
-        "grep": "handleStatus",
-        "repo": "ops-bot"
-      },
       "via": "PATCH /orders/status (shop-api)"
     }
   ],
   "total": 4,
   "byKind": {
+    "bots": {
+      "ops-bot": [
+        "src/ops-bot.ts (maybe)"
+      ]
+    },
     "screens": {
       "backoffice-web": [
         "src/status-board.component.ts"
       ]
+    },
+    "webhooks": {
+      "shop-api": [
+        "src/chat-hook.controller.ts"
+      ]
     }
   },
   "changing": [
-    "entry:shop-api:http:PATCH:/orders/status",
-    "entry:shop-api:http:POST:/hooks/chat"
+    "entry:shop-api:http:PATCH:/orders/status"
   ],
   "reached": 16,
   "entriesByService": {

@@ -15,7 +15,7 @@
   "consumers": [
     {
       "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-      "line": "17-20",
+      "line": 17,
       "kind": "event",
       "meta": {
         "adapter": "nestjs-kafka",

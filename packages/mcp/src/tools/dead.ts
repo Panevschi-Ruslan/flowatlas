@@ -156,7 +156,7 @@ export const deadOutput = {
   kind: z.string().optional(),
   service: z.string().optional(),
   loc: z.string().optional(),
-  verdict: z.enum(['dead', 'likely-dead', 'unknown', 'alive']).optional(),
+  verdict: z.enum(['dead', 'likely-dead', 'maybe', 'unknown', 'alive']).optional(),
   reason: z.string().optional(),
   class: z.string().optional(),
   role: z.string().optional(),
@@ -277,7 +277,13 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
   if (answer === undefined) return { error: `no node ${JSON.stringify(found.node.id)}` };
   const loc = locOf(answer);
   // Where it is reached from (P364), so an alive answer needs no who_calls after it.
-  const { from, ways, walkCut, gap, behind, throughDead } = reader.of(answer.id);
+  const { reach, from, ways, walkCut, gap, behind, throughDead } = reader.of(answer.id);
+  // Said in the words every other answer's rows say it (P396): code an unread call could reach is `maybe` here as in
+  // impact and who_calls, with the same gap, where `likely-dead` beside a `maybe` row sent an agent to find out which.
+  // Traffic's word (`neverSeen`) stays its own: it is evidence beside the code, not a call the reading could not follow.
+  const unread = answer.verdict === 'likely-dead' || (answer.verdict === 'unknown' && answer.evidence.oneOff !== undefined);
+  const verdict = reach === 'maybe' && unread && answer.evidence.neverSeen === undefined ? 'maybe' : answer.verdict;
+  const reachSaid = reach === 'unreached' && answer.verdict === 'likely-dead' ? { reach } : {};
   // The fact before the verdict (P381): no caller in the project joins it, said as a count beside the judgment.
   const uncalled = CALLED_TYPES.has(answer.type) && typeof answer.evidence.callers !== 'number' ? { callers: 0 } : {};
   // A class answers for the ways in it declares too, each judged (P375): which routes of a controller no code calls is
@@ -292,8 +298,9 @@ const answerOne = (db: GraphDb, ctx: ToolContext, reader: ReachReader, ref: stri
       ...(answer.kind === undefined ? {} : { kind: answer.kind }),
       ...(answer.service === undefined ? {} : { service: answer.service }),
       ...(loc === undefined ? {} : { loc }),
-      verdict: answer.verdict,
+      verdict,
       reason: answer.reason,
+      ...reachSaid,
       ...uncalled,
       // Called, but only through ways in judged dead (P381): it runs only when one of them does, so not a bare alive.
       ...(throughDead === true ? { reach: 'dead', throughDead } : {}),
@@ -329,7 +336,7 @@ export const registerDead = (server: McpServer, ctx: ToolContext): void => {
     {
       title: 'Is this dead',
       description:
-        "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` or `alive`, and why that could be wrong; a class or file also judges each way in it declares (`waysIn`); or a service's dead rows.",
+        "Whether a node is `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `maybe` (an unread call could: `gap`), `unknown` or `alive`, and why; a class or file judges its ways in (`waysIn`); or a service's dead rows.",
       inputSchema: {
         id: z.string().optional(),
         ids: severalInput(),

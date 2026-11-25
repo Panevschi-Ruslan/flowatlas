@@ -7,7 +7,7 @@
   "consumers": [
     {
       "id": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
-      "line": "14-17",
+      "line": 14,
       "kind": "event",
       "via": "switch",
       "reach": "dead",
@@ -16,7 +16,7 @@
     },
     {
       "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
-      "line": "51-54",
+      "line": 51,
       "kind": "event",
       "selectedIn": "NotifyService.onModuleInit",
       "via": "switch",
@@ -27,7 +27,7 @@
     },
     {
       "id": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
-      "line": "14-18",
+      "line": 14,
       "kind": "sse",
       "via": "if",
       "reach": "dead",

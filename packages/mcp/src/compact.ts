@@ -66,6 +66,54 @@
  * (P382, `plain-text.ts`): code and Markdown, not a document to slim.
  */
 
+import {
+  ANSWER_READ_META,
+  ANSWER_UNREAD_META,
+  CREDENTIALS_META,
+  HEADERS_META,
+  SENDS_JSON_META,
+  STATUS_CHECKS_META,
+  STREAM_EVENTS_META,
+  STREAM_EVENTS_UNREAD_META,
+} from '@flowatlas/core';
+
+/**
+ * A node's facts that check_contract, findings and the page read, not an agent
+ * reading rows (P396): what a screen reads of an answer (P391), what a request
+ * sends beside its body and which statuses it checks (P388), the events a
+ * stream names (P359), whether a setting has a default. Left out of every row
+ * and tree step of a compact answer, unsaid: a note naming them cost more than
+ * most of them, and the instructions say `verbose: true` gives every field.
+ * They had grown every step of a flow on a real project with every field
+ * each screen reads.
+ */
+export const CONTRACT_META: ReadonlySet<string> = new Set([
+  ANSWER_READ_META,
+  ANSWER_UNREAD_META,
+  HEADERS_META,
+  SENDS_JSON_META,
+  STATUS_CHECKS_META,
+  CREDENTIALS_META,
+  STREAM_EVENTS_META,
+  STREAM_EVENTS_UNREAD_META,
+  'fallback',
+]);
+
+/**
+ * Fields only a verbose answer says (P396): how to confirm a `maybe` row by
+ * hand (`confirm`, P393), which read as a step to take and cost a turn of its
+ * own; `gap` and `behind` already say what could reach the row.
+ */
+export const VERBOSE_ONLY: ReadonlySet<string> = new Set(['confirm']);
+
+/**
+ * The tools whose compact rows keep where a declaration ends (P396), said in
+ * `line` as `"12-40"`: a flow's steps and impact's rows, the code an agent
+ * reads next, where the range saves a Read. Every other tool's rows say the
+ * line alone.
+ */
+export const RANGE_TOOLS: ReadonlySet<string> = new Set(['get_flow', 'impact']);
+
 /** Tools whose answer is handed on as written, `verbose` or not: none since P382, kept for a tool that needs it. */
 export const FULL_ANSWER_TOOLS: ReadonlySet<string> = new Set<string>();
 
@@ -102,6 +150,8 @@ type Plain = Record<string, unknown>;
 interface Pass {
   leftOut: Set<string>;
   typesCut: boolean;
+  /** Whether rows keep where a declaration ends (P396). */
+  ranges: boolean;
 }
 
 /**
@@ -177,11 +227,23 @@ export const listNote = (keys: readonly string[]): string => {
 /** What the answer says when an edge's long inline type was said by its size (P379). */
 export const TYPES_NOTE = 'a long type written inline is said by its field count: verbose: true gives it whole';
 
+/** A row's `meta` without the facts check_contract and findings read. */
+const withoutContractFacts = (meta: Plain): Plain => Object.fromEntries(Object.entries(meta).filter(([key]) => !CONTRACT_META.has(key)));
+
+/**
+ * Whether a value is a list of node ids (P396): `routes`, `handsOnTo`,
+ * `selects` - relations a row's node holds to others, each a full id. The
+ * node's own answer says them; on every row of a list they were most of what
+ * a busy channel's consumers said at detail 2.
+ */
+const isIdList = (value: unknown): boolean =>
+  Array.isArray(value) && value.length > 0 && value.every((item) => typeof item === 'string' && (item.includes('#') || /^(entry|channel|consumer|producer|table|gap):/.test(item)));
+
 /** A list row's `meta` with only its plain facts, the keys left out noted in `pass`. */
 const plainMeta = (meta: Plain, pass: Pass): Plain => {
   const kept: Plain = {};
   for (const [key, value] of Object.entries(meta)) {
-    if (isPlainFact(value)) kept[key] = value;
+    if (isPlainFact(value) && !isIdList(value)) kept[key] = value;
     // Nothing is no structured fact: it goes as every blank field does, unsaid.
     else if (!isBlank(value)) pass.leftOut.add(key);
   }
@@ -410,7 +472,8 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
   // Whether `endLine` was said in `line` or `loc` already (P393).
   let endSaid = false;
   for (const [key, value] of Object.entries(row)) {
-    if (key === 'endLine' && endSaid) continue;
+    if (key === 'endLine' && (endSaid || !pass.ranges)) continue;
+    if (depth > 0 && VERBOSE_ONLY.has(key)) continue;
     if (KEPT.has(key)) {
       out[key] = compactValue(value, depth + 1, inside, pass);
       continue;
@@ -434,7 +497,7 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
         // A way in's file is said by the code handling it, where that is written in the same file (P374).
         const left = locBesideAll(typeof row.by === 'string' ? [...ids, row.by] : ids, value);
         // Where the declaration ends goes into the same field (P393): `line: "12-40"`, `loc: "src/a.ts:12-40"`.
-        const end = typeof row.endLine === 'number' ? row.endLine : undefined;
+        const end = typeof row.endLine === 'number' && pass.ranges ? row.endLine : undefined;
         if (left !== undefined && end !== undefined) {
           if ('line' in left) out.line = `${left.line}-${end}`;
           else if (/:\d+$/.test(left.loc)) out.loc = `${left.loc}-${end}`;
@@ -449,6 +512,7 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
     let said: unknown = value;
     if (key === 'meta' && isPlain(value)) {
       said = metaBeside(value, row, ids);
+      if (depth > 0) said = withoutContractFacts(said as Plain);
       if (listRow) said = plainMeta(said as Plain, pass);
       if (treeRow) said = typesIn(said, pass);
       if (isBlank(said)) continue;
@@ -467,8 +531,9 @@ const targetIdOf = (answer: unknown): string[] =>
   isPlain(answer) && isPlain(answer.target) && typeof answer.target.id === 'string' ? [answer.target.id] : [];
 
 /** The answer with every fact its ids already say left out (see above); anything else as it was. */
-export const compactAnswer = <T>(answer: T): T => {
-  const pass: Pass = { leftOut: new Set(), typesCut: false };
+export const compactAnswer = <T>(answer: T, options: { tool?: string } = {}): T => {
+  const ranges = options.tool === undefined || RANGE_TOOLS.has(options.tool);
+  const pass: Pass = { leftOut: new Set(), typesCut: false, ranges };
   const out = compactValue(answer, 0, targetIdOf(answer), pass);
   if (!isPlain(out)) return out as T;
   const notes = [

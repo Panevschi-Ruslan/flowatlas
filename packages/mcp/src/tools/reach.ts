@@ -1,5 +1,5 @@
 import { isMessageTypeNode, wasMissed, type GraphNode } from '@flowatlas/core';
-import { methodsOf, type GraphDb } from '@flowatlas/linker';
+import { classifyRoute, methodsOf, routeFactsOf, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, projectEdge, truncate } from '../query/detail.js';
@@ -9,7 +9,7 @@ import { requestsOf } from '../query/requests.js';
 import { REVERSE_EDGES } from '../query/flow.js';
 import { truncationMessage, type FlowNode } from '../query/types.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown, type RowShown } from '../query/next.js';
-import { annotateTree, handledBy, reachReader, viaSaid, type ReachReader, type Walked, type WalkedFrom, type WayInFound } from '../query/ways-in.js';
+import { annotateTree, deadOptionsOf, handledBy, reachReader, viaSaid, type ReachReader, type Walked, type WalkedFrom, type WayInFound } from '../query/ways-in.js';
 import type { DbHandle } from '../query/db.js';
 import { figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow } from '../query/observed.js';
 import { slimForest } from '../query/wire.js';
@@ -583,32 +583,131 @@ const kindOfWay = (node: GraphNode): string => {
     case 'invoke':
       return 'functions';
     default:
-      return node.kind !== undefined && (node.kind.startsWith('bot_') || node.kind === 'scene_step') ? 'bots' : 'other';
+      return isBotKind(node.kind) ? 'bots' : 'other';
   }
 };
+
+/** A bot's way in: a command, a callback, an update, a step of a scene. */
+const isBotKind = (kind: string | undefined): boolean => kind !== undefined && (kind.startsWith('bot_') || kind === 'scene_step');
+
+/**
+ * The gaps that leave a bot's way in unnamed (P396): a trigger written as a
+ * value, handlers registered where the reading could not find them. A file
+ * holding one is a bot's, though no way in of it is drawn.
+ */
+const BOT_GAP_REASONS: ReadonlySet<string> = new Set(['dynamic-bot-trigger', 'bot-handlers-not-found']);
+
+/**
+ * The files of a bot's code, by `service\0file` (P396): where a bot's way in
+ * is registered, where the code handling one is written, and where a bot's
+ * trigger was left unread. A route handled in one of them is the bot's
+ * webhook, how its updates arrive, and code in one of them behind an unread
+ * call is the bot's: either breaks a bot, not an API.
+ */
+const botFilesOf = (db: GraphDb): ReadonlySet<string> => {
+  const files = new Set<string>();
+  const add = (node: Pick<GraphNode, 'repo' | 'file'> | undefined): void => {
+    if (node?.file !== undefined) files.add(`${node.repo}\u0000${node.file}`);
+  };
+  for (const entry of db.nodesByType('entry')) {
+    if (!isBotKind(entry.kind)) continue;
+    add(entry);
+    for (const edge of db.edgesFrom(entry.id, ['handles'])) add(db.node(edge.to));
+  }
+  for (const row of db.allUnresolved()) if (row.service !== null && row.file !== null && BOT_GAP_REASONS.has(row.reason)) files.add(`${row.service}\u0000${row.file}`);
+  return files;
+};
+
+/** The most hops a way in's chain is followed towards the changed code to tell whether a bot's code is on it. */
+const MOST_CHAIN_HOPS = 64;
+
+/** The kind a webhook or a callback is said under, by the role `dead` reads off its address and names. */
+const RECEIVER_KINDS: Readonly<Record<string, string>> = { webhook: 'webhooks', callback: 'webhooks' };
 
 /**
  * The ways in that break, by kind and service, each the file of the code that
  * handles it (P381): `{screens: {web: ["src/app/browse-page.component.ts"]}}`,
- * the answer to "which screens, bots, consumers break" in a line. The routes
- * the changed code runs behind - a route of its own service whose handler
- * calls it, reached through no other way in - are what changes, not what
- * breaks: `changing`, apart.
+ * the answer to "which screens, bots, consumers break" in a line.
+ *
+ * Every way in is counted by what it is (P396): a route handled by a bot's
+ * code is the bot's webhook, a bot; a route whose address or name says it
+ * receives what a provider posts is a webhook; a `maybe` row - code an unread
+ * call could reach - under the kind its file says (a bot's file, or the one
+ * kind its service's ways in are), its file marked `(maybe)`. `changing` is
+ * apart: the routes of the changed code's own service that the other rows
+ * request it through, the API being changed, never a webhook or a bot's way in.
  */
-const byKindOf = (ways: readonly WayInFound[], targets: readonly GraphNode[]): { byKind?: Record<string, Record<string, string[]>>; changing?: string[] } => {
+const byKindOf = (
+  db: GraphDb,
+  handle: Pick<DbHandle, 'config'>,
+  ways: readonly WayInFound[],
+  maybes: readonly WayInFound[],
+  targets: readonly GraphNode[],
+  walked: Pick<Walked, 'parents'>,
+  ownIds: ReadonlySet<string>,
+): { byKind?: Record<string, Record<string, string[]>>; changing?: string[] } => {
   const own = new Set(targets.map((target) => target.repo));
+  const bots = botFilesOf(db);
+  const isBotFile = (node: Pick<GraphNode, 'repo' | 'file'> | undefined): boolean => node?.file !== undefined && bots.has(`${node.repo}\u0000${node.file}`);
+  const options = deadOptionsOf(handle);
+  // The routes another row reaches the changed code through.
+  const requested = new Set([...ways, ...maybes].flatMap((way) => (way.via?.id === undefined || way.via.id === way.node.id ? [] : [way.via.id])));
   const changing: string[] = [];
   const groups = new Map<string, Map<string, Set<string>>>();
-  for (const way of ways) {
-    const kind = kindOfWay(way.node);
-    if (kind === 'routes' && way.via === undefined && own.has(way.node.repo)) {
-      changing.push(way.node.id);
-      continue;
-    }
-    const file = way.by?.file ?? way.node.file ?? way.node.label;
+  const put = (kind: string, repo: string, file: string): void => {
     const services = groups.get(kind) ?? new Map<string, Set<string>>();
     groups.set(kind, services);
-    services.set(way.node.repo, (services.get(way.node.repo) ?? new Set()).add(file));
+    services.set(repo, (services.get(repo) ?? new Set()).add(file));
+  };
+  // Whether the code between a way in and the changed code runs through a bot's file: the route hands the bot its
+  // updates, wherever the code handling the route itself is written (a controller handing them to the bot's class).
+  const throughBot = (way: WayInFound): GraphNode | undefined => {
+    let hops = 0;
+    for (let at = walked.parents.get(way.node.id)?.from; at !== undefined && hops < MOST_CHAIN_HOPS; at = walked.parents.get(at)?.from, hops += 1) {
+      if (ownIds.has(at)) return undefined;
+      const step = db.node(at);
+      if (isBotFile(step)) return step;
+    }
+    return undefined;
+  };
+  // A route's kind, and the file of the code that handles it: a bot's webhook by the bot's code it hands updates to.
+  const routeKind = (way: WayInFound): { kind: string; by?: GraphNode } => {
+    if (isBotFile(way.by) || isBotFile(way.node)) return { kind: 'bots' };
+    const bot = throughBot(way);
+    if (bot !== undefined) return { kind: 'bots', by: bot };
+    const role = classifyRoute(routeFactsOf(way.node, way.by?.label), options).role;
+    return { kind: (role === undefined ? undefined : RECEIVER_KINDS[role]) ?? 'routes' };
+  };
+  for (const way of ways) {
+    let kind = kindOfWay(way.node);
+    let by = way.by;
+    if (kind === 'routes') {
+      if (way.via === undefined && own.has(way.node.repo) && requested.has(way.node.id)) {
+        changing.push(way.node.id);
+        continue;
+      }
+      const said = routeKind(way);
+      kind = said.kind;
+      by = said.by ?? by;
+    }
+    put(kind, way.node.repo, by?.file ?? way.node.file ?? way.node.label);
+  }
+  // The kinds of each service's ways in, for a maybe row whose file says none.
+  let serviceKinds: Map<string, Set<string>> | undefined;
+  const kindsOfService = (repo: string): Set<string> => {
+    if (serviceKinds === undefined) {
+      serviceKinds = new Map();
+      for (const entry of db.nodesByType('entry')) serviceKinds.set(entry.repo, (serviceKinds.get(entry.repo) ?? new Set()).add(kindOfWay(entry)));
+    }
+    return serviceKinds.get(repo) ?? new Set();
+  };
+  for (const maybe of maybes) {
+    const file = maybe.node.file ?? maybe.node.label;
+    const kinds = kindsOfService(maybe.node.repo);
+    const kind = isBotFile(maybe.node) ? 'bots' : kinds.size === 1 ? [...kinds][0]! : 'other';
+    // Said once: a file a way in of the same kind already names is not said again as a maybe.
+    if (groups.get(kind)?.get(maybe.node.repo)?.has(file) === true) continue;
+    put(kind, maybe.node.repo, `${file} (maybe)`);
   }
   const sorted = <T>(entries: Iterable<[string, T]>): Array<[string, T]> => [...entries].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   const byKind = Object.fromEntries(
@@ -842,7 +941,7 @@ const impactOn = (
     ...(nextOffset === undefined ? {} : { nextOffset }),
     ...(entriesNone === undefined ? {} : { entriesNone }),
     // Every way in that breaks, on any page, by kind with the files handling them; the routes it runs behind apart (P381).
-    ...(asked === undefined ? byKindOf(ways, targets) : {}),
+    ...(asked === undefined ? byKindOf(db, handle, ways, maybes, targets, walked, ownIds) : {}),
     // How many things reach it at all, so no entry points is telling
     // rather than indistinguishable from nothing reaching it.
     reached,

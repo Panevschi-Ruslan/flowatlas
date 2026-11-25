@@ -39,6 +39,14 @@ export const AGENT_QUESTIONS: readonly AgentQuestion[] = Object.freeze([
 ]);
 
 /**
+ * What the graph does not answer (P396): text written in code - a constant's
+ * value, a log message, a string, a config value - is a grep. The graph holds
+ * how code connects; a plain-text question asked of it first answers nothing
+ * and the grep follows anyway, one turn more than a grep alone.
+ */
+export const TEXT_IS_A_GREP = 'Text in code (a constant, a log line, a string) is a grep.';
+
+/**
  * How to spend as few turns as an answer allows (P366): what every rendering
  * says, the short block read on every turn included. An agent that checks a
  * complete answer row by row, asks for one id at a time or waits for one call
@@ -50,7 +58,9 @@ export const AGENT_QUESTIONS: readonly AgentQuestion[] = Object.freeze([
  */
 export const AGENT_HABITS: readonly string[] = Object.freeze([
   'Before changing a route, handler, body type or message payload: `impact` first.',
-  'An answer with `complete: true` is the whole answer: check only what it lists as unread or unsure, not its rows; keep `reach: "maybe"` rows (behind an unread call) when asked what breaks.',
+  // P396: a question about text in code went to find_symbol first and then to a grep anyway, a turn for nothing.
+  TEXT_IS_A_GREP,
+  'An answer with `complete: true` is the whole answer, its rows need no check; keep `reach: "maybe"` rows when asked what breaks.',
   // P382: each tool's own key, where one `ids` was named for all and who_calls refused it.
   'Several in one call: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`; independent calls in one turn.',
   'Answers are compact: `verbose: true` gives every field.',
@@ -65,6 +75,7 @@ export const AGENT_HABITS: readonly string[] = Object.freeze([
  */
 export const AGENT_TERMINAL_HABITS: readonly string[] = Object.freeze([
   'Before changing a route, handler, body type or message payload: `flowatlas impact <symbol>` first.',
+  TEXT_IS_A_GREP,
   'An answer with `complete: true` is the whole answer: check only what it lists as unread or unsure; keep `reach: "maybe"` rows when asked what breaks.',
   'Answers are compact: `--verbose` gives every field; run independent commands in one turn.',
 ]);

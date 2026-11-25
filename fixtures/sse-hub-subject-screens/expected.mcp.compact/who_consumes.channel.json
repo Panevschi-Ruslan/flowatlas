@@ -7,7 +7,7 @@
   "consumers": [
     {
       "id": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
-      "line": "13-15",
+      "line": 13,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
@@ -15,7 +15,7 @@
     },
     {
       "id": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
-      "line": "17-19",
+      "line": 17,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
@@ -23,7 +23,7 @@
     },
     {
       "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
-      "line": "16-24",
+      "line": 16,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
@@ -31,7 +31,7 @@
     },
     {
       "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
-      "line": "15-21",
+      "line": 15,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
@@ -39,7 +39,7 @@
     },
     {
       "id": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
-      "line": "18-20",
+      "line": 18,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
@@ -47,7 +47,7 @@
     },
     {
       "id": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
-      "line": "35-38",
+      "line": 35,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
@@ -62,7 +62,7 @@
     },
     {
       "id": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
-      "line": "28-31",
+      "line": 28,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards (boards-api)",
@@ -70,7 +70,7 @@
     },
     {
       "id": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
-      "line": "8-10",
+      "line": 8,
       "kind": "sse",
       "reach": "dead",
       "from": "none"
@@ -108,7 +108,7 @@
     },
     {
       "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
-      "line": "13-15",
+      "line": 13,
       "kind": "sse",
       "reach": "alive",
       "from": "POST /boards/:param/cards/:param/archive (boards-api)",

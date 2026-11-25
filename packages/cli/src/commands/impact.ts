@@ -221,7 +221,7 @@ const answerImpact = (symbol: string, options: ImpactOptions, io: QueryIo): void
       const stale = staleFor(handle.path, of.answer);
       if (stale !== undefined) io.err(`${staleLine(stale)}\n`);
       const said = stale === undefined ? of.answer : { ...of.answer, stale };
-      const text = `${options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(compactAnswer(said))}\n`;
+      const text = `${options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(compactAnswer(said, { tool: 'impact' }))}\n`;
       io.out(text);
       noteAnswer(said, text.length);
       return;

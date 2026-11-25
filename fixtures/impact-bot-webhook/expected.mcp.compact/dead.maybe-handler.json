@@ -1,0 +1,16 @@
+{
+  "id": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+  "line": 35,
+  "verdict": "maybe",
+  "reason": "nothing calls it, though its class is used: a call through a receiver the reading could not type may",
+  "callers": 0,
+  "evidence": {
+    "classReached": true
+  },
+  "from": "behind",
+  "gap": "gap:courier-bot|src/courier-bot.ts|call-dynamic-receiver",
+  "next": [
+    "get_source({symbol: \"courier-bot#src/courier-bot.ts:CourierBot.handleDelivered\"})",
+    "cant_follow({service: \"courier-bot\"})"
+  ]
+}

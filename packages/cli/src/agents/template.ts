@@ -87,7 +87,7 @@ const others = (guide: AgentGuide): string[] => guide.services.map((service) => 
 
 /** The description an assistant reads to decide whether to load the guide: the questions, and why a search is not enough. */
 export const guideDescription = (guide: AgentGuide): string =>
-  `Use for questions that cross this project's repositories (${guide.services.map((service) => service.name).join(', ')}): who calls this, what breaks if it changes, who handles a message, how a request flows, is it dead. A search of one checkout cannot see the others; the flowatlas graph joins them.`;
+  `Use for questions that cross this project's repositories (${guide.services.map((service) => service.name).join(', ')}): who calls this, what breaks if it changes, who handles a message, how a request flows, is it dead. A search of one checkout cannot see the others; the flowatlas graph joins them. A constant's value is a grep.`;
 
 /** The name the graph server is registered under when a repository's `.mcp.json` says nothing else. */
 export const DEFAULT_SERVER = 'flowatlas';
@@ -117,7 +117,7 @@ const toolSearchLine = (guide: AgentGuide): string => {
   if (deferred(guide)) return `In Claude Code, load the tools in ONE ToolSearch call: \`${toolSearchQuery(guide.server)}\`.`;
   const some = fewerUpfront(guide);
   if (some !== undefined) return `In Claude Code ${namesSaid(some)} ${some.length === 1 ? 'is' : 'are'} loaded already; load any other graph tool in ONE ToolSearch call with every tool you need.`;
-  return 'In Claude Code the core graph tools are loaded already, with no ToolSearch call; load any other in ONE ToolSearch call with every tool you need.';
+  return 'In Claude Code the core graph tools are loaded already; load any other in ONE ToolSearch call with every tool you need.';
 };
 
 /** Whether no tool loads upfront: turned off, or an upfront list that names none. */

@@ -1,0 +1,1154 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T23:50:21.340Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "backoffice-web",
+      "repo": "./backoffice-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "courier-bot",
+      "repo": "./courier-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "backoffice-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "backoffice-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "backoffice-web#src/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "backoffice-web",
+      "file": "src/orders-api.service.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "backoffice-web#src/orders-api.service.ts:OrdersApiService.setStatus",
+      "type": "method",
+      "label": "OrdersApiService.setStatus",
+      "repo": "backoffice-web",
+      "file": "src/orders-api.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "backoffice-web#src/status-board.component.ts:StatusBoardComponent",
+      "type": "ui_component",
+      "label": "StatusBoardComponent",
+      "repo": "backoffice-web",
+      "file": "src/status-board.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-status-board",
+        "route": "/board"
+      }
+    },
+    {
+      "id": "backoffice-web#src/status-board.component.ts:StatusBoardComponent.markReady",
+      "type": "method",
+      "label": "StatusBoardComponent.markReady",
+      "repo": "backoffice-web",
+      "file": "src/status-board.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:courier-bot#SHOP_API_URL",
+      "type": "config_key",
+      "label": "SHOP_API_URL",
+      "repo": "courier-bot",
+      "file": "src/shop.client.ts",
+      "line": 15,
+      "meta": {
+        "key": "SHOP_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "courier-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "courier-bot",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "courier-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "courier-bot",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "courier-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "courier-bot",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "CourierBot",
+          "ShopClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "courier-bot#src/courier-bot.ts:CourierBot",
+      "type": "provider",
+      "label": "CourierBot",
+      "repo": "courier-bot",
+      "file": "src/courier-bot.ts",
+      "line": 17,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+      "type": "method",
+      "label": "CourierBot.handleDelivered",
+      "repo": "courier-bot",
+      "file": "src/courier-bot.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "{match:string[]}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "courier-bot#src/courier-bot.ts:CourierBot.help",
+      "type": "method",
+      "label": "CourierBot.help",
+      "repo": "courier-bot",
+      "file": "src/courier-bot.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_ctx",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit",
+      "type": "method",
+      "label": "CourierBot.onModuleInit",
+      "repo": "courier-bot",
+      "file": "src/courier-bot.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "courier-bot#src/courier-bot.ts:CourierBot.routes",
+      "type": "method",
+      "label": "CourierBot.routes",
+      "repo": "courier-bot",
+      "file": "src/courier-bot.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:courier-bot#BotRoute[]"
+        }
+      }
+    },
+    {
+      "id": "courier-bot#src/shop.client.ts:ShopClient",
+      "type": "provider",
+      "label": "ShopClient",
+      "repo": "courier-bot",
+      "file": "src/shop.client.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "courier-bot#src/shop.client.ts:ShopClient.updateStatus",
+      "type": "method",
+      "label": "ShopClient.updateStatus",
+      "repo": "courier-bot",
+      "file": "src/shop.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:backoffice-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "repo": "backoffice-web",
+      "file": "src/app.routes.ts",
+      "line": 5,
+      "kind": "screen",
+      "meta": {
+        "path": "/board",
+        "by": "angular-routes",
+        "screens": [
+          "StatusBoardComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:courier-bot:bot_command:help",
+      "type": "entry",
+      "label": "bot_command help",
+      "repo": "courier-bot",
+      "file": "src/courier-bot.ts",
+      "line": 24,
+      "kind": "bot_command",
+      "meta": {
+        "key": "help",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'help'",
+        "updateClass": "CourierBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:shop-api:bot_command:ready",
+      "type": "entry",
+      "label": "bot_command ready",
+      "repo": "shop-api",
+      "file": "src/desk-bot.ts",
+      "line": 20,
+      "kind": "bot_command",
+      "meta": {
+        "key": "ready",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'ready'",
+        "updateClass": "DeskBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "entry",
+      "label": "PATCH /api/orders/status",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/api/orders/status",
+        "rawPath": "/api/orders/status",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:POST:/bot/desk/webhook",
+      "type": "entry",
+      "label": "POST /bot/desk/webhook",
+      "repo": "shop-api",
+      "file": "src/desk-bot.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/bot/desk/webhook",
+        "rawPath": "/bot/desk/webhook",
+        "controller": "DeskBotController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:courier-bot#src/shop.client.ts:15:26",
+      "type": "http_out",
+      "label": "PATCH /api/orders/status",
+      "repo": "courier-bot",
+      "file": "src/shop.client.ts",
+      "line": 15,
+      "meta": {
+        "method": "PATCH",
+        "url": "${SHOP_API_URL}/api/orders/status",
+        "path": "/api/orders/status",
+        "baseUrlEnv": "SHOP_API_URL",
+        "responseType": null,
+        "bodyType": "{orderId:string;status:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId",
+          "status"
+        ],
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "repo:backoffice-web",
+      "type": "repo",
+      "label": "backoffice-web",
+      "repo": "backoffice-web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 1,
+            "rxjs": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:courier-bot",
+      "type": "repo",
+      "label": "courier-bot",
+      "repo": "courier-bot",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "telegraf": 3,
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "telegraf": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "DeskBotController"
+        ],
+        "providers": [
+          "OrdersService",
+          "DeskBot"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/desk-bot.controller.ts:DeskBotController",
+      "type": "provider",
+      "label": "DeskBotController",
+      "repo": "shop-api",
+      "file": "src/desk-bot.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/desk-bot.controller.ts:DeskBotController.receive",
+      "type": "method",
+      "label": "DeskBotController.receive",
+      "repo": "shop-api",
+      "file": "src/desk-bot.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "{callback_query?:{data:string}}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "callback_query",
+            "in": "shop-api#src/desk-bot.ts:DeskBot.handleUpdate",
+            "line": 28
+          },
+          {
+            "field": "callback_query.data",
+            "in": "shop-api#src/desk-bot.ts:DeskBot.handleUpdate",
+            "line": 28
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/desk-bot.ts:DeskBot",
+      "type": "provider",
+      "label": "DeskBot",
+      "repo": "shop-api",
+      "file": "src/desk-bot.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/desk-bot.ts:DeskBot.handleUpdate",
+      "type": "method",
+      "label": "DeskBot.handleUpdate",
+      "repo": "shop-api",
+      "file": "src/desk-bot.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "update",
+              "type": "type:shop-api#DeskUpdate"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/desk-bot.ts:DeskBot.markReady",
+      "type": "method",
+      "label": "DeskBot.markReady",
+      "repo": "shop-api",
+      "file": "src/desk-bot.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/desk-bot.ts:DeskBot.onButton",
+      "type": "method",
+      "label": "DeskBot.onButton",
+      "repo": "shop-api",
+      "file": "src/desk-bot.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/desk-bot.ts:DeskBot.onModuleInit",
+      "type": "method",
+      "label": "DeskBot.onModuleInit",
+      "repo": "shop-api",
+      "file": "src/desk-bot.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "type": "method",
+      "label": "OrdersController.setStatus",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{orderId:string;status:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 11
+          },
+          {
+            "field": "status",
+            "line": 11
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop-api",
+      "file": "src/orders.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+      "type": "method",
+      "label": "OrdersService.updateStatus",
+      "repo": "shop-api",
+      "file": "src/orders.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:backoffice-web#src/status-board.component.ts:9:22",
+      "type": "ui_action",
+      "label": "click=\"markReady('42')\"",
+      "repo": "backoffice-web",
+      "file": "src/status-board.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "markReady('42')",
+        "component": "backoffice-web#src/status-board.component.ts:StatusBoardComponent",
+        "template": "src/status-board.component.ts",
+        "args": [
+          "'42'"
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12",
+      "type": "ui_api_call",
+      "label": "PATCH /api/orders/status",
+      "repo": "backoffice-web",
+      "file": "src/orders-api.service.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "${apiUrl}/api/orders/status",
+        "path": "/api/orders/status",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "{orderId:string;status:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId",
+          "status"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "backoffice-web#src/orders-api.service.ts:OrdersApiService",
+      "to": "backoffice-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders-api.service.ts",
+      "line": 10
+    },
+    {
+      "from": "backoffice-web#src/orders-api.service.ts:OrdersApiService.setStatus",
+      "to": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-api.service.ts",
+      "line": 13
+    },
+    {
+      "from": "backoffice-web#src/status-board.component.ts:StatusBoardComponent",
+      "to": "backoffice-web#src/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/status-board.component.ts",
+      "line": 12
+    },
+    {
+      "from": "backoffice-web#src/status-board.component.ts:StatusBoardComponent.markReady",
+      "to": "backoffice-web#src/orders-api.service.ts:OrdersApiService.setStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/status-board.component.ts",
+      "line": 15
+    },
+    {
+      "from": "courier-bot#src/courier-bot.ts:CourierBot",
+      "to": "courier-bot#src/shop.client.ts:ShopClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/courier-bot.ts",
+      "line": 21
+    },
+    {
+      "from": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+      "to": "courier-bot#src/shop.client.ts:ShopClient.updateStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/courier-bot.ts",
+      "line": 36
+    },
+    {
+      "from": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit",
+      "to": "courier-bot#src/courier-bot.ts:CourierBot.help",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/courier-bot.ts",
+      "line": 24
+    },
+    {
+      "from": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit",
+      "to": "courier-bot#src/courier-bot.ts:CourierBot.routes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:courier-bot#BotRoute[]",
+      "file": "src/courier-bot.ts",
+      "line": 25
+    },
+    {
+      "from": "courier-bot#src/shop.client.ts:ShopClient",
+      "to": "courier-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/shop.client.ts",
+      "line": 10
+    },
+    {
+      "from": "courier-bot#src/shop.client.ts:ShopClient",
+      "to": "courier-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/shop.client.ts",
+      "line": 11
+    },
+    {
+      "from": "courier-bot#src/shop.client.ts:ShopClient.updateStatus",
+      "to": "config_key:courier-bot#SHOP_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/shop.client.ts",
+      "line": 15
+    },
+    {
+      "from": "courier-bot#src/shop.client.ts:ShopClient.updateStatus",
+      "to": "http_out:courier-bot#src/shop.client.ts:15:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/shop.client.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:backoffice-web:screen:/board",
+      "to": "backoffice-web#src/status-board.component.ts:StatusBoardComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.routes.ts",
+      "line": 5,
+      "meta": {
+        "route": "/board"
+      }
+    },
+    {
+      "from": "entry:courier-bot:bot_command:help",
+      "to": "courier-bot#src/courier-bot.ts:CourierBot.help",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/courier-bot.ts",
+      "line": 31
+    },
+    {
+      "from": "entry:shop-api:bot_command:ready",
+      "to": "shop-api#src/desk-bot.ts:DeskBot.markReady",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:shop-api:http:PATCH:/api/orders/status",
+      "to": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string;status:string}"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "body": "{orderId:string;status:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:POST:/bot/desk/webhook",
+      "to": "shop-api#src/desk-bot.controller.ts:DeskBotController.receive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{callback_query?:{data:string}}"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.controller.ts",
+      "line": 9,
+      "meta": {
+        "body": "{callback_query?:{data:string}}"
+      }
+    },
+    {
+      "from": "http_out:courier-bot#src/shop.client.ts:15:26",
+      "to": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/shop.client.ts",
+      "line": 15,
+      "params": [
+        "{orderId:string;status:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "shop-api#src/desk-bot.controller.ts:DeskBotController",
+      "to": "shop-api#src/desk-bot.ts:DeskBot",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk-bot.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "shop-api#src/desk-bot.controller.ts:DeskBotController.receive",
+      "to": "shop-api#src/desk-bot.ts:DeskBot.handleUpdate",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:shop-api#DeskUpdate"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "shop-api#src/desk-bot.ts:DeskBot",
+      "to": "shop-api#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk-bot.ts",
+      "line": 17
+    },
+    {
+      "from": "shop-api#src/desk-bot.ts:DeskBot.handleUpdate",
+      "to": "shop-api#src/desk-bot.ts:DeskBot.onButton",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-api#src/desk-bot.ts:DeskBot.markReady",
+      "to": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.ts",
+      "line": 24
+    },
+    {
+      "from": "shop-api#src/desk-bot.ts:DeskBot.onButton",
+      "to": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.ts",
+      "line": 33
+    },
+    {
+      "from": "shop-api#src/desk-bot.ts:DeskBot.onModuleInit",
+      "to": "shop-api#src/desk-bot.ts:DeskBot.markReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk-bot.ts",
+      "line": 20
+    },
+    {
+      "from": "shop-api#src/orders.controller.ts:OrdersController",
+      "to": "shop-api#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "to": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_action:backoffice-web#src/status-board.component.ts:9:22",
+      "to": "backoffice-web#src/status-board.component.ts:StatusBoardComponent.markReady",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/status-board.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12",
+      "to": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders-api.service.ts",
+      "line": 13,
+      "params": [
+        "{orderId:string;status:string}"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "types": {
+    "type:courier-bot#BotRoute": {
+      "name": "BotRoute",
+      "kind": "object",
+      "declaredIn": "courier-bot#src/courier-bot.ts",
+      "structuralHash": "82357b53a28baf98",
+      "fields": [
+        {
+          "name": "pattern",
+          "type": "RegExp",
+          "optional": false
+        },
+        {
+          "name": "handler",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:shop-api#DeskUpdate": {
+      "name": "DeskUpdate",
+      "kind": "object",
+      "declaredIn": "shop-api#src/desk-bot.ts",
+      "structuralHash": "f92abae22fef9a4a",
+      "fields": [
+        {
+          "name": "callback_query",
+          "type": "{data:string}",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports HttpModule",
+      "service": "courier-bot"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports ConfigModule",
+      "service": "courier-bot"
+    },
+    {
+      "file": "src/courier-bot.ts",
+      "line": 26,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "CourierBot.onModuleInit -> route.handler",
+      "meta": {
+        "causes": [
+          {
+            "cause": "function-value",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/courier-bot.ts",
+                "line": 40,
+                "symbol": "CourierBot.routes -> this.handleDelivered.bind"
+              }
+            ]
+          },
+          {
+            "cause": "interface-type",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/courier-bot.ts",
+                "line": 26,
+                "symbol": "CourierBot.onModuleInit -> route.handler"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "courier-bot"
+    },
+    {
+      "file": "src/courier-bot.ts",
+      "line": 26,
+      "reason": "dynamic-bot-trigger",
+      "hint": "Register with a string literal or a constant, so the command can be named.",
+      "symbol": "route.pattern",
+      "adapter": "telegraf-calls",
+      "service": "courier-bot"
+    }
+  ]
+}

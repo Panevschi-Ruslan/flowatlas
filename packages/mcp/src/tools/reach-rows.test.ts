@@ -107,7 +107,8 @@ describe('several inputs in one call', () => {
     const answer = await call('dead', { ids: [QUEUE, REOPEN] });
     expect(answer.answers.map((one: { asked: string; verdict: string }) => [one.asked, one.verdict])).toEqual([
       [QUEUE, 'alive'],
-      [REOPEN, 'likely-dead'],
+      // P396: maybe, the word impact's row says for it.
+      [REOPEN, 'maybe'],
     ]);
     expect(answer.answers[1].from).toBe('behind');
     expect(answer.complete).toBeUndefined();

@@ -12,7 +12,7 @@
     },
     {
       "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
-      "line": "16-18",
+      "line": 16,
       "reach": "alive",
       "from": "POST /orders/:param/cancel",
       "matched": [
@@ -22,7 +22,7 @@
     },
     {
       "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
-      "line": "14-17",
+      "line": 14,
       "reach": "alive",
       "from": "POST /orders/:param/cancel",
       "matched": [
@@ -32,7 +32,7 @@
     },
     {
       "id": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
-      "line": "14-16",
+      "line": 14,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [
@@ -42,7 +42,7 @@
     },
     {
       "id": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
-      "line": "21-23",
+      "line": 21,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [

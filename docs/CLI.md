@@ -2008,7 +2008,10 @@ an answer citing a file that changed since says so, on stderr for a person
 the JSON. A file whose time moved and whose text did not, a `touch`, is not a
 change. `doctor` says which checkouts moved to another commit or branch since the
 build (`checkout-moved`, an info row that decides no exit code), and the graph
-server's `start_here` says the same under `moved`.
+server's `start_here` says the same under `moved`. It also says when the edit
+hook's index beside the graph is missing, older than the graph, or recorded by
+`build` as not written, with why (`edit-index-unwritten`, info, P396); `build`
+says that failure on its summary too.
 
 ### `flowatlas agents install | status | remove`
 
@@ -2301,7 +2304,9 @@ code calls the symbol. `--channel <name>` lists the ways in beyond that channel
 instead, with the chains to them through it; given a consumer a line names, the
 ways in beyond every channel of its line. The json answer sums the ways in by
 kind, each with the file handling it (`byKind`), and names the routes the
-symbol runs behind apart (`changing`, P381).
+symbol runs behind apart (`changing`, P381): a bot's webhook is a bot and a
+`maybe` row is listed under its kind, marked `(maybe)`; `changing` holds only
+the routes other rows request it through (P396).
 
 `--format json` prints the tool's answer, compact on one line as an agent is
 handed it; with `--verbose` the whole answer, pretty-printed. `--max-nodes` is

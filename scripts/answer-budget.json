@@ -787,14 +787,15 @@
               "verdict": "likely-dead"
             },
             "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent": {
-              "verdict": "likely-dead"
+              "verdict": "maybe"
             },
             "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent": {
               "verdict": "alive"
             }
           }
         }
-      }
+      },
+      "note": "P396: a component an unread call could reach says maybe, the word impact and who_calls say for it, where it said likely-dead."
     },
     {
       "id": "dead.handler-and-method",
@@ -817,7 +818,7 @@
               "verdict": "alive"
             },
             "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen": {
-              "verdict": "likely-dead"
+              "verdict": "maybe"
             }
           }
         }
@@ -1625,7 +1626,7 @@
               "throughDead": true
             },
             "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen": {
-              "verdict": "likely-dead"
+              "verdict": "maybe"
             }
           }
         }
@@ -2910,11 +2911,7 @@
           "entries": {
             "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey": {
               "reach": "maybe",
-              "line": "21-23",
-              "confirm": {
-                "grep": "byKey",
-                "repo": "catalog-web"
-              }
+              "line": "21-23"
             }
           }
         },
@@ -2922,7 +2919,70 @@
           "entries"
         ]
       },
-      "note": "P393: the maybe row said the gap and nothing to settle it with; the agent opened the file to find the method and grepped for its name."
+      "note": "P393: the maybe row said the gap and nothing to settle it with. P396: confirm read as a step to take and cost a turn of its own, so only verbose answers say it; gap and the line range stay."
+    },
+    {
+      "id": "impact.bot-webhook",
+      "ask": "which ways in could break if OrdersService.updateStatus changes, by what they are",
+      "fixture": "impact-bot-webhook",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders.service.ts:OrdersService.updateStatus"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "lists": {
+          "entries": [
+            "entry:backoffice-web:screen:/board",
+            "entry:shop-api:bot_command:ready",
+            "entry:shop-api:http:PATCH:/api/orders/status",
+            "entry:shop-api:http:POST:/bot/desk/webhook",
+            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered": {
+              "reach": "maybe"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P396: byKind left the bots out and changing held the bot's webhook; now bots names both bots (the courier bot's handler marked maybe) and changing the API alone."
+    },
+    {
+      "id": "dead.maybe-handler",
+      "ask": "is CourierBot.handleDelivered dead, and DeskBot.onButton",
+      "fixture": "impact-bot-webhook",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+          "shop-api#src/desk-bot.ts:DeskBot.onButton"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered": {
+              "verdict": "maybe",
+              "gap": "gap:courier-bot|src/courier-bot.ts|call-dynamic-receiver"
+            },
+            "shop-api#src/desk-bot.ts:DeskBot.onButton": {
+              "verdict": "alive"
+            }
+          }
+        }
+      },
+      "note": "P396: dead answered likely-dead where impact said maybe, and the agent spent 13 turns finding out which; both say maybe with the same gap."
     }
   ],
   "fixed": {
@@ -3412,27 +3472,6 @@
       "complete": null,
       "calls": 1
     },
-    "findings.that-hold": {
-      "chars": 4083,
-      "tokens": 1021,
-      "rows": 6,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.hub-screens-types": {
-      "chars": 424,
-      "tokens": 106,
-      "rows": 0,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.handler-types": {
-      "chars": 1349,
-      "tokens": 338,
-      "rows": 1,
-      "complete": null,
-      "calls": 1
-    },
     "who_calls.shadowed-handler": {
       "chars": 567,
       "tokens": 142,
@@ -3592,6 +3631,41 @@
       "tokens": 326,
       "rows": 3,
       "complete": false,
+      "calls": 1
+    },
+    "impact.bot-webhook": {
+      "chars": 1606,
+      "tokens": 402,
+      "rows": 5,
+      "complete": false,
+      "calls": 1
+    },
+    "dead.maybe-handler": {
+      "chars": 814,
+      "tokens": 204,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.that-hold": {
+      "chars": 4083,
+      "tokens": 1021,
+      "rows": 6,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.hub-screens-types": {
+      "chars": 424,
+      "tokens": 106,
+      "rows": 0,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.handler-types": {
+      "chars": 1349,
+      "tokens": 338,
+      "rows": 1,
+      "complete": null,
       "calls": 1
     }
   }

@@ -3,7 +3,7 @@
   "type": "method",
   "service": "ops-bot",
   "loc": "src/ops-bot.ts:29",
-  "verdict": "likely-dead",
+  "verdict": "maybe",
   "reason": "nothing calls it, though its class is used: a call through a receiver the reading could not type may",
   "callers": 0,
   "evidence": {

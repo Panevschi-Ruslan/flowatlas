@@ -19,7 +19,7 @@
     },
     {
       "id": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens.issue",
-      "line": "10-12",
+      "line": 10,
       "reach": "alive",
       "from": "POST /orders/:param/cancel",
       "matched": [
@@ -28,7 +28,7 @@
     },
     {
       "id": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
-      "line": "14-16",
+      "line": 14,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [
@@ -37,7 +37,7 @@
     },
     {
       "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
-      "line": "16-18",
+      "line": 16,
       "reach": "alive",
       "from": "POST /orders/:param/cancel",
       "matched": [
@@ -46,7 +46,7 @@
     },
     {
       "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
-      "line": "14-17",
+      "line": 14,
       "reach": "alive",
       "from": "POST /orders/:param/cancel",
       "matched": [
@@ -55,7 +55,7 @@
     },
     {
       "id": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
-      "line": "21-23",
+      "line": 21,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [
@@ -64,7 +64,7 @@
     },
     {
       "id": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
-      "line": "20-22",
+      "line": 20,
       "reach": "dead",
       "from": "POST /orders/:param/refund",
       "throughDead": true,
@@ -74,7 +74,7 @@
     },
     {
       "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
-      "line": "9-11",
+      "line": 9,
       "reach": "dead",
       "from": "POST /orders/:param/refund",
       "throughDead": true,
@@ -84,7 +84,7 @@
     },
     {
       "id": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
-      "line": "19-22",
+      "line": 19,
       "reach": "dead",
       "from": "POST /orders/:param/refund",
       "throughDead": true,

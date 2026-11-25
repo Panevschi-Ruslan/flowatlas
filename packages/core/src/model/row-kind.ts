@@ -152,6 +152,8 @@ const NOTES: readonly string[] = [
   'store-shared',
   // A checkout that moved since the build (cli/doctor/checkout.ts, P230): the graph is of another commit.
   'checkout-moved',
+  // The edit hook's index not written beside the graph (cli/doctor/edit-index.ts, P396): the graph is whole.
+  'edit-index-unwritten',
   // A declared failure no request answered in the observed window (cli/doctor/runtime.ts, P106):
   // evidence beside the code, nothing missed.
   'failure-declared-unseen',

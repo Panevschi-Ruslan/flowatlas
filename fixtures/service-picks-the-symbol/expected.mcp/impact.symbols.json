@@ -81,6 +81,9 @@
       ]
     },
     "routes": {
+      "lending-api": [
+        "src/books.controller.ts"
+      ],
       "lending-gateway": [
         "src/books.controller.ts"
       ]
@@ -92,8 +95,7 @@
     }
   },
   "changing": [
-    "entry:lending-api:http:GET:/books/:param",
-    "entry:lending-api:http:POST:/books/:param/hold"
+    "entry:lending-api:http:GET:/books/:param"
   ],
   "reached": 21,
   "entriesByService": {

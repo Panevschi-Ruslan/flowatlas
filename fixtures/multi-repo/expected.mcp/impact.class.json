@@ -122,14 +122,14 @@
       ],
       "gateway": [
         "src/orders/orders.controller.ts"
+      ],
+      "orders": [
+        "src/orders/orders.controller.ts"
       ]
     }
   },
   "changing": [
-    "entry:orders:http:GET:/orders/:param",
-    "entry:orders:http:GET:/orders/latest",
-    "entry:orders:http:POST:/orders",
-    "entry:orders:http:POST:/orders/:param/archive"
+    "entry:orders:http:GET:/orders/:param"
   ],
   "reached": 41,
   "entriesByService": {

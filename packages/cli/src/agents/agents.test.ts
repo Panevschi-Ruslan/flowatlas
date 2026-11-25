@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { AGENT_HABITS, AGENT_QUESTIONS, agentQuestionsLine, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import { AGENT_HABITS, AGENT_QUESTIONS, agentQuestionsLine, TEXT_IS_A_GREP, type GraphEdge, type GraphNode } from '@flowatlas/core';
 import { INSTRUCTIONS } from '@flowatlas/mcp';
 import { afterAll, describe, expect, it } from 'vitest';
 import { agentsStatus, installAgents, registeredServer, removeAgents, serverKeyIn, withSearchHook, withoutSearchHook } from '../commands/agents.js';
@@ -12,6 +12,7 @@ import {
   CORE_TOOLS,
   GUIDE_MAX_LINES,
   guideBody,
+  guideDescription,
   ownedFile,
   ownedState,
   SHARED_MAX_CHARS,
@@ -43,6 +44,14 @@ describe('the guide every assistant is given (P227)', () => {
 
   it('asks the same questions the graph server’s instructions ask', () => {
     expect(INSTRUCTIONS.split('\n')).toContain(agentQuestionsLine());
+  });
+
+  // P396: a plain-text question went to find_symbol first and to a grep anyway, one turn more than a grep alone.
+  it('says text in code is a grep, in the block, the guide, the terminal guide and the description', () => {
+    expect(sharedBlock(GUIDE)).toContain(TEXT_IS_A_GREP);
+    expect(guideBody(GUIDE)).toContain(TEXT_IS_A_GREP);
+    expect(guideBody({ ...GUIDE, via: 'terminal' })).toContain(TEXT_IS_A_GREP);
+    expect(guideDescription(GUIDE)).toContain("A constant's value is a grep.");
   });
 
   it('writes a skill and a Cursor rule an assistant loads by description, with a mark that tells a hand edit apart', () => {
@@ -83,10 +92,10 @@ describe('the guide every assistant is given (P227)', () => {
     expect(CORE_TOOLS).toContain('check_contract');
     expect(CORE_TOOLS).not.toContain('who_emits');
     const block = sharedBlock(GUIDE);
-    expect(block).toContain('- In Claude Code the core graph tools are loaded already, with no ToolSearch call; load any other in ONE ToolSearch call with every tool you need.');
+    expect(block).toContain('- In Claude Code the core graph tools are loaded already; load any other in ONE ToolSearch call with every tool you need.');
     expect(block).not.toContain('select:');
     const skill = ownedFile('claude-skill', GUIDE);
-    expect(skill).toContain(`loaded already, with no ToolSearch call; load any other in ONE ToolSearch call with every tool you need. Before Claude Code ${ALWAYS_LOAD_SINCE}: ${select}.`);
+    expect(skill).toContain(`loaded already; load any other in ONE ToolSearch call with every tool you need. Before Claude Code ${ALWAYS_LOAD_SINCE}: ${select}.`);
 
     const deferred = { ...GUIDE, alwaysLoad: false };
     expect(sharedBlock(deferred)).toContain(`- In Claude Code, load the tools in ONE ToolSearch call: ${select}.`);

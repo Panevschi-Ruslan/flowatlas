@@ -9,7 +9,7 @@
   "callers": [
     {
       "id": "lending-api#src/books.controller.ts:BooksController.findOne",
-      "line": "23-26",
+      "line": 23,
       "reach": "alive",
       "from": "GET /books/:param",
       "edge": {

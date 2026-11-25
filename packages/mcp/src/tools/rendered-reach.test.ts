@@ -79,7 +79,9 @@ describe('impact through a component a template renders, and code written nowher
     const answer = await call('dead', { ids: [BADGE, DIALOG, CARD] });
     const [badge, dialog, card] = answer.answers;
     expect(badge).toMatchObject({ verdict: 'likely-dead', evidence: { unreferenced: true } });
-    expect(dialog).toMatchObject({ verdict: 'likely-dead' });
+    // P396: maybe, as its reach says; the badge no unread call could reach stays likely-dead, said unreached.
+    expect(dialog).toMatchObject({ verdict: 'maybe' });
+    expect(badge).toMatchObject({ reach: 'unreached' });
     expect(dialog.evidence?.unreferenced).toBeUndefined();
     expect(card).toMatchObject({ verdict: 'alive' });
   });

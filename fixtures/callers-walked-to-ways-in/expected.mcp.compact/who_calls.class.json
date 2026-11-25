@@ -11,7 +11,7 @@
   "callers": [
     {
       "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
-      "line": "15-18",
+      "line": 15,
       "reach": "alive",
       "from": "DELETE /checkout/:param",
       "edge": {
@@ -25,7 +25,7 @@
     },
     {
       "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
-      "line": "9-13",
+      "line": 9,
       "reach": "alive",
       "from": "POST /checkout",
       "edge": {
@@ -39,7 +39,7 @@
     },
     {
       "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
-      "line": "17-19",
+      "line": 17,
       "reach": "alive",
       "from": "GET /reports/daily",
       "edge": {
@@ -53,7 +53,7 @@
     },
     {
       "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
-      "line": "10-13",
+      "line": 10,
       "reach": "alive",
       "from": "cron StockJobs.nightly",
       "edge": {
@@ -67,7 +67,7 @@
     },
     {
       "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
-      "line": "15-18",
+      "line": 15,
       "reach": "alive",
       "from": "DELETE /checkout/:param",
       "edge": {
@@ -82,7 +82,7 @@
     },
     {
       "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
-      "line": "9-13",
+      "line": 9,
       "reach": "alive",
       "from": "POST /checkout",
       "edge": {
@@ -97,7 +97,7 @@
     },
     {
       "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
-      "line": "10-13",
+      "line": 10,
       "reach": "alive",
       "from": "cron StockJobs.nightly",
       "edge": {

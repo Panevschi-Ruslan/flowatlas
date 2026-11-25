@@ -51,7 +51,8 @@
   "byKind": {
     "screens": {
       "catalog-web": [
-        "src/app/catalog-page.component.ts"
+        "src/app/catalog-page.component.ts",
+        "src/app/items-lookup.service.ts (maybe)"
       ]
     }
   },

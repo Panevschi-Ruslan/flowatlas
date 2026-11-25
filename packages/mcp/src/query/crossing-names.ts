@@ -106,7 +106,10 @@ export const crossingNamesOf = (db: GraphDb): CrossingName[] => {
     }
   }
 
-  for (const channel of db.nodesByType('channel')) {
+  const channels = db.nodesByType('channel');
+  // The channels a type of message is read on, once (P396): asked per channel, it read every channel each time.
+  const typed = new Set(channels.flatMap((node) => (isMessageTypeNode(node) && typeof node.meta?.['channel'] === 'string' ? [node.meta['channel']] : [])));
+  for (const channel of channels) {
     if (isMessageTypeNode(channel)) {
       messageNames(db, channel, add);
       continue;
@@ -130,7 +133,7 @@ export const crossingNamesOf = (db: GraphDb): CrossingName[] => {
       );
     }
     // A channel that carries no type read: its fields compared publish by publish.
-    if (db.nodesByType('channel').some((node) => isMessageTypeNode(node) && node.meta?.['channel'] === channel.id)) continue;
+    if (typed.has(channel.id)) continue;
     const producers = emits.flatMap((edge) => db.node(edge.from) ?? []);
     const consumers = takes.flatMap((edge) => db.node(edge.to) ?? []);
     messageFields(db, { channelId: channel.id, channelLabel: channel.label, id: channel.id }, producers, consumers, add);

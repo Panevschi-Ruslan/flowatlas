@@ -352,6 +352,7 @@ export const PAGE_WORDS = Object.freeze({
     'di-token-unknown': 'token nothing provides',
     'di-type-unresolved': 'injected type not resolved',
     'checkout-moved': 'checkout moved since the build',
+    'edit-index-unwritten': "edit hook's index not written",
     'store-shared': 'a store two services write',
     'document-age': 'how old the document is',
     'duplicate-node-id': 'one id in two repositories',

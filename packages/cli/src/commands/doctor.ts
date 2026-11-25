@@ -24,6 +24,7 @@ import { dbPathFor } from '../db.js';
 import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
 import { checkoutRows } from '../doctor/checkout.js';
+import { editIndexRows } from '../doctor/edit-index.js';
 import { sharedStoreRows } from '../doctor/shared-store.js';
 import { expandReasons, isKnownReason, KNOWN_REASONS, nearestReasons } from '../doctor/hints.js';
 import { runtimeFailureRows } from '../doctor/runtime.js';
@@ -604,6 +605,8 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     // guess is left out while traffic confirms it.
     // A checkout that moved since the build (P230), asked now as the ages are.
     const moved = checkoutRows(checkoutsMoved(readFreshness(dbPathFor(options))));
+    // The edit hook's index beside the graph, missing or recorded as not written (P396): asked now, as above.
+    moved.push(...editIndexRows(dirname(dbPathFor(options)), db.report()?.builtAt));
     // A store more than one service writes (P228): a note, asked of the graph now.
     const shared = sharedStoreRows(db);
     const observed = readObservedBeside(dbPathFor(options)).observed;

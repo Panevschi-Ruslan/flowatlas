@@ -21,9 +21,13 @@
     }
   ],
   "total": 1,
-  "changing": [
-    "entry:orders:http:POST:/orders"
-  ],
+  "byKind": {
+    "routes": {
+      "orders": [
+        "src/orders/orders.controller.ts"
+      ]
+    }
+  },
   "reached": 2,
   "entriesByService": {
     "orders": 1

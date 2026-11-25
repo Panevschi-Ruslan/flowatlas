@@ -478,7 +478,7 @@ export class ToolListing {
     // Code and Markdown are handed on as the text they are, with no structured content to escape them into (P382).
     const plain = compact ? plainTextOf(tool, offered) : undefined;
     if (plain !== undefined) return { content: [{ type: 'text' as const, text: plain }] };
-    const kept = compact ? compactAnswer(offered) : offered;
+    const kept = compact ? compactAnswer(offered, { tool }) : offered;
     if (kept === document) return result;
     const text = JSON.stringify(kept);
     return {

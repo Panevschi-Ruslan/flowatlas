@@ -47,11 +47,15 @@
       "shop-web": [
         "src/app/order-detail.component.ts"
       ]
+    },
+    "webhooks": {
+      "shop-api": [
+        "src/bot/staff-bot.service.ts"
+      ]
     }
   },
   "changing": [
-    "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
-    "entry:shop-api:http:POST:/bot/staff/webhook"
+    "entry:shop-api:http:PATCH:/api/orders/:param/cancel"
   ],
   "reached": 11,
   "entriesByService": {

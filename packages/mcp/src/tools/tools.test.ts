@@ -1158,10 +1158,11 @@ describe('dead, findings, type_usage and scoped prompts', () => {
 
   it('says likely-dead with the call that could hit it, and unknown with the call one segment off', async () => {
     const likely = await call('dead', { id: 'entry:orders:http:GET:/orders/latest' });
-    expect(likely.verdict).toBe('likely-dead');
+    // P396: said maybe, the word every row's reach says for it.
+    expect(likely.verdict).toBe('maybe');
     expect(likely.evidence.couldHit[0].call).toBe(requestIn('gateway#src/clients/orders.client.ts:OrdersClient.variant'));
     const off = await call('dead', { id: 'entry:orders:http:POST:/orders/:param/archive' });
-    expect(off.verdict).toBe('unknown');
+    expect(off.verdict).toBe('maybe');
     expect(off.evidence.oneOff[0]).toMatchObject({ asks: 'POST /orders/:param/cancel', differs: 'cancel for archive' });
     expect(off.next[0]).toBe(`get_source({symbol: ${JSON.stringify(off.evidence.oneOff[0].call)}})`);
   });

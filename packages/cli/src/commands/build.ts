@@ -92,7 +92,8 @@ import { EXIT } from '../exit.js';
 import { writeFreshness } from '../build/freshness.js';
 import { namesOf, writeNames } from '../agents/names.js';
 import { cardNamesOf, writeCardNames } from '../agents/card-names.js';
-import { writeEditIndex } from '../agents/edit-index.js';
+import { writeEditIndexOrSay } from '../agents/edit-index.js';
+import { EDITS_FILE } from '../agents/edit-match.js';
 import { PULLED_DIR, pulledServiceGraphPath } from '../team/bundle.js';
 import { acquireBuildLock, BuildBusyError, claimAgain, leaveQueue, queueAgain, rotateBuildLog, type LockHolder } from '../build/lock.js';
 import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
@@ -219,6 +220,12 @@ export interface BuildResult extends LinkResult {
    * repositories it read, absolute. Named, never removed (R166).
    */
   leftovers: readonly string[];
+  /**
+   * Why the edit hook's index (`edits.json`, P387) could not be written, when
+   * it could not (P396): said on the build's summary and recorded in the
+   * index, where `doctor` reads it, instead of a hook left silent with no word.
+   */
+  editIndexError?: string;
   plan: RebuildPlan;
   /**
    * Where each service's repository is, absolute.
@@ -1030,6 +1037,10 @@ export const leftoverRepoOutputs = (repoDirs: readonly string[], outputDir: stri
   return [...found].sort();
 };
 
+/** The line that says the edit hook's index could not be written, and why (P396). */
+export const editIndexLine = (error: string | undefined): string | undefined =>
+  error === undefined ? undefined : `the edit hook's index (${EDITS_FILE}) was not written, so the hook says nothing after an edit: ${error}`;
+
 /** The one line that names what an earlier version left behind, when it left anything. */
 export const leftoversLine = (leftovers: readonly string[]): string | undefined =>
   leftovers.length === 0
@@ -1308,17 +1319,15 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   }
 
   // The names a search hook can say something about (P227), from the graph just written.
+  let editIndexError: string | undefined;
   if (!keeping) {
     const serviceDirs = Object.fromEntries(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]));
     writeNames(outputDir, namesOf(result.project, serviceDirs));
     // And the names a prompt card can answer for (P386).
     writeCardNames(outputDir, cardNamesOf(result.project, serviceDirs));
-    // And what an edit in each file can break elsewhere, for the edit hook (P387).
-    try {
-      writeEditIndex(outputDir, serviceDirs, result.project.builtAt);
-    } catch {
-      // The hook is a help: without its index it says nothing, and the build stands.
-    }
+    // And what an edit in each file can break elsewhere, for the edit hook (P387). The hook is a help and the build
+    // stands without it, but a failure says itself (P396): on the summary, and in the index doctor reads.
+    editIndexError = writeEditIndexOrSay(outputDir, serviceDirs, result.project.builtAt);
   }
   pruneServiceDirs(outputDir, loaded.config.services);
   const leftovers = leftoverRepoOutputs(
@@ -1339,6 +1348,7 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
     readNothing: silent,
     armsLength,
     leftovers,
+    ...(editIndexError === undefined ? {} : { editIndexError }),
     plan,
     repoDirs: Object.fromEntries(
       loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]),
@@ -1599,6 +1609,8 @@ export const summariseBuild = (result: BuildResult): string[] => {
   // deletes what it names.
   const leftovers = leftoversLine(result.leftovers);
   if (leftovers !== undefined) lines.push(leftovers);
+  const editIndex = editIndexLine(result.editIndexError);
+  if (editIndex !== undefined) lines.push(editIndex);
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
   lines.push(unresolvedLine(result.project.unresolved));
@@ -1770,6 +1782,6 @@ const startInBackground = (settings: BuildOptions): void => {
  * untouched: a note is about this run and this disk, not about the graph.
  */
 export const buildJson = (result: BuildResult): LinkResult['report'] & { notes?: string[] } => {
-  const notes = [leftoversLine(result.leftovers)].filter((note): note is string => note !== undefined);
+  const notes = [leftoversLine(result.leftovers), editIndexLine(result.editIndexError)].filter((note): note is string => note !== undefined);
   return notes.length === 0 ? result.report : { ...result.report, notes };
 };

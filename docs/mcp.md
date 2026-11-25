@@ -118,6 +118,11 @@ Read, a turn of its own.
   first (P382), the one habit that saves a broken caller in a repository the
   agent never opened;
 
+- text in code (a constant, a log line, a string) is a grep (P396): the graph
+  holds how code connects, and a plain-text question asked of it first
+  answered nothing and went to grep a turn later; the server's instructions
+  and the skill's description say it too;
+
 - in Claude Code the core tools are loaded already (P380, [below](#the-core-tools-loaded-upfront)):
   no ToolSearch call for them; any other tool loads in one ToolSearch call with
   every tool the question needs. Where the server leaves them deferred
@@ -251,6 +256,10 @@ file's only one like it, and as the edited one only where the edit was. A
 names, how often the file spelled each and who uses it), and the edited file;
 a name its file does not spell (a channel built from a constant) is not in it.
 It never refuses or fails an edit, and anything slower than 300 ms is silence.
+Where `build` cannot write the index it says why on its summary and in
+`edits.json` itself (`unwritten`, no names, so the hook stays silent), and
+`doctor` says it too (`edit-index-unwritten`, info), as it does for an index
+missing beside `names.json` or older than the graph (P396).
 `--shared` writes it as `flowatlas agents edit-hook --edits <path>`.
 
 ---
@@ -729,6 +738,8 @@ question is answered in the call that asked it.
     name, a class's), to look for as a whole word (`grep -rnw`) in the
     repository (the service) it is in. A hit other than its declaration is
     the call the reading did not follow; none means nothing calls it by name.
+    Only a `verbose` answer says it (P396): in a compact one it read as a step
+    to take and cost a turn; `gap` and `behind` say what could reach the row.
 - **Where a row's code ends (P393).** A row naming a method, a function, a
   class, a component or a handler, at `detail` 1 and up in every answer that
   says reach and in `get_flow`'s tree, carries `endLine` beside `loc`, so a
@@ -739,7 +750,20 @@ question is answered in the call that asked it.
   checked out here, the count met a brace and ended past the first line;
   otherwise it is left out, never guessed. Compact, it goes into the line:
   `line: "12-40"` (or `loc: "src/a.ts:12-40"` where the id does not hold the
-  file).
+  file), on `get_flow`'s steps and `impact`'s rows only, the code read next,
+  where the range saves a Read; every other compact answer says the line
+  alone, and `verbose` says `endLine` everywhere (P396).
+- **What compact rows leave out (P396).** A row or a tree step of a compact
+  answer leaves out the facts `check_contract`, `findings` and the page read:
+  what a screen reads of an answer (`answerRead`, `answerUnread`), what a
+  request sends beside its body and the statuses it checks (`headers`,
+  `sendsJson`, `credentials`, `statusChecks`), the events a stream names
+  (`streamEvents`, `streamEventsUnread`) and a setting's `fallback`. A list
+  row's `meta` leaves out its relations by id (`routes`, `handsOnTo`), said in
+  `note` with its structured facts. `verbose: true` keeps all of it.
+  `get_source` answers at most 6,000 characters of code: a window cut there
+  says `truncated` with the line it ends at, and `next` the `fromLine` call
+  for the rest.
 - **Several inputs in one call.** `dead` takes `ids`, `find_symbol` and
   `search` take `queries`, `get_type` takes `types` and `who_calls` takes
   `symbols`, beside the single form, at most 20, the single one first and
@@ -798,12 +822,20 @@ a filter, a near name or a verdict never makes a half answer look whole.
   of several that answers one of them with an error or candidates is not
   complete.
 - **Impact by kind.** `byKind` sums every way in that breaks, on any page, by
-  kind (`screens`, `routes`, `bots`, `consumers`, `jobs`, `functions`) and
-  service, each the file of the code that handles it:
+  kind (`screens`, `routes`, `webhooks`, `bots`, `consumers`, `jobs`,
+  `functions`) and service, each the file of the code that handles it:
   `{"screens": {"reader-web": ["src/app/book-page.component.ts"]}, "bots":
-  {"desk-bot": ["src/desk-bot.ts"]}}`. `changing` names the routes the
-  changed code runs behind - a route of its own service whose handler calls
-  it, reached through no other way in - which change rather than break.
+  {"desk-bot": ["src/desk-bot.ts"]}}`. Every way in is counted by what it is
+  (P396): a route whose chain to the changed code runs through a bot's code
+  (a file where a bot's way in is registered or handled, or a bot's trigger
+  was left unread) is the bot's webhook, a bot, named by the bot's file; a
+  route whose address or name says it receives what a provider posts is a
+  webhook; a `maybe` row is listed under the kind its file says (a bot's file,
+  else the one kind its service's ways in are), its file marked `(maybe)`.
+  `changing` names the API being changed: the routes of the changed code's
+  own service that other listed rows request it through, never a webhook or a
+  bot's way in. A route of that service no listed row requests is a way in
+  that breaks for callers outside, under `routes`.
 - **Facts before verdicts.** `dead` on a route or a method says `callers: 0`
   beside the verdict where no caller in the project joins it; `waysIn` rows
   of a class or file say `callers` always, and `uncalled` counts every way in
@@ -984,7 +1016,12 @@ two cannot disagree; a test compares them on three fixtures. A **verdict** is
 `dead` (nothing in the graph reaches it and nothing that could is unread),
 `likely-dead` (nothing reaches it, and a call read in part could), `unknown`
 (the graph's silence says nothing: it is triggered from outside the project,
-or a call one segment off names it) or `alive`. Its **evidence**:
+or a call one segment off names it) or `alive`. One node's answer says `maybe`
+where every other answer's row says `reach: "maybe"` (P396): what the list
+calls `likely-dead`, or `unknown` with a call one segment off, with the same
+`gap` and `behind` impact's row names (traffic's `neverSeen` keeps its own
+verdict); `likely-dead` beside `reach: "unreached"` says so (`reach`). The
+lists keep the linker's words. Its **evidence**:
 
 - `couldHit`: requests whose address was read in part and could reach the
   route (`{ call, path, loc }`, the link report's near misses);

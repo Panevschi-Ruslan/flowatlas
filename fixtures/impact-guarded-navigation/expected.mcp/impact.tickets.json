@@ -47,10 +47,14 @@
       "store-web": [
         "src/app/ticket-board.component.ts"
       ]
+    },
+    "webhooks": {
+      "store-api": [
+        "src/hooks.controller.ts"
+      ]
     }
   },
   "changing": [
-    "entry:store-api:http:POST:/api/hooks/chat",
     "entry:store-api:http:POST:/api/tickets/:param/ack"
   ],
   "reached": 11,

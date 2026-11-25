@@ -113,7 +113,9 @@ describe('impact sums the ways in by kind, the routes the code runs behind apart
       'lending-api#src/books.service.ts:BooksService.findOne',
       'lending-api#src/holds.service.ts:HoldsService.place',
     ]);
-    expect(answer.changing).toEqual([API_ROUTE, 'entry:lending-api:http:POST:/books/:param/hold']);
+    // P396: the hold route no listed row requests is a way in that breaks for callers outside, not the API between them.
+    expect(answer.changing).toEqual([API_ROUTE]);
+    expect(answer.byKind.routes['lending-api']).toEqual(['src/books.controller.ts']);
     expect(new Set(ids(answer.entries)).size).toBe(answer.entries.length);
   });
 });

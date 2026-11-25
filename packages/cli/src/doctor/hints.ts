@@ -781,6 +781,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'checkout-moved': () =>
     'The graph describes the commit each repository was on when it was built. Run flowatlas build after a checkout or a merge, or flowatlas hook install to have it rebuilt in the background every time.',
 
+  // The edit hook's index missing beside the graph, or recorded as not written (doctor/edit-index.ts, P396).
+  'edit-index-unwritten': () =>
+    'The edit hook reads edits.json, which build writes beside the graph; without it the hook says nothing after an edit. Run flowatlas build: its summary names why the index could not be written, and an issue with that line helps fix the reading.',
+
   // What traffic answered beside what the code declares (doctor/runtime.ts, P106).
   // Asked of the observed file at doctor time, never stored in the graph.
   'failure-seen-undeclared': () =>

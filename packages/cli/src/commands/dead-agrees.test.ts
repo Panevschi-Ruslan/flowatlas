@@ -34,6 +34,22 @@ const ask = async (config: string, calls: Array<Record<string, unknown>>, dbPath
   }
 };
 
+/**
+ * Each node's own answer, as `id verdict`, in the list's words: one node's answer says `maybe` where its reach does
+ * (P396), the word impact and who_calls say it, for what the list calls likely-dead, or unknown with a request one
+ * segment off. Every other verdict is the list's own.
+ */
+const saidAsListed = (one: readonly any[], ids: readonly string[], command: readonly string[]): string[] => {
+  const listed = new Map(command.map((line) => [line.slice(0, line.lastIndexOf(' ')), line.slice(line.lastIndexOf(' ') + 1)]));
+  return one
+    .map((answer, at) => {
+      const id = ids[at]!;
+      const was = listed.get(id) ?? '';
+      return `${id} ${answer.verdict === 'maybe' && ['likely-dead', 'unknown'].includes(was) ? was : answer.verdict}`;
+    })
+    .sort();
+};
+
 const agree = async (config: string, db?: string): Promise<void> => {
   const { result } = await runDead({ config, kind: 'all', max: '100000', ...(db === undefined ? {} : { db }) });
   const command = [
@@ -45,7 +61,7 @@ const agree = async (config: string, db?: string): Promise<void> => {
   expect((listed.rows as Array<{ id: string; verdict: string }>).map((row) => `${row.id} ${row.verdict}`).sort()).toEqual(command);
   const ids = command.map((line) => line.slice(0, line.lastIndexOf(' ')));
   const one = await ask(config, ids.map((id) => ({ id })), db);
-  expect(one.map((answer, at) => `${ids[at]} ${answer.verdict}`).sort()).toEqual(command);
+  expect(saidAsListed(one, ids, command)).toEqual(command);
 };
 
 describe('flowatlas dead and the MCP dead tool agree', () => {
@@ -81,7 +97,7 @@ describe('flowatlas dead and the MCP dead tool agree', () => {
       // Each row asked about on its own says what the list says.
       const ids = command.map((line) => line.slice(0, line.lastIndexOf(' ')));
       const one = await ask(config, ids.map((id) => ({ id })));
-      expect(one.map((answer, at) => `${ids[at]} ${answer.verdict}`).sort()).toEqual(command);
+      expect(saidAsListed(one, ids, command)).toEqual(command);
     });
   }
 });

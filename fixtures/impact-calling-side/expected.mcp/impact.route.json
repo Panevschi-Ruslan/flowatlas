@@ -39,6 +39,11 @@
   ],
   "total": 2,
   "byKind": {
+    "bots": {
+      "ops-bot": [
+        "src/ops-bot.ts (maybe)"
+      ]
+    },
     "screens": {
       "backoffice-web": [
         "src/status-board.component.ts"

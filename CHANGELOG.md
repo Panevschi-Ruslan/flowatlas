@@ -3057,6 +3057,31 @@ only one of them moved.
 
 ### Changed
 
+- **Fewer turns per question (P396).** A pilot after P381 to P394 kept its
+  right answers and spent more turns and characters on them; each cause is
+  fixed. The instructions, the guide and the skill's description say text in
+  code (a constant, a log line, a string) is a grep, where a plain-text
+  question went to the graph first and to grep a turn later. `dead` on one
+  node says `maybe`, with the same `gap` impact's row names, where it said
+  `likely-dead` beside impact's `maybe` (traffic's verdict stays its own; the
+  lists keep the linker's words). Compact answers leave out `confirm` (only
+  `verbose` says it), the facts check_contract and findings read
+  (`answerRead`, `answerUnread`, `headers`, `sendsJson`, `credentials`,
+  `statusChecks`, `streamEvents`, `fallback`) on every row and step, a list
+  row's relations by id (`routes`, `handsOnTo`), and line ranges outside
+  `get_flow` and `impact`; `get_source` answers at most 6,000 characters of
+  code and names the `fromLine` call for the rest. The answer budget's
+  questions of the base run to 135,451 characters (135,854), the text every
+  turn carries to 9,388 (9,397).
+- **impact counts every way in by what it is (P396).** `byKind` named only
+  some: a bot's webhook sat in `changing` beside the API, and a maybe row was
+  in no kind. A route whose chain to the changed code runs through a bot's
+  code is a bot, named by the bot's file; a route whose address or name says
+  it receives a provider's posts is under `webhooks`; a `maybe` row is listed
+  under its file's kind, marked `(maybe)`. `changing` holds only the routes
+  of the changed code's own service that other rows request it through; a
+  route no row requests is under `routes`.
+
 - **The finding of a state machine task that retries no transient error is
   `workflow-function-unretried` (P394).** It was `workflow-lambda-unretried`;
   a `--kind`, a `.flowatlas` filter or a SARIF rule that names the old reason
@@ -3210,6 +3235,14 @@ only one of them moved.
   CategoryTree[]`) answers end to end. New fixture `findings-that-hold`; the
   ten types `sse-hub-subject-screens`' screens choose, each published on
   another channel the hub relays, are no longer listed.
+- **A build that cannot write the edit hook's index says why (P396).** The
+  failure was swallowed whole: on a real five-repository project no
+  `edits.json` appeared and the hook stayed silent. A body type made of itself
+  overflowed the stack there (fixed by the depth guard on shapes); any failure
+  left is said on the build's summary and JSON notes, in `edits.json`
+  (`unwritten`, with no names), and by `doctor` as `edit-index-unwritten`
+  (info), which also says an index missing beside `names.json` or older than
+  the graph.
 
 - **`impact` never walks back along a navigation, from a guard, or across a
   channel into a flood (P372).** A method that navigates to a screen

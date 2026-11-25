@@ -11,7 +11,7 @@
     },
     {
       "id": "shop-api#src/payments/payments.service.ts:PaymentsService.capture",
-      "line": "5-7",
+      "line": 5,
       "reach": "alive",
       "from": "POST /payments",
       "matched": [
@@ -20,7 +20,7 @@
     },
     {
       "id": "shop-api#src/payments/payments.controller.ts:PaymentsController.capture",
-      "line": "9-12",
+      "line": 9,
       "reach": "alive",
       "from": "POST /payments",
       "matched": [
@@ -29,7 +29,7 @@
     },
     {
       "id": "shop-web#src/app/payments.client.ts:PaymentsClient.pay",
-      "line": "10-12",
+      "line": 10,
       "reach": "alive",
       "from": "screen /orders",
       "matched": [
@@ -38,7 +38,7 @@
     },
     {
       "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
-      "line": "9-11",
+      "line": 9,
       "reach": "dead",
       "from": "POST /orders/:param/refund",
       "throughDead": true,
@@ -49,7 +49,7 @@
     {
       "id": "shop-api#src/payments/payments.service.ts:PaymentsService",
       "type": "provider",
-      "line": "3-12",
+      "line": 3,
       "kind": "injectable",
       "reach": "alive",
       "from": "POST /payments",
@@ -61,7 +61,7 @@
     {
       "id": "shop-api#src/payments/payments.controller.ts:PaymentsController",
       "type": "provider",
-      "line": "4-13",
+      "line": 4,
       "kind": "controller",
       "reach": "alive",
       "from": "POST /payments",
@@ -72,7 +72,7 @@
     {
       "id": "shop-web#src/app/payments.client.ts:PaymentsClient",
       "type": "provider",
-      "line": "6-13",
+      "line": 6,
       "kind": "injectable",
       "reach": "alive",
       "from": "screen /orders",

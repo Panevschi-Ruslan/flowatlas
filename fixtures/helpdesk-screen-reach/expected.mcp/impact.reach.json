@@ -21,9 +21,13 @@
     }
   ],
   "total": 1,
-  "changing": [
-    "entry:desk-api:http:POST:/desks/:param/tickets/:param/close"
-  ],
+  "byKind": {
+    "routes": {
+      "desk-api": [
+        "src/tickets/tickets.controller.ts"
+      ]
+    }
+  },
   "reached": 2,
   "entriesByService": {
     "desk-api": 1

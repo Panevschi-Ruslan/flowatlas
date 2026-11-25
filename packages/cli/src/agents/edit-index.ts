@@ -1,6 +1,7 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { openGraphDb } from '@flowatlas/linker';
+import { openGraphDb, type GraphDb } from '@flowatlas/linker';
+import { NAMES_FILE } from './names.js';
 import { crossingNamesOf, type CrossingName } from '@flowatlas/mcp';
 import { countIn, EDITS_FILE, EDITS_FORMAT_VERSION, fileKey, squeezed, type EditIndex, type EditMatch, type EditName } from './edit-match.js';
 
@@ -78,17 +79,76 @@ const readOrNothing = (path: string): string | undefined => {
   }
 };
 
-/** Builds the index from the database beside it and writes it, unless it already says exactly this. */
-export const writeEditIndex = (outputDir: string, services: Record<string, string>, builtAt: string): void => {
-  const db = openGraphDb(join(outputDir, 'graph.db'), { readonly: true });
-  let index: EditIndex;
-  try {
-    index = editIndexOf(crossingNamesOf(db), services, builtAt, readOrNothing);
-  } finally {
-    db.close();
-  }
+/** Writes an index, unless the file already says exactly this. */
+const writeIndex = (outputDir: string, index: EditIndex): void => {
   const path = join(outputDir, EDITS_FILE);
   const text = `${JSON.stringify(index)}\n`;
   if (readOrNothing(path) === text) return;
   writeFileSync(path, text, 'utf8');
+};
+
+/** Builds the index from the database beside it and writes it, unless it already says exactly this. */
+export const writeEditIndex = (outputDir: string, services: Record<string, string>, builtAt: string, names: (db: GraphDb) => readonly CrossingName[] = crossingNamesOf): void => {
+  const db = openGraphDb(join(outputDir, 'graph.db'), { readonly: true });
+  let index: EditIndex;
+  try {
+    index = editIndexOf(names(db), services, builtAt, readOrNothing);
+  } finally {
+    db.close();
+  }
+  writeIndex(outputDir, index);
+};
+
+/** An error as one line: its kind and message, a stack overflow named so (P396). */
+export const failureSaid = (error: unknown): string => {
+  if (error instanceof RangeError && /call stack/i.test(error.message)) return `the reading recursed too deep (${error.message})`;
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+};
+
+/**
+ * The index written, or, where building it fails, an index with no names
+ * that says why (P396), and the reason returned for the build to say. A
+ * failure used to be swallowed whole: on a real five-repository project no
+ * `edits.json` appeared, nothing said why, and the hook stayed silent.
+ */
+export const writeEditIndexOrSay = (
+  outputDir: string,
+  services: Record<string, string>,
+  builtAt: string,
+  names: (db: GraphDb) => readonly CrossingName[] = crossingNamesOf,
+): string | undefined => {
+  try {
+    writeEditIndex(outputDir, services, builtAt, names);
+    return undefined;
+  } catch (error) {
+    const said = failureSaid(error);
+    try {
+      writeIndex(outputDir, { editsFormatVersion: EDITS_FORMAT_VERSION, builtAt, services, files: {}, unwritten: said });
+    } catch {
+      // An output directory that takes no file: the build says why all the same.
+    }
+    return said;
+  }
+};
+
+/**
+ * What `doctor` says about the edit index beside a graph (P396): nothing where
+ * it was written for this graph; why, where the build recorded a failure; and
+ * that it is missing or older than the graph, where the build wrote the
+ * search hook's names beside it and not it. A directory with neither file is
+ * one no build of this version wrote, and is not asked about.
+ */
+export const editIndexProblem = (outputDir: string, builtAt: string | undefined): string | undefined => {
+  const text = readOrNothing(join(outputDir, EDITS_FILE));
+  if (text === undefined) return existsSync(join(outputDir, NAMES_FILE)) ? `${EDITS_FILE} is missing beside ${NAMES_FILE}: the build that wrote the graph did not write it` : undefined;
+  let index: Partial<EditIndex>;
+  try {
+    index = JSON.parse(text) as Partial<EditIndex>;
+  } catch {
+    return `${EDITS_FILE} cannot be read as JSON`;
+  }
+  if (typeof index.unwritten === 'string') return `the build could not write it: ${index.unwritten}`;
+  if (builtAt !== undefined && index.builtAt !== builtAt) return `${EDITS_FILE} was written for the graph built at ${String(index.builtAt)}, not this one (${builtAt})`;
+  return undefined;
 };

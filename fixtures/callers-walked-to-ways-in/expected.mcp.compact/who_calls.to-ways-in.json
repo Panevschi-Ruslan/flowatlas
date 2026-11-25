@@ -9,7 +9,7 @@
   "callers": [
     {
       "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
-      "line": "15-18",
+      "line": 15,
       "reach": "alive",
       "from": "DELETE /checkout/:param",
       "edge": {
@@ -22,7 +22,7 @@
       "children": [
         {
           "id": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.cancel",
-          "line": "13-16",
+          "line": 13,
           "reach": "alive",
           "from": "DELETE /checkout/:param",
           "edge": {
@@ -38,7 +38,7 @@
     },
     {
       "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
-      "line": "9-13",
+      "line": 9,
       "reach": "alive",
       "from": "POST /checkout",
       "edge": {
@@ -51,7 +51,7 @@
       "children": [
         {
           "id": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place",
-          "line": "8-11",
+          "line": 8,
           "reach": "alive",
           "from": "POST /checkout",
           "edge": {
@@ -67,7 +67,7 @@
     },
     {
       "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
-      "line": "17-19",
+      "line": 17,
       "reach": "alive",
       "from": "GET /reports/daily",
       "edge": {
@@ -80,7 +80,7 @@
       "children": [
         {
           "id": "stock-api#src/reports/report.builder.ts:ReportBuilder.section",
-          "line": "13-15",
+          "line": 13,
           "reach": "alive",
           "from": "GET /reports/daily",
           "edge": {
@@ -95,7 +95,7 @@
     },
     {
       "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
-      "line": "10-13",
+      "line": 10,
       "reach": "alive",
       "from": "cron StockJobs.nightly",
       "edge": {

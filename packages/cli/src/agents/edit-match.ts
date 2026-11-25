@@ -44,6 +44,11 @@ export interface EditIndex {
   services: Record<string, string>;
   /** `service` then a tab then the repository-relative POSIX path, to the names written in that file. */
   files: Record<string, EditName[]>;
+  /**
+   * Why the build could not write the index, when it could not (P396): `files`
+   * is then empty, so the hook says nothing, and `doctor` says this.
+   */
+  unwritten?: string;
 }
 
 export const fileKey = (service: string, file: string): string => `${service}\t${file}`;

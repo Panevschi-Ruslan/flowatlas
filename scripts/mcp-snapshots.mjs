@@ -243,6 +243,22 @@ const CALLING_SIDE_CASES = [
   ['who_calls.bot-chain', 'who_calls', { symbol: CALLING_SIDE_TARGET, depth: 8 }],
   ['dead.bot-handler', 'dead', { id: 'ops-bot#src/ops-bot.ts:OpsBot.handleStatus' }],
 ];
+/**
+ * Every way in counted by what it is (P396): a bot's webhook handled by the
+ * bot's class is a bot, a maybe row of another bot is a bot marked maybe, and
+ * `changing` holds the API alone; `dead` on the maybe handler says `maybe`
+ * with the gap impact names.
+ */
+const BOT_WEBHOOK_TARGET = 'shop-api#src/orders.service.ts:OrdersService.updateStatus';
+const BOT_WEBHOOK_CASES = [
+  ['impact.bot-webhook', 'impact', { symbol: BOT_WEBHOOK_TARGET }],
+  ['dead.maybe-handler', 'dead', { id: 'courier-bot#src/courier-bot.ts:CourierBot.handleDelivered' }],
+];
+const BOT_WEBHOOK_COMPACT_CASES = [
+  ['impact.bot-webhook', 'impact', { symbol: BOT_WEBHOOK_TARGET, verbose: false }],
+  ['dead.maybe-handler', 'dead', { id: 'courier-bot#src/courier-bot.ts:CourierBot.handleDelivered', verbose: false }],
+];
+
 /** The same impact, compact (P365), at both levels of detail: what an agent is handed. */
 const CALLING_SIDE_COMPACT_CASES = [
   ['impact.calling-side', 'impact', { symbol: CALLING_SIDE_TARGET, verbose: false }],
@@ -1056,6 +1072,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'impact-calling-side'),
     outDir: join(root, 'fixtures', 'impact-calling-side', 'expected.mcp.compact'),
     cases: CALLING_SIDE_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-bot-webhook'),
+    outDir: join(root, 'fixtures', 'impact-bot-webhook', 'expected.mcp'),
+    cases: BOT_WEBHOOK_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'impact-bot-webhook'),
+    outDir: join(root, 'fixtures', 'impact-bot-webhook', 'expected.mcp.compact'),
+    cases: BOT_WEBHOOK_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'angular-rendered-reach'),

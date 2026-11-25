@@ -79,16 +79,29 @@ describe('impact lists every way in that could break, in one call', () => {
   it('keeps a row its id, service and line at detail 1 when compact, the crossing and the reach beside them', async () => {
     const response = (await client.callTool({ name: 'impact', arguments: { symbol: TARGET } })) as { content: Array<{ text: string }> };
     const compact = JSON.parse(response.content[0]!.text);
-    // Where the method ends goes beside its line, and how to confirm the maybe beside it (P393).
+    // Where the method ends goes beside its line (P393); how to confirm the maybe by hand only verbose says (P396).
     expect(compact.entries[3]).toEqual({
       id: HANDLER,
       line: expect.stringMatching(/^29-\d+$/),
       reach: 'maybe',
       from: 'behind',
       gap: GAP,
-      confirm: { grep: 'handleStatus', repo: 'ops-bot' },
       via: 'PATCH /orders/status (shop-api)',
     });
+    const verbose = await call('impact', { symbol: TARGET, verbose: true });
+    expect(verbose.entries[3]).toMatchObject({ id: HANDLER, confirm: { grep: 'handleStatus', repo: 'ops-bot' } });
+  });
+
+  // P396: byKind counts every way in by what it is - the webhook a provider posts to apart, the bot's maybe handler
+  // under bots - and `changing` holds the route the other rows request the method through, never the webhook.
+  it('sums every way in by what it is, the maybe bot under bots, and the API alone as changing', async () => {
+    const answer = await call('impact', { symbol: TARGET });
+    expect(answer.byKind).toEqual({
+      bots: { 'ops-bot': ['src/ops-bot.ts (maybe)'] },
+      screens: { 'backoffice-web': ['src/status-board.component.ts'] },
+      webhooks: { 'shop-api': ['src/chat-hook.controller.ts'] },
+    });
+    expect(answer.changing).toEqual(['entry:shop-api:http:PATCH:/orders/status']);
   });
 
   it('pages the ways in and the maybe rows as one list', async () => {
@@ -112,9 +125,12 @@ describe('reach never turns a maybe into a no', () => {
     expect(rows.get(LEGACY)).toMatchObject({ reach: 'dead' });
   });
 
-  it('says dead on the handler is likely-dead, with the gap it sits behind', async () => {
+  // P396: in the word impact's row says it, with the same gap, where likely-dead beside a maybe row sent an agent digging.
+  it('says dead on the handler is maybe, with the gap it sits behind, as impact says', async () => {
     const answer = await call('dead', { id: HANDLER });
-    expect(answer).toMatchObject({ verdict: 'likely-dead', from: 'behind', gap: GAP });
+    expect(answer).toMatchObject({ verdict: 'maybe', from: 'behind', gap: GAP });
+    const impact = await call('impact', { symbol: TARGET });
+    expect(impact.entries.find((row: { id: string }) => row.id === HANDLER)).toMatchObject({ reach: 'maybe', gap: GAP });
   });
 
   it('says a way in whose caller is outside is outside, and unknown nowhere', () => {

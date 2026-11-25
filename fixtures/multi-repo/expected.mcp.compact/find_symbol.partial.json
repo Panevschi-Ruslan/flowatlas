@@ -2,7 +2,7 @@
   "matches": [
     {
       "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
-      "line": "32-34",
+      "line": 32,
       "reach": "alive",
       "from": "GET /orders/:param",
       "requests": [

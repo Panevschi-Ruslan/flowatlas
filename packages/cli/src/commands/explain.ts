@@ -97,7 +97,7 @@ const answerExplain = (name: string, options: ExplainOptions, io: QueryIo = proc
     if (stale !== undefined) io.err(`${staleLine(stale)}\n`);
     const said = stale === undefined ? answer : { ...answer, stale };
     // JSON is what an agent is handed, compact as the tool's (P365); `--verbose` prints it whole, as before.
-    const json = (): string => (options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(compactAnswer(said)));
+    const json = (): string => (options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(compactAnswer(said, { tool: 'describe_for_prompt' })));
     const text = format === 'json' ? `${json()}\n` : `${(answer.markdown ?? '').trimEnd()}\n`;
     io.out(text);
     noteAnswer(said, text.length);

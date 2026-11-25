@@ -24,6 +24,7 @@
       "loc": "src/app/legacy-badge.component.ts:4",
       "verdict": "likely-dead",
       "reason": "no route shows it, no link lands on it and no template renders it, and its name is written nowhere else in its repository",
+      "reach": "unreached",
       "evidence": {
         "unreferenced": true
       },
@@ -36,7 +37,7 @@
       "kind": "standalone",
       "service": "catalog-web",
       "loc": "src/app/promo-dialog.component.ts:4",
-      "verdict": "likely-dead",
+      "verdict": "maybe",
       "reason": "no route shows it, no link the reading followed lands on it and no template read renders it; code that hands it on as a value may",
       "evidence": {},
       "from": "behind"

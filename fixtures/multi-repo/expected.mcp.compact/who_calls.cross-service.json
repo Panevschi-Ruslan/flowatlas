@@ -8,7 +8,7 @@
   "callers": [
     {
       "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
-      "line": "25-28",
+      "line": 25,
       "reach": "alive",
       "from": "GET /orders/:param",
       "edge": {
@@ -44,7 +44,7 @@
               "children": [
                 {
                   "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
-                  "line": "30-43",
+                  "line": 30,
                   "reach": "alive",
                   "from": "consumer invoice.requested",
                   "ways": 4,
@@ -52,7 +52,7 @@
                   "children": [
                     {
                       "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-                      "line": "28-31",
+                      "line": 28,
                       "reach": "alive",
                       "from": "consumer invoice.requested",
                       "ways": 2,
@@ -66,7 +66,7 @@
                       "children": [
                         {
                           "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-                          "line": "28-31",
+                          "line": 28,
                           "kind": "event",
                           "reach": "dead",
                           "from": "event invoice.requested",
@@ -94,7 +94,7 @@
                     },
                     {
                       "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-                      "line": "17-20",
+                      "line": 17,
                       "reach": "alive",
                       "from": "event order.created",
                       "edge": {
@@ -107,7 +107,7 @@
                       "children": [
                         {
                           "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-                          "line": "17-20",
+                          "line": 17,
                           "kind": "event",
                           "reach": "alive",
                           "from": "event order.created",
@@ -135,7 +135,7 @@
                     },
                     {
                       "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
-                      "line": "15-18",
+                      "line": 15,
                       "reach": "alive",
                       "from": "POST /invoices",
                       "edge": {
@@ -176,14 +176,14 @@
               "children": [
                 {
                   "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
-                  "line": "32-34",
+                  "line": 32,
                   "reach": "alive",
                   "from": "GET /orders/:param",
                   "edge": "calls",
                   "children": [
                     {
                       "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
-                      "line": "30-33",
+                      "line": 30,
                       "reach": "alive",
                       "from": "GET /orders/:param",
                       "edge": {

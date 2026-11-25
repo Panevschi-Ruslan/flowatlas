@@ -1,0 +1,113 @@
+{
+  "target": {
+    "id": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+    "type": "method",
+    "label": "OrdersService.updateStatus",
+    "loc": "src/orders.service.ts:8",
+    "service": "shop-api",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:backoffice-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "loc": "src/app.routes.ts:5",
+      "service": "backoffice-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "PATCH /api/orders/status (shop-api)",
+      "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"
+    },
+    {
+      "id": "entry:shop-api:bot_command:ready",
+      "type": "entry",
+      "label": "bot_command ready",
+      "loc": "src/desk-bot.ts:20",
+      "service": "shop-api",
+      "kind": "bot_command",
+      "reach": "outside",
+      "by": "shop-api#src/desk-bot.ts:DeskBot.markReady"
+    },
+    {
+      "id": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "entry",
+      "label": "PATCH /api/orders/status",
+      "loc": "src/orders.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "rowsVia": 2
+    },
+    {
+      "id": "entry:shop-api:http:POST:/bot/desk/webhook",
+      "type": "entry",
+      "label": "POST /bot/desk/webhook",
+      "loc": "src/desk-bot.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "outside",
+      "by": "shop-api#src/desk-bot.controller.ts:DeskBotController.receive"
+    },
+    {
+      "id": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+      "type": "method",
+      "label": "CourierBot.handleDelivered",
+      "loc": "src/courier-bot.ts:35",
+      "service": "courier-bot",
+      "endLine": 37,
+      "reach": "maybe",
+      "from": "behind",
+      "gap": "gap:courier-bot|src/courier-bot.ts|call-dynamic-receiver",
+      "confirm": {
+        "grep": "handleDelivered",
+        "repo": "courier-bot"
+      },
+      "via": "PATCH /api/orders/status (shop-api)"
+    }
+  ],
+  "total": 5,
+  "byKind": {
+    "bots": {
+      "courier-bot": [
+        "src/courier-bot.ts (maybe)"
+      ],
+      "shop-api": [
+        "src/desk-bot.ts"
+      ]
+    },
+    "screens": {
+      "backoffice-web": [
+        "src/status-board.component.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:PATCH:/api/orders/status"
+  ],
+  "reached": 17,
+  "entriesByService": {
+    "shop-api": 3,
+    "backoffice-web": 1
+  },
+  "maybe": 1,
+  "reachedByService": {
+    "shop-api": 8,
+    "backoffice-web": 6,
+    "courier-bot": 3
+  },
+  "servicesWithoutEntry": [
+    "courier-bot"
+  ],
+  "channels": [],
+  "complete": false,
+  "left": [
+    "gaps: 1 chain stops at an unread call before any way in: the maybe row"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:backoffice-web:screen:/board\"})",
+    "describe_for_prompt({id: \"entry:backoffice-web:screen:/board\"})",
+    "impact({symbol: \"entry:backoffice-web:screen:/board\"})"
+  ]
+}

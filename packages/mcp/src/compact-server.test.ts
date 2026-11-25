@@ -63,7 +63,7 @@ describe('compact answers at the boundary (P365)', () => {
       const full = await ask(name, { ...args, verbose: true });
       const short = await ask(name, args);
       expect(short.isError, name).toBeUndefined();
-      expect(JSON.parse(short.content[0]!.text), name).toEqual(compactAnswer(JSON.parse(full.content[0]!.text)));
+      expect(JSON.parse(short.content[0]!.text), name).toEqual(compactAnswer(JSON.parse(full.content[0]!.text), { tool: name }));
       expect(short.structuredContent, name).toEqual(JSON.parse(short.content[0]!.text));
       whole += full.content[0]!.text.length;
       compact += short.content[0]!.text.length;
