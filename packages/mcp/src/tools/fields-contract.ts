@@ -1,4 +1,4 @@
-import { isMessageTypeNode, makeMessageTypeId, type GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, makeMessageTypeId, SELECTION_DIFFERS_META, SELECTS_OTHERS_META, selectionsOf, type GraphNode } from '@flowatlas/core';
 import { messageTypeFacts, messageTypesOn, type GraphDb } from '@flowatlas/linker';
 import { resolveChannelRef } from '../query/channel-ref.js';
 import { projectDetail } from '../query/detail.js';
@@ -41,7 +41,35 @@ interface Missing {
   line: number;
   /** The senders that do not send it, where some do. */
   notSentBy?: string[];
+  /** Why the type the read is compared under is not sure: two sources say the consumer's types differently (P397). */
+  unsure?: string;
 }
+
+/** The reading code a consumer's types rest on, where two sources say them differently (P397): why, by the code's id. */
+const differsByReader = (db: GraphDb, consumers: readonly GraphNode[], type: string | undefined): Map<string, string> => {
+  const differs = new Map<string, string>();
+  for (const node of consumers) {
+    const said = node.meta?.[SELECTION_DIFFERS_META];
+    if (typeof said !== 'string') continue;
+    for (const read of consumerReading(db, node, type).reads) differs.set(read.id, `${node.label}: ${said}`);
+  }
+  return differs;
+};
+
+/**
+ * Whether a consumer of a channel takes a type (P397): one that chooses no
+ * type takes them all; one whose every choice is its own handler (its
+ * parameter's type, a caller's branch, a choice in its own body) takes only
+ * the types it chooses; one that hands types on to other handlers, or every
+ * other type the same way, is read for each type, its reads under the
+ * choices of others left out by their type.
+ */
+const takesType = (consumer: GraphNode, type: string): boolean => {
+  const selections = selectionsOf(consumer);
+  if (selections.length === 0 || consumer.meta?.[SELECTS_OTHERS_META] === true) return true;
+  if (selections.some((selection) => selection.consumer !== consumer.id)) return true;
+  return selections.some((selection) => selection.type === type);
+};
 
 interface Unused {
   field: string;
@@ -195,7 +223,12 @@ export const channelContract = (
   const senders: Sender[] = producers.map((node) => ({ id: node.id, sends: producerSends(db, node, parent.id, wanted) }));
   const receivers: Receiver[] = consumers.map((node) => ({ id: node.id, label: node.label, reading: consumerReading(db, node, wanted) }));
   const compared = wanted === undefined ? byType(db, parent.id, consumers, field) : undefined;
-  const { missing, unused, left: unsure } = compared ?? compareFields(senders, receivers, field, (use) => unreadIn(db, use));
+  const { missing: compareMissing, unused, left: unsure } = compared ?? compareFields(senders, receivers, field, (use) => unreadIn(db, use));
+  const differs = compared === undefined ? differsByReader(db, consumers, wanted) : new Map<string, string>();
+  const missing = compareMissing.map((row: Missing) => {
+    const said = differs.get(row.id);
+    return said === undefined ? row : { ...row, unsure: said };
+  });
   const shownProducers = producers.slice(0, input.maxNodes);
   const shownConsumers = consumers.slice(0, input.maxNodes);
   if (shownProducers.length < producers.length) left.push(`page: ${producers.length - shownProducers.length} more producers; raise maxNodes`);
@@ -245,9 +278,11 @@ const byType = (
     // The channel's own handlers, and those that take this type alone without a chooser among them.
     const own = new Set(consumers.map((node) => node.id));
     const takers = [
-      ...consumers,
+      // A handler whose type is chosen is compared only under the types it is chosen for (P397).
+      ...consumers.filter((node) => takesType(node, value)),
       ...facts.selectors.filter((selector) => !own.has(selector.selectedBy ?? '') && !own.has(selector.consumer.id)).map((selector) => selector.consumer),
     ];
+    const differs = differsByReader(db, takers, value);
     const compared = compareFields(
       facts.producers.map((node) => ({ id: node.id, sends: producerSends(db, node, channel, value) })),
       takers.map((node) => ({ id: node.id, label: node.label, reading: consumerReading(db, node, value) })),
@@ -258,7 +293,8 @@ const byType = (
       const key = `${row.field}|${row.id}|${row.line}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      missing.push({ type: value, ...row });
+      const unsure = differs.get(row.id);
+      missing.push({ type: value, ...row, ...(unsure === undefined ? {} : { unsure }) });
     }
     for (const row of compared.unused) unused.push({ type: value, ...row });
     for (const said of compared.left) left.add(said);

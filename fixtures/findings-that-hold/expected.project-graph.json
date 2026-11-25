@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T23:38:23.712Z",
+  "builtAt": "2026-11-25T09:23:38.599Z",
   "services": [
     {
       "name": "stores-api",
@@ -52,14 +52,16 @@
       "label": "AppModule",
       "repo": "back-office",
       "file": "src/app.module.ts",
-      "line": 5,
+      "line": 7,
       "kind": "static",
       "meta": {
         "controllers": [
-          "BackOfficeController"
+          "BackOfficeController",
+          "BuildRelayController"
         ],
         "providers": [
-          "StoresClient"
+          "StoresClient",
+          "BuildBot"
         ],
         "exports": []
       }
@@ -99,6 +101,240 @@
             "in": "back-office#src/stores.client.ts:StoresClient.create",
             "line": 28,
             "why": "handed to this.http.post"
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot",
+      "type": "provider",
+      "label": "BuildBot",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+      "type": "method",
+      "label": "BuildBot.applyStatus",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildStatusEvent"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "method",
+      "label": "BuildBot.handleBuildDone",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildDoneEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "artifactName",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "method",
+      "label": "BuildBot.handleBuildRetry",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildRetriedEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "attempt",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "method",
+      "label": "BuildBot.handleBuildStatus",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildStatusEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "status",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+            "line": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "method",
+      "label": "BuildBot.handleJobQueued",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#JobQueuedEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "jobId",
+            "line": 15
+          },
+          {
+            "field": "priority",
+            "line": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-relay.controller.ts:BuildRelayController",
+      "type": "provider",
+      "label": "BuildRelayController",
+      "repo": "back-office",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "type": "method",
+      "label": "BuildRelayController.relay",
+      "repo": "back-office",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{message:type:back-office#BuildMessage}"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": [
+          {
+            "field": "message",
+            "line": 13
+          },
+          {
+            "field": "message.type",
+            "line": 14
+          },
+          {
+            "field": "message.status",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+            "line": 37
+          },
+          {
+            "field": "message.artifactName",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+            "line": 27
+          },
+          {
+            "field": "message.attempt",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+            "line": 21
+          },
+          {
+            "field": "message.jobId",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+            "line": 15
+          },
+          {
+            "field": "message.priority",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+            "line": 15
           }
         ]
       }
@@ -275,6 +511,91 @@
       }
     },
     {
+      "id": "channel:build_updates",
+      "type": "channel",
+      "label": "build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "build-bus",
+          "redis-pubsub"
+        ],
+        "producers": 4,
+        "consumers": 4
+      }
+    },
+    {
+      "id": "channel:build_updates#BUILD_DONE",
+      "type": "channel",
+      "label": "build_updates#BUILD_DONE",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 14,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "BUILD_DONE",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:build_updates#BUILD_FAILED",
+      "type": "channel",
+      "label": "build_updates#BUILD_FAILED",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 22,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "BUILD_FAILED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:build_updates#BUILD_STATUS",
+      "type": "channel",
+      "label": "build_updates#BUILD_STATUS",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 18,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "BUILD_STATUS",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:build_updates#JOB_QUEUED",
+      "type": "channel",
+      "label": "build_updates#JOB_QUEUED",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "JOB_QUEUED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
       "id": "channel:shop:*:events",
       "type": "channel",
       "label": "shop:*:events",
@@ -384,6 +705,106 @@
       "meta": {
         "key": "STORES_API_URL",
         "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildDone",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "BUILD_DONE",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+            "via": "if",
+            "line": 17,
+            "file": "src/builds/build-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildRetry",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "selectionDiffers": "its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "BUILD_FAILED",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+            "via": "if",
+            "line": 19,
+            "file": "src/builds/build-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildStatus",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 31,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "BUILD_STATUS",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+            "via": "parameter",
+            "line": 32
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "consumer",
+      "label": "BuildBot.handleJobQueued",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "JOB_QUEUED",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+            "via": "if",
+            "line": 15,
+            "file": "src/builds/build-relay.controller.ts"
+          }
+        ]
       }
     },
     {
@@ -533,6 +954,22 @@
       }
     },
     {
+      "id": "entry:back-office:http:POST:/events/builds",
+      "type": "entry",
+      "label": "POST /events/builds",
+      "repo": "back-office",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/events/builds",
+        "rawPath": "/events/builds",
+        "controller": "BuildRelayController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "entry:stores-api:event:shop:*:events",
       "type": "entry",
       "label": "event shop:*:events",
@@ -653,6 +1090,70 @@
         "path": "/stores/:param",
         "rawPath": "/stores/:id",
         "controller": "StoresController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/done/:param",
+      "type": "entry",
+      "label": "POST /builds/:param/done/:param",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/done/:param",
+        "rawPath": "/builds/:jobId/done/:artifact",
+        "controller": "BuildsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/failed/:param",
+      "type": "entry",
+      "label": "POST /builds/:param/failed/:param",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/failed/:param",
+        "rawPath": "/builds/:jobId/failed/:reason",
+        "controller": "BuildsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/queued",
+      "type": "entry",
+      "label": "POST /builds/:param/queued",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/queued",
+        "rawPath": "/builds/:jobId/queued",
+        "controller": "BuildsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/status/:param",
+      "type": "entry",
+      "label": "POST /builds/:param/status/:param",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/status/:param",
+        "rawPath": "/builds/:jobId/status/:status",
+        "controller": "BuildsController",
         "adapter": "nestjs-http"
       }
     },
@@ -819,6 +1320,82 @@
       }
     },
     {
+      "id": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "JOB_QUEUED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "BUILD_DONE"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "BUILD_STATUS"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "BUILD_FAILED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
       "id": "producer:stores-api#src/orders/orders.service.ts:11:11",
       "type": "producer",
       "label": "message shop:*:orders",
@@ -863,10 +1440,10 @@
       "repo": "back-office",
       "meta": {
         "stats": {
-          "files": 4,
-          "filesRead": 4,
+          "files": 7,
+          "filesRead": 7,
           "filesUnreadable": 0,
-          "classes": 3,
+          "classes": 5,
           "skippedExternalCalls": {
             "@nestjs/axios": 1,
             "@nestjs/config": 1
@@ -919,10 +1496,10 @@
       "repo": "stores-api",
       "meta": {
         "stats": {
-          "files": 8,
-          "filesRead": 8,
+          "files": 11,
+          "filesRead": 11,
           "filesUnreadable": 0,
-          "classes": 7,
+          "classes": 10,
           "skippedExternalCalls": {
             "redis": 10,
             "rxjs": 4
@@ -1185,18 +1762,21 @@
       "label": "AppModule",
       "repo": "stores-api",
       "file": "src/app.module.ts",
-      "line": 9,
+      "line": 12,
       "kind": "static",
       "meta": {
         "controllers": [
           "OrdersController",
           "AuditController",
           "LiveController",
-          "StoresController"
+          "StoresController",
+          "BuildsController"
         ],
         "providers": [
           "OrdersService",
-          "AuditService"
+          "AuditService",
+          "BuildsService",
+          "BuildBus"
         ],
         "exports": []
       }
@@ -1312,6 +1892,245 @@
             },
             {
               "name": "entryId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/build-bus.ts:BuildBus",
+      "type": "provider",
+      "label": "BuildBus",
+      "repo": "stores-api",
+      "file": "src/builds/build-bus.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "method",
+      "label": "BuildBus.publish",
+      "repo": "stores-api",
+      "file": "src/builds/build-bus.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController",
+      "type": "provider",
+      "label": "BuildsController",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.done",
+      "type": "method",
+      "label": "BuildsController.done",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "artifact",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.failed",
+      "type": "method",
+      "label": "BuildsController.failed",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.queued",
+      "type": "method",
+      "label": "BuildsController.queued",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.status",
+      "type": "method",
+      "label": "BuildsController.status",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService",
+      "type": "provider",
+      "label": "BuildsService",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "type": "method",
+      "label": "BuildsService.done",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "artifactName",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "type": "method",
+      "label": "BuildsService.failed",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "type": "method",
+      "label": "BuildsService.queued",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "type": "method",
+      "label": "BuildsService.status",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "status",
               "type": "string"
             }
           ],
@@ -1744,6 +2563,74 @@
       "line": 10
     },
     {
+      "from": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildStatusEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 33
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildDoneEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildRetriedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildStatusEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#JobQueuedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 16
+    },
+    {
       "from": "back-office#src/stores.client.ts:StoresClient",
       "to": "back-office#node_modules/@nestjs/axios:HttpService",
       "type": "injects",
@@ -1774,6 +2661,86 @@
       "confidence": "static",
       "file": "src/stores.client.ts",
       "line": 28
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 25
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 19
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 31
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:build_updates#BUILD_DONE",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 17,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:build_updates#BUILD_FAILED",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 19,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:build_updates#BUILD_STATUS",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 32,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+        "via": "parameter"
+      }
+    },
+    {
+      "from": "channel:build_updates#JOB_QUEUED",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 15,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "via": "if"
+      }
     },
     {
       "from": "channel:shop:*:events",
@@ -1863,6 +2830,54 @@
       }
     },
     {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#BuildDoneEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 25
+    },
+    {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#BuildRetriedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 19
+    },
+    {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#BuildStatusEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 31
+    },
+    {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#JobQueuedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 13
+    },
+    {
       "from": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
       "to": "shop-web#src/screens/AuditLog.tsx:handleFeed",
       "type": "handles",
@@ -1921,6 +2936,21 @@
       "line": 8,
       "meta": {
         "body": "type:back-office#StoreDraft"
+      }
+    },
+    {
+      "from": "entry:back-office:http:POST:/events/builds",
+      "to": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{message:type:back-office#BuildMessage}"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 11,
+      "meta": {
+        "body": "{message:type:back-office#BuildMessage}"
       }
     },
     {
@@ -2021,6 +3051,69 @@
       "line": 27,
       "meta": {
         "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/done/:param",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.done",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{jobId:string;artifact:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/failed/:param",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.failed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{jobId:string;reason:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/queued",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.queued",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{jobId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/status/:param",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.status",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 23,
+      "meta": {
+        "params": "{jobId:string;status:string}"
       }
     },
     {
@@ -2167,6 +3260,94 @@
       "line": 15,
       "params": [
         "string"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "to": "channel:build_updates#JOB_QUEUED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "params": [
+        "{type:string;jobId:string}"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string;artifactName:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 14
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "to": "channel:build_updates#BUILD_DONE",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 14,
+      "params": [
+        "{type:string;jobId:string;artifactName:string}"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string;status:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 18
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "to": "channel:build_updates#BUILD_STATUS",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 18,
+      "params": [
+        "{type:string;jobId:string;status:string}"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string;reason:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "to": "channel:build_updates#BUILD_FAILED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 22,
+      "params": [
+        "{type:string;jobId:string;reason:string}"
       ]
     },
     {
@@ -2384,6 +3565,157 @@
       "line": 11
     },
     {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/builds/builds.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.done",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.failed",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.queued",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.status",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 25
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 7
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "to": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 14
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 14
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "to": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 22
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 22
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "to": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "to": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 18
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 18
+    },
+    {
       "from": "stores-api#src/live/live.controller.ts:LiveController.extraChannel",
       "to": "http_out:stores-api#src/live/live.controller.ts:38:28",
       "type": "calls",
@@ -2583,6 +3915,145 @@
     }
   ],
   "types": {
+    "type:back-office#BuildDoneEvent": {
+      "name": "BuildDoneEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "beaa19c4d6753f17",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'BUILD_DONE'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "artifactName",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#BuildMessage": {
+      "name": "BuildMessage",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "b7b782bbd79984f0",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#BuildRetriedEvent": {
+      "name": "BuildRetriedEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "bd983c4a9a39ac9b",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'BUILD_RETRIED'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "attempt",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#BuildStatusEvent": {
+      "name": "BuildStatusEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "de2f79348a893be8",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'BUILD_STATUS'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#JobQueuedEvent": {
+      "name": "JobQueuedEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "1032320c0d9e0228",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'JOB_QUEUED'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
     "type:back-office#StoreDraft": {
       "name": "StoreDraft",
       "kind": "object",
@@ -2846,6 +4317,15 @@
     }
   },
   "unresolved": [
+    {
+      "file": "src/builds/build-bot.ts",
+      "line": 20,
+      "reason": "message-type-differs",
+      "level": "info",
+      "hint": "The parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED (src/builds/build-relay.controller.ts:19). The caller's choice is drawn.",
+      "symbol": "BuildBot.handleBuildRetry",
+      "service": "back-office"
+    },
     {
       "file": "src/audit/audit.service.ts",
       "line": 15,

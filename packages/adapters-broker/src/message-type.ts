@@ -6,6 +6,7 @@ import {
   SELECTION_UNREAD_META,
   SELECTS_META,
   SELECTS_OTHERS_META,
+  SELECTION_DIFFERS_META,
   definePass,
   evaluateExpression,
   findMethod,
@@ -1276,6 +1277,11 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
         own = dispatched;
         const said = [...new Set(dispatched.map((each) => each.type))].sort();
         if (declared !== undefined && (declared.values.length !== said.length || declared.values.some((value) => !said.includes(value)))) {
+          // Said on the consumer too (P397): what is compared under the caller's types rests on one of two sources.
+          consumer.meta = {
+            ...consumer.meta,
+            [SELECTION_DIFFERS_META]: `its parameter's type says ${declared.values.join(', ')}; the code that calls it does so for ${said.join(', ')}`,
+          };
           host.report({
             file,
             line: declared.line,

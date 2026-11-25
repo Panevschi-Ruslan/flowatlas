@@ -1,0 +1,205 @@
+{
+  "channel": "channel:build_updates",
+  "producers": [
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "loc": "src/builds/builds.service.ts:10",
+      "service": "stores-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /builds/:param/queued",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "jobId"
+      ]
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "loc": "src/builds/builds.service.ts:14",
+      "service": "stores-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /builds/:param/done/:param",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "jobId",
+        "artifactName"
+      ]
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "loc": "src/builds/builds.service.ts:18",
+      "service": "stores-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /builds/:param/status/:param",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "jobId",
+        "status"
+      ]
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "loc": "src/builds/builds.service.ts:22",
+      "service": "stores-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /builds/:param/failed/:param",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "jobId",
+        "reason"
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildDone",
+      "loc": "src/builds/build-bot.ts:25",
+      "service": "back-office",
+      "kind": "event",
+      "endLine": 28,
+      "reach": "dead",
+      "from": "POST /events/builds",
+      "throughDead": true,
+      "reads": [
+        "artifactName"
+      ]
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildRetry",
+      "loc": "src/builds/build-bot.ts:19",
+      "service": "back-office",
+      "kind": "event",
+      "endLine": 22,
+      "reach": "dead",
+      "from": "POST /events/builds",
+      "throughDead": true,
+      "reads": [
+        "attempt"
+      ]
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildStatus",
+      "loc": "src/builds/build-bot.ts:31",
+      "service": "back-office",
+      "kind": "event",
+      "endLine": 34,
+      "reach": "dead",
+      "from": "POST /events/builds",
+      "throughDead": true,
+      "reads": [
+        "status"
+      ]
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "consumer",
+      "label": "BuildBot.handleJobQueued",
+      "loc": "src/builds/build-bot.ts:13",
+      "service": "back-office",
+      "kind": "event",
+      "endLine": 16,
+      "reach": "dead",
+      "from": "POST /events/builds",
+      "throughDead": true,
+      "reads": [
+        "jobId",
+        "priority"
+      ]
+    }
+  ],
+  "missing": [
+    {
+      "type": "BUILD_FAILED",
+      "field": "attempt",
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "line": 21,
+      "unsure": "BuildBot.handleBuildRetry: its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED"
+    },
+    {
+      "type": "JOB_QUEUED",
+      "field": "priority",
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "line": 15
+    }
+  ],
+  "unused": [
+    {
+      "type": "BUILD_DONE",
+      "field": "jobId",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:14:11"
+      ]
+    },
+    {
+      "type": "BUILD_DONE",
+      "field": "type",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:14:11"
+      ]
+    },
+    {
+      "type": "BUILD_FAILED",
+      "field": "jobId",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:22:11"
+      ]
+    },
+    {
+      "type": "BUILD_FAILED",
+      "field": "reason",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:22:11"
+      ]
+    },
+    {
+      "type": "BUILD_FAILED",
+      "field": "type",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:22:11"
+      ]
+    },
+    {
+      "type": "BUILD_STATUS",
+      "field": "jobId",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:18:11"
+      ]
+    },
+    {
+      "type": "BUILD_STATUS",
+      "field": "type",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:18:11"
+      ]
+    },
+    {
+      "type": "JOB_QUEUED",
+      "field": "type",
+      "sentBy": [
+        "producer:stores-api#src/builds/builds.service.ts:10:11"
+      ]
+    }
+  ],
+  "complete": true
+}

@@ -599,6 +599,9 @@ const HOLD_CASES = [
   ['findings.contract-break-warnings', 'findings', { kind: 'contract-break', severity: 'warning' }],
   ['check_contract.answer-guarded', 'check_contract', { edge: 'GET /stores/:id' }],
   ['check_contract.answer-made-of-itself', 'check_contract', { edge: 'GET /categories/tree' }],
+  // P397: each handler compared under the types the relay's if/else and its parameter say, one said two ways held back.
+  ['findings.field-never-sent', 'findings', { kind: 'field-never-sent' }],
+  ['check_contract.chosen-types', 'check_contract', { channel: 'build_updates' }],
 ];
 /** The same, compact: what an agent is handed. */
 const HOLD_COMPACT_CASES = [

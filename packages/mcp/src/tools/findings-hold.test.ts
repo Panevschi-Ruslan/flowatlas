@@ -62,6 +62,18 @@ describe('findings that hold', () => {
     expect(warnings.rows.every((row: { severity: string }) => row.severity === 'warning')).toBe(true);
   });
 
+  it("compares a handler's reads only under the types it is chosen for, and holds back one whose type two sources say differently (P397)", async () => {
+    const answer = await call('findings', { kind: 'field-never-sent' });
+    // priority is read under JOB_QUEUED, the type the relay's if calls the handler for; no read is set against another type's publishes.
+    expect(answer.rows.map((row: { message: string }) => row.message)).toEqual([
+      '`priority` is read by BuildBot.handleJobQueued on build_updates (JOB_QUEUED) and sent by none of its publishers',
+    ]);
+    expect(answer.heldBack['field-never-sent'].why).toContain('its parameter\'s type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED');
+    const contract = await call('check_contract', { channel: 'build_updates' });
+    const said = contract.missing.map((row: { field: string; type?: string; unsure?: string }) => `${row.field}@${row.type}${row.unsure === undefined ? '' : ' unsure'}`);
+    expect(said.sort()).toEqual(['attempt@BUILD_FAILED unsure', 'priority@JOB_QUEUED']);
+  });
+
   it('answers on a route whose answer type is made of itself', async () => {
     const contract = await call('check_contract', { edge: 'GET /categories/tree' });
     expect(contract.left.join(' ')).toContain('is not a shape read');

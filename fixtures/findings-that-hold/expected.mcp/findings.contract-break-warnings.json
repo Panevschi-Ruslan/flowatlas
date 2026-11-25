@@ -117,6 +117,10 @@
       "count": 1,
       "why": "no deployment file of back-office was read: its settings may be set where the reading does not look"
     },
+    "field-never-sent": {
+      "count": 1,
+      "why": "`attempt` is compared under a type said two ways (BuildBot.handleBuildRetry: its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED)"
+    },
     "answer-field-never-returned": {
       "count": 3,
       "why": "1: what GET /categories/tree answers is not a shape read, so the fields its clients read were not compared; 2: `changesFromPrevious` is read behind a check that it is there (changeSummary, line 27): the client handles its absence"

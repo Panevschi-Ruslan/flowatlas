@@ -135,7 +135,7 @@ export const fieldFindingsOf = (
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (const channel of channels) {
     const answer = channelContract(db, reader, { channel: channel.id, maxNodes: 1000 }) as {
-      missing?: Array<{ field: string; id: string; line: number; type?: string; notSentBy?: string[] }>;
+      missing?: Array<{ field: string; id: string; line: number; type?: string; notSentBy?: string[]; unsure?: string }>;
       unused?: Array<{ field: string; type?: string }>;
       complete?: boolean;
       left?: string[];
@@ -147,6 +147,11 @@ export const fieldFindingsOf = (
       continue;
     }
     for (const row of missing) {
+      // The type it is compared under is said two ways (P397): which publishes it should see is not sure.
+      if (row.unsure !== undefined) {
+        hold(1, `\`${row.field}\` is compared under a type said two ways (${row.unsure})`);
+        continue;
+      }
       const reading = db.node(row.id);
       const sentInstead = (answer.unused ?? []).filter((each) => each.type === row.type).map((each) => each.field);
       const renamed = likelyRenamed(row.field, sentInstead);

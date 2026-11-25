@@ -1,11 +1,25 @@
 {
   "counts": {
+    "field-never-sent": 1,
     "answer-field-never-returned": 1,
     "type-never-published": 1,
     "contract-break": 1,
     "message-type-unselected": 2
   },
   "top": {
+    "field-never-sent": [
+      {
+        "kind": "field-never-sent",
+        "id": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "to": "channel:build_updates#JOB_QUEUED",
+        "line": 15,
+        "message": "`priority` is read by BuildBot.handleJobQueued on build_updates (JOB_QUEUED) and sent by none of its publishers",
+        "precision": "high",
+        "evidence": "every sender on the crossing and every reader of it was read",
+        "rank": 1,
+        "next": "check_contract({channel: \"channel:build_updates#JOB_QUEUED\"})"
+      }
+    ],
     "answer-field-never-returned": [
       {
         "kind": "answer-field-never-returned",
@@ -85,6 +99,10 @@
     "config-not-set": {
       "count": 1,
       "why": "no deployment file of back-office was read: its settings may be set where the reading does not look"
+    },
+    "field-never-sent": {
+      "count": 1,
+      "why": "`attempt` is compared under a type said two ways (BuildBot.handleBuildRetry: its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED)"
     },
     "answer-field-never-returned": {
       "count": 3,

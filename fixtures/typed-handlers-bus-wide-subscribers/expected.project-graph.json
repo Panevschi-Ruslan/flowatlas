@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:24:52.631Z",
+  "builtAt": "2026-11-25T09:33:02.857Z",
   "services": [
     {
       "name": "shop",
@@ -513,6 +513,7 @@
         "adapter": "shop-bus",
         "decorator": "Consumes",
         "entryId": null,
+        "selectionDiffers": "its parameter's type says ORDER_CANCELLED; the code that calls it does so for ORDER_REFUNDED",
         "discriminator": "type",
         "selects": [
           {

@@ -1267,6 +1267,7 @@ export {
   selectionsOf,
   SELECTS_META,
   SELECTS_OTHERS_META,
+  SELECTION_DIFFERS_META,
   type DiscriminatorField,
   type Selection,
   type SelectionVia,

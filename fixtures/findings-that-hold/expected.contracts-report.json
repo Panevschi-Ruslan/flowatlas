@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 8,
-  "generatedAt": "2026-11-24T23:38:24.262Z",
+  "generatedAt": "2026-11-25T09:23:39.203Z",
   "edges": [
     {
       "edge": {
@@ -665,6 +665,198 @@
     },
     {
       "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:10:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:10:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:10:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:10:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:14:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:14:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:14:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:14:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:18:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:18:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:18:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:18:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:22:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:22:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:22:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+        "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "type": "emits"
+      },
+      "edgeKey": "producer:stores-api#src/builds/builds.service.ts:22:11|emits|consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
         "from": "producer:stores-api#src/orders/orders.service.ts:11:11",
         "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
         "type": "emits"
@@ -813,7 +1005,7 @@
     "shared": 0,
     "identical": 6,
     "hash_differs": 1,
-    "unchecked": 15,
+    "unchecked": 31,
     "errors": 1,
     "warnings": 7,
     "infos": 0,

@@ -3169,6 +3169,20 @@ only one of them moved.
 
 ### Fixed
 
+- **A handler's reads are compared under the types it is chosen for (P397).**
+  `check_contract` on a channel and `field-never-sent` set every handler of a
+  channel against every type's publishes, so two handlers marked
+  `@Consumes` on one channel, each chosen by a relay's `if`/`else if`/`else`
+  and its parameter's type, were each said to read a field "sent by none of
+  its publishers" under the other's type. A handler whose every choice is its
+  own (its parameter's type, a caller's branch, a choice in its own body) is
+  now compared only under the types it is chosen for; one that hands types on
+  to other handlers, or every other type alike, is read for each type as
+  before. Where the code calling a handler under a choice and the declared
+  type of its parameter say different types, the consumer says so
+  (`meta.selectionDiffers`), `check_contract` marks a missing field read under
+  it `unsure`, and `field-never-sent` holds it back with why.
+
 - **Findings that hold (P395).** `type-never-published` checked a type a
   screen chooses against one channel at a time, though a screen fed through a
   stream route (or a hub) receives every channel it relays: a type published

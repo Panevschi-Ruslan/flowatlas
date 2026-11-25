@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T23:38:23.712Z",
+  "builtAt": "2026-11-25T09:23:38.599Z",
   "configHash": "4e694d4df266",
   "services": [
     {
@@ -8,18 +8,20 @@
       "repo": "./back-office",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 11,
-      "edges": 7,
-      "types": 1,
+      "nodes": 25,
+      "edges": 22,
+      "types": 6,
       "unresolved": 0,
-      "durationMs": 1079,
+      "durationMs": 1195,
       "packages": {
         "name": "back-office",
         "runtime": [
+          "@flowatlas/markers",
           "@nestjs/axios",
           "@nestjs/common",
           "@nestjs/config",
           "@nestjs/core",
+          "redis",
           "rxjs"
         ],
         "dev": []
@@ -34,7 +36,7 @@
       "edges": 14,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 838,
+      "durationMs": 837,
       "packages": {
         "name": "shop-web",
         "runtime": [
@@ -48,11 +50,11 @@
       "repo": "./stores-api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 53,
-      "edges": 44,
+      "nodes": 74,
+      "edges": 66,
       "types": 3,
       "unresolved": 8,
-      "durationMs": 1478,
+      "durationMs": 1617,
       "packages": {
         "name": "stores-api",
         "runtime": [
@@ -82,8 +84,8 @@
     "byReason": {}
   },
   "channels": {
-    "total": 2,
-    "linked": 2,
+    "total": 3,
+    "linked": 3,
     "noConsumers": [],
     "noProducers": [],
     "unselectedTypes": [
@@ -92,10 +94,15 @@
     ]
   },
   "routes": {
-    "total": 10,
+    "total": 15,
     "called": 5,
     "uncalled": [
       "entry:back-office:http:POST:/admin/stores",
+      "entry:back-office:http:POST:/events/builds",
+      "entry:stores-api:http:POST:/builds/:param/done/:param",
+      "entry:stores-api:http:POST:/builds/:param/failed/:param",
+      "entry:stores-api:http:POST:/builds/:param/queued",
+      "entry:stores-api:http:POST:/builds/:param/status/:param",
       "entry:stores-api:http:POST:/shops/:param/alerts/:param",
       "entry:stores-api:http:POST:/shops/:param/audit/:param",
       "entry:stores-api:http:POST:/shops/:param/orders/:param",
@@ -104,7 +111,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 7,
+    "total": 12,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -138,12 +145,12 @@
     }
   ],
   "totals": {
-    "nodes": 87,
-    "edges": 79,
-    "types": 7,
+    "nodes": 125,
+    "edges": 124,
+    "types": 12,
     "missed": 8,
     "sites": 8,
-    "notes": 0,
+    "notes": 1,
     "findings": 2,
     "unresolved": 8
   }

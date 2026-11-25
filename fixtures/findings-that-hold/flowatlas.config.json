@@ -4,16 +4,47 @@
       "name": "stores-api",
       "repo": "./stores-api",
       "type": "nestjs",
-      "baseUrlEnv": ["STORES_API_URL"]
+      "baseUrlEnv": [
+        "STORES_API_URL"
+      ]
     },
-    { "name": "back-office", "repo": "./back-office", "type": "nestjs" },
+    {
+      "name": "back-office",
+      "repo": "./back-office",
+      "type": "nestjs"
+    },
     {
       "name": "shop-web",
       "repo": "./shop-web",
       "type": "react",
-      "apiBaseEnv": ["VITE_STORES_URL"],
-      "apiTarget": { "VITE_STORES_URL": "stores-api" }
+      "apiBaseEnv": [
+        "VITE_STORES_URL"
+      ],
+      "apiTarget": {
+        "VITE_STORES_URL": "stores-api"
+      }
     }
   ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "build-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": [
+                "BuildBus"
+              ],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "output": ".flowatlas"
 }

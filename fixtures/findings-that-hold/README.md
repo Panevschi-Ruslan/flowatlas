@@ -33,11 +33,28 @@ Type-checked, never executed:
   number; `GET /categories/tree` answers `type CategoryTree = string |
   CategoryTree[]`, a type made of itself.
 
+- `BuildsService` publishes on `build_updates` through the project's own
+  `BuildBus.publish` (`adapters.broker.custom`): `JOB_QUEUED` (`jobId`),
+  `BUILD_DONE` (`artifactName`), `BUILD_STATUS` (`status`) and `BUILD_FAILED`
+  (`reason`).
+
 ## The back office - `back-office` (Nest)
 
 `StoresClient.create` posts a `StoreDraft`: seven fields the stores service
 requires are optional in it (seven contract warnings) and `priceTier` is a
 string (one contract error).
+
+`BuildBot`'s handlers are each marked `@Consumes('build_updates')` and read no
+type; `BuildRelayController.relay` (`POST /events/builds`) dispatches the
+channel's messages with an `if`, two `else if`s (one handing the message on
+through `as unknown as`) and an `else` (P397):
+
+| Handler | Its parameter | The relay calls it under | Reads | Drawn |
+|---|---|---|---|---|
+| `handleJobQueued` | `JobQueuedEvent` (`JOB_QUEUED`) | `type === 'JOB_QUEUED'` | `jobId`, `priority` | `JOB_QUEUED`, via `if` |
+| `handleBuildDone` | `BuildDoneEvent` (`BUILD_DONE`) | `type === 'BUILD_DONE'` | `artifactName` | `BUILD_DONE`, via `if` |
+| `handleBuildRetry` | `BuildRetriedEvent` (`BUILD_RETRIED`) | `type === 'BUILD_FAILED'` | `attempt` | `BUILD_FAILED`, `meta.selectionDiffers` |
+| `handleBuildStatus` | `BuildStatusEvent` (`BUILD_STATUS`) | the `else` | `status`, in the private `applyStatus` | `BUILD_STATUS`, via `parameter` |
 
 ## The shop's screens - `shop-web` (React)
 
@@ -60,8 +77,12 @@ fetches `GET /categories/tree` and reads `label` and `children`.
 | `type-never-published` | `ORDER_REFUNDED`, "which nothing publishes on the 2 channels it receives (shop:*:events, shop:*:orders)" | `ALERT_RAISED` on the feed: a channel it relays is not read |
 | `answer-field-never-returned` | `rating` of `GET /stores/:param` | `distance` and `changesFromPrevious`, read behind a check that they are there (`guarded` in `check_contract`); the tree's reads, since `CategoryTree` is no shape read |
 | `contract-break` | `priceTier` sent as `string`, declared `number` | 7 warnings under `warnings`, listed by `findings({kind: "contract-break", severity: "warning"})` |
+| `field-never-sent` | `priority`, read by `handleJobQueued` under `JOB_QUEUED` | `attempt`: `handleBuildRetry`'s parameter says `BUILD_RETRIED`, the relay calls it for `BUILD_FAILED` |
 
 Before P395, `AUDIT_ENTRY_CREATED` (checked against the orders channel alone)
 and `ORDER_PLACED` (against the events channel alone) were both listed at
 `high`, as was `ALERT_RAISED`; `distance` and `changesFromPrevious` were
-listed; and the seven warnings were rows of `contract-break`.
+listed; and the seven warnings were rows of `contract-break`. Before P397,
+every handler of `build_updates` was compared under every type:
+`artifactName` under `BUILD_FAILED`, `status` and `attempt` and `priority`
+under `BUILD_DONE`, four rows at `high`, three about the wrong type.

@@ -70,6 +70,13 @@ export const SELECTS_META = 'selects';
 export const SELECTION_UNREAD_META = 'selectionUnread';
 /** A consumer that selects some types and hands every other one on, the same way. */
 export const SELECTS_OTHERS_META = 'selectsOthers';
+/**
+ * On a consumer whose types two sources say differently (P397): the code
+ * calling its handler under a choice says one set, the declared type of the
+ * parameter it is handed the message in another. The caller's choice is drawn;
+ * this says why a comparison resting on it is not sure.
+ */
+export const SELECTION_DIFFERS_META = 'selectionDiffers';
 /** On a consumer drawn for a selection: the consumer whose handler selected it. */
 export const SELECTED_BY_META = 'selectedBy';
 
