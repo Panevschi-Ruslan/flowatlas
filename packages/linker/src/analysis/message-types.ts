@@ -4,6 +4,7 @@ import {
   isMessageTypeNode,
   MESSAGE_TYPE_UNREAD_META,
   messageTypesOf,
+  nameWrittenOf,
   RELAYS_UNREAD_META,
   SELECTED_BY_META,
   SELECTION_UNREAD_META,
@@ -13,6 +14,8 @@ import {
   UNREACHED_META,
   type GraphEdge,
   type GraphNode,
+  type NameWritten,
+  type OpenPlace,
 } from '@flowatlas/core';
 import { EVERY_CHANNEL_VIA } from '../every-channel-link.js';
 
@@ -72,6 +75,8 @@ export interface MessageTypeFacts {
    * sure. Asked only where nothing live selects it on this channel.
    */
   readonly relayed: readonly RelayedChooser[];
+  /** Where its name is written in the code the build read (P404); undefined where the build did not say. */
+  readonly written?: NameWritten;
 }
 
 /** A consumer choosing a type whose channels are not known whole, and why. */
@@ -237,7 +242,8 @@ export const messageTypeFacts = (lookup: MessageTypeLookup, type: GraphNode, mod
           .sort(byId);
   const live = selectors.some((selector) => selector.unreached === undefined);
   const relayed = live ? [] : relayedChoosers(lookup, value, new Set(selectors.map((selector) => selector.consumer.id)), modulesByRepo);
-  return { type, channel, value, producers, selectors, receivers, unreadProducers, relayed };
+  const written = nameWrittenOf(type);
+  return { type, channel, value, producers, selectors, receivers, unreadProducers, relayed, ...(written === undefined ? {} : { written }) };
 };
 
 /**
@@ -359,6 +365,27 @@ export interface Unselected {
    * the type receives channels not all read, any of which may be this one.
    */
   readonly held?: string;
+  /**
+   * Where a choice of it may still be made (P404), where the build said
+   * where its name is written: each consumer whose choice was not read by a
+   * test its name cannot rule out, each place its name is written that the
+   * graph read no choice at, each test that may take it. Empty where the
+   * name rules every place out; undefined where the build did not say.
+   */
+  readonly open?: readonly UnselectedOpen[];
+  /** How many places `open` would list past those it keeps. */
+  readonly openCount?: number;
+  /** Where its name is written in a send, the first: what settles it. */
+  readonly sentAt?: string;
+}
+
+/** A place "nothing selects it" is not sure of: a consumer whose choice was not read, or a place in the code. */
+export interface UnselectedOpen {
+  /** The consumer, where the place is one. */
+  readonly id?: string;
+  readonly service?: string;
+  readonly loc?: string;
+  readonly why: string;
 }
 
 const named = (nodes: readonly { consumer: GraphNode }[], most = 2): string =>
@@ -366,6 +393,73 @@ const named = (nodes: readonly { consumer: GraphNode }[], most = 2): string =>
     .slice(0, most)
     .map((each) => each.consumer.label)
     .join(', ') + (nodes.length > most ? ` and ${nodes.length - most} more` : '');
+
+const plural = (count: number, one: string, many = `${one}s`): string => `${count} ${count === 1 ? one : many}`;
+
+/** Where a consumer is, for a row: its handler's line where it has one, else its own. */
+const consumerLoc = (consumer: GraphNode): { service: string; loc?: string } => ({
+  service: consumer.repo,
+  ...(consumer.file === undefined ? {} : { loc: consumer.line === undefined ? consumer.file : `${consumer.file}:${consumer.line}` }),
+});
+
+/**
+ * "Nothing selects it" decided by where its name is written (P404): a type
+ * is chosen by its name, so where the name is written nowhere but its sends
+ * and definitions, no consumer that takes every type and hands it on can
+ * choose it past them, and the answer is sure. What the name cannot rule
+ * out stays open, each place named: a consumer whose choice is a test the
+ * graph did not read (a set or map built when the code runs, a comparison
+ * with a value worked out), a place the name is written and no choice was
+ * read, a prefix or pattern test, a name assembled when the code runs, a
+ * consumer in a service whose code was not read. Undefined where the build
+ * named no place it is sent: nothing to settle it by.
+ */
+const byName = (
+  facts: MessageTypeFacts,
+  written: NameWritten,
+  before: readonly string[],
+  selecting: readonly ChannelReceiver[],
+  generic: readonly ChannelReceiver[],
+  unread: readonly ChannelReceiver[],
+): Unselected | undefined => {
+  const [sent] = written.sent;
+  if (sent === undefined) return undefined;
+  const channelName = facts.channel?.label ?? 'its channel';
+  const open: UnselectedOpen[] = [
+    ...unread.map((each) => ({ id: each.consumer.id, ...consumerLoc(each.consumer), why: each.why ?? 'its choice was not read' })),
+    ...written.open.map((place: OpenPlace) => ({ service: place.service, loc: place.loc, why: `${place.why}: ${place.text}` })),
+    ...(written.unread ?? []).map((service) => ({ service, why: `the code of ${service}, which consumes ${channelName}, was not read for the name` })),
+    ...facts.relayed.map((each) => ({ id: each.consumer.id, ...consumerLoc(each.consumer), why: `chooses ${facts.value} and ${each.why}` })),
+  ];
+  const openCount = open.length + (written.openCount - written.open.length);
+  const where = `${sent.loc}${sent.service === '' ? '' : ` in ${sent.service}`}`;
+  const more = written.sentCount > 1 ? ` and ${written.sentCount - 1} more` : '';
+  const counted = [
+    ...before,
+    selecting.length > 0 && `${plural(selecting.length, 'consumer')} choose${selecting.length === 1 ? 's' : ''} other types`,
+    generic.length > 0 && `${plural(generic.length, 'consumer')} take${generic.length === 1 ? 's' : ''} every type and hand${generic.length === 1 ? 's' : ''} it on${openCount === 0 ? `, and no code past ${generic.length === 1 ? 'it' : 'them'} compares the name` : ''}`,
+  ].filter((part): part is string => typeof part === 'string');
+  const sentSaid = `its name is written only where it is ${written.onlyAtSends ? 'sent' : 'sent or built'}, at ${where}${more}`;
+  if (openCount === 0) {
+    return {
+      sureness: 'sure',
+      // Where a class nothing builds chooses it, its choice is said beside: no code that runs compares it.
+      said: `no code ${facts.selectors.length > 0 ? 'that runs ' : ''}compares ${facts.value}: ${sentSaid}${counted.length === 0 ? '' : `; ${counted.join('; ')}`}`,
+      open: [],
+      openCount: 0,
+      sentAt: where,
+    };
+  }
+  const [firstOpen] = open;
+  const openSaid = `${plural(openCount, 'place')} may still choose it${firstOpen === undefined ? '' : `: ${firstOpen.loc ?? firstOpen.service ?? ''}${firstOpen.loc === undefined && firstOpen.service === undefined ? '' : ' '}(${firstOpen.why})`}${openCount > 1 ? `, and ${openCount - 1} more` : ''}`;
+  return {
+    sureness: 'unsure',
+    said: `no code that runs selects ${facts.value} on ${channelName}: ${[...counted, openSaid].join('; ')}`,
+    open,
+    openCount,
+    sentAt: where,
+  };
+};
 
 /**
  * What to say of a type no live code selects (P358): who receives the channel
@@ -395,6 +489,9 @@ export const unselectedSaid = (facts: MessageTypeFacts): Unselected | undefined 
       ...held,
     };
   }
+  // Where something takes types past what the graph read, where the name is written settles what it can (P404).
+  const decided = facts.written === undefined || (generic.length === 0 && unread.length === 0) ? undefined : byName(facts, facts.written, parts, selecting, generic, unread);
+  if (decided !== undefined) return { ...decided, ...held };
   if (selecting.length > 0) parts.push(`${selecting.length} consumer${selecting.length === 1 ? '' : 's'} choose${selecting.length === 1 ? 's' : ''} other types (${named(selecting)})`);
   if (generic.length > 0) parts.push(`${named(generic)} pass${generic.length === 1 ? 'es' : ''} every type on without choosing, and what takes them past it is not read`);
   if (unread.length > 0) parts.push(`${named(unread)} not read (${unread[0]!.why})`);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:55:39.191Z",
+  "builtAt": "2026-11-25T15:59:20.646Z",
   "services": [
     {
       "name": "shop",
@@ -339,6 +339,20 @@
         "messageType": "DESK_CLOSED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/desk/desk.service.ts:14",
+              "text": "type: 'DESK_CLOSED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -356,6 +370,27 @@
         "messageType": "HELP_REQUESTED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/desk/desk.service.ts:10",
+              "text": "type: 'HELP_REQUESTED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "shop",
+              "loc": "src/notify/notify.service.ts:19",
+              "text": "private static readonly RELEVANT = new Set(['HELP_REQUESTED', 'ORDER_READY']);",
+              "why": "HELP_REQUESTED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -389,6 +424,20 @@
         "messageType": "ORDER_CANCELLED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:18",
+              "text": "type: 'ORDER_CANCELLED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 2
       }
@@ -406,6 +455,20 @@
         "messageType": "ORDER_PLACED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:22",
+              "text": "type: 'ORDER_PLACED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 2
       }
@@ -423,6 +486,27 @@
         "messageType": "ORDER_READY",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:10",
+              "text": "type: 'ORDER_READY'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "shop",
+              "loc": "src/notify/notify.service.ts:19",
+              "text": "private static readonly RELEVANT = new Set(['HELP_REQUESTED', 'ORDER_READY']);",
+              "why": "ORDER_READY is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 3
       }
@@ -440,6 +524,20 @@
         "messageType": "ORDER_REFUNDED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:26",
+              "text": "type: 'ORDER_REFUNDED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -457,6 +555,27 @@
         "messageType": "STATUS_CHANGED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:14",
+              "text": "type: 'STATUS_CHANGED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "bot",
+              "loc": "src/events/relay.controller.ts:24",
+              "text": "'STATUS_CHANGED'",
+              "why": "STATUS_CHANGED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -1647,7 +1766,7 @@
         },
         "fieldsRead": [
           {
-            "field": "length",
+            "field": "type",
             "line": 22
           }
         ]

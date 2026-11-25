@@ -1,0 +1,272 @@
+{
+  "requests": [
+    {
+      "route": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+      "by": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes"
+    }
+  ],
+  "root": {
+    "node": {
+      "id": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes",
+      "type": "method",
+      "label": "RoomService.getFreeTimes",
+      "loc": "src/rooms/room.service.ts:24",
+      "service": "chat-bot",
+      "endLine": 28
+    },
+    "children": [
+      {
+        "node": {
+          "id": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots",
+          "type": "method",
+          "label": "RoomService.fetchSlots",
+          "loc": "src/rooms/room.service.ts:30",
+          "endLine": 33
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static",
+          "params": [
+            "string"
+          ],
+          "returns": "string[]"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "config_key:chat-bot#ROOMS_API_URL",
+              "type": "config_key",
+              "label": "ROOMS_API_URL",
+              "loc": "src/rooms/room.service.ts:31"
+            },
+            "edge": {
+              "type": "reads_config",
+              "confidence": "static"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "http_out:chat-bot#src/rooms/room.service.ts:31:43",
+              "type": "http_out",
+              "label": "GET /api/admin/:param/rooms/free-times",
+              "loc": "src/rooms/room.service.ts:31"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+                  "type": "entry",
+                  "label": "GET /api/admin/:param/rooms/free-times",
+                  "loc": "src/rooms/rooms.controller.ts:9",
+                  "service": "rooms-api",
+                  "kind": "http"
+                },
+                "edge": {
+                  "type": "http_calls",
+                  "confidence": "static",
+                  "returns": "string[]"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes",
+                      "type": "method",
+                      "label": "RoomsController.freeTimes",
+                      "loc": "src/rooms/rooms.controller.ts:9",
+                      "endLine": 12
+                    },
+                    "edge": {
+                      "type": "handles",
+                      "confidence": "static",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "string[]"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "rooms-api#src/rooms/rooms.service.ts:RoomsService.freeTimes",
+                          "type": "method",
+                          "label": "RoomsService.freeTimes",
+                          "loc": "src/rooms/rooms.service.ts:11",
+                          "endLine": 13
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static",
+                          "params": [
+                            "string"
+                          ],
+                          "returns": "string[]"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "chat-bot#src/bus/venue-bus.service.ts:VenueBus.publish",
+          "type": "method",
+          "label": "VenueBus.publish",
+          "loc": "src/bus/venue-bus.service.ts:9",
+          "endLine": 12
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static",
+          "params": [
+            "string",
+            "T"
+          ],
+          "returns": "void"
+        },
+        "children": []
+      },
+      {
+        "node": {
+          "id": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+          "type": "producer",
+          "label": "event staff_feed",
+          "loc": "src/rooms/room.service.ts:26",
+          "kind": "event"
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "channel:staff_feed",
+              "type": "channel",
+              "label": "staff_feed",
+              "loc": "src/rooms/rooms.service.ts:27",
+              "service": "rooms-api"
+            },
+            "edge": {
+              "type": "emits",
+              "confidence": "static",
+              "params": [
+                "{type:string;venueId:string;count:number}"
+              ]
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+                  "type": "consumer",
+                  "label": "StaffBot.onEvent",
+                  "loc": "src/staff/staff-bot.service.ts:20",
+                  "service": "chat-bot",
+                  "kind": "event",
+                  "endLine": 23
+                },
+                "edge": {
+                  "type": "consumes",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+                      "type": "method",
+                      "label": "StaffBot.onEvent",
+                      "loc": "src/staff/staff-bot.service.ts:23",
+                      "endLine": 25
+                    },
+                    "edge": {
+                      "type": "handles",
+                      "confidence": "static",
+                      "params": [
+                        "type:chat-bot#StaffMessage"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+                          "type": "method",
+                          "label": "StaffBot.handleRoomReady",
+                          "loc": "src/staff/staff-bot.service.ts:27",
+                          "endLine": 29
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static",
+                          "params": [
+                            "type:chat-bot#StaffMessage"
+                          ],
+                          "returns": "void"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "node": {
+              "id": "channel:staff_feed#SLOTS_SHOWN",
+              "type": "channel",
+              "label": "staff_feed#SLOTS_SHOWN",
+              "loc": "src/rooms/room.service.ts:26",
+              "kind": "message_type"
+            },
+            "edge": {
+              "type": "emits",
+              "confidence": "static",
+              "params": [
+                "{type:string;venueId:string;count:number}"
+              ]
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "node": {
+          "id": "chat-bot#src/rooms/slot-renderer.service.ts:SlotRenderer.render",
+          "type": "method",
+          "label": "SlotRenderer.render",
+          "loc": "src/rooms/slot-renderer.service.ts:20",
+          "endLine": 23
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static",
+          "params": [
+            "string[]"
+          ],
+          "returns": "string"
+        },
+        "children": []
+      }
+    ]
+  },
+  "unresolvedOnPath": 1,
+  "complete": false,
+  "left": [
+    "unread: 1 step on the path could not be followed: event staff_feed (message-type-unselected), off every request's way"
+  ],
+  "next": [
+    "describe_for_prompt({id: \"chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes\"})",
+    "check_contract({from: \"http_out:chat-bot#src/rooms/room.service.ts:31:43\", to: \"entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times\"})",
+    "impact({symbol: \"chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes\"})",
+    "get_source({symbol: \"chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots\"})"
+  ]
+}

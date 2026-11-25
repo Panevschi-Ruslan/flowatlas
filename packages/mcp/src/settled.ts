@@ -79,7 +79,10 @@ const whoCallsSettled = (answer: Plain): string | undefined => {
 };
 
 /** A field a list's rows say is missing on one side, by the lists check_contract writes. */
-const missingOf = (answer: Plain): number => rowsIn(answer.missing) + rowsIn(isPlain(answer.answer) ? answer.answer.missing : undefined) + rowsIn(isPlain(answer.fields) ? answer.fields.missing : undefined);
+const missingOf = (answer: Plain): number =>
+  rowsIn(answer.missing) +
+  rowsIn(isPlain(answer.answer) ? answer.answer.missing : undefined) +
+  rowsIn(isPlain(answer.fields) ? answer.fields.missing : undefined);
 
 /**
  * check_contract: the two ends compared with nothing left unread. A call's
@@ -108,8 +111,28 @@ const endsSettled =
     if (!Array.isArray(answer[key])) return undefined;
     const total = typeof answer.total === 'number' ? answer.total : rowsIn(answer[key]);
     const which = typeof answer.type === 'string' ? ` of ${answer.type}` : '';
+    // A type nothing selects, sure by where its name is written (P404): that sentence is what settles it.
+    if (total === 0 && answer.sureness === 'sure' && typeof answer.unselected === 'string') return answer.unselected;
     return total === 0 ? `no ${key.slice(0, -1)}${which}` : `${plural(total, key.slice(0, -1))}${which}, all listed`;
   };
+
+/**
+ * get_flow: where every request the walk crossed lands, each joined to a
+ * route (P404), with no step it could not follow on a request's way. A cut
+ * elsewhere in the tree leaves the flow unsure, not where its requests land:
+ * the answer keeps `complete: false` and its `left`. A walk its depth
+ * stopped may have more requests past it, and settles nothing.
+ */
+const flowSettled = (answer: Plain): string | undefined => {
+  const landed = landedOf(answer.requests);
+  if (landed === undefined) return undefined;
+  const left = Array.isArray(answer.left) ? answer.left.filter((item): item is string => typeof item === 'string') : [];
+  if (left.some((item) => (item.startsWith('unread:') && item.includes("on a request's way")) || /^[^:]*\bdepth\b[^:]*:/.test(item))) return undefined;
+  return landed.replace(/^its request/, 'the request').replace(/^its requests/, 'the requests');
+};
+
+/** The tools a half answer may settle the part of: a flow's requests, whatever else was cut. */
+const SETTLES_A_PART: ReadonlySet<string> = new Set(['get_flow']);
 
 /** What settles each tool's answer, by tool: a tool not named here never says `settled`. */
 const SETTLES: Readonly<Record<string, (answer: Plain) => string | undefined>> = {
@@ -118,6 +141,7 @@ const SETTLES: Readonly<Record<string, (answer: Plain) => string | undefined>> =
   check_contract: contractSettled,
   who_consumes: endsSettled('consumers'),
   who_emits: endsSettled('producers'),
+  get_flow: flowSettled,
 };
 
 /** The tools an answer may settle. */
@@ -130,10 +154,17 @@ export const SETTLING_TOOLS: ReadonlySet<string> = new Set(Object.keys(SETTLES))
 export const settledAnswer = <T>(tool: string, answer: T): T => {
   const settles = SETTLES[tool];
   if (settles === undefined || !isPlain(answer)) return answer;
-  if (answer.complete === false || 'error' in answer || typeof answer.nextOffset === 'number') return answer;
+  const part = SETTLES_A_PART.has(tool) && answer.complete === false;
+  if ((answer.complete === false && !part) || 'error' in answer || typeof answer.nextOffset === 'number') return answer;
   const settled = settles(answer);
   if (settled === undefined) return answer;
+  // What is settled is said first and names no further call; what was cut keeps `complete: false` and its `left`.
   const { next: _next, ...rest } = answer;
+  // Said once: `unselected` is the sentence `settled` already holds (P404).
+  if (settled === rest.unselected) {
+    delete rest.unselected;
+    delete rest.sureness;
+  }
   return { settled, ...rest } as T;
 };
 

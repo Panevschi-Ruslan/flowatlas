@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:15:07.666Z",
+  "builtAt": "2026-11-25T15:58:50.555Z",
   "services": [
     {
       "name": "api",
@@ -377,6 +377,20 @@
         "messageType": "ORDER_CANCELED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "api",
+              "loc": "src/orders/orders.service.ts:17",
+              "text": "type: 'ORDER_CANCELED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }

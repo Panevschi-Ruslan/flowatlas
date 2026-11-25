@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:49:32.911Z",
+  "builtAt": "2026-11-25T15:58:48.507Z",
   "configHash": "9968b986e1bb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 2,
       "unresolved": 3,
-      "durationMs": 1729,
+      "durationMs": 1168,
       "packages": {
         "name": "edge",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 19,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1203,
+      "durationMs": 814,
       "packages": {
         "name": "portal",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 31,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 1997,
+      "durationMs": 1341,
       "packages": {
         "name": "shipping",
         "runtime": [
@@ -128,7 +128,7 @@
       "file": "src/parcels/parcels.service.ts",
       "line": 19,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); onTick passes every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types; 1 consumer takes every type and hands it on; 2 places may still choose it: src/live/useWorkspaceEvents.ts:16 (its handler is not code this reads), and 1 more",
       "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
       "service": "shipping",
       "meta": {

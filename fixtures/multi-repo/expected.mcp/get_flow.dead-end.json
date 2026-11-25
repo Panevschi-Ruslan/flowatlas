@@ -1,4 +1,9 @@
 {
+  "requests": [
+    {
+      "unjoined": "POST ${ORDERS_URL}/orders/${…}/cancel"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:gateway:http:POST:/orders/:param/cancel",
@@ -113,7 +118,7 @@
   "unresolvedOnPath": 1,
   "complete": false,
   "left": [
-    "unread: 1 step on the path could not be followed"
+    "unread: 1 step on the path could not be followed: POST /orders/:param/cancel (target-route-not-found), on a request's way"
   ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",

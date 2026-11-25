@@ -1,0 +1,31 @@
+{
+  "channel": {
+    "id": "channel:venue_events",
+    "type": "channel",
+    "label": "venue_events",
+    "loc": "src/orders/orders.service.ts:12",
+    "service": "rooms-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumer",
+      "label": "PushService.dispatch",
+      "loc": "src/push/push.service.ts:31",
+      "service": "notify-worker",
+      "kind": "event",
+      "via": "switch",
+      "endLine": 35,
+      "reach": "alive",
+      "from": "event venue_events"
+    }
+  ],
+  "total": 1,
+  "type": "CALL_STAFF",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:venue_events\", type: \"CALL_STAFF\"})",
+    "impact({symbol: \"consumer:notify-worker#src/push/push.service.ts:PushService.dispatch\"})",
+    "get_source({symbol: \"consumer:notify-worker#src/push/push.service.ts:PushService.dispatch\"})"
+  ]
+}

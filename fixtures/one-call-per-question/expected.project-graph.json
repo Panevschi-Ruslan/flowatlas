@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:10:10.365Z",
+  "builtAt": "2026-11-25T15:56:41.458Z",
   "services": [
     {
       "name": "shop-api",
@@ -45,6 +45,25 @@
         "messageType": "HELP_REQUESTED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop-api",
+              "loc": "src/desk/desk.service.ts:10",
+              "text": "type: 'HELP_REQUESTED'"
+            },
+            {
+              "service": "shop-api",
+              "loc": "src/floor/floor.service.ts:10",
+              "text": "type: 'HELP_REQUESTED'"
+            }
+          ],
+          "sentCount": 2,
+          "onlyAtSends": false,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -78,6 +97,25 @@
         "messageType": "HELP_REQUESTED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop-api",
+              "loc": "src/floor/floor.service.ts:10",
+              "text": "type: 'HELP_REQUESTED'"
+            },
+            {
+              "service": "shop-api",
+              "loc": "src/desk/desk.service.ts:10",
+              "text": "type: 'HELP_REQUESTED'"
+            }
+          ],
+          "sentCount": 2,
+          "onlyAtSends": false,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -111,6 +149,20 @@
         "messageType": "ORDER_CANCELLED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop-api",
+              "loc": "src/orders/orders.service.ts:15",
+              "text": "type: 'ORDER_CANCELLED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -128,6 +180,20 @@
         "messageType": "ORDER_READY",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop-api",
+              "loc": "src/orders/orders.service.ts:10",
+              "text": "type: 'ORDER_READY'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }

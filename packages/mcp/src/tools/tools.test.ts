@@ -377,7 +377,9 @@ describe('the tools a session is offered', () => {
     // `requests` list: 21,457, which the model never reads either. P395's findings `warnings`: 21,561.
     // P403 declares on every output schema what the boundary may add (a size cut's `complete`, `left`, `next`,
     // `nextOffset`, and `settled` on who_consumes and who_emits) and who_consumes' `selectionUnread`: 22,409.
-    expect(output.length).toBeLessThan(22450);
+    // P404 gives who_consumes and who_emits `alsoOn` (the other channels a type is sent on) and `selectionUnread` a
+    // place's `service`, `in` and `handedBy`: 22,975, which the model never reads.
+    expect(output.length).toBeLessThan(23000);
   });
 
   /**

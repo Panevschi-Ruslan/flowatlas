@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:21:02.312Z",
+  "builtAt": "2026-11-25T15:51:35.342Z",
   "services": [
     {
       "name": "stores-api",
@@ -540,6 +540,20 @@
         "messageType": "BUILD_DONE",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:14",
+              "text": "type: 'BUILD_DONE'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -557,6 +571,20 @@
         "messageType": "BUILD_FAILED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:22",
+              "text": "type: 'BUILD_FAILED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -574,6 +602,20 @@
         "messageType": "BUILD_STATUS",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:18",
+              "text": "type: 'BUILD_STATUS'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -591,6 +633,20 @@
         "messageType": "JOB_QUEUED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:10",
+              "text": "type: 'JOB_QUEUED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -624,6 +680,20 @@
         "messageType": "ALERT_RAISED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/audit/audit.service.ts:15",
+              "text": "type: 'ALERT_RAISED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -641,6 +711,20 @@
         "messageType": "AUDIT_ENTRY_CREATED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/audit/audit.service.ts:11",
+              "text": "type: 'AUDIT_ENTRY_CREATED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -674,6 +758,20 @@
         "messageType": "ORDER_PLACED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/orders/orders.service.ts:11",
+              "text": "type: 'ORDER_PLACED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -691,6 +789,20 @@
         "messageType": "ORDER_SHIPPED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/orders/orders.service.ts:15",
+              "text": "type: 'ORDER_SHIPPED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }

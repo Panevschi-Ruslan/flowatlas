@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+      "by": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+    }
+  ],
   "root": {
     "node": {
       "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",

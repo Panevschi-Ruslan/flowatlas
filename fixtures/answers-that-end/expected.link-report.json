@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T12:50:35.745Z",
+  "builtAt": "2026-11-25T15:49:33.178Z",
   "configHash": "ede45fc24eb1",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 22,
       "types": 3,
       "unresolved": 2,
-      "durationMs": 1457,
+      "durationMs": 1197,
       "packages": {
         "name": "packing-worker",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 29,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 1530,
+      "durationMs": 1189,
       "packages": {
         "name": "shop-api",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 3,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1223,
+      "durationMs": 993,
       "packages": {
         "name": "web",
         "runtime": [
@@ -105,7 +105,7 @@
       "file": "src/orders/orders.service.ts",
       "line": 25,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects ORDER_DELAYED on packing_events: 2 consumers choose other types (PackBoard.onEvent, Receipts.onEvent); CourierPager.onEvent passes every type on without choosing, and what takes them past it is not read; AuditFeed.onEvent not read (this.kept.has(event.type) tests the type against a set the code does not write out.)",
+      "message": "no code that runs selects ORDER_DELAYED on packing_events: 2 consumers choose other types; 1 consumer takes every type and hands it on; 1 place may still choose it: src/packing/audit-feed.service.ts:24 (this.kept.has(event.type) tests the type against a set the code does not write out.)",
       "symbol": "producer:shop-api#src/orders/orders.service.ts:25:5",
       "service": "shop-api",
       "meta": {

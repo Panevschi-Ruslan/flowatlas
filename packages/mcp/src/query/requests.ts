@@ -104,7 +104,15 @@ const unjoinedSaid = (request: GraphNode): string => {
 /** Where the requests a method sends land; nothing for a node that sends none or is not code. */
 export const requestsOf = (db: GraphDb, node: GraphNode | undefined): RequestsSaid => {
   if (node === undefined || !CODE_TYPES.has(node.type)) return {};
-  const requests = requestNodesOf(db, node);
+  return landingsOf(db, requestNodesOf(db, node));
+};
+
+/**
+ * Where each of `requests` lands (P404): the rows `requestsOf` says of a
+ * method's requests, said of any list of request nodes - the ones a
+ * `get_flow` walk crossed.
+ */
+export const landingsOf = (db: GraphDb, requests: readonly GraphNode[]): RequestsSaid => {
   if (requests.length === 0) return {};
   const landed: RequestLanding[] = [];
   const unjoined: string[] = [];

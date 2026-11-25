@@ -17,13 +17,9 @@
         ],
         "handlers": [],
         "sites": 2,
-        "unselected": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
-        "reach": "maybe",
-        "from": "POST /spaces/:param/quota",
-        "confirm": {
-          "grep": "QUOTA_WARNING",
-          "repo": "docs-api"
-        }
+        "unselected": "no code that runs compares QUOTA_WARNING: its name is written only where it is sent, at src/spaces/spaces.service.ts:37 in docs-api; only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types; 1 consumer takes every type and hands it on, and no code past it compares the name",
+        "reach": "dead",
+        "from": "POST /spaces/:param/quota"
       }
     ],
     "gaps": [
@@ -35,7 +31,7 @@
         "kind": "finding",
         "service": "docs-api",
         "loc": "src/spaces/spaces.service.ts:37",
-        "message": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
+        "message": "no code that runs compares QUOTA_WARNING: its name is written only where it is sent, at src/spaces/spaces.service.ts:37 in docs-api; only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types; 1 consumer takes every type and hands it on, and no code past it compares the name",
         "sites": 1,
         "places": [
           "src/spaces/spaces.service.ts:37"

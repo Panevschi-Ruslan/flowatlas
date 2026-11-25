@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T14:07:16.994Z",
+  "builtAt": "2026-11-25T15:57:35.732Z",
   "services": [
     {
       "name": "shop-api",
@@ -77,6 +77,20 @@
         "messageType": "HELP_REQUESTED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop-api",
+              "loc": "src/desk/desk.service.ts:10",
+              "text": "type: 'HELP_REQUESTED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 3
       }

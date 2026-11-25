@@ -50,13 +50,13 @@ describe('who handles one type of message', () => {
     expect(labels((await call('who_consumes', { channel: CHANNEL, type: 'COMMENT_ADDED' })).consumers)).toEqual(['ActivityFeed.pushComment', 'SpaceEventsDispatcher.onComment']);
   });
 
-  it('answers "no code selects it" for a type selected only in a class nothing builds, unsure past a consumer that forwards every type', async () => {
+  it('answers "no code selects it" for a type selected only in a class nothing builds, sure past a consumer that forwards every type where its name is written only where it is sent (P404)', async () => {
     const answer = await call('who_consumes', { channel: CHANNEL, type: 'QUOTA_WARNING' });
     expect(answer.consumers).toHaveLength(1);
     expect(answer.consumers[0]).toMatchObject({ label: 'LegacyDigest.mailQuota', unreached: expect.stringContaining('nothing builds LegacyDigest') });
-    expect(answer.unselected).toContain('no code that runs selects QUOTA_WARNING');
-    expect(answer.unselected).toContain('StreamRelay.forward passes every type on without choosing');
-    expect(answer.sureness).toBe('unsure');
+    expect(answer.unselected).toContain('no code that runs compares QUOTA_WARNING: its name is written only where it is sent');
+    expect(answer.unselected).toContain('1 consumer takes every type and hands it on, and no code past it compares the name');
+    expect(answer.sureness).toBe('sure');
   });
 
   it('takes the channel as code writes it, saying which it answered for (P360)', async () => {
@@ -115,14 +115,15 @@ describe('searching for a type by its value', () => {
 
   it('says so in the hit where nothing that runs selects it, and keeps types out of the channels', async () => {
     const answer = await call('search', { query: 'QUOTA' });
-    expect(answer.results.messages[0].unselected).toContain('no code that runs selects QUOTA_WARNING');
+    expect(answer.results.messages[0].unselected).toContain('no code that runs compares QUOTA_WARNING');
     expect(answer.results.channels).toBeUndefined();
   });
 });
 
 describe('dead, per type', () => {
   it('judges a type, and a handler in a class nothing builds', async () => {
-    expect(await call('dead', { id: `${CHANNEL}#QUOTA_WARNING` })).toMatchObject({ verdict: 'unknown', evidence: { missing: 'consumer' } });
+    // Sure since P404: past the relay that takes every type, no code writes its name but the send.
+    expect(await call('dead', { id: `${CHANNEL}#QUOTA_WARNING` })).toMatchObject({ verdict: 'dead', evidence: { missing: 'consumer' } });
     expect(await call('dead', { id: `${CHANNEL}#EXPORT_FINISHED` })).toMatchObject({ verdict: 'alive' });
     expect(await call('dead', { id: 'consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota' })).toMatchObject({ verdict: 'dead' });
     // A method that checks the type and is reached by nothing stays dead: it is no consumer of anything.

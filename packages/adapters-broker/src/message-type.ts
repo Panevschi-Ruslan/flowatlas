@@ -547,7 +547,10 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
 
   /** Which of a call's arguments hands the message on, where one does. */
   const messageArgument = (call: CallExpression): number | undefined => {
-    const index = call.getArguments().findIndex((argument) => [argument, ...argument.getDescendants()].some((each) => isMessage(each)));
+    const args = call.getArguments();
+    const whole = args.findIndex((argument) => isMessage(argument));
+    if (whole >= 0) return whole;
+    const index = args.findIndex((argument) => [argument, ...argument.getDescendants()].some((each) => isMessage(each)));
     return index < 0 ? undefined : index;
   };
 
@@ -586,6 +589,23 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
       if (!foreign) fallback ??= resolved;
     }
     return fallback ?? { kind: 'self' };
+  };
+
+  /**
+   * The handler a branch of a choice runs (P404): the call it hands the
+   * message on to where the branch is that one call, or a row of calls; the
+   * function holding the choice where the branch is code of its own. A case
+   * that looks a room up first (`const room = await this.findRoom(evt.roomId);
+   * … formatted = formatCall(…)`) is handled where it is written, not by the
+   * lookup: the lookup's other callers would read as handlers of the type.
+   * The guards a branch leaves by (`if (!room) return;`) and its `break` are
+   * no code of its own.
+   */
+  const branchHandlerIn = (statements: readonly TsNode[], within: TsNode): ChosenHandler => {
+    const work = branchWork(statements);
+    if (work.length === 0) return { kind: 'self' };
+    if (work.every((statement) => statementCall(statement) !== undefined)) return handlerIn(work, within);
+    return { kind: 'self' };
   };
 
   const add = (values: readonly string[], field: DiscriminatorField, via: SelectionVia, at: TsNode, handler: ChosenHandler, heuristic = false): void => {
@@ -845,7 +865,7 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
             cased.push(...values.values);
           }
           if (statements.length === 0) continue;
-          add(pending, field, 'switch', clause, handlerIn(statements, fn));
+          add(pending, field, 'switch', clause, branchHandlerIn(statements, fn));
           pending = [];
         } else {
           const handler = statements.length > 0 ? handlerIn(statements, fn) : undefined;
@@ -870,7 +890,7 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
       const then = node.getThenStatement();
       const otherwise = node.getElseStatement();
       if (test.positive) {
-        add(test.values, test.field, 'if', node, handlerIn([then], fn));
+        add(test.values, test.field, 'if', node, branchHandlerIn([then], fn));
         // The head of an if, else if, …, else: the last else takes what the tests before it do not choose (P400).
         const chain = elseOfChain(node);
         const restHandler = chain === undefined ? undefined : handlerIn([chain.statement], fn);
@@ -885,13 +905,13 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
         add(test.values, test.field, 'guard', node, handlerIn(after, fn));
         continue;
       }
-      if (otherwise !== undefined) add(test.values, test.field, 'if', node, handlerIn([otherwise], fn));
+      if (otherwise !== undefined) add(test.values, test.field, 'if', node, branchHandlerIn([otherwise], fn));
       continue;
     }
     if (Node.isConditionalExpression(node)) {
       const test = condition(node.getCondition());
       if (test === undefined || 'unread' in test) continue;
-      add(test.values, test.field, 'if', node, handlerIn([test.positive ? node.getWhenTrue() : node.getWhenFalse()], fn));
+      add(test.values, test.field, 'if', node, branchHandlerIn([test.positive ? node.getWhenTrue() : node.getWhenFalse()], fn));
       continue;
     }
     if (Node.isElementAccessExpression(node)) {
@@ -936,8 +956,47 @@ export const readSelections = (fn: FunctionLike, owner: ClassDeclaration | undef
   return { selections, unread, others, ...(rest.length === 0 ? {} : { rest }) };
 };
 
+/** Whether a statement only leaves: a `return;`, a `throw`, a `break`, a `continue`, or nothing. */
+const leaves = (statement: TsNode): boolean =>
+  Node.isThrowStatement(statement) ||
+  Node.isBreakStatement(statement) ||
+  Node.isContinueStatement(statement) ||
+  Node.isEmptyStatement(statement) ||
+  (Node.isReturnStatement(statement) && statement.getExpression() === undefined);
+
+/** A guard a branch leaves by: `if (!room) return;`, with no else. */
+const isGuard = (statement: TsNode): boolean => {
+  if (!Node.isIfStatement(statement) || statement.getElseStatement() !== undefined) return false;
+  const then = statement.getThenStatement();
+  const inner = Node.isBlock(then) ? then.getStatements() : [then];
+  return inner.length > 0 && inner.every(leaves);
+};
+
+/** The statements a branch runs (P404): blocks opened, its guards and exits left out. */
+const branchWork = (statements: readonly TsNode[]): TsNode[] =>
+  statements.flatMap((statement) => (Node.isBlock(statement) ? branchWork(statement.getStatements()) : leaves(statement) || isGuard(statement) ? [] : [statement]));
+
+/**
+ * The call a statement is (P404): `this.h(evt);`, `await this.h(evt);`,
+ * `void this.h(evt);`, `return this.h(evt);`, or an arrow's body that is a
+ * call. Undefined for anything else - a local, an assignment, a loop.
+ */
+const statementCall = (statement: TsNode): CallExpression | undefined => {
+  const expression = Node.isExpressionStatement(statement)
+    ? statement.getExpression()
+    : Node.isReturnStatement(statement)
+      ? statement.getExpression()
+      : Node.isExpression(statement)
+        ? statement
+        : undefined;
+  if (expression === undefined) return undefined;
+  let node = peel(expression);
+  if (Node.isVoidExpression(node)) node = peel(node.getExpression());
+  return Node.isCallExpression(node) ? node : undefined;
+};
+
 /** A branch that only leaves - a `return;`, a `throw` - runs nothing that takes the message. */
-const exitsOnly = (statements: readonly TsNode[]): boolean =>
+const exitsOnly =(statements: readonly TsNode[]): boolean =>
   statements.length === 0 ||
   statements.every((statement) => Node.isThrowStatement(statement) || Node.isBreakStatement(statement) || (Node.isReturnStatement(statement) && statement.getExpression() === undefined));
 
@@ -1339,8 +1398,15 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
       if ('fn' in at) return [deepen(readSelections(at.fn, classAround(at.fn), lookup))];
       return [deepen(readSubscription(at.subscribe, classAround(at.subscribe), lookup))];
     });
+    // A callback written where the consumer subscribes that hands the message to its handler, choosing on the way
+    // (`if (!RELEVANT.has(evt.type)) return; this.dispatch(id, evt)`), is read first (P404): its choice, and the
+    // argument it hands the message in, are what the handler takes.
+    const callback = target !== consumer && subscriptions.length === 0 ? declarationAt(host, consumer.file, consumer.line) : undefined;
+    const throughCallback = callback === undefined || callback.fn === found?.fn ? undefined : deepen(readSelections(callback.fn, callback.owner, lookup));
     const read: SelectionReading =
-      found !== undefined
+      throughCallback !== undefined && throughCallback.selections.length > 0
+        ? throughCallback
+        : found !== undefined
         ? deepen(readSelections(found.fn, found.owner, lookup))
         : { selections: readings.flatMap((each) => each.selections), unread: readings.flatMap((each) => each.unread), others: readings.some((each) => each.others) };
     const file = target.file ?? consumer.file ?? '';

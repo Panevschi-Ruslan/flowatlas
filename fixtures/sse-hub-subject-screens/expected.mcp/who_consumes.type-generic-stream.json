@@ -25,6 +25,12 @@
   "total": 1,
   "channelUsed": "channel:crew:*:shifts",
   "type": "CREW_ASSIGNED",
+  "alsoOn": [
+    {
+      "channel": "channel:board:*:events",
+      "count": 1
+    }
+  ],
   "complete": true,
   "next": [
     "who_emits({channel: \"channel:crew:*:shifts\", type: \"CREW_ASSIGNED\"})",

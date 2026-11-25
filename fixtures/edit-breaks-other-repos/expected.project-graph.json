@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T16:09:09.246Z",
+  "builtAt": "2026-11-25T15:51:07.571Z",
   "services": [
     {
       "name": "catalog-api",
@@ -441,6 +441,20 @@
         "messageType": "STOCK_LOW",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "catalog-api",
+              "loc": "src/items/items.service.ts:27",
+              "text": "type: 'STOCK_LOW'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }

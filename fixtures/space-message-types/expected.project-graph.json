@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:54:55.184Z",
+  "builtAt": "2026-11-25T16:00:43.865Z",
   "services": [
     {
       "name": "docs-api",
@@ -51,6 +51,27 @@
         "messageType": "COMMENT_ADDED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:21",
+              "text": "type: SpaceEventType.CommentAdded"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/mention.handler.ts:13",
+              "text": "event.type !== 'COMMENT_ADDED'",
+              "why": "COMMENT_ADDED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 2
       }
@@ -68,6 +89,14 @@
         "messageType": "DOC_ARCHIVED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [],
+          "sentCount": 0,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 0,
         "consumers": 1
       }
@@ -85,6 +114,27 @@
         "messageType": "DOC_PUBLISHED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:16",
+              "text": "type: 'DOC_PUBLISHED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/audit-trail.service.ts:16",
+              "text": "DOC_PUBLISHED: (event) => this.recordPublish(event)",
+              "why": "DOC_PUBLISHED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 2
       }
@@ -102,6 +152,20 @@
         "messageType": "EXPORT_FINISHED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/space-events.ts:44",
+              "text": "type: 'EXPORT_FINISHED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": false,
+          "defined": 2,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 2
       }
@@ -119,6 +183,39 @@
         "messageType": "MEMBER_JOINED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:27",
+              "text": "type: SPACE_EVENTS.memberJoined"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/audit-trail.service.ts:17",
+              "text": "MEMBER_JOINED: this.recordJoin.bind(this)",
+              "why": "MEMBER_JOINED is written here; the graph read no choice of it"
+            },
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/dispatcher.service.ts:30",
+              "text": "'MEMBER_JOINED'",
+              "why": "MEMBER_JOINED is written here; the graph read no choice of it"
+            },
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/welcome.handlers.ts:13",
+              "text": "@OnSpaceEvent('MEMBER_JOINED') greet(event: MemberJoined): void { void event.mem",
+              "why": "MEMBER_JOINED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 3
+        },
         "producers": 1,
         "consumers": 3
       }
@@ -136,6 +233,20 @@
         "messageType": "QUOTA_WARNING",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:37",
+              "text": "type: 'QUOTA_WARNING'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -3709,14 +3820,14 @@
       "file": "src/spaces/spaces.service.ts",
       "line": 37,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
+      "message": "no code that runs compares QUOTA_WARNING: its name is written only where it is sent, at src/spaces/spaces.service.ts:37 in docs-api; only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types; 1 consumer takes every type and hands it on, and no code past it compares the name",
       "symbol": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
       "service": "docs-api",
       "meta": {
         "type": "channel:space:*:events#QUOTA_WARNING",
         "channel": "channel:space:*:events",
         "messageType": "QUOTA_WARNING",
-        "sureness": "unsure"
+        "sureness": "sure"
       }
     },
     {

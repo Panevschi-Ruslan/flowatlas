@@ -10,7 +10,7 @@ import {
   type FunctionLike,
   type GraphNode,
 } from '@flowatlas/core';
-import { Node, type ClassDeclaration, type Node as TsNode, type ParameterDeclaration } from 'ts-morph';
+import { Node, type ClassDeclaration, type Node as TsNode, type ParameterDeclaration, type Type } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import { definePass } from './types.js';
 
@@ -54,6 +54,15 @@ const startOf = (parameter: ParameterDeclaration, index: number): { start?: Fiel
   return undefined;
 };
 
+/** Whether a parameter's type can be a message: anything but a plain value - a string, a number, a flag. */
+const mayHoldMessage = (type: Type): boolean =>
+  type.isAny() ||
+  type.isUnknown() ||
+  type.isObject() ||
+  type.isIntersection() ||
+  type.isTypeParameter() ||
+  (type.isUnion() && type.getUnionTypes().some(mayHoldMessage));
+
 /**
  * Where a handler is handed the body or the message: the parameters its
  * decorators name, else the first, as the request (a route) or the message
@@ -72,7 +81,10 @@ const startsOf = (fn: FunctionLike, route: boolean): { starts: FieldStart[]; pic
     if (found?.field !== undefined) picked.push({ field: found.field, line: parameter.getStartLineNumber() });
   });
   if (!decorated && parameters.length > 0) {
-    starts.push({ param: 0, state: route ? { kind: 'request' } : { kind: 'payload', prefix: [] } });
+    // A consumer's message is its first parameter that can hold one (P404): `dispatch(venueId: string, raw: unknown)`
+    // is handed the message second, and a string first reads nothing of it.
+    const held = route ? 0 : parameters.findIndex((parameter) => mayHoldMessage(parameter.getType()));
+    starts.push({ param: Math.max(held, 0), state: route ? { kind: 'request' } : { kind: 'payload', prefix: [] } });
   }
   return { starts, picked };
 };

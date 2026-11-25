@@ -7,7 +7,7 @@
  * thing it must not notice is the line it sits on, because inserting an import
  * moves every symbol in the file without changing any of them.
  */
-import type { GraphEdge, GraphNode } from '@flowatlas/core';
+import { NAME_WRITTEN_META, type GraphEdge, type GraphNode } from '@flowatlas/core';
 
 /** JSON with object keys in a fixed order, so two equal values read alike. */
 export const stableJson = (value: unknown): string => {
@@ -24,11 +24,13 @@ export const stableJson = (value: unknown): string => {
  *
  * `line` is the only key with a fixed meaning across node types, and it is the
  * one that moves without anything changing. Everything else a pass wrote is
- * part of what the node says.
+ * part of what the node says, but where a type's name is written (P404): the
+ * places of the code around it, which move with every edit of those files,
+ * and which a graph built at another revision may not record at all.
  */
 const metaWithoutPosition = (meta: Record<string, unknown> | undefined): Record<string, unknown> => {
   if (meta === undefined) return {};
-  const { line: _line, ...rest } = meta;
+  const { line: _line, [NAME_WRITTEN_META]: _written, ...rest } = meta;
   return rest;
 };
 

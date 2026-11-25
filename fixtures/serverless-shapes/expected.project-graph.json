@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:25:35.129Z",
+  "builtAt": "2026-11-25T15:58:20.984Z",
   "services": [
     {
       "name": "members",
@@ -103,6 +103,20 @@
         "messageType": "digest",
         "discriminator": "kind",
         "channelKind": "queue",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "members",
+              "loc": "services/notices/src/notices/digest.ts:7",
+              "text": "kind: 'digest'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -120,6 +134,20 @@
         "messageType": "welcome",
         "discriminator": "kind",
         "channelKind": "queue",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "members",
+              "loc": "services/notices/src/notices/welcome.ts:7",
+              "text": "kind: 'welcome'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }

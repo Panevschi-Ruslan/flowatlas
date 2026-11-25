@@ -1,5 +1,5 @@
 import { isMessageTypeNode, makeMessageTypeId, type GraphNode } from '@flowatlas/core';
-import { messageTypeFacts, messageTypesOn, unselectedSaid, type GraphDb, type MessageTypeFacts } from '@flowatlas/linker';
+import { messageTypeFacts, messageTypesOn, unselectedSaid, type GraphDb, type MessageTypeFacts, type UnselectedOpen } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { resolveChannelRef } from '../query/channel-ref.js';
@@ -77,7 +77,27 @@ const endsOutput = (key: 'producers' | 'consumers') => ({
    * Each consumer whose choice of type was not read (P403): where it is and
    * what was not read, so one Read settles "nothing selects it".
    */
-  selectionUnread: z.array(z.object({ id: z.string(), loc: z.string().optional(), line: z.number().optional(), why: z.string() })).optional(),
+  selectionUnread: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        loc: z.string().optional(),
+        line: z.number().optional(),
+        service: z.string().optional(),
+        why: z.string(),
+        /** The function the place is written in (P404). */
+        in: z.string().optional(),
+        /** The consumer taking every type that hands it there (P404). */
+        handedBy: z.string().optional(),
+      }),
+    )
+    .optional(),
+  /**
+   * The other channels the same type is sent on (P404), each with its
+   * publishes or handlers counted, and with `field` the handlers reading it:
+   * a type asked on one channel is often read on another.
+   */
+  alsoOn: z.array(z.object({ channel: z.string(), count: z.number(), readers: z.array(z.string()).optional() })).optional(),
   /** Publishes on the channel whose type was not read: any may send the type asked about. */
   maybe: z.array(nodeOutput).optional(),
   note: z.string().optional(),
@@ -127,6 +147,120 @@ const selectionUnreadOf = (db: GraphDb, facts: MessageTypeFacts): Array<{ id: st
       const at = handler?.file !== undefined ? handler : receiver.consumer;
       const loc = at.file === undefined ? undefined : at.line === undefined ? at.file : `${at.file}:${at.line}`;
       return { id: receiver.consumer.id, ...(loc === undefined ? {} : { loc }), why: receiver.takes === 'generic' ? PASSES_ON : (receiver.why ?? 'its choice was not read') };
+    });
+
+/** A place a choice of a type may still be made, as `selectionUnread` lists it (P404). */
+interface OpenRow {
+  id?: string;
+  loc?: string;
+  service?: string;
+  why: string;
+  in?: string;
+  handedBy?: string;
+}
+
+/** How many calls deep a consumer taking every type is followed to the code it hands the types to. */
+const HAND_OFF_HOPS = 6;
+
+/** The most functions one hand-off walk visits. */
+const HAND_OFF_NODES = 400;
+
+/** The method or function a line of a file is written in: the nearest one declared at or above it. */
+const codeAt = (db: GraphDb, service: string, file: string, line: number): GraphNode | undefined => {
+  let best: GraphNode | undefined;
+  for (const type of ['method', 'function'] as const) {
+    for (const node of db.nodesByType(type)) {
+      if (node.repo !== service || node.file !== file || node.line === undefined || node.line > line) continue;
+      if (best === undefined || (best.line ?? 0) < node.line) best = node;
+    }
+  }
+  return best;
+};
+
+/** The code each consumer that takes every type hands it to, followed by its calls (P404). */
+const handedTo = (db: GraphDb, facts: MessageTypeFacts): Map<string, string> => {
+  const reached = new Map<string, string>();
+  for (const receiver of facts.receivers) {
+    if (receiver.takes !== 'generic' || receiver.unreached !== undefined) continue;
+    let frontier = db.edgesFrom(receiver.consumer.id, ['handles']).map((edge) => edge.to);
+    for (let hop = 0; hop <= HAND_OFF_HOPS && frontier.length > 0 && reached.size < HAND_OFF_NODES; hop += 1) {
+      const next: string[] = [];
+      for (const id of frontier) {
+        if (reached.has(id)) continue;
+        reached.set(id, receiver.consumer.id);
+        for (const edge of db.edgesFrom(id, ['calls'])) if (!reached.has(edge.to)) next.push(edge.to);
+      }
+      frontier = next;
+    }
+  }
+  return reached;
+};
+
+/** A loc's file and line. */
+const LOC = /^(.*):(\d+)$/;
+
+/**
+ * The places a type no code selects may still be chosen (P404), as the
+ * linker said them from where its name is written: each with the function
+ * it is written in, and the consumer taking every type that hands it there
+ * where its calls reach it.
+ */
+const openRowsOf = (db: GraphDb, facts: MessageTypeFacts, open: readonly UnselectedOpen[]): OpenRow[] => {
+  let handed: Map<string, string> | undefined;
+  return open.slice(0, MOST_UNREAD_NAMED).map((place) => {
+    const at = place.loc === undefined ? null : LOC.exec(place.loc);
+    const code = place.id !== undefined || at === null || place.service === undefined ? undefined : codeAt(db, place.service, at[1]!, Number(at[2]));
+    const by = code === undefined ? undefined : (handed ??= handedTo(db, facts)).get(code.id);
+    // A consumer is where its handler is written: where its choice would be.
+    const [handles] = place.id === undefined ? [] : db.edgesFrom(place.id, ['handles']);
+    const handler = handles === undefined ? undefined : db.node(handles.to);
+    const loc = handler?.file === undefined ? place.loc : handler.line === undefined ? handler.file : `${handler.file}:${handler.line}`;
+    return {
+      ...(place.id === undefined ? {} : { id: place.id }),
+      ...(loc === undefined ? {} : { loc }),
+      ...(place.id === undefined && place.service !== undefined ? { service: place.service } : {}),
+      why: place.why,
+      ...(code === undefined ? {} : { in: code.id }),
+      ...(by === undefined ? {} : { handedBy: by }),
+    };
+  });
+};
+
+/** What `left` says of the places a type may still be chosen: how many, and the first, the one to read (P404). */
+const openLeft = (type: string, count: number, first: OpenRow): string =>
+  `unsure: ${count} place${count === 1 ? '' : 's'} may still choose ${type}, the first ${first.loc ?? first.id ?? first.service ?? ''}${count > 1 ? '; verbose: true lists each' : ''}`;
+
+/** The most code one `alsoOn` row names. */
+const MOST_ALSO_NAMED = 3;
+
+/**
+ * The other channels a type is sent on (P404), at most `MAX_CARRIERS`: each
+ * with its publishes (who_emits) or the handlers choosing it (who_consumes)
+ * counted, and with a field the handlers there that read it, named. A
+ * pilot asked who reads a field of a type on the channel it was also sent
+ * on, got none, and took six turns to find the reader on the other one.
+ */
+const alsoCarriedOn = (
+  db: GraphDb,
+  asked: string,
+  value: string,
+  key: 'producers' | 'consumers',
+  field: string | undefined,
+): Array<{ channel: string; count: number; readers?: string[] }> =>
+  channelsCarrying(db, value)
+    .filter((one) => one.channel !== asked)
+    .slice(0, MAX_CARRIERS)
+    .flatMap((one) => {
+      const typeNode = db.node(makeMessageTypeId(one.channel, one.type));
+      if (typeNode === undefined) return [];
+      const facts = messageTypeFacts(db, typeNode);
+      if (key === 'producers') return [{ channel: one.channel, count: facts.producers.length }];
+      const choosing = facts.selectors.filter((selector) => selector.unreached === undefined).map((selector) => selector.consumer);
+      const takers =
+        choosing.length > 0 ? choosing : facts.receivers.filter((receiver) => receiver.takes === 'generic' && receiver.unreached === undefined).map((receiver) => receiver.consumer);
+      if (field === undefined) return [{ channel: one.channel, count: choosing.length }];
+      const readers = takers.filter((node) => consumerReading(db, node, one.type).reads.some((row) => readsField(row.field, field))).map((node) => node.id).sort();
+      return [{ channel: one.channel, count: readers.length, ...(readers.length === 0 ? {} : { readers: readers.slice(0, MOST_ALSO_NAMED) }) }];
     });
 
 /** A selector as listed: the consumer, and where and how the choice was made. */
@@ -192,6 +326,7 @@ const fieldsOfEnds = (
   type: string | undefined,
   field: string | undefined,
   detail: number,
+  roles?: ReadonlyMap<string, string>,
 ): FieldsOfEnds => {
   const extra = new Map<string, Record<string, unknown>>();
   if (field === undefined && detail < 2) return { kept: [...nodes], extra, left: [] };
@@ -205,8 +340,10 @@ const fieldsOfEnds = (
         if (reading.known) extra.set(node.id, { reads: fieldNames(reading) });
         continue;
       }
-      if (!reading.known) left.push(`unread: ${node.label} was not read for the fields it reads`);
-      for (const use of reading.unread) left.push(`unsure: ${node.label}: ${use.why}, line ${use.line}`);
+      // Why it may read the field at all (P404): it chooses the type, or takes every type.
+      const role = roles?.get(node.id);
+      if (!reading.known) left.push(`unread: ${node.label}${role === undefined ? '' : ` (${role})`} was not read for the fields it reads`);
+      for (const use of reading.unread) left.push(`unsure: ${node.label}${role === undefined ? '' : ` (${role})`}: ${use.why}, line ${use.line}`);
       const sites = reading.reads.filter((row) => readsField(row.field, field));
       if (sites.length === 0) continue;
       kept.push(node);
@@ -325,11 +462,19 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
             ? facts.receivers.filter((receiver) => receiver.takes === 'generic').map((receiver) => receiver.consumer)
             : selected;
         const elsewhere = outsideService(candidates, input.service);
-        const ends = fieldsOfEnds(db, key, candidates.filter(inService(input.service)).sort(byId), parent.id, wanted, field, detail);
+        const roles = new Map<string, string>([
+          ...facts.receivers.filter((receiver) => receiver.takes === 'generic').map((receiver) => [receiver.consumer.id, 'takes every type'] as const),
+          ...selected.map((node) => [node.id, `chooses ${wanted}`] as const),
+        ]);
+        const ends = fieldsOfEnds(db, key, candidates.filter(inService(input.service)).sort(byId), parent.id, wanted, field, detail, roles);
+        // The other channels the type is sent on (P404): the field may be read there and not here.
+        const alsoOn = alsoCarriedOn(db, parent.id, wanted, key, field);
         const nodes = ends.kept;
         const { items, total, truncated, nextOffset } = truncate(nodes, maxNodes, input.offset);
         const said = key === 'consumers' ? unselectedSaid(facts) : undefined;
-        const selectionUnread = said?.sureness === 'unsure' ? selectionUnreadOf(db, facts) : [];
+        // Where the build said where the type's name is written, the places a choice may still be made (P404).
+        const selectionUnread: OpenRow[] = said?.sureness !== 'unsure' ? [] : said.open !== undefined ? openRowsOf(db, facts, said.open) : selectionUnreadOf(db, facts);
+        const openCount = said?.open === undefined ? selectionUnread.length : (said.openCount ?? selectionUnread.length);
         const unreadNamed = selectionUnread.slice(0, MOST_UNREAD_NAMED);
         const maybe = key === 'producers' && facts.producers.length === 0 ? facts.unreadProducers : [];
         const args = { channel: parent.id, type: wanted, field, service: input.service, detail: input.detail, maxNodes };
@@ -348,6 +493,7 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
             ...(field === undefined ? {} : { field }),
             ...(said === undefined ? {} : { unselected: said.said, sureness: said.sureness }),
             ...(unreadNamed.length === 0 ? {} : { selectionUnread: unreadNamed }),
+            ...(alsoOn.length === 0 ? {} : { alsoOn }),
             ...(key === 'producers' && facts.producers.length === 0
               ? {
                   note:
@@ -364,7 +510,9 @@ export const registerChannels = (server: McpServer, ctx: ToolContext): void => {
               said?.sureness === 'unsure' &&
                 (selectionUnread.length === 0
                   ? `unsure: ${said.said}`
-                  : `unsure: ${selectionUnread.length} consumer${selectionUnread.length === 1 ? '' : 's'} whose choice was not read: selectionUnread${selectionUnread.length > unreadNamed.length ? ` names ${unreadNamed.length}` : ''}`),
+                  : said.open !== undefined
+                    ? openLeft(wanted, openCount, selectionUnread[0]!)
+                    : `unsure: ${selectionUnread.length} consumer${selectionUnread.length === 1 ? '' : 's'} whose choice was not read: selectionUnread${selectionUnread.length > unreadNamed.length ? ` names ${unreadNamed.length}` : ''}`),
               filterLeft(elsewhere, key, input.service),
               ...ends.left,
               ...reader.left(),

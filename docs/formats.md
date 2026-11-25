@@ -161,7 +161,7 @@ On a `consumer` (P358):
 | `handsOnTo` | on the consumer a stream's frames arrive at, where it only pushes them into a subject: the consumers subscribed to it, which stand for it when whether a type is selected is asked; `subjects` the subjects it pushes into |
 | `unreached` | why the consumer never runs, said by the reader that drew it: the wrapper it subscribes through is injected or made by nothing (P362); a choice it makes is no selection |
 
-On a `channel` of kind `message_type`: `channel` (the channel it is a type of), `messageType`, `discriminator`. Type nodes are counted in none of the link report's channel figures; `channels.unselectedTypes` lists those published where consumers choose by type and chosen by none.
+On a `channel` of kind `message_type`: `channel` (the channel it is a type of), `messageType`, `discriminator`, and, where `build` read the code, `nameWritten` (P404): where its name is written - `sent` (the first three places it is sent or built into a message, `service`, `loc`, `text`), `sentCount`, `onlyAtSends` (every one at a publish of it), `defined` (enum members, constants, types), `open` (at most five other places, each with `why`: written where the graph read no choice, a whole use of the enum defining it, a prefix, pattern or assembled name that may take it), `openCount`, and `unread` (services consuming its channel whose code was not read). Type nodes are counted in none of the link report's channel figures; `channels.unselectedTypes` lists those published where consumers choose by type and chosen by none.
 
 ### Ways in
 

@@ -8,6 +8,29 @@ only one of them moved.
 
 ### Added
 
+- **Answers that settle themselves (P404).** The build records where each
+  type of message's name is written in the code it read (sent or built, the
+  enum member or constant defining it and that member's uses, every other
+  place, and every prefix, pattern or assembled name that may take it), so
+  "no code selects ROW_CLAIMED" past consumers that take every type and hand
+  it on is settled where the name is written only where it is sent:
+  `who_consumes` says `settled: "no code compares ROW_CLAIMED: its name is
+  written only where it is sent, at …"`, `complete: true`, and `dead` and
+  `message-type-unselected` agree; what the name cannot rule out stays
+  unsure, each place named (`selectionUnread` verbose only, with the function
+  it is in and the consumer that hands it there; compact counts them in
+  `left`). A `case` that is code of its own is handled by the function
+  holding the switch, not by the lookup it makes first; a subscription's
+  callback that chooses before handing the message on is read with the
+  argument it hands it in, and a consumer's field reads start at its first
+  parameter that can hold a message (`dispatch(venueId: string, raw:
+  unknown)`). `check_contract({channel, type})` lists only the
+  consumers choosing the type (and those not read), counting the rest
+  (`takeEveryType`). `who_consumes` and `who_emits` with a type name the other
+  channels carrying it (`alsoOn`), with a field the handlers there reading
+  it. `get_flow` says `requests` first, `settled` where every request lands,
+  each unread step by name and whether it lies on a request's way, and cuts
+  its deepest rows first past the answer's size, the requests kept.
 - **What clients already check is read (P402).** An Angular template's reads
   are `guarded` where the template checks a field on their path first (`?.`,
   `@if`, `*ngIf`, `??`, `||`, `&&`, `!`, a ternary, `== null`), so

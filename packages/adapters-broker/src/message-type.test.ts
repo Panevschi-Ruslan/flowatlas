@@ -100,6 +100,25 @@ export class Handlers {
     }
   }
 
+  async lookedUp(event: ParcelEvent): Promise<void> {
+    let line: string | undefined;
+    switch (event.type) {
+      case 'PARCEL_LOST': {
+        if (!event.id) return;
+        const found = await this.find(event.id);
+        if (!found) return;
+        line = this.format(event);
+        break;
+      }
+      case 'PARCEL_PACKED':
+        await this.onPacked(event);
+        break;
+    }
+    void line;
+  }
+
+  async find(id: string): Promise<string | undefined> { return id; }
+  format(event: ParcelEvent): string { return event.id; }
   onPacked(event: ParcelEvent): void { void event; }
   onShipped(event: ParcelEvent): void { void event; }
   forward(event: ParcelEvent): void { void event; }
@@ -172,6 +191,10 @@ describe('the types a handler chooses on', () => {
     expect(pairs(reading)).toEqual(['PARCEL_LOST:switch:onShipped', 'PARCEL_PACKED:switch:onPacked', 'PARCEL_SHIPPED:switch:onShipped']);
     // The default hands every other type on, the same way: not a choice of any one.
     expect(reading.others).toBe(true);
+  });
+
+  it('takes a case written as code of its own as handled where the switch is, not by the lookup it makes first (P404)', () => {
+    expect(pairs(selections('lookedUp'))).toEqual(['PARCEL_LOST:switch:self', 'PARCEL_PACKED:switch:onPacked']);
   });
 
   it('reads an if and the else ifs after it, an || of values included', () => {

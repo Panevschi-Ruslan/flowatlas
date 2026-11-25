@@ -1,4 +1,11 @@
 {
+  "settled": "the request lands on PATCH /api/orders/:param/cancel (shop-api), OrdersController.cancel",
+  "requests": [
+    {
+      "route": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+    }
+  ],
   "root": {
     "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
     "loc": "src/orders/orders.controller.ts:27",
@@ -238,6 +245,19 @@
                       "channel": "channel:order_updates",
                       "discriminator": "type",
                       "channelKind": "channel",
+                      "nameWritten": {
+                        "sent": [
+                          {
+                            "service": "shop-api",
+                            "loc": "src/orders/orders.service.ts:15",
+                            "text": "type: 'ORDER_CANCELLED'"
+                          }
+                        ],
+                        "sentCount": 1,
+                        "onlyAtSends": true,
+                        "defined": 1,
+                        "openCount": 0
+                      },
                       "producers": 1,
                       "consumers": 1
                     },
@@ -365,9 +385,5 @@
     ]
   },
   "unresolvedOnPath": 0,
-  "complete": true,
-  "next": [
-    "impact({symbol: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
-    "get_source({symbol: \"shop-api#src/orders/orders.controller.ts:OrdersController.cancel\"})"
-  ]
+  "complete": true
 }

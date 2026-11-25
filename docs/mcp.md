@@ -834,6 +834,61 @@ an answer that was right: turns, not answer size, are what a session pays for.
   repository shares by its call, `.start(`, searched as written; the bare word
   met every one of them.
 
+#### Answers that settle themselves (P404)
+
+A second pilot's costly questions each ended with the agent reading what
+the first answer could have settled.
+
+- **A type's name, where it is written.** The build records on each type of
+  message where its name is written in every file it read (`nameWritten` on
+  the type's node): where it is sent or built into a message, how many places
+  define it (an enum member, a constant, a type), and every other place - a
+  `case`, a comparison, a key of a record of handlers, a set of names, a use
+  of the whole enum (`Object.values(VenueEvent)`) - that is no choice the
+  graph read, and every test a name cannot rule out (a `startsWith`, a
+  pattern naming part of it, a name assembled when the code runs). A
+  constant or an enum member holding the name is followed to its uses.
+- **"Nothing selects it", settled.** Where consumers take every type and
+  hand it on, a type whose name is written nowhere but its sends and
+  definitions is chosen by no code past them: `who_consumes` says it,
+  `settled: "no code compares ROW_CLAIMED: its name is written only where it
+  is sent, at src/rooms/rooms.service.ts:17 in rooms-api; 1 consumer chooses
+  other types; 3 consumers take every type and hand it on, and no code past
+  them compares the name"`, `complete: true`; `dead` and the finding
+  `message-type-unselected` are sure alike. What the name cannot rule out
+  stays unsure, each place named: a consumer whose choice was not read, a
+  place the name is written, a test that may take it, a consumer in a
+  service whose code was not read. `selectionUnread` lists them in a verbose
+  answer, with the function each place is in (`in`) and the consumer taking
+  every type that hands it there (`handedBy`); a compact answer says the
+  count and the first place in `left`.
+- **A case handled where it is written.** A `case` or an `if` branch that is
+  code of its own (`const room = await this.findRoom(evt.roomId); if (!room)
+  return; formatted = formatCall(…)`) is handled by the function holding the
+  choice, not by the first call in it; one call handing the message on (or a
+  row of calls) is still that call. A callback written where a consumer
+  subscribes that chooses before handing the message on (`if
+  (!RELEVANT.has(evt.type)) return; this.dispatch(id, evt)`) is read with the
+  argument it hands the message in.
+- **Choosers listed, the rest counted.** `check_contract({channel, type})`
+  lists the consumers choosing the type and those whose choice was not read;
+  those taking every type are compared and counted (`takeEveryType`).
+- **The other channels a type is sent on.** `who_consumes` and `who_emits`
+  with `type` say `alsoOn`: each other channel carrying the type, its
+  handlers (or publishes) counted, and with `field` the handlers there that
+  read it, named. A handler left unread for its fields says why it may read
+  the field at all: it chooses the type, or takes every type.
+- **A flow's requests first.** `get_flow` says `requests` first, each
+  request the walk crossed with the route it lands on and the code handling
+  it (`{route, by}`, `{unjoined}`), and `settled` where every one lands (`"the
+  request lands on GET /api/admin/:param/rooms/free-times (rooms-api),
+  RoomsController.freeTimes"`). A step the walk could not follow is named
+  with why and whether it lies on a request's way; one off every request's
+  way leaves `complete: false` and its `left`, and the requests settled; a
+  walk its depth stopped settles nothing.
+  Past `MAX_ANSWER_CHARS` the tree's deepest rows are cut first, a level at a
+  time, `requests` kept whole and the cut said in `left`.
+
 #### Answers never falsely complete (P381)
 
 An answer that says `complete: true` is the whole answer to what was asked;

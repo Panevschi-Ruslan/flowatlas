@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:24:11.318Z",
+  "builtAt": "2026-11-25T15:58:43.693Z",
   "services": [
     {
       "name": "planner",
@@ -431,6 +431,20 @@
         "messageType": "ALERT",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "planner",
+              "loc": "src/boards/boards.service.ts:16",
+              "text": "type: 'ALERT'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -464,6 +478,25 @@
         "messageType": "CARD_ADDED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "planner",
+              "loc": "src/boards/boards.service.ts:11",
+              "text": "type: 'CARD_ADDED'"
+            },
+            {
+              "service": "planner",
+              "loc": "src/boards/boards.service.ts:12",
+              "text": "type: 'CARD_ADDED'"
+            }
+          ],
+          "sentCount": 2,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -497,6 +530,20 @@
         "messageType": "DIGEST",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "planner",
+              "loc": "src/boards/boards.service.ts:20",
+              "text": "type: 'DIGEST'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -532,6 +579,20 @@
         "messageType": "MEMBER_JOINED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "gateway",
+              "loc": "src/objects/presence-hub.ts:29",
+              "text": "type: 'MEMBER_JOINED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": false,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 0,
         "consumers": 1
       }
@@ -565,6 +626,25 @@
         "messageType": "CARD_ADDED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "planner",
+              "loc": "src/boards/boards.service.ts:11",
+              "text": "type: 'CARD_ADDED'"
+            },
+            {
+              "service": "planner",
+              "loc": "src/boards/boards.service.ts:12",
+              "text": "type: 'CARD_ADDED'"
+            }
+          ],
+          "sentCount": 2,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }

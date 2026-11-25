@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:24:18.180Z",
+  "builtAt": "2026-11-25T15:58:48.507Z",
   "services": [
     {
       "name": "shipping",
@@ -193,6 +193,27 @@
         "messageType": "COURIER_ASSIGNED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shipping",
+              "loc": "src/parcels/parcels.service.ts:19",
+              "text": "type: 'COURIER_ASSIGNED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "portal",
+              "loc": "src/screens/ParcelBoard.tsx:18",
+              "text": "event.type === 'COURIER_ASSIGNED'",
+              "why": "COURIER_ASSIGNED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -210,6 +231,20 @@
         "messageType": "PARCEL_PACKED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shipping",
+              "loc": "src/parcels/parcels.service.ts:15",
+              "text": "type: 'PARCEL_PACKED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -2344,7 +2379,7 @@
       "file": "src/parcels/parcels.service.ts",
       "line": 19,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types (handleParcelEvent); onTick passes every type on without choosing, and what takes them past it is not read; CourierPanel not read (its handler is not code this reads)",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types; 1 consumer takes every type and hands it on; 2 places may still choose it: src/live/useWorkspaceEvents.ts:16 (its handler is not code this reads), and 1 more",
       "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
       "service": "shipping",
       "meta": {

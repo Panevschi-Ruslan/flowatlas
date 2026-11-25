@@ -1,4 +1,5 @@
 import type { DetailLevel, GraphNode } from '@flowatlas/core';
+import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
@@ -15,6 +16,66 @@ import { MAX_NEXT, withNext, withTraceFor } from '../query/next.js';
 import { slimTree, type WireFlowNode, type WireNode } from '../query/wire.js';
 import { bound, callOf, commonInput, completeOf, READ_ONLY, withDb, type ToolContext } from './common.js';
 import { trafficDiffers } from './contract.js';
+import { landingsOf } from '../query/requests.js';
+import { MAX_ANSWER_CHARS } from '../capped.js';
+
+/**
+ * What `left` says of the steps the walk could not follow (P404): the first
+ * by name and why, and whether it lies on a request's way. A pilot's
+ * "unread: 1 step on the path could not be followed" beside a request
+ * already joined read as if the route might be wrong, and the agent searched
+ * and read to confirm it.
+ */
+const unreadSaid = (db: GraphDb, steps: ReadonlyArray<{ id: string; onRequestWay: boolean }>, requests: boolean): string | undefined => {
+  const [first] = steps;
+  if (first === undefined) return undefined;
+  const node = db.node(first.id);
+  const [row] = db.unresolvedFor(first.id);
+  const why = row === undefined ? (node === undefined ? 'not in the graph' : undefined) : row.reason;
+  const onWay = steps.filter((step) => step.onRequestWay).length;
+  const where = !requests ? '' : onWay === 0 ? `, off every request's way` : `, ${onWay === steps.length ? '' : `${onWay} of them `}on a request's way`;
+  return `unread: ${steps.length} step${steps.length === 1 ? '' : 's'} on the path could not be followed: ${node?.label ?? first.id}${why === undefined ? '' : ` (${why})`}${steps.length > 1 ? ` and ${steps.length - 1} more` : ''}${where}`;
+};
+
+/** How many rows a tree holds below its root, and how deep it goes. */
+const shapeOf = (row: WireFlowNode, depth = 0): { rows: number; deepest: number } =>
+  row.children.reduce(
+    (sum, child) => {
+      const inner = shapeOf(child, depth + 1);
+      return { rows: sum.rows + 1 + inner.rows, deepest: Math.max(sum.deepest, inner.deepest) };
+    },
+    { rows: 0, deepest: depth },
+  );
+
+/** The tree with every row deeper than `depth` steps left out. */
+const cutBelow = (row: WireFlowNode, depth: number, at = 0): WireFlowNode => ({
+  ...row,
+  children: at >= depth ? [] : row.children.map((child) => cutBelow(child, depth, at + 1)),
+});
+
+/**
+ * A flow's answer within `MAX_ANSWER_CHARS` (P404): past it, the deepest
+ * rows of the tree go first, a level at a time, and `requests` stays whole,
+ * so where the requests land is never what the cut takes. Said in `left`.
+ */
+export const flowWithin =(answer: Record<string, unknown> & { root: WireFlowNode }, most = MAX_ANSWER_CHARS): Record<string, unknown> => {
+  if (JSON.stringify(answer).length <= most) return answer;
+  const before = shapeOf(answer.root);
+  let root = answer.root;
+  for (let depth = before.deepest - 1; depth >= 1; depth -= 1) {
+    root = cutBelow(answer.root, depth);
+    if (JSON.stringify({ ...answer, root }).length <= most - 200) break;
+  }
+  const after = shapeOf(root);
+  if (after.rows === before.rows) return answer;
+  const left = Array.isArray(answer.left) ? (answer.left as string[]) : [];
+  return {
+    ...answer,
+    root,
+    complete: false,
+    left: [...left, `cap: ${before.rows - after.rows} rows deeper than ${after.deepest} steps cut, the answer held to ${most} characters${Array.isArray(answer.requests) ? '; requests lists every request' : ''}`],
+  };
+};
 
 /**
  * `next` with `check_contract({edge: entry})` second (P113), when traffic
@@ -257,8 +318,11 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             flow.root.failures = failuresSeenRef(compared);
           }
         }
+        // Where each request the walk crossed lands, first (P404): the question a flow is most often asked.
+        const landed = landingsOf(db, (flow.requests ?? []).flatMap((id) => db.node(id) ?? []));
         return withNext(
-          {
+          flowWithin({
+            ...landed,
             root: treeOut(flow.root, detail),
             // The less specific routes that answer the same request (P94 D2).
             ...(ref.alsoAnswers === undefined ? {} : { alsoAnswers: ref.alsoAnswers }),
@@ -272,11 +336,10 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             // The whole flow, or what was cut or left unread on it (P364).
             ...completeOf([
               flow.truncated !== undefined && `${(flow.stoppedBy ?? []).join(', ') || 'cut'}: ${flow.truncated}`,
-              flow.unresolvedOnPath > 0 &&
-                `unread: ${flow.unresolvedOnPath} step${flow.unresolvedOnPath === 1 ? '' : 's'} on the path could not be followed`,
+              unreadSaid(db, flow.unreadSteps ?? [], landed.requests !== undefined),
             ]),
             ...(note === undefined ? {} : { note }),
-          },
+          }),
           withDrift(
             withTraceFor(flowNext(ref.id, flow), ref.node, sampledIn(ctx.handle.path)),
             ref.id,

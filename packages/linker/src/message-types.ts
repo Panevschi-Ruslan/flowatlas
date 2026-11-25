@@ -20,6 +20,7 @@ import {
 } from '@flowatlas/core';
 import { channelsUnknown, messageTypeFacts, unselectedSaid, type MessageTypeLookup } from './analysis/message-types.js';
 import { EVERY_CHANNEL_VIA } from './every-channel-link.js';
+import { markTypeNamesWritten, type TypeNameSources } from './type-names.js';
 import { cmp, edgeKey } from './order.js';
 
 /**
@@ -39,7 +40,7 @@ import { cmp, edgeKey } from './order.js';
  * none of them, is a finding: the design says each type has its handler, and
  * this one has none.
  */
-export const joinMessageTypes = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>): Unresolved[] => {
+export const joinMessageTypes = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>, sources?: TypeNameSources): Unresolved[] => {
   const from = new Map<string, GraphEdge[]>();
   const to = new Map<string, GraphEdge[]>();
   const index = (edge: GraphEdge): void => {
@@ -256,6 +257,9 @@ export const joinMessageTypes = (nodes: Map<string, GraphNode>, edges: Map<strin
       }
     }
   }
+
+  // Where each type's name is written in the code the build read (P404): what "nothing selects it" can rule out.
+  if (sources !== undefined) markTypeNamesWritten(nodes, lookup, sources);
 
   const modules = new Set(lookup.nodesByType('module').map((node) => node.repo));
   const rows: Unresolved[] = [];

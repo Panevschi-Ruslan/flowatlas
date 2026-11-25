@@ -27,7 +27,7 @@ const SAID_ROOM = 600;
 const MOST_CUTS = 4;
 
 /** Fields that are no list of rows, whatever their size: the calls and the cuts already said. */
-const NOT_ROWS: ReadonlySet<string> = new Set(['next', 'left']);
+const NOT_ROWS: ReadonlySet<string> = new Set(['next', 'left', 'requests']);
 
 /** A call written as `next` writes one, the arguments as given. */
 const callSaid = (tool: string, args: Readonly<Plain>): string => {

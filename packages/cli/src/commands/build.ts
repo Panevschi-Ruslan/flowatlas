@@ -1,5 +1,5 @@
 import { execFile, spawn } from 'node:child_process';
-import { closeSync, existsSync, mkdirSync, openSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { cpus } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -41,6 +41,7 @@ import {
   missedOf,
   writeGraphDb,
   type LinkResult,
+  type TypeNameSources,
   type ServicePackages,
   type ServiceReport,
 } from '@flowatlas/linker';
@@ -363,6 +364,33 @@ interface SurveyOptions {
   /** What would stand in for it now, for the names its last reading wanted (P83). */
   standIns?: StandInsState;
 }
+
+/** The files a type's name is looked for in: code and templates, not the deployment files a survey also stamps. */
+const NAME_FILES = /\.(m|c)?(t|j)sx?$|\.(vue|svelte|html)$/;
+
+/**
+ * The code the build read, for where each message type's name is written
+ * (P404): each surveyed service's source files, read when the linker asks.
+ */
+export const typeNameSourcesOf = (surveys: readonly RepoSurvey[], repoDirOf: (service: string) => string | undefined): TypeNameSources => ({
+  services: surveys.flatMap((survey) => {
+    const dir = repoDirOf(survey.service);
+    if (dir === undefined) return [];
+    return [
+      {
+        service: survey.service,
+        files: Object.keys(survey.files).filter((file) => NAME_FILES.test(file) && !file.endsWith('.d.ts')),
+        read: (file: string): string | undefined => {
+          try {
+            return readFileSync(join(dir, file), 'utf8');
+          } catch {
+            return undefined;
+          }
+        },
+      },
+    ];
+  }),
+});
 
 /** Everything planning needs to know about one repository, read from disk. */
 const surveyService = (options: SurveyOptions): RepoSurvey => {
@@ -1264,6 +1292,11 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
     settings: settingsOfProject(loaded),
+    // Where each message type's name is written, in the files each survey listed (P404).
+    sources: typeNameSourcesOf(surveys, (name) => {
+      const service = loaded.config.services.find((each) => each.name === name);
+      return service === undefined ? undefined : loaded.repoDir(service);
+    }),
     services: extracted.map((item) => {
       const packages = packagesOf(readServiceManifest(loaded.repoDir(item.service)));
       return packages === undefined ? item.report : { ...item.report, packages };

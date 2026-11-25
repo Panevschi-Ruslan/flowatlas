@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:13:55.857Z",
+  "builtAt": "2026-11-25T15:52:51.043Z",
   "services": [
     {
       "name": "market-api",
@@ -113,6 +113,20 @@
         "messageType": "DESK_URGENT",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "market-api",
+              "loc": "src/events.service.ts:15",
+              "text": "type: 'DESK_URGENT'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -130,6 +144,20 @@
         "messageType": "ITEMS_CHANGED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "market-api",
+              "loc": "src/events.service.ts:11",
+              "text": "type: 'ITEMS_CHANGED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }

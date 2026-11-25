@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
@@ -309,6 +315,20 @@
                         "messageType": "ORDER_CANCELLED",
                         "discriminator": "type",
                         "channelKind": "channel",
+                        "nameWritten": {
+                          "sent": [
+                            {
+                              "service": "shop-api",
+                              "loc": "src/orders/orders.service.ts:15",
+                              "text": "type: 'ORDER_CANCELLED'"
+                            }
+                          ],
+                          "sentCount": 1,
+                          "onlyAtSends": true,
+                          "defined": 1,
+                          "open": [],
+                          "openCount": 0
+                        },
                         "producers": 1,
                         "consumers": 1
                       }

@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T16:00:46.103Z",
+  "configHash": "a588343e441c",
+  "services": [
+    {
+      "name": "chat-bot",
+      "repo": "./chat-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 24,
+      "edges": 19,
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 1091,
+      "packages": {
+        "name": "chat-bot",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "notify-worker",
+      "repo": "./notify-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 36,
+      "types": 4,
+      "unresolved": 1,
+      "durationMs": 1059,
+      "packages": {
+        "name": "notify-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "rooms-api",
+      "repo": "./rooms-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 39,
+      "edges": 38,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 1037,
+      "packages": {
+        "name": "rooms-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": [],
+    "unselectedTypes": [
+      "channel:staff_feed#SLOTS_SHOWN",
+      "channel:venue_events#ORDER_PAID",
+      "channel:venue_events#ROOM_READY",
+      "channel:venue_events#ROW_CLAIMED",
+      "channel:venue_events#TABLE_FREED"
+    ]
+  },
+  "routes": {
+    "total": 7,
+    "called": 1,
+    "uncalled": [
+      "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/call",
+      "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/claim",
+      "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/ready",
+      "entry:rooms-api:http:POST:/api/venues/:param/orders/:param/paid",
+      "entry:rooms-api:http:POST:/api/venues/:param/orders/:param/ready/:param",
+      "entry:rooms-api:http:POST:/api/venues/:param/orders/tables/:param/free"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "file": "src/rooms/room.service.ts",
+      "line": 26,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects SLOTS_SHOWN on staff_feed: 1 consumer chooses other types (StaffBot.onEvent)",
+      "symbol": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+      "service": "chat-bot",
+      "meta": {
+        "type": "channel:staff_feed#SLOTS_SHOWN",
+        "channel": "channel:staff_feed",
+        "messageType": "SLOTS_SHOWN",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ORDER_PAID on venue_events: 1 consumer chooses other types; 3 consumers take every type and hand it on; 1 place may still choose it: src/orders/order-watch.service.ts:23 (a prefix test that may take ORDER_PAID: evt.type.startsWith('ORDER_'))",
+      "symbol": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#ORDER_PAID",
+        "channel": "channel:venue_events",
+        "messageType": "ORDER_PAID",
+        "sureness": "unsure"
+      }
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects TABLE_FREED on venue_events: 1 consumer chooses other types; 3 consumers take every type and hand it on; 1 place may still choose it: src/feed/room-board.service.ts:9 (TABLE_FREED is written here; the graph read no choice of it: evt.type === 'TABLE_FREED')",
+      "symbol": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#TABLE_FREED",
+        "channel": "channel:venue_events",
+        "messageType": "TABLE_FREED",
+        "sureness": "unsure"
+      }
+    },
+    {
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17,
+      "reason": "message-type-unselected",
+      "message": "no code compares ROW_CLAIMED: its name is written only where it is sent, at src/rooms/rooms.service.ts:17 in rooms-api; 1 consumer chooses other types; 3 consumers take every type and hand it on, and no code past them compares the name",
+      "symbol": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#ROW_CLAIMED",
+        "channel": "channel:venue_events",
+        "messageType": "ROW_CLAIMED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26,
+      "reason": "message-type-unselected",
+      "message": "no code compares ROOM_READY: its name is written only where it is sent, at src/rooms/rooms.service.ts:26 in rooms-api and 1 more; 1 consumer chooses other types; 3 consumers take every type and hand it on, and no code past them compares the name",
+      "symbol": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#ROOM_READY",
+        "channel": "channel:venue_events",
+        "messageType": "ROOM_READY",
+        "sureness": "sure"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 103,
+    "edges": 105,
+    "types": 7,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 5,
+    "unresolved": 4
+  }
+}

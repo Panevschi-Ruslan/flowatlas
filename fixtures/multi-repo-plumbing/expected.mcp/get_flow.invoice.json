@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:billing:http:POST:/invoices",
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",

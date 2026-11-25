@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:25:17.602Z",
+  "builtAt": "2026-11-25T15:58:13.145Z",
   "services": [
     {
       "name": "jobs",
@@ -39,6 +39,20 @@
         "messageType": "sweep",
         "discriminator": "kind",
         "channelKind": "queue",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "jobs",
+              "loc": "tools/src/sweep.ts:7",
+              "text": "kind: 'sweep'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }

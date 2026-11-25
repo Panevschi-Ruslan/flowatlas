@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:14:46.934Z",
+  "builtAt": "2026-11-25T15:58:46.018Z",
   "services": [
     {
       "name": "boards-api",
@@ -1622,6 +1622,20 @@
         "messageType": "BOARD_AUDITED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:43",
+              "text": "type: 'BOARD_AUDITED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -1656,6 +1670,20 @@
         "messageType": "BOARD_RENAMED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:28",
+              "text": "type: 'BOARD_RENAMED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -1673,6 +1701,20 @@
         "messageType": "CARD_ADDED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:19",
+              "text": "type: 'CARD_ADDED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 2
       }
@@ -1690,6 +1732,33 @@
         "messageType": "CARD_ARCHIVED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:23",
+              "text": "type: 'CARD_ARCHIVED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "admin",
+              "loc": "src/app/boards/archive-panel.component.ts:7",
+              "text": "const ARCHIVE_TYPES = ['CARD_ARCHIVED'] as const;",
+              "why": "CARD_ARCHIVED is written here; the graph read no choice of it"
+            },
+            {
+              "service": "web",
+              "loc": "src/screens/BoardScreen.tsx:6",
+              "text": "const REFRESH_ON: ReadonlySet<string> = new Set(['CARD_MOVED', 'CARD_ARCHIVED', ",
+              "why": "CARD_ARCHIVED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 2
+        },
         "producers": 1,
         "consumers": 3
       }
@@ -1707,6 +1776,20 @@
         "messageType": "CARD_COMMENTED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:33",
+              "text": "type: 'CARD_COMMENTED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -1724,6 +1807,27 @@
         "messageType": "CARD_IMPORTED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/card-events.service.ts:27",
+              "text": "type: 'CARD_IMPORTED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "web",
+              "loc": "src/screens/BoardScreen.tsx:6",
+              "text": "const REFRESH_ON: ReadonlySet<string> = new Set(['CARD_MOVED', 'CARD_ARCHIVED', ",
+              "why": "CARD_IMPORTED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -1741,6 +1845,27 @@
         "messageType": "CARD_MOVED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:15",
+              "text": "type: 'CARD_MOVED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "web",
+              "loc": "src/screens/BoardScreen.tsx:6",
+              "text": "const REFRESH_ON: ReadonlySet<string> = new Set(['CARD_MOVED', 'CARD_ARCHIVED', ",
+              "why": "CARD_MOVED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 3
       }
@@ -1758,6 +1883,27 @@
         "messageType": "CARD_PINNED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [],
+          "sentCount": 0,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/card-events.service.ts:23",
+              "text": "await this.publishCardEvent('CARD_PINNED', boardId, { cardId });",
+              "why": "CARD_PINNED is written here; the graph read no choice of it"
+            },
+            {
+              "service": "web",
+              "loc": "src/screens/BoardScreen.tsx:6",
+              "text": "const REFRESH_ON: ReadonlySet<string> = new Set(['CARD_MOVED', 'CARD_ARCHIVED', ",
+              "why": "CARD_PINNED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 2
+        },
         "producers": 0,
         "consumers": 1
       }
@@ -1775,6 +1921,27 @@
         "messageType": "CREW_ASSIGNED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:38",
+              "text": "type: 'CREW_ASSIGNED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": false,
+          "defined": 0,
+          "open": [
+            {
+              "service": "admin",
+              "loc": "src/app/boards/crew-panel.component.ts:7",
+              "text": "const REFRESH_ON: ReadonlySet<string> = new Set(['CREW_ASSIGNED']);",
+              "why": "CREW_ASSIGNED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 0,
         "consumers": 1
       }
@@ -1809,6 +1976,20 @@
         "messageType": "ORDER_PLACED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/orders.service.ts:20",
+              "text": "type: 'ORDER_PLACED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -1826,6 +2007,20 @@
         "messageType": "ORDER_SHIPPED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/orders.service.ts:25",
+              "text": "type: 'ORDER_SHIPPED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -1843,6 +2038,20 @@
         "messageType": "SCHEDULED_ALERT",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/orders.service.ts:29",
+              "text": "type: 'SCHEDULED_ALERT'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -1876,6 +2085,27 @@
         "messageType": "CREW_ASSIGNED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "boards-api",
+              "loc": "src/boards/boards.service.ts:38",
+              "text": "type: 'CREW_ASSIGNED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "admin",
+              "loc": "src/app/boards/crew-panel.component.ts:7",
+              "text": "const REFRESH_ON: ReadonlySet<string> = new Set(['CREW_ASSIGNED']);",
+              "why": "CREW_ASSIGNED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
         "producers": 1,
         "consumers": 1
       }

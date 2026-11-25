@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:13:52.522Z",
+  "builtAt": "2026-11-25T15:52:48.491Z",
   "services": [
     {
       "name": "store-api",
@@ -135,6 +135,20 @@
         "messageType": "ORDER_CLOSED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "store-api",
+              "loc": "src/events.service.ts:19",
+              "text": "type: 'ORDER_CLOSED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -168,6 +182,20 @@
         "messageType": "ORDER_CHANGED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "store-api",
+              "loc": "src/events.service.ts:11",
+              "text": "type: 'ORDER_CHANGED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }
@@ -201,6 +229,20 @@
         "messageType": "ORDER_PAID",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "store-api",
+              "loc": "src/events.service.ts:15",
+              "text": "type: 'ORDER_PAID'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 0
       }

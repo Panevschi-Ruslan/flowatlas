@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:stock-api:http:POST:/products",
+      "by": "stock-api#src/products/products.controller.ts:ProductsController.create"
+    }
+  ],
   "root": {
     "node": {
       "id": "store-web#src/app/catalog.component.ts:CatalogComponent.add",

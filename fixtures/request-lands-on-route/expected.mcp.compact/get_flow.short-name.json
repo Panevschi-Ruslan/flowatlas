@@ -1,4 +1,11 @@
 {
+  "settled": "the request lands on GET /api/admin/:param/catalog/grouped (shop-api), AdminCatalogController.grouped",
+  "requests": [
+    {
+      "route": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+      "by": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+    }
+  ],
   "root": {
     "id": "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
     "line": "17-19",
@@ -82,9 +89,5 @@
     ]
   },
   "unresolvedOnPath": 0,
-  "complete": true,
-  "next": [
-    "impact({symbol: \"shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped\"})",
-    "get_source({symbol: \"shop-admin#src/app/admin-api.service.ts:AdminApiService.get\"})"
-  ]
+  "complete": true
 }

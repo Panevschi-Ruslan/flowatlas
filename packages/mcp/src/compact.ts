@@ -107,6 +107,14 @@ export const CONTRACT_META: ReadonlySet<string> = new Set([
 export const VERBOSE_ONLY: ReadonlySet<string> = new Set(['confirm']);
 
 /**
+ * An answer's own lists said only in verbose answers (P404): `who_consumes`'
+ * `selectionUnread`, each place a type nothing selects may still be chosen.
+ * Its `left` says how many and the first, the one file and line to read;
+ * a list of every one read as a to-do list, and an agent read each file.
+ */
+export const VERBOSE_ONLY_ANSWER: ReadonlySet<string> = new Set(['selectionUnread']);
+
+/**
  * The tools whose compact rows keep where a declaration ends (P396), said in
  * `line` as `"12-40"`: a flow's steps and impact's rows, the code an agent
  * reads next, where the range saves a Read. Every other tool's rows say the
@@ -474,6 +482,7 @@ const compactObject = (given: Plain, depth: number, under: readonly string[], pa
   for (const [key, value] of Object.entries(row)) {
     if (key === 'endLine' && (endSaid || !pass.ranges)) continue;
     if (depth > 0 && VERBOSE_ONLY.has(key)) continue;
+    if (depth === 0 && VERBOSE_ONLY_ANSWER.has(key)) continue;
     if (KEPT.has(key)) {
       out[key] = compactValue(value, depth + 1, inside, pass);
       continue;

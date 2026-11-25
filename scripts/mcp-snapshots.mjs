@@ -300,6 +300,24 @@ const ANSWERS_END_COMPACT_CASES = ANSWERS_END_CASES.map(([name, tool, args]) => 
 // A maybe whose name another class shares: confirmed by its call, `.start(`, said in verbose answers only.
 ANSWERS_END_CASES.push(['who_calls.common-name-maybe', 'who_calls', { symbol: 'packing-worker#src/packing/audit-feed.service.ts:AuditFeed.start' }]);
 
+/**
+ * Answers that settle themselves (P404): a type whose name is written only
+ * where it is sent, one a prefix test may take, one compared past a hand-off;
+ * a dispatcher's case handled where it is written; a field read on the other
+ * channel the type is sent on; a flow whose request lands, a step off its way
+ * unread.
+ */
+const ANSWERS_SETTLE_CASES = [
+  ['who_consumes.name-sent-only', 'who_consumes', { channel: 'venue_events', type: 'ROW_CLAIMED' }],
+  ['who_consumes.prefix-test', 'who_consumes', { channel: 'venue_events', type: 'ORDER_PAID' }],
+  ['who_consumes.past-a-hand-off', 'who_consumes', { channel: 'venue_events', type: 'TABLE_FREED' }],
+  ['who_consumes.case-handled-in-place', 'who_consumes', { channel: 'venue_events', type: 'CALL_STAFF' }],
+  ['who_consumes.field-on-another-channel', 'who_consumes', { channel: 'venue_events', type: 'ROOM_READY', field: 'roomName' }],
+  ['check_contract.choosers-only', 'check_contract', { channel: 'venue_events', type: 'CALL_STAFF' }],
+  ['get_flow.request-first', 'get_flow', { entry: 'chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes' }],
+];
+const ANSWERS_SETTLE_COMPACT_CASES = ANSWERS_SETTLE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
+
 /** The same impact, compact (P365), at both levels of detail: what an agent is handed. */
 const CALLING_SIDE_COMPACT_CASES = [
   ['impact.calling-side', 'impact', { symbol: CALLING_SIDE_TARGET, verbose: false }],
@@ -1209,6 +1227,16 @@ const SUITES = [
     fixture: join(root, 'fixtures', 'answers-that-end'),
     outDir: join(root, 'fixtures', 'answers-that-end', 'expected.mcp.compact'),
     cases: ANSWERS_END_COMPACT_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'answers-that-settle'),
+    outDir: join(root, 'fixtures', 'answers-that-settle', 'expected.mcp'),
+    cases: ANSWERS_SETTLE_CASES,
+  },
+  {
+    fixture: join(root, 'fixtures', 'answers-that-settle'),
+    outDir: join(root, 'fixtures', 'answers-that-settle', 'expected.mcp.compact'),
+    cases: ANSWERS_SETTLE_COMPACT_CASES,
   },
   {
     fixture: join(root, 'fixtures', 'angular-rendered-reach'),

@@ -1296,6 +1296,22 @@ export {
 } from './worker-config.js';
 export { markUnreferenced, namesWritten, noteMarkup, publishesEntry, UNREFERENCED_META } from './unreferenced.js';
 export {
+  MOST_OPEN,
+  MOST_WRITTEN,
+  NAME_WRITTEN_META,
+  nameWrittenOf,
+  testMayTake,
+  typeNamesIn,
+  type NameSite,
+  type NameSiteKind,
+  type NamesInFile,
+  type NameTest,
+  type NameTestShape,
+  type NameWritten,
+  type OpenPlace,
+  type WrittenPlace,
+} from './type-names-written.js';
+export {
   CREDENTIALS_META,
   HEADERS_META,
   readRequestFacts,

@@ -199,6 +199,9 @@ export const channelContract = (
   const left: string[] = [];
   let producers: GraphNode[];
   let consumers: GraphNode[];
+  // The consumers listed (P404): those choosing the type and those whose choice was not read; the ones taking every
+  // type alike are compared, and counted.
+  let listed: ReadonlySet<string> | undefined;
   if (wanted !== undefined) {
     const typeNode = db.node(makeMessageTypeId(parent.id, wanted));
     if (typeNode === undefined) {
@@ -211,7 +214,10 @@ export const channelContract = (
     const facts = messageTypeFacts(db, typeNode);
     producers = [...facts.producers];
     const generic = facts.receivers.filter((receiver) => receiver.takes === 'generic').map((receiver) => receiver.consumer);
+    const unreadReceivers = facts.receivers.filter((receiver) => receiver.takes === 'unread').map((receiver) => receiver.consumer);
     consumers = [...new Map([...facts.selectors.map((selector) => selector.consumer), ...generic].map((node) => [node.id, node])).values()];
+    listed = new Set([...facts.selectors.map((selector) => selector.consumer.id), ...unreadReceivers.map((node) => node.id)]);
+    for (const node of unreadReceivers) if (!consumers.some((each) => each.id === node.id)) consumers.push(node);
     if (facts.unreadProducers.length > 0) left.push(`unsure: ${facts.unreadProducers.length} publish(es) on ${parent.label} send a type not read; any may be ${wanted}`);
     for (const receiver of facts.receivers) if (receiver.takes === 'unread') left.push(`unsure: ${receiver.consumer.label} chooses by a type not read${receiver.why === undefined ? '' : ` (${receiver.why})`}`);
   } else {
@@ -230,9 +236,11 @@ export const channelContract = (
     return said === undefined ? row : { ...row, unsure: said };
   });
   const shownProducers = producers.slice(0, input.maxNodes);
-  const shownConsumers = consumers.slice(0, input.maxNodes);
+  const listedConsumers = listed === undefined ? consumers.map((node, index) => ({ node, index })) : consumers.flatMap((node, index) => (listed.has(node.id) ? [{ node, index }] : []));
+  const takeEvery = consumers.length - listedConsumers.length;
+  const shownConsumers = listedConsumers.slice(0, input.maxNodes);
   if (shownProducers.length < producers.length) left.push(`page: ${producers.length - shownProducers.length} more producers; raise maxNodes`);
-  if (shownConsumers.length < consumers.length) left.push(`page: ${consumers.length - shownConsumers.length} more consumers; raise maxNodes`);
+  if (shownConsumers.length < listedConsumers.length) left.push(`page: ${listedConsumers.length - shownConsumers.length} more consumers; raise maxNodes`);
   const only = (names: readonly string[]): string[] => (field === undefined ? [...names] : names.filter((name) => readsField(name, field)));
   return withNext(
     {
@@ -243,10 +251,12 @@ export const channelContract = (
         const sends = senders[index]?.sends;
         return { ...reader.annotate(projectDetail(node, 1)), ...(sends === undefined ? {} : { sends: only(sends) }) };
       }),
-      consumers: shownConsumers.map((node, index) => {
+      consumers: shownConsumers.map(({ node, index }) => {
         const reading = receivers[index]!.reading;
         return { ...reader.annotate(projectDetail(node, 1)), ...(reading.known ? { reads: only(fieldNames(reading)) } : {}) };
       }),
+      // Consumers taking every type alike: compared with the rest, not listed (P404).
+      ...(takeEvery === 0 ? {} : { takeEveryType: takeEvery }),
       missing,
       unused,
       ...completeOf([...unsure, ...left, ...reader.left()]),

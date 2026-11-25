@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:49:04.293Z",
+  "builtAt": "2026-11-25T16:00:43.865Z",
   "configHash": "93bf054e22ea",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 30,
       "types": 6,
       "unresolved": 2,
-      "durationMs": 3471,
+      "durationMs": 1025,
       "packages": {
         "name": "docs-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 57,
       "types": 7,
       "unresolved": 2,
-      "durationMs": 3292,
+      "durationMs": 1039,
       "packages": {
         "name": "notify-worker",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 3286,
+      "durationMs": 1009,
       "packages": {
         "name": "realtime-gateway",
         "runtime": [
@@ -107,14 +107,14 @@
       "file": "src/spaces/spaces.service.ts",
       "line": 37,
       "reason": "message-type-unselected",
-      "message": "no code that runs selects QUOTA_WARNING on space:*:events: only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types (ActivityFeed.onMessage, AuditTrail.record and 3 more); StreamRelay.forward passes every type on without choosing, and what takes them past it is not read",
+      "message": "no code that runs compares QUOTA_WARNING: its name is written only where it is sent, at src/spaces/spaces.service.ts:37 in docs-api; only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types; 1 consumer takes every type and hands it on, and no code past it compares the name",
       "symbol": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
       "service": "docs-api",
       "meta": {
         "type": "channel:space:*:events#QUOTA_WARNING",
         "channel": "channel:space:*:events",
         "messageType": "QUOTA_WARNING",
-        "sureness": "unsure"
+        "sureness": "sure"
       }
     }
   ],

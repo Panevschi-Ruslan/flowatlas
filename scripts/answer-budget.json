@@ -495,7 +495,7 @@
                   "params": [
                     {
                       "name": "product",
-                      "type": "{\u202622 fields}"
+                      "type": "{…22 fields}"
                     }
                   ],
                   "returns": "string"
@@ -1868,9 +1868,9 @@
       ],
       "expect": {
         "says": [
-          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { \u2026 }",
-          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { \u2026 }",
-          "48    listNotes(@Param('orderId') orderId: string): string[] { \u2026 }",
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
           "whole: true"
         ],
         "saysNot": [
@@ -2840,7 +2840,7 @@
           "rows": {
             "consumer:web#src/app/live.service.ts:LiveService.onReady": {
               "precision": "high",
-              "fix": "listen with addEventListener(\"order-ready\", \u2026), or send the frames with no event name"
+              "fix": "listen with addEventListener(\"order-ready\", …), or send the frames with no event name"
             }
           }
         },
@@ -3260,22 +3260,154 @@
         "type": "ORDER_DELAYED"
       },
       "lists": [
-        "consumers",
-        "selectionUnread"
+        "consumers"
       ],
       "expect": {
         "complete": false,
         "lists": {
-          "selectionUnread": [
-            "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
-            "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent"
+          "consumers": []
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P403: no code that runs selects it; the consumer whose choice was not read is named with its line and why, one Read, where 'not read (A.f, B.g)' sent agents grepping. P404: CourierPager, which takes every type, is ruled out by where ORDER_DELAYED's name is written (only where it is sent); left names AuditFeed's set, the one place left, and the list is in verbose answers only."
+    },
+    {
+      "id": "who_consumes.name-sent-only",
+      "ask": "which code handles ROW_CLAIMED on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "ROW_CLAIMED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": []
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P404: no code compares ROW_CLAIMED, its name written only where it is sent; the three consumers taking every type are counted in the settled sentence, not listed in selectionUnread for the agent to read each."
+    },
+    {
+      "id": "who_consumes.past-a-hand-off",
+      "ask": "which code handles TABLE_FREED on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "TABLE_FREED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "consumers": []
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P404: unsure, and left names the one place a choice may be made, RoomBoard.apply's comparison, three calls past the relay that takes every type; the compact answer lists no consumer to read."
+    },
+    {
+      "id": "who_consumes.case-handled-in-place",
+      "ask": "which code handles CALL_STAFF on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "CALL_STAFF"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [
+            "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch"
           ]
         },
         "exact": [
-          "selectionUnread"
+          "consumers"
         ]
       },
-      "note": "P403: no code that runs selects it; the two consumers whose choice was not read are named with their line and why, one Read each, where 'not read (A.f, B.g)' sent agents grepping."
+      "note": "P404: the case that looks the room up and formats a line is handled by PushService.dispatch, which holds the switch, not by findRoom, the lookup it makes first."
+    },
+    {
+      "id": "who_consumes.field-on-another-channel",
+      "ask": "which methods read roomName of ROOM_READY, asked on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "ROOM_READY",
+        "field": "roomName"
+      },
+      "lists": [
+        "consumers",
+        "alsoOn"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "consumers": [],
+          "alsoOn": [
+            "channel:staff_feed"
+          ]
+        },
+        "rowsSay": {
+          "alsoOn": {
+            "channel:staff_feed": {
+              "readers": [
+                "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady"
+              ]
+            }
+          }
+        },
+        "exact": [
+          "consumers",
+          "alsoOn"
+        ]
+      },
+      "note": "P404: no handler reads roomName on venue_events; alsoOn names the reader on staff_feed, the other channel the type is sent on, where an agent took six turns to find it."
+    },
+    {
+      "id": "get_flow.request-first",
+      "ask": "which route does RoomService.getFreeTimes in the chat bot call, and in which service does it land",
+      "fixture": "answers-that-settle",
+      "tool": "get_flow",
+      "args": {
+        "entry": "RoomService.getFreeTimes"
+      },
+      "lists": [
+        "requests"
+      ],
+      "expect": {
+        "complete": false,
+        "settled": true,
+        "lists": {
+          "requests": [
+            "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times"
+          ]
+        },
+        "exact": [
+          "requests"
+        ]
+      },
+      "note": "P404: requests first and settled say where the request lands (GET /api/admin/:param/rooms/free-times in rooms-api, RoomsController.freeTimes); the unread step is named off the request's way, where the route sat deep in the tree beside 'unread: 1 step'."
     },
     {
       "id": "findings.that-agree",
@@ -3456,8 +3588,8 @@
     }
   ],
   "fixed": {
-    "instructions": 2372,
-    "instructionsDb": 2432,
+    "instructions": 2367,
+    "instructionsDb": 2427,
     "guideBlock": 1028,
     "guideBlockClaude": 366,
     "skillDescription": 298,
@@ -3467,92 +3599,92 @@
   },
   "recorded": {
     "impact.multi-repo": {
-      "chars": 2136,
-      "tokens": 534,
+      "chars": 2045,
+      "tokens": 512,
       "rows": 6,
       "complete": true,
       "calls": 1
     },
     "impact.calling-side": {
-      "chars": 1453,
-      "tokens": 364,
+      "chars": 1444,
+      "tokens": 361,
       "rows": 4,
       "complete": false,
       "calls": 1
     },
     "impact.shared-client-items": {
-      "chars": 1343,
-      "tokens": 336,
+      "chars": 1254,
+      "tokens": 314,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "impact.shared-client-desks": {
-      "chars": 988,
-      "tokens": 247,
+      "chars": 841,
+      "tokens": 211,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "impact.rendered-reach": {
-      "chars": 1297,
-      "tokens": 325,
+      "chars": 1288,
+      "tokens": 322,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "who_calls.multi-repo": {
-      "chars": 1886,
-      "tokens": 472,
+      "chars": 1799,
+      "tokens": 450,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "who_calls.helpdesk": {
-      "chars": 1063,
-      "tokens": 266,
+      "chars": 918,
+      "tokens": 230,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "who_calls.long-chain": {
-      "chars": 2764,
-      "tokens": 691,
+      "chars": 2662,
+      "tokens": 666,
       "rows": 14,
       "complete": true,
       "calls": 1
     },
     "who_calls.class-shared-callers": {
-      "chars": 2862,
-      "tokens": 716,
+      "chars": 2760,
+      "tokens": 690,
       "rows": 13,
       "complete": true,
       "calls": 1
     },
     "who_calls.several-symbols": {
-      "chars": 1522,
-      "tokens": 381,
+      "chars": 1420,
+      "tokens": 355,
       "rows": 5,
       "complete": true,
       "calls": 1
     },
     "who_calls.routes-several": {
-      "chars": 2381,
-      "tokens": 596,
+      "chars": 2293,
+      "tokens": 574,
       "rows": 6,
       "complete": true,
       "calls": 1
     },
     "who_calls.routes-depth": {
-      "chars": 2381,
-      "tokens": 596,
+      "chars": 2293,
+      "tokens": 574,
       "rows": 6,
       "complete": true,
       "calls": 1
     },
     "get_flow.inline-type": {
-      "chars": 1688,
-      "tokens": 422,
+      "chars": 1729,
+      "tokens": 433,
       "rows": 6,
       "complete": true,
       "calls": 1
@@ -3565,22 +3697,22 @@
       "calls": 1
     },
     "who_consumes.helpdesk-type": {
-      "chars": 680,
-      "tokens": 170,
+      "chars": 567,
+      "tokens": 142,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "who_consumes.relayed-type": {
-      "chars": 896,
-      "tokens": 224,
+      "chars": 792,
+      "tokens": 198,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "who_consumes.every-channel": {
-      "chars": 573,
-      "tokens": 144,
+      "chars": 452,
+      "tokens": 113,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3600,8 +3732,8 @@
       "calls": 1
     },
     "fields.handler-reads": {
-      "chars": 685,
-      "tokens": 172,
+      "chars": 539,
+      "tokens": 135,
       "rows": 1,
       "complete": true,
       "calls": 1
@@ -3614,8 +3746,8 @@
       "calls": 1
     },
     "fields.missing-unused": {
-      "chars": 817,
-      "tokens": 205,
+      "chars": 782,
+      "tokens": 196,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3635,15 +3767,15 @@
       "calls": 1
     },
     "get_flow.route": {
-      "chars": 1836,
-      "tokens": 459,
+      "chars": 1848,
+      "tokens": 462,
       "rows": 10,
       "complete": true,
       "calls": 1
     },
     "get_flow.route-detail-2": {
-      "chars": 2163,
-      "tokens": 541,
+      "chars": 2175,
+      "tokens": 544,
       "rows": 10,
       "complete": true,
       "calls": 1
@@ -3663,15 +3795,15 @@
       "calls": 1
     },
     "list_entries.paged": {
-      "chars": 2499,
-      "tokens": 625,
+      "chars": 2490,
+      "tokens": 623,
       "rows": 17,
       "complete": true,
       "calls": 6
     },
     "impact.handling-code": {
-      "chars": 1183,
-      "tokens": 296,
+      "chars": 1052,
+      "tokens": 263,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3684,8 +3816,8 @@
       "calls": 1
     },
     "who_consumes.never-subscribed": {
-      "chars": 1074,
-      "tokens": 269,
+      "chars": 948,
+      "tokens": 237,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3698,15 +3830,15 @@
       "calls": 1
     },
     "impact.detail-2-lean": {
-      "chars": 1744,
-      "tokens": 436,
+      "chars": 1613,
+      "tokens": 404,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.reached-through-route": {
-      "chars": 1183,
-      "tokens": 296,
+      "chars": 1052,
+      "tokens": 263,
       "rows": 3,
       "complete": true,
       "calls": 1
@@ -3726,36 +3858,36 @@
       "calls": 1
     },
     "impact.channels-once": {
-      "chars": 2574,
-      "tokens": 644,
+      "chars": 2437,
+      "tokens": 610,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "who_calls.channels-counted": {
-      "chars": 1895,
-      "tokens": 474,
+      "chars": 1761,
+      "tokens": 441,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "impact.across-consumer": {
-      "chars": 1407,
-      "tokens": 352,
+      "chars": 1359,
+      "tokens": 340,
       "rows": 5,
       "complete": true,
       "calls": 1
     },
     "get_flow.short-name": {
-      "chars": 1515,
-      "tokens": 379,
+      "chars": 1605,
+      "tokens": 402,
       "rows": 8,
       "complete": true,
       "calls": 1
     },
     "who_calls.request-lands": {
-      "chars": 967,
-      "tokens": 242,
+      "chars": 981,
+      "tokens": 246,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3768,43 +3900,43 @@
       "calls": 1
     },
     "search.client-path": {
-      "chars": 436,
-      "tokens": 109,
+      "chars": 427,
+      "tokens": 107,
       "rows": 1,
       "complete": true,
       "calls": 1
     },
     "search.folder-name": {
-      "chars": 411,
-      "tokens": 103,
+      "chars": 402,
+      "tokens": 101,
       "rows": 1,
       "complete": true,
       "calls": 1
     },
     "who_calls.service-picks": {
-      "chars": 1718,
-      "tokens": 430,
+      "chars": 1624,
+      "tokens": 406,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.own-service": {
-      "chars": 1909,
-      "tokens": 478,
+      "chars": 1839,
+      "tokens": 460,
       "rows": 5,
       "complete": true,
       "calls": 1
     },
     "who_calls.two-services": {
-      "chars": 3208,
-      "tokens": 802,
+      "chars": 3182,
+      "tokens": 796,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "who_calls.ids": {
-      "chars": 2381,
-      "tokens": 596,
+      "chars": 2293,
+      "tokens": 574,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3817,8 +3949,8 @@
       "calls": 1
     },
     "list_entries.uncalled": {
-      "chars": 534,
-      "tokens": 134,
+      "chars": 525,
+      "tokens": 132,
       "rows": 4,
       "complete": true,
       "calls": 1
@@ -3831,15 +3963,15 @@
       "calls": 1
     },
     "impact.by-kind": {
-      "chars": 1389,
-      "tokens": 348,
+      "chars": 1298,
+      "tokens": 325,
       "rows": 4,
       "complete": true,
       "calls": 1
     },
     "impact.symbols": {
-      "chars": 1668,
-      "tokens": 417,
+      "chars": 1577,
+      "tokens": 395,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -3866,8 +3998,8 @@
       "calls": 1
     },
     "check_contract.type-as-channel": {
-      "chars": 700,
-      "tokens": 175,
+      "chars": 652,
+      "tokens": 163,
       "rows": 2,
       "complete": true,
       "calls": 1
@@ -3880,43 +4012,43 @@
       "calls": 1
     },
     "get_flow.detail-2-once": {
-      "chars": 5316,
-      "tokens": 1329,
+      "chars": 5576,
+      "tokens": 1394,
       "rows": 17,
       "complete": true,
       "calls": 1
     },
     "find_symbol.two-words": {
-      "chars": 924,
-      "tokens": 231,
+      "chars": 915,
+      "tokens": 229,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "search.sentence": {
-      "chars": 896,
-      "tokens": 224,
+      "chars": 887,
+      "tokens": 222,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "search.sentence-payments": {
-      "chars": 1533,
-      "tokens": 384,
+      "chars": 1524,
+      "tokens": 381,
       "rows": 8,
       "complete": false,
       "calls": 1
     },
     "find_symbol.camel-words": {
-      "chars": 1173,
-      "tokens": 294,
+      "chars": 1164,
+      "tokens": 291,
       "rows": 5,
       "complete": false,
       "calls": 1
     },
     "search.or": {
-      "chars": 1828,
-      "tokens": 457,
+      "chars": 1819,
+      "tokens": 455,
       "rows": 10,
       "complete": false,
       "calls": 1
@@ -3936,16 +4068,16 @@
       "calls": 1
     },
     "findings.between-services": {
-      "chars": 5155,
-      "tokens": 1289,
+      "chars": 5234,
+      "tokens": 1309,
       "rows": 8,
       "complete": null,
       "calls": 1
     },
     "findings.that-hold": {
-      "chars": 4083,
-      "tokens": 1021,
-      "rows": 6,
+      "chars": 3912,
+      "tokens": 978,
+      "rows": 5,
       "complete": null,
       "calls": 1
     },
@@ -3957,43 +4089,36 @@
       "calls": 1
     },
     "findings.handler-types": {
-      "chars": 1349,
-      "tokens": 338,
+      "chars": 1504,
+      "tokens": 376,
       "rows": 1,
       "complete": null,
       "calls": 1
     },
-    "findings.setting-renamed": {
-      "chars": 1546,
-      "tokens": 387,
+    "findings.client-checks": {
+      "chars": 1920,
+      "tokens": 480,
       "rows": 2,
       "complete": null,
       "calls": 1
     },
-    "findings.open-write-among-guarded": {
-      "chars": 1668,
-      "tokens": 417,
-      "rows": 2,
-      "complete": null,
-      "calls": 1
-    },
-    "findings.missing-route-through-helper": {
-      "chars": 868,
-      "tokens": 217,
-      "rows": 1,
-      "complete": null,
+    "check_contract.gathered-answer": {
+      "chars": 1125,
+      "tokens": 282,
+      "rows": 5,
+      "complete": true,
       "calls": 1
     },
     "who_calls.shadowed-handler": {
-      "chars": 567,
-      "tokens": 142,
+      "chars": 466,
+      "tokens": 117,
       "rows": 2,
       "complete": true,
       "calls": 1
     },
     "who_calls.shadowing-handler": {
-      "chars": 1352,
-      "tokens": 338,
+      "chars": 1250,
+      "tokens": 313,
       "rows": 6,
       "complete": true,
       "calls": 1
@@ -4020,8 +4145,8 @@
       "calls": 1
     },
     "card.route-aloud": {
-      "chars": 1050,
-      "tokens": 263,
+      "chars": 967,
+      "tokens": 242,
       "rows": 1,
       "complete": null,
       "calls": 0
@@ -4034,15 +4159,15 @@
       "calls": 0
     },
     "card.message-type": {
-      "chars": 1352,
-      "tokens": 338,
+      "chars": 1106,
+      "tokens": 277,
       "rows": 1,
       "complete": null,
       "calls": 0
     },
     "card.handler-in-service": {
-      "chars": 1113,
-      "tokens": 279,
+      "chars": 1026,
+      "tokens": 257,
       "rows": 1,
       "complete": null,
       "calls": 0
@@ -4069,8 +4194,8 @@
       "calls": 1
     },
     "check_change.one-service": {
-      "chars": 749,
-      "tokens": 188,
+      "chars": 748,
+      "tokens": 187,
       "rows": 0,
       "complete": true,
       "calls": 1
@@ -4132,22 +4257,22 @@
       "calls": 1
     },
     "who_consumes.type-as-channel": {
-      "chars": 934,
-      "tokens": 234,
+      "chars": 830,
+      "tokens": 208,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.maybe-confirm": {
-      "chars": 1297,
-      "tokens": 325,
+      "chars": 1288,
+      "tokens": 322,
       "rows": 3,
       "complete": false,
       "calls": 1
     },
     "impact.bot-webhook": {
-      "chars": 1483,
-      "tokens": 371,
+      "chars": 1386,
+      "tokens": 347,
       "rows": 5,
       "complete": true,
       "calls": 1
@@ -4160,17 +4285,94 @@
       "calls": 1
     },
     "who_calls.table-handler": {
-      "chars": 760,
-      "tokens": 190,
+      "chars": 653,
+      "tokens": 164,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.table-api": {
-      "chars": 1046,
-      "tokens": 262,
+      "chars": 933,
+      "tokens": 234,
       "rows": 3,
       "complete": true,
+      "calls": 1
+    },
+    "dead.lifecycle-setup": {
+      "chars": 563,
+      "tokens": 141,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "impact.text-router": {
+      "chars": 432,
+      "tokens": 108,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.prefix-buttons": {
+      "chars": 825,
+      "tokens": 207,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "who_calls.request-settled": {
+      "chars": 880,
+      "tokens": 220,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.through-channel-settled": {
+      "chars": 1890,
+      "tokens": 473,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.selection-unread": {
+      "chars": 737,
+      "tokens": 185,
+      "rows": 0,
+      "complete": false,
+      "calls": 1
+    },
+    "who_consumes.name-sent-only": {
+      "chars": 413,
+      "tokens": 104,
+      "rows": 0,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.past-a-hand-off": {
+      "chars": 717,
+      "tokens": 180,
+      "rows": 0,
+      "complete": false,
+      "calls": 1
+    },
+    "who_consumes.case-handled-in-place": {
+      "chars": 374,
+      "tokens": 94,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.field-on-another-channel": {
+      "chars": 894,
+      "tokens": 224,
+      "rows": 1,
+      "complete": false,
+      "calls": 1
+    },
+    "get_flow.request-first": {
+      "chars": 2694,
+      "tokens": 674,
+      "rows": 1,
+      "complete": false,
       "calls": 1
     },
     "findings.that-agree": {
@@ -4194,58 +4396,23 @@
       "complete": null,
       "calls": 1
     },
-    "findings.client-checks": {
-      "chars": 1920,
-      "tokens": 480,
+    "findings.setting-renamed": {
+      "chars": 1546,
+      "tokens": 387,
       "rows": 2,
       "complete": null,
       "calls": 1
     },
-    "check_contract.gathered-answer": {
-      "chars": 1125,
-      "tokens": 282,
-      "rows": 5,
-      "complete": true,
-      "calls": 1
-    },
-    "who_calls.request-settled": {
-      "chars": 880,
-      "tokens": 220,
-      "rows": 1,
-      "complete": true,
-      "calls": 1
-    },
-    "impact.through-channel-settled": {
-      "chars": 1890,
-      "tokens": 473,
-      "rows": 3,
-      "complete": true,
-      "calls": 1
-    },
-    "who_consumes.selection-unread": {
-      "chars": 1147,
-      "tokens": 287,
-      "rows": 2,
-      "complete": false,
-      "calls": 1
-    },
-    "dead.lifecycle-setup": {
-      "chars": 563,
-      "tokens": 141,
+    "findings.open-write-among-guarded": {
+      "chars": 1668,
+      "tokens": 417,
       "rows": 2,
       "complete": null,
       "calls": 1
     },
-    "impact.text-router": {
-      "chars": 521,
-      "tokens": 131,
-      "rows": 1,
-      "complete": true,
-      "calls": 1
-    },
-    "findings.prefix-buttons": {
-      "chars": 825,
-      "tokens": 207,
+    "findings.missing-route-through-helper": {
+      "chars": 868,
+      "tokens": 217,
       "rows": 1,
       "complete": null,
       "calls": 1

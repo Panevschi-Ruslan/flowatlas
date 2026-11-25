@@ -1,0 +1,2445 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-25T16:00:46.665Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:chat-bot#src/rooms/room.service.ts:31:43",
+        "to": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:chat-bot#src/rooms/room.service.ts:31:43|http_calls|entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "string[]",
+        "symbol": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "string[]",
+        "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+        "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:chat-bot#src/rooms/room.service.ts:26:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "chat-bot",
+        "typeId": "{type:string;venueId:string;count:number}",
+        "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "type:chat-bot#StaffMessage",
+        "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+            "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:chat-bot#src/rooms/room.service.ts:26:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "chat-bot",
+            "typeId": "{type:string;venueId:string;count:number}",
+            "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes"
+          },
+          "receiver": {
+            "service": "chat-bot",
+            "typeId": "type:chat-bot#StaffMessage",
+            "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+          },
+          "typeId": "type:chat-bot#StaffMessage",
+          "field": "count",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender chat-bot sends `count: number`; receiver chat-bot declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+            "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:chat-bot#src/rooms/room.service.ts:26:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "chat-bot",
+            "typeId": "{type:string;venueId:string;count:number}",
+            "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes"
+          },
+          "receiver": {
+            "service": "chat-bot",
+            "typeId": "type:chat-bot#StaffMessage",
+            "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+          },
+          "typeId": "type:chat-bot#StaffMessage",
+          "field": "roomId",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver chat-bot requires `roomId: string`; sender chat-bot does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+            "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:chat-bot#src/rooms/room.service.ts:26:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "chat-bot",
+            "typeId": "{type:string;venueId:string;count:number}",
+            "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes"
+          },
+          "receiver": {
+            "service": "chat-bot",
+            "typeId": "type:chat-bot#StaffMessage",
+            "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+          },
+          "typeId": "type:chat-bot#StaffMessage",
+          "field": "venueId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender chat-bot sends `venueId: string`; receiver chat-bot declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "orderId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+            "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "note",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `note: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "note",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `note: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "note",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `note: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+            "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage",
+            "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#VenueMessage",
+          "field": "roomName",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomName: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+            "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+            "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+          "field": "roomName",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomName: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "roomId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+            "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+            "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+          },
+          "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+          "field": "roomName",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `roomName: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+        "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:27:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "type:chat-bot#StaffMessage",
+        "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+            "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:27:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "chat-bot",
+            "typeId": "type:chat-bot#StaffMessage",
+            "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+          },
+          "typeId": "type:chat-bot#StaffMessage",
+          "field": "roomName",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`roomName` is optional for receiver chat-bot and always sent by sender rooms-api",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+            "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:27:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "rooms-api",
+            "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+            "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+          },
+          "receiver": {
+            "service": "chat-bot",
+            "typeId": "type:chat-bot#StaffMessage",
+            "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+          },
+          "typeId": "type:chat-bot#StaffMessage",
+          "field": "venueId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender rooms-api sends `venueId: string`; receiver chat-bot declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+        "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:chat-bot#src/rooms/room.service.ts:26:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "chat-bot",
+        "typeId": "{type:string;venueId:string;count:number}",
+        "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "type:chat-bot#StaffMessage",
+        "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+      },
+      "typeId": "type:chat-bot#StaffMessage",
+      "field": "count",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender chat-bot sends `count: number`; receiver chat-bot declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+        "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:chat-bot#src/rooms/room.service.ts:26:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "chat-bot",
+        "typeId": "{type:string;venueId:string;count:number}",
+        "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "type:chat-bot#StaffMessage",
+        "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+      },
+      "typeId": "type:chat-bot#StaffMessage",
+      "field": "roomId",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver chat-bot requires `roomId: string`; sender chat-bot does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+        "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:chat-bot#src/rooms/room.service.ts:26:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "chat-bot",
+        "typeId": "{type:string;venueId:string;count:number}",
+        "symbol": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "type:chat-bot#StaffMessage",
+        "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+      },
+      "typeId": "type:chat-bot#StaffMessage",
+      "field": "venueId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender chat-bot sends `venueId: string`; receiver chat-bot declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "orderId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `orderId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "note",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `note: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "note",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `note: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "note",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `note: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage",
+        "symbol": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#VenueMessage",
+      "field": "roomName",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomName: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+        "symbol": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts",
+      "field": "roomName",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomName: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "roomId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+        "symbol": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent"
+      },
+      "typeId": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts",
+      "field": "roomName",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `roomName: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+        "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:27:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "type:chat-bot#StaffMessage",
+        "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+      },
+      "typeId": "type:chat-bot#StaffMessage",
+      "field": "roomName",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`roomName` is optional for receiver chat-bot and always sent by sender rooms-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+        "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:27:5|emits|consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "rooms-api",
+        "typeId": "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}",
+        "symbol": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady"
+      },
+      "receiver": {
+        "service": "chat-bot",
+        "typeId": "type:chat-bot#StaffMessage",
+        "symbol": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent"
+      },
+      "typeId": "type:chat-bot#StaffMessage",
+      "field": "venueId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender rooms-api sends `venueId: string`; receiver chat-bot declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:chat-bot#src/rooms/room.service.ts:31:43",
+        "to": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:chat-bot#src/rooms/room.service.ts:31:43|http_calls|entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+        "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:12:5|emits|consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "notify-worker#src/push/push.service.ts:PushService.dispatch has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+        "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:17:5|emits|consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "notify-worker#src/push/push.service.ts:PushService.dispatch has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+        "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/orders/orders.service.ts:22:5|emits|consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "notify-worker#src/push/push.service.ts:PushService.dispatch has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+        "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:17:5|emits|consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "notify-worker#src/push/push.service.ts:PushService.dispatch has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+        "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:21:5|emits|consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "notify-worker#src/push/push.service.ts:PushService.dispatch has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+        "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:rooms-api#src/rooms/rooms.service.ts:26:5|emits|consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "direction": "payload",
+      "reason": "body-already-serialised",
+      "message": "notify-worker#src/push/push.service.ts:PushService.dispatch has string where a shape should be, which is how a body travels rather than what is in it",
+      "hint": "Compare the shape rather than the wire: type the value before it is serialised, or the one it is parsed into, and pass that — or annotate this end, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 21,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 20,
+    "unchecked": 7,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 31,
+    "ignored": 0
+  }
+}

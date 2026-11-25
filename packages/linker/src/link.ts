@@ -82,6 +82,7 @@ import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
 import { joinMessageTypes, unselectedTypesOf } from './message-types.js';
+import type { TypeNameSources } from './type-names.js';
 import {
   callPerChoice,
   CONFIGURED_UI_VIAS,
@@ -109,6 +110,11 @@ export interface LinkOptions {
    * and an address waiting on the environment.
    */
   settings?: Readonly<Record<string, RepoSettings>>;
+  /**
+   * The code each service was read from (P404), for where each message
+   * type's name is written: read by whoever can see the files.
+   */
+  sources?: TypeNameSources;
 }
 
 const configHashOf = (config: FlowatlasConfig): string =>
@@ -1497,7 +1503,7 @@ export const linkGraphs = (
   );
 
   // The types of message each channel carries, once every channel is joined (P358).
-  const typed = joinMessageTypes(nodes, edges);
+  const typed = joinMessageTypes(nodes, edges, options.sources);
   found.push(...typed);
   const unselectedTypes = unselectedTypesOf(typed);
   const surveyedChannels = surveyChannels(nodes.values(), edges.values());

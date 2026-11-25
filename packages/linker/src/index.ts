@@ -7,6 +7,7 @@
  */
 export { configHashOf, linkGraphs } from './link.js';
 export type { LinkOptions, LinkResult } from './link.js';
+export type { TypeNameSources } from './type-names.js';
 export { mergeGraphs } from './merge.js';
 export type { Merged, TypeVersion } from './merge.js';
 export { findingFor, resolveCall } from './http-link.js';
@@ -325,7 +326,7 @@ export type {
 export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, precisionOf, rankFindings } from './analysis/findings.js';
 export { identifierWords, likelyRenamed, nearestRoutes, promoteGap, routesReadOf, typesNeverPublished, waysInReaching } from './analysis/boundary.js';
 export type { BoundaryFinding, HeldBack, Promoted, RoutesRead } from './analysis/boundary.js';
-export { messageTypeFacts, messageTypesOn, unreachedHandler, unselectedSaid } from './analysis/message-types.js';
+export { messageTypeFacts, messageTypesOn, unreachedHandler, unselectedSaid, type UnselectedOpen } from './analysis/message-types.js';
 export type { ChannelReceiver, MessageTypeFacts, MessageTypeLookup, TypeSelector, Unselected } from './analysis/message-types.js';
 export { joinMessageTypes } from './message-types.js';
 export type {

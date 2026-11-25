@@ -138,7 +138,21 @@ export interface FlowResult {
   left?: number;
   /** The crossings left unfollowed, nearest first, at most `MAX_CROSSINGS_LEFT`. */
   crossingsLeft?: CrossingLeft[];
+  /**
+   * The requests the walk crossed, in the order it met them, those past the
+   * budget too (P404): what `get_flow` says first, where each lands.
+   */
+  requests?: string[];
+  /**
+   * The steps on the path that could not be followed (P404), each with
+   * whether it lies on a request's way: on the path from the entry to a
+   * request the walk crossed, or a request itself.
+   */
+  unreadSteps?: Array<{ id: string; onRequestWay: boolean }>;
 }
+
+/** The nodes a request is drawn as (P404). */
+const REQUEST_NODES: ReadonlySet<string> = new Set(['http_out', 'ui_api_call']);
 
 /** How many nodes a walk shows when nobody says; `get_flow` sets its own (P92 D4). */
 export const DEFAULT_WALK_NODES = 150;
@@ -413,6 +427,9 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
 
   const unresolvedIds = new Set<string>();
   if (db.unresolvedFor(entryId).length > 0) unresolvedIds.add(entryId);
+  // The requests crossed, and every step on the way to one (P404).
+  const requests: string[] = [];
+  const requestWay = new Set<string>();
 
   const ranking = rankingFor(db);
 
@@ -534,6 +551,11 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
         // and the entry a path ends at included: a function deployed with no body
         // to read is where its path stops, and the row saying so is why (R168).
         if (target === undefined || db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
+        if (target !== undefined && REQUEST_NODES.has(target.type)) {
+          requests.push(edge.to);
+          requestWay.add(edge.to);
+          for (const step of item.path) requestWay.add(step);
+        }
       }
 
       let row = item.flow === undefined || stopped !== undefined ? undefined : rowOf(edge, target, repeat, placed.get(edge.to));
@@ -600,7 +622,12 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
     }
   }
 
-  const result: FlowResult = { root, unresolvedOnPath: unresolvedIds.size };
+  const result: FlowResult = {
+    root,
+    unresolvedOnPath: unresolvedIds.size,
+    ...(requests.length === 0 ? {} : { requests }),
+    ...(unresolvedIds.size === 0 ? {} : { unreadSteps: [...unresolvedIds].map((id) => ({ id, onRequestWay: requestWay.has(id) })) }),
+  };
   const stoppedBy = BY_WEIGHT.filter((limit) => cut[limit] > 0).sort((a, b) => cut[b] - cut[a]);
   if (stoppedBy.length === 0) return result;
 

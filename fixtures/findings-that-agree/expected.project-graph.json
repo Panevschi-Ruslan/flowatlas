@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:47:34.353Z",
+  "builtAt": "2026-11-25T15:51:32.723Z",
   "services": [
     {
       "name": "catalog-api",
@@ -690,6 +690,20 @@
         "messageType": "PRICE_CHANGED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "catalog-api",
+              "loc": "src/events/catalog.service.ts:10",
+              "text": "type: 'PRICE_CHANGED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -707,6 +721,20 @@
         "messageType": "PRODUCT_RETIRED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "catalog-api",
+              "loc": "src/events/catalog.service.ts:18",
+              "text": "type: 'PRODUCT_RETIRED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -724,6 +752,20 @@
         "messageType": "STOCK_LOW",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "catalog-api",
+              "loc": "src/events/catalog.service.ts:14",
+              "text": "type: 'STOCK_LOW'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }

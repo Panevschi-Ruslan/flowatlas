@@ -1,0 +1,20 @@
+{
+  "channel": {
+    "id": "channel:venue_events",
+    "loc": "src/orders/orders.service.ts:12",
+    "service": "rooms-api"
+  },
+  "consumers": [],
+  "total": 0,
+  "type": "ORDER_PAID",
+  "unselected": "no code that runs selects ORDER_PAID on venue_events: 1 consumer chooses other types; 3 consumers take every type and hand it on; 1 place may still choose it: src/orders/order-watch.service.ts:23 (a prefix test that may take ORDER_PAID: evt.type.startsWith('ORDER_'))",
+  "sureness": "unsure",
+  "complete": false,
+  "left": [
+    "unsure: 1 place may still choose ORDER_PAID, the first src/orders/order-watch.service.ts:23"
+  ],
+  "next": [
+    "who_emits({channel: \"channel:venue_events\", type: \"ORDER_PAID\"})",
+    "who_consumes({channel: \"channel:venue_events\"})"
+  ]
+}

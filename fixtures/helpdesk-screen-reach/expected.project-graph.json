@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:15:08.643Z",
+  "builtAt": "2026-11-25T15:52:37.581Z",
   "services": [
     {
       "name": "desk-api",
@@ -115,6 +115,20 @@
         "messageType": "TICKET_ASSIGNED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/tickets/tickets.service.ts:15",
+              "text": "type: 'TICKET_ASSIGNED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 2
       }
@@ -132,6 +146,20 @@
         "messageType": "TICKET_CLOSED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/tickets/tickets.service.ts:19",
+              "text": "type: 'TICKET_CLOSED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }
@@ -149,6 +177,20 @@
         "messageType": "TICKET_REOPENED",
         "discriminator": "type",
         "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/tickets/tickets.service.ts:23",
+              "text": "type: 'TICKET_REOPENED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
         "producers": 1,
         "consumers": 1
       }

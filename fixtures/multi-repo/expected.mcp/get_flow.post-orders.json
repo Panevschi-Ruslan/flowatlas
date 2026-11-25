@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:orders:http:GET:/orders/:param",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:orders:http:POST:/orders",
