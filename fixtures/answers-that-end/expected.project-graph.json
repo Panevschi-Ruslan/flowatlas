@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:15:32.744Z",
+  "builtAt": "2026-11-25T13:43:34.926Z",
   "services": [
     {
       "name": "shop-api",
@@ -438,6 +438,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -512,6 +516,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -585,7 +593,14 @@
         "fieldsRead": [
           {
             "field": "type",
-            "line": 25
+            "line": 25,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'ORDER_CANCELLED'"
+              ],
+              "line": 25
+            }
           },
           {
             "field": "orderId",
@@ -608,6 +623,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -1101,6 +1120,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

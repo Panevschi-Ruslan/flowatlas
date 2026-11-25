@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:21:10.952Z",
+  "builtAt": "2026-11-25T13:47:34.353Z",
   "services": [
     {
       "name": "catalog-api",
@@ -270,6 +270,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

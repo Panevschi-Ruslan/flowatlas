@@ -1,4 +1,5 @@
 {
+  "settled": "its request lands on PATCH /api/orders/status (shop-api), OrdersController.setStatus; no way in reaches it",
   "target": {
     "id": "shop-web#src/orders-api.ts:markReady",
     "type": "function",
@@ -57,9 +58,5 @@
   ],
   "waysIn": [],
   "waysInNone": "nothing reaches this",
-  "complete": true,
-  "next": [
-    "impact({symbol: \"shop-web#src/orders-api.ts:markReady\"})",
-    "get_source({symbol: \"shop-web#src/orders-api.ts:markReady\"})"
-  ]
+  "complete": true
 }

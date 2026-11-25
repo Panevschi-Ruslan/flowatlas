@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:05:51.896Z",
+  "builtAt": "2026-11-25T13:54:55.184Z",
   "services": [
     {
       "name": "docs-api",
@@ -1318,7 +1318,17 @@
         "fieldsRead": [
           {
             "field": "type",
-            "line": 25
+            "line": 25,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'DOC_PUBLISHED'",
+                "'COMMENT_ADDED'",
+                "'MEMBER_JOINED'",
+                "'EXPORT_FINISHED'"
+              ],
+              "line": 25
+            }
           },
           {
             "field": "commentId",

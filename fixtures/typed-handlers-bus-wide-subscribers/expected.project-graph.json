@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:07:15.275Z",
+  "builtAt": "2026-11-25T13:55:39.191Z",
   "services": [
     {
       "name": "shop",
@@ -257,7 +257,17 @@
           },
           {
             "field": "message.type",
-            "line": 21
+            "line": 21,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'ORDER_READY'",
+                "'STATUS_CHANGED'",
+                "'ORDER_CANCELLED'",
+                "'ORDER_REFUNDED'"
+              ],
+              "line": 21
+            }
           },
           {
             "field": "message.label",
