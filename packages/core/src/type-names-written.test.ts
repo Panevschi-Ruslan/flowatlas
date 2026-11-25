@@ -48,8 +48,8 @@ describe('where a type name is written', () => {
 
   it('reads a template as text and a single-file component by its script', () => {
     expect(kinds('<div *ngIf="kind === \'ROW_CLAIMED\'"></div>', ['ROW_CLAIMED'], 'a.component.html')).toEqual([[1, 'other', undefined, undefined]]);
-    const vue = ['<template><p>{{ label }}</p></template>', '<script lang="ts">', "if (evt.type === 'ROW_CLAIMED') go();", '</script>'].join('\n');
-    expect(kinds(vue, ['ROW_CLAIMED'], 'Row.vue')).toEqual([[3, 'other', undefined, undefined]]);
+    const component = ['<template><p>{{ label }}</p></template>', '<script lang="ts">', "if (evt.type === 'ROW_CLAIMED') go();", '</script>'].join('\n');
+    expect(kinds(component, ['ROW_CLAIMED'], 'Row.component')).toEqual([[3, 'other', undefined, undefined]]);
   });
 
   it('finds the tests a name cannot rule out, and which values each may take', () => {

@@ -201,10 +201,10 @@ const identifierUse = (node: ts.Identifier): { kind: NameSiteKind; alias?: strin
   return expressionUse(node);
 };
 
-/** The script a file holds, with the line it starts on: a single-file component's `<script>` blocks, else the whole file. */
+/** The script a file holds, with the line it starts on: the whole of a script file, else the `<script>` blocks of a file that is not one (a single-file component), else none. */
 const scriptsOf = (fileName: string, text: string): Array<{ code: string; line: number; kind: ts.ScriptKind }> => {
   const lower = fileName.toLowerCase();
-  if (lower.endsWith('.vue') || lower.endsWith('.svelte')) {
+  if (!/\.(m|c)?(t|j)sx?$/.test(lower)) {
     const out: Array<{ code: string; line: number; kind: ts.ScriptKind }> = [];
     for (const match of text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
       const start = (match.index ?? 0) + match[0].indexOf('>') + 1;
@@ -217,7 +217,6 @@ const scriptsOf = (fileName: string, text: string): Array<{ code: string; line: 
     }
     return out;
   }
-  if (!/\.(m|c)?(t|j)sx?$/.test(lower)) return [];
   const kind = lower.endsWith('.tsx')
     ? ts.ScriptKind.TSX
     : lower.endsWith('.jsx')
@@ -378,8 +377,8 @@ const MAY_TEST = /startsWith|endsWith|includes|\.test\(|\.match|\.search|RegExp|
 /**
  * Every place one file writes one of `words`, and every test of a string in
  * it the name cannot rule out. A file whose text holds neither is not parsed.
- * `.vue` and `.svelte` are read in their `<script>` blocks, their markup as
- * text; a file of another kind (a template) as text alone.
+ * A file that is not a script file is read in its `<script>` blocks, its markup as
+ * text; a file with no `<script>` block (a template) as text alone.
  */
 export const typeNamesIn = (fileName: string, text: string, words: ReadonlySet<string>, options: { tests?: boolean } = {}): NamesInFile => {
   const wanted = mentions(text, words);
