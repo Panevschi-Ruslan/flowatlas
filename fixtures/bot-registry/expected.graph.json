@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "bot-registry",
-  "generatedAt": "2026-11-23T14:32:29.862Z",
+  "generatedAt": "2026-11-25T12:46:49.997Z",
   "nodes": [
     {
       "id": "bot-registry#src/actions/cancel-order.action.ts:callbacks:keep_order@19",
@@ -620,19 +620,6 @@
         "type:bot-registry#OrdersService"
       ],
       "returns": "string"
-    },
-    {
-      "from": "bot-registry#src/bot.ts:Bot.setup",
-      "to": "bot-registry#src/handlers/callback-registry.ts:dispatch",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/bot.ts",
-      "line": 27,
-      "params": [
-        "string",
-        "type:bot-registry#BotDeps"
-      ],
-      "returns": "boolean"
     },
     {
       "from": "bot-registry#src/bot.ts:on callback_query@26",

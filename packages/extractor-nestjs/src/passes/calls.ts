@@ -1,6 +1,8 @@
 import {
   causeMeta,
+  FRAMEWORK_CALLS_META,
   findMethod,
+  methodNamedOn,
   forEachCall,
   lineOf,
   methodBodies,
@@ -11,6 +13,7 @@ import {
   tableTargetOf,
   tableUnreadHint,
   whyNoClass,
+  type FrameworkCallTime,
   type NamedFunction,
   type TableDispatch,
 } from '@flowatlas/core';
@@ -45,10 +48,10 @@ interface Caller {
   /** Creates the caller's own node, which nothing does until it has an edge. */
   ensure(): void;
   /**
-   * Functions written in the body that a way in names as its handler (P398):
-   * a call through a table inside one is drawn from that function's own node,
-   * which the way in reaches, and not again from the method around it, which
-   * nothing may call but the framework.
+   * Functions written in the body that a way in names as its handler (P398,
+   * P399): a call inside one is drawn from that function's own node, which
+   * the way in reaches, and not again from the method around it, which runs
+   * it only to register it.
    */
   handlersInside?: ReadonlySet<TsNode>;
 }
@@ -137,6 +140,10 @@ const followTable = (
   });
 };
 
+/** Whether an entry adapter's ways in stand for a call (P399): see `EntryAdapter.standsForCall`. */
+const standsForWaysIn = (ctx: NestExtractContext, call: TsNode): boolean =>
+  ctx.adapters.entry.some((adapter) => adapter.standsForCall?.(call) === true);
+
 /**
  * Draws the edges one body's calls stand for.
  *
@@ -164,8 +171,15 @@ const walkCalls = (
           ...(follow.byName === undefined ? {} : { byName: (fn: NamedFunction, call: TsNode) => follow.byName?.(fn, call, edgeMeta) }),
           ...(follow.byMember === undefined ? {} : { byMember: (fn: NamedFunction, call: TsNode) => follow.byMember?.(fn, call, edgeMeta) }),
         };
+  const handlers = caller.handlersInside;
   forEachCall(body, (call) => {
     const callee = call.getExpression();
+
+    // A call written in a function a way in names as its handler is that
+    // function's, drawn from its own node, which the way in reaches; not again
+    // from the method it is written in, which runs it only to register it
+    // (P398 for calls through a table, P399 for every call).
+    if (handlers !== undefined && call.getFirstAncestor((node) => handlers.has(node)) !== undefined) return;
 
     // `route.handler(ctx)` where `route` is an element of a table written out,
     // and `const { handler } = route; handler(ctx)`: a call of each element's
@@ -177,9 +191,9 @@ const walkCalls = (
           ? tableDispatchOf(callee.getExpression(), callee.getName(), call)
           : undefined;
       if (dispatch !== undefined) {
-        const handlers = caller.handlersInside;
-        const inHandler = handlers !== undefined && call.getFirstAncestor((node) => handlers.has(node)) !== undefined;
-        if (!inHandler) followTable(ctx, caller, call, dispatch, named, depth);
+        // A call whose table's elements are ways in of their own (a bot's listener split by prefix, P399): each way in
+        // hands the update to its element, so the call is theirs, with nothing left unread.
+        if (!standsForWaysIn(ctx, call)) followTable(ctx, caller, call, dispatch, named, depth);
         return;
       }
     }
@@ -454,8 +468,52 @@ const walkHandlerFunctions = (ctx: NestExtractContext, alsoReached: readonly Nam
   }
 };
 
+/**
+ * The lifecycle hooks Nest calls by itself on every provider and controller it
+ * builds, and when (the framework's lifecycle events): the application starts,
+ * or it stops.
+ */
+const NEST_HOOKS: ReadonlyMap<string, FrameworkCallTime> = new Map([
+  ['onModuleInit', 'startup'],
+  ['onApplicationBootstrap', 'startup'],
+  ['onModuleDestroy', 'shutdown'],
+  ['beforeApplicationShutdown', 'shutdown'],
+  ['onApplicationShutdown', 'shutdown'],
+]);
+
+/**
+ * Marks the lifecycle hooks Nest calls (P399): on a controller or a provider
+ * a module of the repository registers (a class, or a `useClass`), each hook
+ * it declares whose node the walk drew is written `frameworkCalls: { hook,
+ * when }`, so what answers reach reads it as a way in - `startup
+ * (onModuleInit)` - and a method only it calls (`setup()`) as reached. A hook
+ * on a class no module registers is left as it was: nothing says Nest builds
+ * that class.
+ */
+const markLifecycleHooks = (ctx: NestExtractContext): void => {
+  const registered = new Set<ClassDeclaration>();
+  for (const module of ctx.modules.all()) {
+    for (const controller of module.controllers) registered.add(controller);
+    for (const provider of [...module.providers, ...(module.dynamicProviders ?? [])]) {
+      if (provider.declaration !== undefined && (provider.kind === 'class' || provider.kind === 'useClass')) registered.add(provider.declaration);
+    }
+  }
+  if (registered.size === 0) return;
+  for (const indexed of ctx.classes.all()) {
+    if (!WALKED.has(indexed.role) || !registered.has(indexed.declaration)) continue;
+    for (const [hook, when] of NEST_HOOKS) {
+      const method = methodNamedOn(indexed.declaration, hook);
+      const id = method === undefined ? undefined : ctx.methodIdOf(method);
+      const node = id === undefined ? undefined : ctx.builder.getNode(id);
+      if (node === undefined) continue;
+      node.meta = { ...node.meta, [FRAMEWORK_CALLS_META]: { hook, when } };
+    }
+  }
+};
+
 /** Turns call sites into edges between the things that hold them. */
 export const callsPass = definePass('calls', (ctx: NestExtractContext) => {
   const reached = walkClasses(ctx);
   walkHandlerFunctions(ctx, reached);
+  markLifecycleHooks(ctx);
 });

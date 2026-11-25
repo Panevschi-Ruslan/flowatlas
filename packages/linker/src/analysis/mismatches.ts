@@ -276,9 +276,16 @@ export const botButtonMismatches = (db: GraphDb, all: readonly AnchoredUnresolve
   const handlers = entries.flatMap((entry) => handlerOf(entry) ?? []).sort((a, b) => byText(a.entry.id, b.entry.id));
   const botServices = new Set(db.nodesByType('entry').filter((entry) => /^bot_|^scene_/.test(entry.kind ?? '')).map((entry) => entry.repo));
   const unreadTriggers = all.filter((row) => row.reason === 'dynamic-bot-trigger' && botServices.has(row.service ?? '')).length;
+  // A listener whose table of prefixes is split into ways in of their own (P399) takes no callback itself unless what
+  // it does besides choosing reads the data: the elements are the handlers its buttons are held against.
+  const splitAway = (entry: GraphNode): boolean => typeof entry.meta?.['splitByTable'] === 'string' && entry.meta?.['restReadsData'] !== true;
   const catchAll = db
     .nodesByType('entry', 'bot_event')
-    .find((entry) => entry.meta?.['updateType'] === 'callback_query' || entry.meta?.['key'] === 'callback_query' || entry.id.endsWith(':bot_event:callback_query'));
+    .find(
+      (entry) =>
+        !splitAway(entry) &&
+        (entry.meta?.['updateType'] === 'callback_query' || entry.meta?.['key'] === 'callback_query' || entry.id.endsWith(':bot_event:callback_query')),
+    );
   const handlersWhy =
     unreadTriggers > 0
       ? `${unreadTriggers} handler(s) of a bot are registered under a trigger not read`

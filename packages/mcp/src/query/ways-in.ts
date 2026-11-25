@@ -1,4 +1,6 @@
 import {
+  frameworkCallOf,
+  frameworkCallSaid,
   gapIdOf,
   isMessageTypeNode,
   isRunsBeforeEdge,
@@ -151,7 +153,9 @@ const CLASS_TYPES = new Set(['provider', 'ui_component']);
 /** A way in as `from` says it: `GET /orders/:param`, `screen /floor-plan`, `cron nightly`, `consumer tenant:*:events`. */
 export const wayInSaid = (db: GraphReads, node: GraphNode, rowService: string | undefined): string => {
   let said: string;
-  if (node.type === 'consumer') {
+  const framework = frameworkCallOf(node);
+  if (framework !== undefined) said = frameworkCallSaid(framework);
+  else if (node.type === 'consumer') {
     const channel = db.edgesTo(node.id, ['consumes']).map((edge) => db.node(edge.from)?.label ?? edge.from)[0];
     said = `consumer ${channel ?? node.label}`;
   } else {
@@ -541,11 +545,11 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     const met: GraphNode[] = [];
     const parents = new Map<string, WalkedFrom>();
     const crossings: ChannelCrossing[] = [];
-    const queue: Array<{ node: GraphNode; depth: number; held: boolean; via?: Crossing; ran?: true }> = [];
+    const queue: Array<{ node: GraphNode; depth: number; held: boolean; via?: Crossing; ran?: true; consumed?: true }> = [];
     for (const start of starts) {
       // A handler a consumer runs is held as the consumer's is: where its class or file is shown.
       const handler = graph.edgesTo(start.id, ['handles']).some((edge) => edge.from.startsWith('consumer:'));
-      queue.push({ node: start, depth: 0, held: handler });
+      queue.push({ node: start, depth: 0, held: handler, ...(handler ? { consumed: true as const } : {}) });
       if (!CLASS_TYPES.has(start.type)) continue;
       for (const method of methodsOfClass(start.id)) {
         const node = graph.node(method);
@@ -567,7 +571,9 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
       const { node, depth } = item;
       const isStart = startIds.has(node.id);
       if (!isStart) met.push(node);
-      const wayIn = !isStart && (node.type === 'entry' || isOutsideConsumer(graph, node));
+      // A hook a consumer's handler is written in or called from (a subscription made in `onModuleInit`) runs that
+      // handler when a message arrives, not at startup: reached through a consumer, it is no way in (P399).
+      const wayIn = !isStart && (node.type === 'entry' || isOutsideConsumer(graph, node) || (item.consumed !== true && isFrameworkWay(node)));
       if (wayIn) {
         found.push({ node, depth, ...(item.via === undefined ? {} : { via: item.via }) });
         if (!through) continue;
@@ -595,7 +601,15 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
         if (reached === undefined) continue;
         parents.set(step.id, { from: node.id, ...(step.edge === undefined ? {} : { edge: step.edge }) });
         const via = item.via ?? crossingOf(node, step.edge);
-        queue.push({ node: reached, depth: depth + 1, held: step.held, ...(via === undefined ? {} : { via }), ...(step.ran === true ? { ran: true as const } : {}) });
+        const consumed = item.consumed === true || node.type === 'consumer';
+        queue.push({
+          node: reached,
+          depth: depth + 1,
+          held: step.held,
+          ...(via === undefined ? {} : { via }),
+          ...(step.ran === true ? { ran: true as const } : {}),
+          ...(consumed ? { consumed: true as const } : {}),
+        });
       }
     }
     return { found, tops, met, parents, crossings, read, cut };
@@ -626,6 +640,12 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     const reach = reachOfVerdict(node, answer);
     return reach === 'maybe' && answer.evidence.unreferenced === true && gapsIn(node) === undefined ? 'unreached' : reach;
   };
+
+  /**
+   * A hook the framework calls by itself (P399), on a class it builds: a way
+   * in of its own, `startup (onModuleInit)`, as long as `dead` says it runs.
+   */
+  const isFrameworkWay = (node: GraphNode): boolean => frameworkCallOf(node) !== undefined && reachOf(node)?.reach === 'alive';
 
   /** The verdict of a node `dead` judges, or the liveliest of the code a site is written in, as `reach`. */
   const reachOf = (node: GraphNode): { reach: Reach; answer: DeadAnswer } | undefined => {
@@ -686,8 +706,9 @@ export const reachReader = (db: GraphDb, handle: Pick<DbHandle, 'config'> & { pa
     judged += 1;
     const judgedReach = reachOf(node);
     let row: RowReach = judgedReach === undefined ? {} : { reach: judgedReach.reach };
-    // A way in is its own; only code below one is walked back from.
-    if (node.type !== 'entry' && judgedReach !== undefined) {
+    // A way in is its own; only code below one is walked back from. A hook the framework calls is one (P399).
+    if (judgedReach?.reach === 'alive' && isFrameworkWay(node)) row = { reach: 'alive', from: wayInSaid(graph, node, undefined) };
+    else if (node.type !== 'entry' && judgedReach !== undefined) {
       if (budget <= 0) unwalked += 1;
       else {
         // A consumer judged never to run (its subscription made by code nothing runs, P374) is not reached by what

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "nest-broker-markers",
-  "generatedAt": "2026-11-23T14:41:32.071Z",
+  "generatedAt": "2026-11-25T12:54:04.659Z",
   "nodes": [
     {
       "id": "channel:order.archived",
@@ -677,6 +677,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

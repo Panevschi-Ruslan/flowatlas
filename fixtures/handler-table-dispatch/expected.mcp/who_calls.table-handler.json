@@ -6,18 +6,17 @@
     "loc": "src/staff-bot.ts:67",
     "service": "staff-bot",
     "reach": "alive",
-    "from": "bot_event callback_query"
+    "from": "bot_callback view_order_*"
   },
   "callers": [
     {
       "node": {
-        "id": "staff-bot#src/staff-bot.ts:on callback_query@43",
+        "id": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
         "type": "function",
-        "label": "on callback_query@43",
-        "loc": "src/staff-bot.ts:43",
-        "endLine": 48,
+        "label": "bot_callback view_order_*@28",
+        "loc": "src/staff-bot.ts:28",
         "reach": "alive",
-        "from": "bot_event callback_query"
+        "from": "bot_callback view_order_*"
       },
       "edge": {
         "type": "calls",
@@ -31,11 +30,11 @@
       "children": [
         {
           "node": {
-            "id": "entry:staff-bot:bot_event:callback_query",
+            "id": "entry:staff-bot:bot_callback:view_order_*",
             "type": "entry",
-            "label": "bot_event callback_query",
-            "loc": "src/staff-bot.ts:43",
-            "kind": "bot_event",
+            "label": "bot_callback view_order_*",
+            "loc": "src/staff-bot.ts:28",
+            "kind": "bot_callback",
             "reach": "outside"
           },
           "edge": {
@@ -49,12 +48,12 @@
   ],
   "waysIn": [
     {
-      "id": "entry:staff-bot:bot_event:callback_query",
+      "id": "entry:staff-bot:bot_callback:view_order_*",
       "type": "entry",
-      "label": "bot_event callback_query",
-      "loc": "src/staff-bot.ts:43",
+      "label": "bot_callback view_order_*",
+      "loc": "src/staff-bot.ts:28",
       "service": "staff-bot",
-      "kind": "bot_event",
+      "kind": "bot_callback",
       "reach": "outside",
       "hops": 2,
       "by": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
@@ -62,8 +61,8 @@
   ],
   "complete": true,
   "next": [
-    "get_flow({entry: \"entry:staff-bot:bot_event:callback_query\"})",
-    "describe_for_prompt({id: \"entry:staff-bot:bot_event:callback_query\"})",
-    "impact({symbol: \"entry:staff-bot:bot_event:callback_query\"})"
+    "get_flow({entry: \"entry:staff-bot:bot_callback:view_order_*\"})",
+    "describe_for_prompt({id: \"entry:staff-bot:bot_callback:view_order_*\"})",
+    "impact({symbol: \"entry:staff-bot:bot_callback:view_order_*\"})"
   ]
 }

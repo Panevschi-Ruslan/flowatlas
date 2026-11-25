@@ -4,8 +4,8 @@
   "verdict": "alive",
   "reason": "called",
   "evidence": {
-    "callers": 2,
-    "caller": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit"
+    "callers": 1,
+    "caller": "entry:courier-bot:bot_callback:/^delivered:(\\w+)$/"
   },
   "from": "bot_callback /^delivered:(\\w+)$/"
 }

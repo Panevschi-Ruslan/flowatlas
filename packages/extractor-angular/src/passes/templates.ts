@@ -34,8 +34,21 @@ import { definePass } from './types.js';
 /** The router's methods a template's handler navigates with. */
 const NAVIGATING: ReadonlySet<string> = new Set(['navigate', 'navigateByUrl']);
 
-/** Framework callbacks that run a component's own code without anyone asking. */
-const LIFECYCLE = ['ngOnInit', 'ngAfterViewInit', 'ngOnDestroy'] as const;
+/**
+ * Framework callbacks that run a component's or a directive's own code without
+ * anyone asking: every lifecycle hook Angular calls on one it renders (P399
+ * added the five beyond `ngOnInit`, `ngAfterViewInit` and `ngOnDestroy`).
+ */
+const LIFECYCLE = [
+  'ngOnChanges',
+  'ngOnInit',
+  'ngDoCheck',
+  'ngAfterContentInit',
+  'ngAfterContentChecked',
+  'ngAfterViewInit',
+  'ngAfterViewChecked',
+  'ngOnDestroy',
+] as const;
 
 export interface TemplateText {
   source: string;
@@ -636,6 +649,8 @@ export const templatesPass = definePass('templates', (ctx) => {
     }
   };
 
+  // A directive's hooks run where an element it matches is rendered, as a component's do where it is (P399).
+  for (const indexed of ctx.classes.withRole('directive')) lifecycle(indexed);
   for (const indexed of ctx.classes.withRole('component')) {
     lifecycle(indexed);
 

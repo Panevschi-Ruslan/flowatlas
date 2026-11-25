@@ -2997,10 +2997,10 @@
         "complete": true,
         "lists": {
           "callers": [
-            "staff-bot#src/staff-bot.ts:on callback_query@43"
+            "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28"
           ],
           "waysIn": [
-            "entry:staff-bot:bot_event:callback_query"
+            "entry:staff-bot:bot_callback:view_order_*"
           ]
         },
         "exact": [
@@ -3008,12 +3008,16 @@
         ],
         "notListed": {
           "callers": [
+            "staff-bot#src/staff-bot.ts:on callback_query@43",
             "staff-bot#src/staff-bot.ts:StaffBot.setup",
             "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
+          ],
+          "waysIn": [
+            "entry:staff-bot:bot_event:callback_query"
           ]
         }
       },
-      "note": "P398: route.handler(ctx, data) on this.buttonRoutes.find(...) was a gap and the handler maybe, the row a pilot dug into for turns; the callback_query handler that dispatches calls it, reached from the bot."
+      "note": "P398: route.handler(ctx, data) on this.buttonRoutes.find(...) was a gap and the handler maybe, the row a pilot dug into for turns; the callback_query handler that dispatches calls it, reached from the bot. P399: the listener choosing through the table opens a way in per prefix, so the handler is reached from bot_callback view_order_* through its element's arrow, not from the listener."
     },
     {
       "id": "impact.table-api",
@@ -3031,21 +3035,113 @@
         "lists": {
           "entries": [
             "entry:shop-api:http:GET:/api/orders/active",
-            "entry:staff-bot:bot_command:orders",
-            "entry:staff-bot:bot_event:callback_query"
+            "entry:staff-bot:bot_callback:view_order_*",
+            "entry:staff-bot:bot_command:orders"
           ]
         },
         "notListed": {
           "entries": [
             "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
-            "staff-bot#src/staff-bot.ts:StaffBot.listOrders"
+            "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+            "entry:staff-bot:bot_event:callback_query",
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
           ]
         },
         "exact": [
           "entries"
         ]
       },
-      "note": "P398: the bot is counted under bots by its ways in, a button through a table of prefixes and a command a loop over a table registers; no maybe row."
+      "note": "P398: the bot is counted under bots by its ways in, a button through a table of prefixes and a command a loop over a table registers; no maybe row. P399: the button is the way in its prefix opens, bot_callback view_order_*; the listener is not listed."
+    },
+    {
+      "id": "dead.lifecycle-setup",
+      "ask": "is StaffBot.setup dead, which only onModuleInit calls, and onModuleInit",
+      "fixture": "handler-table-dispatch",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "staff-bot#src/staff-bot.ts:StaffBot.setup",
+          "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "staff-bot#src/staff-bot.ts:StaffBot.setup": {
+              "verdict": "alive",
+              "from": "startup (onModuleInit)"
+            },
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit": {
+              "verdict": "alive",
+              "from": "startup (onModuleInit)"
+            }
+          }
+        }
+      },
+      "note": "P399: a method only Nest's onModuleInit calls ended its chain at a maybe (from: behind); the framework calls the hook of a provider a module registers, so it is alive from startup."
+    },
+    {
+      "id": "impact.text-router",
+      "ask": "which ways in could break if TextRouter.route changes",
+      "fixture": "handler-table-dispatch",
+      "tool": "impact",
+      "args": {
+        "symbol": "staff-bot#src/text-router.ts:TextRouter.route"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:staff-bot:bot_event:text"
+          ]
+        },
+        "exact": [
+          "entries"
+        ],
+        "notListed": {
+          "entries": [
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit",
+            "staff-bot#src/staff-bot.ts:StaffBot.setup"
+          ]
+        }
+      },
+      "note": "P399: the call in the text listener was drawn from setup too, so impact listed onModuleInit as a maybe row; it is the listener's alone."
+    },
+    {
+      "id": "findings.prefix-buttons",
+      "ask": "which bot buttons send data no handler takes",
+      "fixture": "handler-table-dispatch",
+      "tool": "findings",
+      "args": {
+        "kind": "bot-button-unhandled"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor": {
+              "precision": "high"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P399: the prefixes of a listener's table are ways in with their callback data, so view_order_${id} and set_status_${id} are handled and archive_order_${id} is named; behind the one callback_query way in every button was held back."
     }
   ],
   "fixed": {
@@ -3725,24 +3821,45 @@
       "calls": 1
     },
     "dead.table-handler": {
-      "chars": 591,
-      "tokens": 148,
+      "chars": 588,
+      "tokens": 147,
       "rows": 2,
       "complete": null,
       "calls": 1
     },
     "who_calls.table-handler": {
-      "chars": 746,
-      "tokens": 187,
+      "chars": 760,
+      "tokens": 190,
       "rows": 3,
       "complete": true,
       "calls": 1
     },
     "impact.table-api": {
-      "chars": 1045,
+      "chars": 1046,
       "tokens": 262,
       "rows": 3,
       "complete": true,
+      "calls": 1
+    },
+    "dead.lifecycle-setup": {
+      "chars": 563,
+      "tokens": 141,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "impact.text-router": {
+      "chars": 521,
+      "tokens": 131,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.prefix-buttons": {
+      "chars": 825,
+      "tokens": 207,
+      "rows": 1,
+      "complete": null,
       "calls": 1
     }
   }

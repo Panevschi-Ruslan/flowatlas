@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:42:32.973Z",
+  "builtAt": "2026-11-25T12:56:03.398Z",
   "services": [
     {
       "name": "gateway",
@@ -241,6 +241,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

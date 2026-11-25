@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:20.670Z",
+  "builtAt": "2026-11-25T13:04:32.114Z",
   "configHash": "37faf70e2e78",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1792,
+      "durationMs": 2438,
       "packages": {
         "name": "admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1728,
+      "durationMs": 2258,
       "packages": {
         "name": "@shop/audit",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1817,
+      "durationMs": 2470,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 24,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1872,
+      "durationMs": 2363,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -84,7 +84,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1812,
+      "durationMs": 2444,
       "packages": {
         "name": "@shop/ledger",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1816,
+      "durationMs": 2269,
       "packages": {
         "name": "metrics",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1813,
+      "durationMs": 2357,
       "packages": {
         "name": "reports",
         "runtime": [
@@ -138,7 +138,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1823,
+      "durationMs": 2343,
       "packages": {
         "name": "shop",
         "runtime": [
@@ -156,7 +156,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1742,
+      "durationMs": 2437,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -208,7 +208,7 @@
     "edges": 35,
     "types": 0,
     "missed": 9,
-    "sites": 19,
+    "sites": 17,
     "notes": 0,
     "findings": 0,
     "unresolved": 9

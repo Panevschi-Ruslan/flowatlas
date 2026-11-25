@@ -20,6 +20,17 @@
       "rowsVia": 2
     },
     {
+      "id": "entry:staff-bot:bot_callback:view_order_*",
+      "type": "entry",
+      "label": "bot_callback view_order_*",
+      "loc": "src/staff-bot.ts:28",
+      "service": "staff-bot",
+      "kind": "bot_callback",
+      "reach": "outside",
+      "via": "GET /api/orders/active (shop-api)",
+      "by": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
+    },
+    {
       "id": "entry:staff-bot:bot_command:orders",
       "type": "entry",
       "label": "bot_command orders",
@@ -29,17 +40,6 @@
       "reach": "outside",
       "via": "GET /api/orders/active (shop-api)",
       "by": "staff-bot#src/staff-bot.ts:StaffBot.listOrders"
-    },
-    {
-      "id": "entry:staff-bot:bot_event:callback_query",
-      "type": "entry",
-      "label": "bot_event callback_query",
-      "loc": "src/staff-bot.ts:43",
-      "service": "staff-bot",
-      "kind": "bot_event",
-      "reach": "outside",
-      "via": "GET /api/orders/active (shop-api)",
-      "by": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
     }
   ],
   "total": 3,

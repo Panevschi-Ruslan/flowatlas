@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:25:34.310Z",
+  "builtAt": "2026-11-25T13:13:13.267Z",
   "services": [
     {
       "name": "orders-api",
@@ -1198,6 +1198,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

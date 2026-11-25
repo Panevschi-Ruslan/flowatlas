@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:41:32.120Z",
+  "builtAt": "2026-11-25T12:54:04.891Z",
   "services": [
     {
       "name": "nest-broker-markers",
@@ -708,6 +708,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

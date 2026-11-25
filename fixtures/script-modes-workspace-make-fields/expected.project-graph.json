@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:47:20.670Z",
+  "builtAt": "2026-11-25T13:04:32.114Z",
   "services": [
     {
       "name": "shop",
@@ -1566,32 +1566,11 @@
       "line": 15,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 11,
+      "sites": 9,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "CatalogServer.start -> this.products.get",
       "meta": {
         "causes": [
-          {
-            "cause": "callback-param",
-            "sites": 6,
-            "samples": [
-              {
-                "file": "src/server.ts",
-                "line": 16,
-                "symbol": "CatalogServer.start -> res.json"
-              },
-              {
-                "file": "src/server.ts",
-                "line": 16,
-                "symbol": "GET /products@15 -> res.json"
-              },
-              {
-                "file": "src/server.ts",
-                "line": 19,
-                "symbol": "CatalogServer.start -> res.json"
-              }
-            ]
-          },
           {
             "cause": "module-not-installed",
             "package": "express",
@@ -1611,6 +1590,27 @@
                 "file": "src/server.ts",
                 "line": 21,
                 "symbol": "CatalogServer.start -> this.app.use"
+              }
+            ]
+          },
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 16,
+                "symbol": "GET /products@15 -> res.json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 19,
+                "symbol": "GET /drafts@18 -> res.json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 36,
+                "symbol": "GET /reviews@35 -> res.json"
               }
             ]
           }

@@ -1,0 +1,68 @@
+{
+  "target": {
+    "id": "kiosk#js/kiosk.js:showStock",
+    "type": "function",
+    "line": 5,
+    "reach": "maybe",
+    "from": "behind",
+    "behind": "kiosk#js/kiosk.js:kiosk.js:top",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:GET:/api/stock",
+        "by": "shop-api#src/stock.controller.ts:StockController.count"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "id": "kiosk#js/kiosk.js:openScreen",
+      "type": "function",
+      "line": 15,
+      "reach": "maybe",
+      "from": "behind",
+      "behind": "kiosk#js/kiosk.js:kiosk.js:top",
+      "edge": {
+        "type": "calls",
+        "returns": "any"
+      },
+      "children": [
+        {
+          "id": "kiosk#js/kiosk.js:kiosk.js:top",
+          "type": "function",
+          "line": 21,
+          "reach": "maybe",
+          "from": "behind",
+          "edge": {
+            "type": "calls",
+            "params": [
+              "any"
+            ],
+            "returns": "any"
+          },
+          "topOfChain": true,
+          "gapsInFile": 0
+        }
+      ]
+    }
+  ],
+  "waysIn": [],
+  "waysInNone": "no way in reaches this; the maybe rows stop at an unread call",
+  "maybe": [
+    {
+      "id": "kiosk#js/kiosk.js:kiosk.js:top",
+      "type": "function",
+      "line": 21,
+      "reach": "maybe",
+      "from": "behind",
+      "hops": 2
+    }
+  ],
+  "complete": false,
+  "left": [
+    "gaps: 1 chain stops at an unread call before any way in: the maybe row"
+  ],
+  "next": [
+    "cant_follow({service: \"kiosk\"})",
+    "search({query: \"js/kiosk.js\", kinds: [\"gaps\"]})"
+  ]
+}

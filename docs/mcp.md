@@ -707,7 +707,9 @@ question is answered in the call that asked it.
     judge, takes the liveliest verdict of the code it is written in.
   - `from`: the nearest way in, short - `screen /queue`, `GET /orders/:param`,
     `cron nightly`, `consumer tenant:*:events` (a handler whose channel nothing
-    read publishes to), with `(service)` after it when it is another
+    read publishes to), `startup (onModuleInit)` (a lifecycle hook the
+    framework calls on a class it builds, P399, a way in of its own), with
+    `(service)` after it when it is another
     service's - or `none`; on a `maybe` row nothing read reaches, the nearest
     way in beyond the unread call where the code it is written in is known,
     and `behind` otherwise. A walk back from the row finds the first ways in on
@@ -826,7 +828,7 @@ a filter, a near name or a verdict never makes a half answer look whole.
   complete.
 - **Impact by kind.** `byKind` sums every way in that breaks, on any page, by
   kind (`screens`, `routes`, `webhooks`, `bots`, `consumers`, `jobs`,
-  `functions`) and service, each the file of the code that handles it:
+  `functions`, `startup` for a hook the framework calls, P399) and service, each the file of the code that handles it:
   `{"screens": {"reader-web": ["src/app/book-page.component.ts"]}, "bots":
   {"desk-bot": ["src/desk-bot.ts"]}}`. Every way in is counted by what it is
   (P396): a route whose chain to the changed code runs through a bot's code

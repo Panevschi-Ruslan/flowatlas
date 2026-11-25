@@ -1,4 +1,4 @@
-import { isMessageTypeNode, UNREFERENCED_META, type GraphNode } from '@flowatlas/core';
+import { frameworkCallOf, frameworkCallSaid, isMessageTypeNode, UNREFERENCED_META, type GraphNode } from '@flowatlas/core';
 import { messageTypeFacts, unreachedHandler, unselectedSaid } from './message-types.js';
 import type { GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
@@ -129,6 +129,8 @@ export interface DeadEvidence {
   classReached?: true;
   /** Its name is written nowhere in its repository but where it is declared, so no unread call could name it (P370). */
   unreferenced?: true;
+  /** The framework calls it by itself, or a hook of it (P399): `startup (onModuleInit)`. */
+  framework?: string;
   via?: string;
   seen?: { count: number; lastSeen: string | null; window: string };
   neverSeen?: { window: string; confidence: NeverSeenConfidence };
@@ -960,6 +962,11 @@ const providerAnswer = (db: GraphDb, context: ProviderContext, provider: GraphNo
   if (injectors.length > 0) return { verdict: 'alive', reason: 'injected', evidence: aliveBy(injectors) };
   const reaching = (context.owners.get(provider.id) ?? []).flatMap((method) => db.edgesTo(method, METHOD_CALLERS));
   if (reaching.length > 0) return { verdict: 'alive', reason: 'its methods are reached', evidence: aliveBy(reaching) };
+  // A class the framework builds and calls a hook of (P399): its reader marks the hook only where a module registers it.
+  const hook = (context.owners.get(provider.id) ?? []).map((method) => frameworkCallOf(db.node(method))).find((call) => call !== undefined);
+  if (hook !== undefined) {
+    return { verdict: 'alive', reason: `the framework builds it and calls its ${hook.hook} at ${hook.when}`, evidence: { framework: frameworkCallSaid(hook) } };
+  }
 
   const unresolved = context.unresolvedInjects.get(provider.repo) ?? 0;
   // A class no module even registers is not built by the container at all, so
@@ -1027,6 +1034,9 @@ const methodAnswer = (db: GraphDb, context: ProviderContext, method: GraphNode):
     };
   }
   if (reaching.length > 0) return { verdict: 'alive', reason: 'called', evidence: aliveBy(reaching) };
+  // A lifecycle hook of a class the framework builds (P399): the framework is its caller.
+  const framework = frameworkCallOf(method);
+  if (framework !== undefined) return { verdict: 'alive', reason: `the framework calls it at ${framework.when}`, evidence: { framework: frameworkCallSaid(framework) } };
   const owner = ownerOf(method.id);
   const holder = owner === undefined ? undefined : db.node(owner);
   if (holder === undefined) return { verdict: 'likely-dead', reason: 'nothing calls it; it belongs to no class the graph holds', evidence: {} };
@@ -1362,6 +1372,9 @@ const functionAnswer = (db: GraphDb, fn: GraphNode): Answered => {
   if (routed !== undefined) return routed;
   const reaching = db.edgesTo(fn.id, METHOD_CALLERS);
   if (reaching.length > 0) return { verdict: 'alive', reason: 'called', evidence: aliveBy(reaching) };
+  // A hook of a class the framework builds, drawn as a function by the reading that drew it (P399).
+  const framework = frameworkCallOf(fn);
+  if (framework !== undefined) return { verdict: 'alive', reason: `the framework calls it at ${framework.when}`, evidence: { framework: frameworkCallSaid(framework) } };
   return { verdict: 'likely-dead', reason: 'nothing calls it; an import the reading did not follow may', evidence: {} };
 };
 

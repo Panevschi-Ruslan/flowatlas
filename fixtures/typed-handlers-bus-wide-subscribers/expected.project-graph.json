@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T09:33:02.857Z",
+  "builtAt": "2026-11-25T13:07:15.275Z",
   "services": [
     {
       "name": "shop",
@@ -1416,6 +1416,10 @@
           "params": [],
           "returns": "void"
         },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        },
         "fieldsRead": []
       }
     },
@@ -1572,6 +1576,10 @@
           "params": [],
           "returns": "void"
         },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        },
         "fieldsRead": []
       }
     },
@@ -1646,6 +1654,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -1695,6 +1707,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         },
         "fieldsRead": []
       }

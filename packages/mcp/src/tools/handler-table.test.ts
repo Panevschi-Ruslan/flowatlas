@@ -42,20 +42,40 @@ afterAll(async () => {
 });
 
 describe('a handler held by a table written out', () => {
-  it('is called by the dispatcher, reached from the bot, never maybe', async () => {
+  it('is reached from the way in its prefix opens (P399), never maybe', async () => {
     const answer = await call(tables, 'who_calls', { symbol: SHOW });
     const callers = (answer.callers as Array<{ node: { id: string; reach?: string } }>).map((item) => item.node);
-    // The handler the way in names dispatches; the method it is written in is not drawn again (nothing but the framework calls it).
-    expect(callers.map((node) => node.id)).toEqual(['staff-bot#src/staff-bot.ts:on callback_query@43']);
+    // The element's own handler, which the way in of its prefix names; the listener choosing it is not drawn again.
+    expect(callers.map((node) => node.id)).toEqual(['staff-bot#src/staff-bot.ts:bot_callback view_order_*@28']);
     expect(callers.every((node) => node.reach === 'alive')).toBe(true);
-    expect((answer.waysIn as Array<{ id: string }>).map((row) => row.id)).toEqual(['entry:staff-bot:bot_event:callback_query']);
+    expect((answer.waysIn as Array<{ id: string }>).map((row) => row.id)).toEqual(['entry:staff-bot:bot_callback:view_order_*']);
+    expect(answer.target.from).toBe('bot_callback view_order_*');
     expect(answer.complete).toBe(true);
+  });
+
+  it('says the framework reaches what only a lifecycle hook calls (P399)', async () => {
+    const answer = await call(tables, 'dead', { ids: ['staff-bot#src/staff-bot.ts:StaffBot.setup', 'staff-bot#src/staff-bot.ts:StaffBot.onModuleInit'] });
+    const rows = answer.answers as Array<{ verdict: string; from?: string }>;
+    expect(rows.map((row) => row.verdict)).toEqual(['alive', 'alive']);
+    expect(rows.map((row) => row.from)).toEqual(['startup (onModuleInit)', 'startup (onModuleInit)']);
+    // A call written in the text listener is the listener's, not again the method that registers it.
+    const route = await call(tables, 'impact', { symbol: 'staff-bot#src/text-router.ts:TextRouter.route' });
+    expect((route.entries as Array<{ id: string }>).map((row) => row.id)).toEqual(['entry:staff-bot:bot_event:text']);
+    expect(route.maybe ?? 0).toBe(0);
+  });
+
+  it('follows tables in a React screen and a plain script (P399)', async () => {
+    const screen = await call(tables, 'who_calls', { symbol: 'shop-web#src/orders-api.ts:markReady', depth: 1 });
+    expect(screen.callers.map((item: { node: { id: string }; edge?: { meta?: Record<string, string> } }) => item.node.id)).toEqual(['shop-web#src/OrdersToolbar.tsx:OrdersToolbar']);
+    const kiosk = await call(tables, 'who_calls', { symbol: 'kiosk#js/kiosk.js:showStock', depth: 1 });
+    expect(kiosk.callers.map((item: { node: { id: string } }) => item.node.id)).toEqual(['kiosk#js/kiosk.js:openScreen']);
   });
 
   it('counts the bot under bots in impact on the API method behind it, with no maybe row', async () => {
     const answer = await call(tables, 'impact', { symbol: LIST_ACTIVE });
     const ids = (answer.entries as Array<{ id: string }>).map((row) => row.id);
-    expect(ids).toEqual(expect.arrayContaining(['entry:shop-api:http:GET:/api/orders/active', 'entry:staff-bot:bot_event:callback_query', 'entry:staff-bot:bot_command:orders']));
+    expect(ids).toEqual(expect.arrayContaining(['entry:shop-api:http:GET:/api/orders/active', 'entry:staff-bot:bot_callback:view_order_*', 'entry:staff-bot:bot_command:orders']));
+    expect(ids).not.toContain('entry:staff-bot:bot_event:callback_query');
     expect(answer.maybe ?? 0).toBe(0);
     expect(answer.byKind.bots).toEqual({ 'staff-bot': ['src/staff-bot.ts'] });
   });

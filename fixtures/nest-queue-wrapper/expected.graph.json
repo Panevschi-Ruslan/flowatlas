@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "nest-queue-wrapper",
-  "generatedAt": "2026-11-23T14:44:26.646Z",
+  "generatedAt": "2026-11-25T12:58:02.840Z",
   "nodes": [
     {
       "id": "channel:cron-queue",
@@ -352,6 +352,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

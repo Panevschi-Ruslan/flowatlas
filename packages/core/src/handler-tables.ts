@@ -63,6 +63,21 @@ export interface TableDispatch {
   readonly unread: number;
   /** Every element the table holds, read or not. */
   readonly total: number;
+  /**
+   * How the call's condition picks the element, where it tests a member of it
+   * (P399): the member, the test (`prefix`, `equals`, `pattern`, `suffix`,
+   * `contains`) and the value it is tested against (`data` of
+   * `data.startsWith(r.prefix)`), so a reader can tell what the selection is by.
+   */
+  readonly selection?: TableSelection;
+}
+
+/** The test a table call's element is chosen by (P399). */
+export interface TableSelection {
+  readonly member: string;
+  readonly test: string;
+  /** The value tested against the element's member, as written. */
+  readonly subject?: TsNode;
 }
 
 /** What one element's member runs. */
@@ -253,11 +268,8 @@ const memberOfElement = (expr: TsNode | undefined, param: string): string | unde
   return Node.isIdentifier(of) && of.getText() === param ? node.getName() : undefined;
 };
 
-/** How a condition selects an element: the member it tests, and the word for the test. */
-interface Selection {
-  readonly member: string;
-  readonly test: string;
-}
+/** How a condition selects an element: the member it tests, the word for the test, and what it is tested against. */
+type Selection = TableSelection;
 
 const STRING_TESTS: ReadonlyMap<string, string> = new Map([
   ['startsWith', 'prefix'],
@@ -274,8 +286,9 @@ const selectionOf = (condition: TsNode | undefined, param: string | undefined): 
     if (Node.isBinaryExpression(node)) {
       const operator = node.getOperatorToken().getKind();
       if (operator !== SyntaxKind.EqualsEqualsEqualsToken && operator !== SyntaxKind.EqualsEqualsToken) continue;
-      const member = memberOfElement(node.getLeft(), param) ?? memberOfElement(node.getRight(), param);
-      if (member !== undefined) return { member, test: 'equals' };
+      const left = memberOfElement(node.getLeft(), param);
+      const member = left ?? memberOfElement(node.getRight(), param);
+      if (member !== undefined) return { member, test: 'equals', subject: left === undefined ? node.getLeft() : node.getRight() };
       continue;
     }
     if (!Node.isCallExpression(node)) continue;
@@ -284,13 +297,14 @@ const selectionOf = (condition: TsNode | undefined, param: string | undefined): 
     const name = callee.getName();
     if (name === 'test' || name === 'exec') {
       const member = memberOfElement(callee.getExpression(), param);
-      if (member !== undefined) return { member, test: 'pattern' };
+      const tested = node.getArguments()[0];
+      if (member !== undefined) return { member, test: 'pattern', ...(tested === undefined ? {} : { subject: tested }) };
       continue;
     }
     const test = STRING_TESTS.get(name);
     if (test === undefined) continue;
     const member = memberOfElement(node.getArguments()[0], param);
-    if (member !== undefined) return { member, test };
+    if (member !== undefined) return { member, test, subject: callee.getExpression() };
   }
   return undefined;
 };
@@ -406,7 +420,7 @@ export const tableDispatchOf = (receiver: TsNode, member: string, call: TsNode):
     }
     // No element written out holds the member: nothing says the call is one of the table's.
     if (rows.length === 0) return undefined;
-    return { table, member, rows, unread: unread + missing, total: elements.length + unread };
+    return { table, member, rows, unread: unread + missing, total: elements.length + unread, ...(selection === undefined ? {} : { selection }) };
   } catch {
     // A question the checker throws on reads as no table, which is what was there before.
     return undefined;

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:23:49.354Z",
+  "builtAt": "2026-11-25T13:14:56.278Z",
   "services": [
     {
       "name": "lending-api",
@@ -116,6 +116,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

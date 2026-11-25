@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:07:42.589Z",
+  "builtAt": "2026-11-25T13:14:32.303Z",
   "services": [
     {
       "name": "shop-api",
@@ -447,6 +447,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         },
         "fieldsRead": []
       }

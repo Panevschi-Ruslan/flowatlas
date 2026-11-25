@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T12:03:47.051Z",
+  "builtAt": "2026-11-25T13:13:43.804Z",
   "configHash": "2ca141f1e2da",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 872,
+      "durationMs": 1011,
       "packages": {
         "name": "backoffice-web",
         "runtime": [
@@ -30,10 +30,10 @@
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 15,
-      "edges": 11,
+      "edges": 10,
       "types": 1,
       "unresolved": 2,
-      "durationMs": 1110,
+      "durationMs": 1262,
       "packages": {
         "name": "courier-bot",
         "runtime": [
@@ -56,7 +56,7 @@
       "edges": 12,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1102,
+      "durationMs": 1216,
       "packages": {
         "name": "shop-api",
         "runtime": [
@@ -106,7 +106,7 @@
   "unresolved": [],
   "totals": {
     "nodes": 40,
-    "edges": 31,
+    "edges": 30,
     "types": 2,
     "missed": 2,
     "sites": 2,

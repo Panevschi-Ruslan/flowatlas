@@ -1,0 +1,65 @@
+{
+  "target": {
+    "id": "shop-web#src/orders-api.ts:markReady",
+    "type": "function",
+    "line": 10,
+    "reach": "unreached",
+    "from": "none",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:PATCH:/api/orders/status",
+        "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "id": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "ui_component",
+      "line": 17,
+      "kind": "function",
+      "reach": "unreached",
+      "from": "none",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "id": "ui_action:shop-web#src/OrdersToolbar.tsx:27:15",
+          "label": "onClick={refresh}",
+          "kind": "event",
+          "edge": "handles",
+          "topOfChain": true,
+          "gapsInFile": 1
+        },
+        {
+          "id": "ui_action:shop-web#src/OrdersToolbar.tsx:28:15",
+          "label": "onClick={ready}",
+          "kind": "event",
+          "edge": "handles",
+          "topOfChain": true,
+          "gapsInFile": 1
+        },
+        {
+          "id": "ui_action:shop-web#src/OrdersToolbar.tsx:29:15",
+          "label": "onClick={stock}",
+          "kind": "event",
+          "edge": "handles",
+          "topOfChain": true,
+          "gapsInFile": 1
+        }
+      ]
+    }
+  ],
+  "waysIn": [],
+  "waysInNone": "nothing reaches this",
+  "complete": true,
+  "next": [
+    "impact({symbol: \"shop-web#src/orders-api.ts:markReady\"})",
+    "get_source({symbol: \"shop-web#src/orders-api.ts:markReady\"})"
+  ]
+}

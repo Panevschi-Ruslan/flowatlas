@@ -4,12 +4,25 @@
       "name": "shop-api",
       "repo": "./shop-api",
       "type": "nestjs",
-      "baseUrlEnv": ["SHOP_API_URL"]
+      "baseUrlEnv": ["SHOP_API_URL"],
+      "hosts": ["shop.example.test"]
     },
     {
       "name": "staff-bot",
       "repo": "./staff-bot",
       "type": "nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_SHOP_API_URL"],
+      "apiTarget": { "VITE_SHOP_API_URL": "shop-api" }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "browser"
     }
   ],
   "output": ".flowatlas"

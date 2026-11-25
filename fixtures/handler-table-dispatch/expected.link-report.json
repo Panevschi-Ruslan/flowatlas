@@ -1,8 +1,19 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T12:08:50.496Z",
-  "configHash": "e0893d8993c9",
+  "builtAt": "2026-11-25T13:21:26.613Z",
+  "configHash": "db1d5d07446c",
   "services": [
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 8,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1870
+    },
     {
       "name": "shop-api",
       "repo": "./shop-api",
@@ -12,7 +23,7 @@
       "edges": 11,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1027,
+      "durationMs": 2329,
       "packages": {
         "name": "shop-api",
         "runtime": [
@@ -24,15 +35,33 @@
       }
     },
     {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 12,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2069,
+      "packages": {
+        "name": "shop-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
       "name": "staff-bot",
       "repo": "./staff-bot",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 29,
+      "nodes": 34,
       "edges": 28,
-      "types": 5,
+      "types": 6,
       "unresolved": 2,
-      "durationMs": 1061,
+      "durationMs": 2268,
       "packages": {
         "name": "staff-bot",
         "runtime": [
@@ -58,8 +87,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 0,
-    "resolved": 0,
+    "total": 5,
+    "resolved": 5,
     "unresolved": 0,
     "byReason": {}
   },
@@ -71,25 +100,23 @@
   },
   "routes": {
     "total": 4,
-    "called": 3,
-    "uncalled": [
-      "entry:shop-api:http:GET:/api/reports/:param"
-    ],
+    "called": 4,
+    "uncalled": [],
     "duplicated": []
   },
   "types": {
-    "total": 5,
+    "total": 6,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
-    "nodes": 49,
-    "edges": 42,
-    "types": 5,
-    "missed": 3,
-    "sites": 3,
+    "nodes": 73,
+    "edges": 62,
+    "types": 6,
+    "missed": 4,
+    "sites": 4,
     "notes": 0,
     "findings": 0,
-    "unresolved": 3
+    "unresolved": 4
   }
 }

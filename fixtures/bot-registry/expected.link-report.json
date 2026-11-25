@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:29.953Z",
+  "builtAt": "2026-11-25T12:46:50.048Z",
   "configHash": "00bbce722abb",
   "services": [
     {
@@ -9,10 +9,10 @@
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 27,
-      "edges": 24,
+      "edges": 23,
       "types": 3,
       "unresolved": 3,
-      "durationMs": 1505,
+      "durationMs": 919,
       "packages": {
         "name": "bot-registry",
         "runtime": [
@@ -59,7 +59,7 @@
   "unresolved": [],
   "totals": {
     "nodes": 27,
-    "edges": 24,
+    "edges": 23,
     "types": 3,
     "missed": 3,
     "sites": 3,

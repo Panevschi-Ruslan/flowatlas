@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:14:27.445Z",
+  "builtAt": "2026-11-25T12:49:49.126Z",
   "services": [
     {
       "name": "api",
@@ -1594,20 +1594,15 @@
       "line": 22,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 7,
+      "sites": 6,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "StatusServer.start -> app.get",
       "meta": {
         "causes": [
           {
             "cause": "callback-param",
-            "sites": 3,
+            "sites": 2,
             "samples": [
-              {
-                "file": "src/status/status.server.ts",
-                "line": 23,
-                "symbol": "StatusServer.start -> res.send"
-              },
               {
                 "file": "src/status/status.server.ts",
                 "line": 23,

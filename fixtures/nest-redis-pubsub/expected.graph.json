@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "nest-redis-pubsub",
-  "generatedAt": "2026-11-23T16:41:18.093Z",
+  "generatedAt": "2026-11-25T12:58:10.777Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
@@ -471,6 +471,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         },
         "fieldsRead": []
       }

@@ -1,3 +1,4 @@
+import type { Node as TsNode } from 'ts-morph';
 import type { ApplicationMap } from './applications.js';
 import type { FlowatlasConfig } from '../config.js';
 import type { Confidence } from '../model/edges.js';
@@ -205,4 +206,14 @@ export interface EntryAdapter {
    * of every adapter that applies, through the registry.
    */
   conventions?: ConventionsOf;
+  /**
+   * Whether a call written in the repository is one this adapter's ways in
+   * stand for (P399): a call through a table of handlers whose elements the
+   * adapter opened a way in each for (`route.handler(ctx, data)` in a bot's
+   * `callback_query` listener, one way in per prefix). A call walk draws no
+   * edge for such a call - each way in hands the update to its element's
+   * handler itself - and no gap, since nothing is left unread. Optional;
+   * asked only of calls a walk reads as calls through a table.
+   */
+  standsForCall?(call: TsNode): boolean;
 }

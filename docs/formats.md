@@ -171,7 +171,7 @@ On an `entry`:
 | `stages` | the stages a Terraform API is deployed to; a stage the workspace names lists each workspace's |
 | `implementedBy` | the package whose code answers the way in: a gRPC health or reflection service handed to the server |
 | `protoFieldNames` | as on a request, for the service's contract |
-| `handlerVia` | how the code behind the way in was found (`function`, `method`, `inline`, `named`, ...; `table`, P398: one way in per element of a table written out that a loop registers, `bot.action(route.pattern, ...)` over `for (const route of routes)`). Two say it is not the repository's: `framework`, a route the framework's own code answers (a Strapi core route whose controller writes no action), and `package`, one an installed package declares and answers (a Strapi or Gatsby plugin under `node_modules`), drawn at the file that enables it with `package` and `declaredIn` naming the package and its file |
+| `handlerVia` | how the code behind the way in was found (`function`, `method`, `inline`, `named`, ...; `table`, P398: one way in per element of a table written out that a loop registers, `bot.action(route.pattern, ...)` over `for (const route of routes)`; since P399 also one per element of a table a listener of every update chooses through, with `selectedBy`, `updateType` and `splitByTable` on the listener kept). Two say it is not the repository's: `framework`, a route the framework's own code answers (a Strapi core route whose controller writes no action), and `package`, one an installed package declares and answers (a Strapi or Gatsby plugin under `node_modules`), drawn at the file that enables it with `package` and `declaredIn` naming the package and its file |
 
 A type the tool read from a `.proto` contract carries `declaredBy: protobuf`
 with `protoMessage` or `protoEnum`, and each field `protoName` where its name
@@ -227,7 +227,42 @@ arrow written in the element - with `meta.via: "table"` and, where the
 selection names a key, `meta.selectedBy` (`prefix set_status_`, `equals
 stock`, `pattern /^done:(\w+)$/`). Elements not written out (a spread of a
 value from elsewhere) keep the call's `call-dynamic-receiver` row, cause
-`table-rows-unread`, its hint saying how many.
+`table-rows-unread`, its hint saying how many. Read in every call walk that
+resolves calls: Nest's, Angular's (every element form since P399), and the
+browser reader's for React, Vue, Svelte and plain scripts (P399).
+
+A bot's listener of every update of a type (`bot.on('callback_query', ...)`
+on a `Telegraf`, or a method decorated `@On('callback_query')`) that hands
+each update to the element of a table its data selects
+(`this.routes.find((r) => data.startsWith(r.prefix))`, `r.command === text`,
+`r.pattern.test(data)`) opens a way in per element (P399), the one an
+explicit registration of it would open: `bot_callback view_order_*` for a
+prefix (`bot_command` for `text` and `message`), with `meta.selectedBy`,
+`meta.updateType`, `meta.registration` (`action`, `hears`, `inlineQuery`),
+`handlerVia: "table"`, a callback's `meta.callbackData` (`{ regex:
+"^view_order_" }`, so the buttons read beside it are held against each,
+P388), handled by what the element's handler runs and placed at the element.
+The call through the table is the ways in's: no call walk draws it again,
+and an adapter says so through `EntryAdapter.standsForCall`. The listener
+stays a way in only where it does more than choose, with
+`meta.splitByTable` (`file:line` of the table) and `restReadsData: true`
+where that rest reads the update's data (only then is it a catch-all a
+button finding is held back for). A table whose every element is not read
+(its key, its handler) is not split. The same holds the call a loop's
+registration over a table hands each update to (`bot.command(command.name,
+(ctx) => command.run(ctx))`, P398's ways in): it is no call of the method
+the loop is written in.
+
+A lifecycle hook the framework calls by itself (P399) carries
+`meta.frameworkCalls: { hook, when }` on its method node: Nest's
+`onModuleInit`, `onApplicationBootstrap` (`startup`), `onModuleDestroy`,
+`beforeApplicationShutdown`, `onApplicationShutdown` (`shutdown`) on a
+controller or a provider a module of the repository registers. `dead`
+answers it `alive` (evidence `framework: "startup (onModuleInit)"`), its
+class alive with it, and every reach answer reads it as a way in of its own,
+`from: "startup (onModuleInit)"`, under `startup` in impact's `byKind`. An
+Angular component's or directive's hooks (all eight, P399) are `ui_action`
+nodes of kind `lifecycle`, run where the component is shown.
 
 A front end's navigations and route guards are `calls` edges. A navigation's
 `meta` gains `alsoNavigates` (the other addresses written to the same page from

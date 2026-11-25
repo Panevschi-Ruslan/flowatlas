@@ -1,0 +1,31 @@
+{
+  "kind": "bot-button-unhandled",
+  "rows": [
+    {
+      "kind": "bot-button-unhandled",
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor",
+      "line": 84,
+      "message": "StaffBot.buttonsFor builds a button sending \"archive_order_${…}\", which no handler of callback data matches; the handlers match /^set_status_/, /^view_order_/",
+      "precision": "high",
+      "evidence": "every handler of callback data in the project was read, and none takes every callback",
+      "seenBy": [
+        "bot_command orders (staff-bot)"
+      ],
+      "rank": 1,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "get_source({symbol: \"staff-bot#src/staff-bot.ts:StaffBot.buttonsFor\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "no deployment file of staff-bot was read: its settings may be set where the reading does not look"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"staff-bot#src/staff-bot.ts:StaffBot.buttonsFor\"})"
+  ]
+}

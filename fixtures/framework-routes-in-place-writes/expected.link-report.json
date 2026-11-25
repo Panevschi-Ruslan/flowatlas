@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:35:15.254Z",
+  "builtAt": "2026-11-25T12:49:25.058Z",
   "configHash": "b08112f32b05",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2332,
+      "durationMs": 1670,
       "packages": {
         "name": "admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2279,
+      "durationMs": 1585,
       "packages": {
         "name": "api",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2276,
+      "durationMs": 1659,
       "packages": {
         "name": "cms",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2135,
+      "durationMs": 1551,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -87,7 +87,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2107,
+      "durationMs": 1565,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -105,7 +105,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2265,
+      "durationMs": 1656,
       "packages": {
         "name": "poller",
         "runtime": [
@@ -123,7 +123,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 8,
-      "durationMs": 2428,
+      "durationMs": 1690,
       "packages": {
         "name": "site",
         "runtime": [
@@ -177,7 +177,7 @@
     "edges": 29,
     "types": 0,
     "missed": 14,
-    "sites": 23,
+    "sites": 22,
     "notes": 1,
     "findings": 0,
     "unresolved": 14

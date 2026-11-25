@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T12:08:50.496Z",
+  "builtAt": "2026-11-25T13:21:26.613Z",
   "services": [
     {
       "name": "shop-api",
@@ -13,6 +13,18 @@
       "repo": "./staff-bot",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
     }
   ],
   "nodes": [
@@ -93,6 +105,52 @@
       }
     },
     {
+      "id": "entry:staff-bot:bot_callback:set_status_*",
+      "type": "entry",
+      "label": "bot_callback set_status_*",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 27,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "set_status_*",
+        "adapter": "telegraf-calls",
+        "trigger": "'callback_query'",
+        "updateClass": "StaffBot",
+        "registration": "action",
+        "updateType": "callback_query",
+        "selectedBy": "prefix set_status_",
+        "callbackData": {
+          "regex": "^set_status_",
+          "flags": ""
+        },
+        "handlerVia": "table"
+      }
+    },
+    {
+      "id": "entry:staff-bot:bot_callback:view_order_*",
+      "type": "entry",
+      "label": "bot_callback view_order_*",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 28,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "view_order_*",
+        "adapter": "telegraf-calls",
+        "trigger": "'callback_query'",
+        "updateClass": "StaffBot",
+        "registration": "action",
+        "updateType": "callback_query",
+        "selectedBy": "prefix view_order_",
+        "callbackData": {
+          "regex": "^view_order_",
+          "flags": ""
+        },
+        "handlerVia": "table"
+      }
+    },
+    {
       "id": "entry:staff-bot:bot_command:help",
       "type": "entry",
       "label": "bot_command help",
@@ -140,7 +198,8 @@
         "registration": "on",
         "trigger": "'callback_query'",
         "updateClass": "StaffBot",
-        "handlerVia": "inline"
+        "handlerVia": "inline",
+        "splitByTable": "src/staff-bot.ts:26"
       }
     },
     {
@@ -217,6 +276,84 @@
       }
     },
     {
+      "id": "kiosk#js/kiosk.js:kiosk.js:top",
+      "type": "function",
+      "label": "kiosk.js:top",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 21
+    },
+    {
+      "id": "kiosk#js/kiosk.js:openScreen",
+      "type": "function",
+      "label": "openScreen",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "kiosk#js/kiosk.js:showReport",
+      "type": "function",
+      "label": "showReport",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "kiosk#js/kiosk.js:showStock",
+      "type": "function",
+      "label": "showStock",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:kiosk",
+      "type": "repo",
+      "label": "kiosk",
+      "repo": "kiosk",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
       "id": "repo:shop-api",
       "type": "repo",
       "label": "shop-api",
@@ -245,6 +382,29 @@
       }
     },
     {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 5,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
       "id": "repo:staff-bot",
       "type": "repo",
       "label": "staff-bot",
@@ -256,7 +416,7 @@
           "filesUnreadable": 0,
           "classes": 4,
           "skippedExternalCalls": {
-            "telegraf": 12,
+            "telegraf": 15,
             "@nestjs/axios": 3,
             "@nestjs/config": 3
           }
@@ -516,6 +676,82 @@
       }
     },
     {
+      "id": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "ui_component",
+      "label": "OrdersToolbar",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 17,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/OrdersToolbar.tsx:reload",
+      "type": "function",
+      "label": "reload",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/orders-api.ts:countStock",
+      "type": "function",
+      "label": "countStock",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/orders-api.ts:loadReport",
+      "type": "function",
+      "label": "loadReport",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/orders-api.ts:markReady",
+      "type": "function",
+      "label": "markReady",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "staff-bot#node_modules/@nestjs/axios:HttpService",
       "type": "provider",
       "label": "HttpService",
@@ -612,6 +848,39 @@
       }
     },
     {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor",
+      "type": "method",
+      "label": "StaffBot.buttonsFor",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 80,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:staff-bot#ActiveOrder"
+            }
+          ],
+          "returns": "type:telegraf#InlineButton[]"
+        },
+        "callbackButtons": [
+          {
+            "data": "view_order_${…}",
+            "at": "src/staff-bot.ts:82"
+          },
+          {
+            "data": "set_status_${…}",
+            "at": "src/staff-bot.ts:83"
+          },
+          {
+            "data": "archive_order_${…}",
+            "at": "src/staff-bot.ts:84"
+          }
+        ]
+      }
+    },
+    {
       "id": "staff-bot#src/staff-bot.ts:StaffBot.commands",
       "type": "method",
       "label": "StaffBot.commands",
@@ -678,6 +947,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -716,6 +989,52 @@
             },
             {
               "name": "data",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:bot_callback set_status_*@27",
+      "type": "function",
+      "label": "bot_callback set_status_*@27",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            },
+            {
+              "name": "d",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
+      "type": "function",
+      "label": "bot_callback view_order_*@28",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            },
+            {
+              "name": "d",
               "type": "string"
             }
           ],
@@ -854,6 +1173,174 @@
           "returns": "void"
         }
       }
+    },
+    {
+      "id": "ui_action:shop-web#src/OrdersToolbar.tsx:27:15",
+      "type": "ui_action",
+      "label": "onClick={refresh}",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "refresh",
+        "component": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/OrdersToolbar.tsx:28:15",
+      "type": "ui_action",
+      "label": "onClick={ready}",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "ready",
+        "component": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/OrdersToolbar.tsx:29:15",
+      "type": "ui_action",
+      "label": "onClick={stock}",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "stock",
+        "component": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#js/kiosk.js:2:10",
+      "type": "ui_api_call",
+      "label": "GET /api/reports/daily",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/api/reports/daily",
+        "path": "/api/reports/daily",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "shop.example.test",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#js/kiosk.js:6:10",
+      "type": "ui_api_call",
+      "label": "GET /api/stock",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/api/stock",
+        "path": "/api/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "shop.example.test",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+      "type": "ui_api_call",
+      "label": "PATCH /api/orders/status",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "${VITE_SHOP_API_URL}/api/orders/status",
+        "path": "/api/orders/status",
+        "baseUrlEnv": "VITE_SHOP_API_URL",
+        "responseType": null,
+        "bodyType": "{orderId:string;status:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId",
+          "status"
+        ],
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+      "type": "ui_api_call",
+      "label": "GET /api/stock",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_API_URL}/api/stock",
+        "path": "/api/stock",
+        "baseUrlEnv": "VITE_SHOP_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "items",
+            "in": "shop-web#src/orders-api.ts:countStock",
+            "line": 17
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+      "type": "ui_api_call",
+      "label": "GET /api/reports/daily",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_API_URL}/api/reports/daily",
+        "path": "/api/reports/daily",
+        "baseUrlEnv": "VITE_SHOP_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
     }
   ],
   "edges": [
@@ -906,6 +1393,22 @@
       "meta": {
         "body": "{orderId:string;status:string}"
       }
+    },
+    {
+      "from": "entry:staff-bot:bot_callback:set_status_*",
+      "to": "staff-bot#src/staff-bot.ts:bot_callback set_status_*@27",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 27
+    },
+    {
+      "from": "entry:staff-bot:bot_callback:view_order_*",
+      "to": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 28
     },
     {
       "from": "entry:staff-bot:bot_command:help",
@@ -983,6 +1486,60 @@
         "via": "baseUrlEnv",
         "targetService": "shop-api"
       }
+    },
+    {
+      "from": "kiosk#js/kiosk.js:kiosk.js:top",
+      "to": "kiosk#js/kiosk.js:openScreen",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/kiosk.js",
+      "line": 21
+    },
+    {
+      "from": "kiosk#js/kiosk.js:openScreen",
+      "to": "kiosk#js/kiosk.js:showReport",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "js/kiosk.js",
+      "line": 17,
+      "meta": {
+        "via": "table"
+      }
+    },
+    {
+      "from": "kiosk#js/kiosk.js:openScreen",
+      "to": "kiosk#js/kiosk.js:showStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "js/kiosk.js",
+      "line": 17,
+      "meta": {
+        "via": "table"
+      }
+    },
+    {
+      "from": "kiosk#js/kiosk.js:showReport",
+      "to": "ui_api_call:kiosk#js/kiosk.js:2:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 2
+    },
+    {
+      "from": "kiosk#js/kiosk.js:showStock",
+      "to": "ui_api_call:kiosk#js/kiosk.js:6:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 6
     },
     {
       "from": "shop-api#src/orders.controller.ts:OrdersController",
@@ -1064,6 +1621,84 @@
       }
     },
     {
+      "from": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "to": "shop-web#src/OrdersToolbar.tsx:reload",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 20,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals refresh"
+      }
+    },
+    {
+      "from": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "to": "shop-web#src/orders-api.ts:countStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 20,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals stock"
+      }
+    },
+    {
+      "from": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "to": "shop-web#src/orders-api.ts:markReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 20,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals ready"
+      }
+    },
+    {
+      "from": "shop-web#src/OrdersToolbar.tsx:reload",
+      "to": "shop-web#src/orders-api.ts:loadReport",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 9
+    },
+    {
+      "from": "shop-web#src/orders-api.ts:countStock",
+      "to": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 16
+    },
+    {
+      "from": "shop-web#src/orders-api.ts:loadReport",
+      "to": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 5
+    },
+    {
+      "from": "shop-web#src/orders-api.ts:markReady",
+      "to": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 11
+    },
+    {
       "from": "staff-bot#src/replies.ts:replyStock",
       "to": "staff-bot#src/staff.api.ts:StaffApi.getStock",
       "type": "calls",
@@ -1104,6 +1739,24 @@
     },
     {
       "from": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+      "to": "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:staff-bot#ActiveOrder"
+      ],
+      "returns": "type:telegraf#InlineButton[]",
+      "file": "src/staff-bot.ts",
+      "line": 75,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 74
+        }
+      }
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
       "to": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders",
       "type": "calls",
       "confidence": "static",
@@ -1126,21 +1779,6 @@
     },
     {
       "from": "staff-bot#src/staff-bot.ts:StaffBot.setup",
-      "to": "staff-bot#src/replies.ts:replyHelp",
-      "type": "calls",
-      "confidence": "static",
-      "params": [
-        "type:telegraf#Context"
-      ],
-      "returns": "void",
-      "file": "src/staff-bot.ts",
-      "line": 50,
-      "meta": {
-        "via": "table"
-      }
-    },
-    {
-      "from": "staff-bot#src/staff-bot.ts:StaffBot.setup",
       "to": "staff-bot#src/staff-bot.ts:StaffBot.commands",
       "type": "calls",
       "confidence": "static",
@@ -1148,33 +1786,6 @@
       "returns": "type:staff-bot#SlashCommand[]",
       "file": "src/staff-bot.ts",
       "line": 49
-    },
-    {
-      "from": "staff-bot#src/staff-bot.ts:StaffBot.setup",
-      "to": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
-      "type": "calls",
-      "confidence": "static",
-      "params": [
-        "type:telegraf#Context"
-      ],
-      "returns": "void",
-      "file": "src/staff-bot.ts",
-      "line": 50,
-      "meta": {
-        "via": "table"
-      }
-    },
-    {
-      "from": "staff-bot#src/staff-bot.ts:StaffBot.setup",
-      "to": "staff-bot#src/text-router.ts:TextRouter.route",
-      "type": "calls",
-      "confidence": "static",
-      "params": [
-        "type:telegraf#Context"
-      ],
-      "returns": "void",
-      "file": "src/staff-bot.ts",
-      "line": 52
     },
     {
       "from": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
@@ -1187,7 +1798,7 @@
       "line": 68
     },
     {
-      "from": "staff-bot#src/staff-bot.ts:on callback_query@43",
+      "from": "staff-bot#src/staff-bot.ts:bot_callback set_status_*@27",
       "to": "staff-bot#src/staff-bot.ts:StaffBot.handleStatus",
       "type": "calls",
       "confidence": "static",
@@ -1197,14 +1808,10 @@
       ],
       "returns": "void",
       "file": "src/staff-bot.ts",
-      "line": 27,
-      "meta": {
-        "via": "table",
-        "selectedBy": "prefix set_status_"
-      }
+      "line": 27
     },
     {
-      "from": "staff-bot#src/staff-bot.ts:on callback_query@43",
+      "from": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
       "to": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
       "type": "calls",
       "confidence": "static",
@@ -1214,11 +1821,7 @@
       ],
       "returns": "void",
       "file": "src/staff-bot.ts",
-      "line": 28,
-      "meta": {
-        "via": "table",
-        "selectedBy": "prefix view_order_"
-      }
+      "line": 28
     },
     {
       "from": "staff-bot#src/staff-bot.ts:on text@52",
@@ -1320,6 +1923,93 @@
         "via": "table",
         "selectedBy": "equals stock"
       }
+    },
+    {
+      "from": "ui_action:shop-web#src/OrdersToolbar.tsx:27:15",
+      "to": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 27
+    },
+    {
+      "from": "ui_action:shop-web#src/OrdersToolbar.tsx:28:15",
+      "to": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 28
+    },
+    {
+      "from": "ui_action:shop-web#src/OrdersToolbar.tsx:29:15",
+      "to": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 29
+    },
+    {
+      "from": "ui_api_call:kiosk#js/kiosk.js:2:10",
+      "to": "entry:shop-api:http:GET:/api/reports/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 2,
+      "meta": {
+        "via": "host",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#js/kiosk.js:6:10",
+      "to": "entry:shop-api:http:GET:/api/stock",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 6,
+      "meta": {
+        "via": "host",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+      "to": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 11,
+      "params": [
+        "{orderId:string;status:string}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+      "to": "entry:shop-api:http:GET:/api/stock",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+      "to": "entry:shop-api:http:GET:/api/reports/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 5,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
     }
   ],
   "types": {
@@ -1388,6 +2078,16 @@
         "package": "telegraf"
       }
     },
+    "type:telegraf#InlineButton": {
+      "name": "InlineButton",
+      "kind": "external",
+      "declaredIn": "telegraf",
+      "structuralHash": "e50be8beb8c89f61",
+      "meta": {
+        "declKind": "external",
+        "package": "telegraf"
+      }
+    },
     "type:telegraf#Telegraf": {
       "name": "Telegraf",
       "kind": "external",
@@ -1411,6 +2111,14 @@
         "cause": "table-rows-unread"
       },
       "service": "shop-api"
+    },
+    {
+      "file": "src/OrdersToolbar.tsx",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop-web"
     },
     {
       "file": "src/app.module.ts",

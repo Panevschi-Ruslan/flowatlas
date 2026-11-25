@@ -1,7 +1,8 @@
 import type { EntryAdapter, EntryHandler, EntryKind, EntryNode, ExtractContext } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId, resolveTypeOrigin, startLineOf, tableDispatchOf, tableKeyOf, tableMemberOf, tableTargetOf } from '@flowatlas/core';
+import { hasAnyDependency, makeEntryId, resolveTypeOrigin, startLineOf, tableDispatchOf, tableKeyOf, tableMemberOf } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
+import { handlerOfTarget, isSplitTableCall, tableAt, tableRouteEntries, tableRoutesIn, type TableRoutes } from './bot-table-routes.js';
 import { resolveTriggerArg } from './nestjs-telegraf/triggers.js';
 import {
   enclosingClass,
@@ -112,6 +113,8 @@ interface Site {
   /** Elements of that table whose trigger is not written out, and every element. */
   unread?: number;
   total?: number;
+  /** A listener of every update of a type whose table of handlers is split into a way in per element (P399). */
+  split?: TableRoutes;
 }
 
 /** The member of `element` a call or a reference in the handler names: `handler` of `(ctx) => route.handler(ctx)` or of `route.handler`. */
@@ -126,15 +129,6 @@ const memberCalledOn = (handlerArg: TsNode | undefined, element: string): string
     if (found !== undefined) return found;
   }
   return undefined;
-};
-
-/** What one element of a table runs, as the handler of the way in it opens. */
-const handlerOfTarget = (value: TsNode | undefined, label: string, ctx: ExtractContext): EntryHandler | undefined => {
-  const target = value === undefined ? undefined : tableTargetOf(value);
-  if (target === undefined) return undefined;
-  if (target.kind === 'method') return Node.isMethodDeclaration(target.method) ? handlerOf(target.method, ctx) : undefined;
-  if (target.kind === 'function') return handlerOfFunction(target.fn, ctx);
-  return inlineHandlerOf(target.fn, label, ctx);
 };
 
 /**
@@ -171,6 +165,29 @@ const tableSiteOf = (
   return keys.length === 0 ? undefined : { keys, handlers, unread, total: dispatch.total };
 };
 
+/**
+ * Whether a call is the one a registration over a table hands each update to
+ * (P399): `command.run(ctx)` in `bot.command(command.name, (ctx) =>
+ * command.run(ctx))` in a loop over a table whose every element's trigger is
+ * written out. Each element is a way in handled by what its member runs, so
+ * the call is theirs, not a call the method around the loop makes.
+ */
+const isTableRegistrationCall = (call: TsNode): boolean => {
+  const callee = Node.isCallExpression(call) ? call.getExpression() : undefined;
+  if (callee === undefined || !Node.isPropertyAccessExpression(callee)) return false;
+  const fn = call.getFirstAncestor((node) => Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node) || Node.isMethodDeclaration(node));
+  const registration = fn?.getParent();
+  if (fn === undefined || registration === undefined || !Node.isCallExpression(registration) || registration.getArguments()[1] !== fn) return false;
+  const found = registrationOf(registration);
+  if (found === undefined || found.implied !== undefined) return false;
+  const trigger = registration.getArguments()[0];
+  if (trigger === undefined || !Node.isPropertyAccessExpression(trigger)) return false;
+  const element = trigger.getExpression();
+  if (callee.getExpression().getText() !== element.getText()) return false;
+  const dispatch = tableDispatchOf(element, trigger.getName(), registration);
+  return dispatch !== undefined && dispatch.unread === 0 && dispatch.rows.every((row) => tableKeyOf(row.element, trigger.getName()) !== undefined);
+};
+
 const siteOf = (call: CallExpression, ctx: ExtractContext): Site | null => {
   const registration = registrationOf(call);
   if (registration === undefined) return null;
@@ -199,6 +216,8 @@ const siteOf = (call: CallExpression, ctx: ExtractContext): Site | null => {
 
   const handlerArg = implied === undefined ? args[1] : args[0];
   const owner = enclosingClass(call);
+  // `bot.on('callback_query', (ctx) => { ... route.handler(ctx, data) })` over a table: a way in per element (P399).
+  const split = name === 'on' && keys.length === 1 && handlerArg !== undefined ? tableRoutesIn(handlerArg, keys[0]!) : undefined;
   const behind = handlerInside(handlerArg, owner, ctx);
   // A function written in the registration that hands over to no one thing is
   // still the code the update runs, and is nearer the truth than whatever the
@@ -215,6 +234,7 @@ const siteOf = (call: CallExpression, ctx: ExtractContext): Site | null => {
     line: startLineOf(call),
     text: (implied === undefined ? (args[0]?.getText() ?? '') : name).slice(0, 80),
     ...(owner === undefined ? {} : { updateClass: owner.getName() ?? '<anonymous>' }),
+    ...(split === undefined ? {} : { split }),
   };
 };
 
@@ -235,6 +255,7 @@ export const telegrafCallsAdapter: EntryAdapter = {
   // The bot library dispatches updates itself; no request pipeline wraps them.
   outsideApplication: true,
   detect: (pkg) => hasAnyDependency(pkg, [TELEGRAF]),
+  standsForCall: (call) => isSplitTableCall(call, 'call') || isTableRegistrationCall(call),
   extractEntries: (ctx: ExtractContext) => {
     const entries: EntryNode[] = [];
     const seen = new Set<string>();
@@ -249,6 +270,22 @@ export const telegrafCallsAdapter: EntryAdapter = {
         }
         registrations += 1;
         if (site.unread !== undefined) reportTableUnread(ctx, call, site.unread, site.total ?? site.unread);
+
+        const split = site.split;
+        if (split !== undefined) {
+          const update = site.keys[0] ?? '';
+          for (const entry of tableRouteEntries(ctx, split, update, {
+            adapter: ADAPTER,
+            trigger: site.text,
+            ...(site.updateClass === undefined ? {} : { updateClass: site.updateClass }),
+          })) {
+            if (seen.has(entry.id)) continue;
+            seen.add(entry.id);
+            entries.push(entry);
+          }
+          // The listener chooses and does nothing else: its elements are the whole of it.
+          if (!split.rest) continue;
+        }
 
         for (const key of site.keys) {
           const id = makeEntryId(ctx.repo, site.kind, key);
@@ -274,6 +311,8 @@ export const telegrafCallsAdapter: EntryAdapter = {
               // Said plainly, because a walk from this entry is only as narrow
               // as the answer to "which code does the handler run".
               handlerVia: site.handlers !== undefined ? 'table' : site.viaRegistration ? 'registration' : site.inline === true ? 'inline' : 'call',
+              // Its table's elements are ways in of their own (P399): this one is what runs for every update besides.
+              ...(split === undefined ? {} : { splitByTable: tableAt(split, ctx), ...(split.restReadsData ? { restReadsData: true } : {}) }),
             },
           });
         }

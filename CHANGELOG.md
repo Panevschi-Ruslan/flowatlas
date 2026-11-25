@@ -3221,6 +3221,41 @@ only one of them moved.
   is not. The text every turn carries goes to 9,385 characters (9,388); the
   answer budget's questions that were there before go to 143,383 (143,729),
   with two new ones on a table of handlers (1,791).
+- **A way in per button of a prefix table (P399).** A bot's listener of
+  every callback (`bot.on('callback_query', ...)`, or a method decorated
+  `@On('callback_query')`; `text`, `message` and `inline_query` alike) that
+  hands each update to the element of a table its data selects
+  (`this.buttonRoutes.find((r) => data.startsWith(r.prefix))`, `===`, a
+  pattern's `test`) opened one `bot_event` way in, the prefixes only on the
+  edges. It now opens one per element, the way an explicit
+  `bot.action(/^view_order_/)` would (`bot_callback view_order_*`, its
+  `callbackData` a pattern), handled by what the element's handler runs, so
+  the buttons P388 reads are held against each prefix: a button sending
+  `view_order_${id}` is handled, one whose data no element starts is a
+  `bot-button-unhandled` finding where it was held back behind a catch-all.
+  The listener stays a way in only for what it does besides choosing
+  (`splitByTable`, `restReadsData` where that reads the data). A table with
+  an element not read is not split. The call a loop's registration over a
+  table hands each update to is no longer drawn from the method around the
+  loop either.
+- **The framework calls lifecycle hooks (P399).** A method only Nest's
+  `onModuleInit` reached (`setup()`, registering a bot) was the end of a
+  chain nothing read reaches, a `maybe` in impact, who_calls and dead. The
+  Nest reader marks `onModuleInit`, `onApplicationBootstrap`,
+  `onModuleDestroy`, `beforeApplicationShutdown` and `onApplicationShutdown`
+  on a controller or provider a module registers (`frameworkCalls`); `dead`
+  answers them alive, and their class, and reach reads each as a way in,
+  `from: "startup (onModuleInit)"`, `startup` in impact's `byKind`. Angular
+  reads all eight hooks of a component, and a directive's, as run where it is
+  shown. A call written in a function a way in names as its handler is drawn
+  from that function only, for every call (P398 did so for table calls).
+- **Tables in every call walk (P399).** The browser reader's call walk
+  (React, Vue, Svelte, plain scripts) follows a call through a table as
+  Nest's does: a function or method each element holds, or the calls of an
+  arrow written in it, `via: "table"`, unread elements a
+  `call-dynamic-receiver` row with the count. Angular's reads every form:
+  a destructured member, a function declared or imported, and every call an
+  arrow written in an element makes.
 
 - **A handler's reads are compared under the types it is chosen for (P397).**
   `check_contract` on a channel and `field-never-sent` set every handler of a

@@ -3,15 +3,15 @@
     "id": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
     "line": 67,
     "reach": "alive",
-    "from": "bot_event callback_query"
+    "from": "bot_callback view_order_*"
   },
   "callers": [
     {
-      "id": "staff-bot#src/staff-bot.ts:on callback_query@43",
+      "id": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
       "type": "function",
-      "line": 43,
+      "line": 28,
       "reach": "alive",
-      "from": "bot_event callback_query",
+      "from": "bot_callback view_order_*",
       "edge": {
         "type": "calls",
         "params": [
@@ -22,8 +22,8 @@
       },
       "children": [
         {
-          "id": "entry:staff-bot:bot_event:callback_query",
-          "loc": "src/staff-bot.ts:43",
+          "id": "entry:staff-bot:bot_callback:view_order_*",
+          "loc": "src/staff-bot.ts:28",
           "reach": "outside",
           "edge": "handles"
         }
@@ -32,15 +32,15 @@
   ],
   "waysIn": [
     {
-      "id": "entry:staff-bot:bot_event:callback_query",
-      "line": 43,
+      "id": "entry:staff-bot:bot_callback:view_order_*",
+      "line": 28,
       "reach": "outside",
       "hops": 2
     }
   ],
   "complete": true,
   "next": [
-    "get_flow({entry: \"entry:staff-bot:bot_event:callback_query\"})",
-    "describe_for_prompt({id: \"entry:staff-bot:bot_event:callback_query\"})"
+    "get_flow({entry: \"entry:staff-bot:bot_callback:view_order_*\"})",
+    "describe_for_prompt({id: \"entry:staff-bot:bot_callback:view_order_*\"})"
   ]
 }

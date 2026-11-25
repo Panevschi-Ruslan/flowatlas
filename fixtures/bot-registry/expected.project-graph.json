@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:32:29.953Z",
+  "builtAt": "2026-11-25T12:46:50.048Z",
   "services": [
     {
       "name": "bot-registry",
@@ -627,19 +627,6 @@
       "returns": "string",
       "file": "src/bot.ts",
       "line": 32
-    },
-    {
-      "from": "bot-registry#src/bot.ts:Bot.setup",
-      "to": "bot-registry#src/handlers/callback-registry.ts:dispatch",
-      "type": "calls",
-      "confidence": "static",
-      "params": [
-        "string",
-        "type:bot-registry#BotDeps"
-      ],
-      "returns": "boolean",
-      "file": "src/bot.ts",
-      "line": 27
     },
     {
       "from": "bot-registry#src/bot.ts:on callback_query@26",

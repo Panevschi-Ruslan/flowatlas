@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T20:24:21.313Z",
+  "builtAt": "2026-11-25T13:15:07.666Z",
   "services": [
     {
       "name": "api",
@@ -177,6 +177,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

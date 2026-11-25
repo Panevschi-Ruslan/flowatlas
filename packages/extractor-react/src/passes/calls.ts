@@ -1,4 +1,17 @@
-import { forEachCall, isLibFile, lineOf, namedByProperty, packageOfPath, startLineOf } from '@flowatlas/core';
+import {
+  causeMeta,
+  forEachCall,
+  isLibFile,
+  lineOf,
+  namedByProperty,
+  packageOfPath,
+  startLineOf,
+  tableDispatchOf,
+  tableDispatchOfName,
+  tableTargetOf,
+  tableUnreadHint,
+  type TableDispatch,
+} from '@flowatlas/core';
 import type { NewExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -157,6 +170,21 @@ const constructedBy = (ctx: ReactExtractContext, made: NewExpression): IndexedFu
 
 const NO_NAMES: ReadonlySet<string> = new Set();
 
+/** How many tables inside the functions a table holds are followed before the walk stops. */
+const TABLE_DEPTH = 3;
+
+/** The table a call's receiver, or the name it calls, is an element of (P398): `route.handler(ctx)`, `const { run } = route; run()`. */
+const tableCalled = (callee: TsNode, call: TsNode): TableDispatch | undefined =>
+  Node.isIdentifier(callee)
+    ? tableDispatchOfName(callee, call)
+    : Node.isPropertyAccessExpression(callee)
+      ? tableDispatchOf(callee.getExpression(), callee.getName(), call)
+      : undefined;
+
+/** Whether an entry adapter's ways in stand for a call (P399): see `EntryAdapter.standsForCall`. */
+const standsForWaysIn = (ctx: ReactExtractContext, call: TsNode): boolean =>
+  ctx.adapters.entry.some((adapter) => adapter.standsForCall?.(call) === true);
+
 /** A script that may declare an accessor, told by its text before it is walked. */
 const MAY_DECLARE_ACCESSOR = /\b(?:get|set)\s+[\w$#]+\s*\(/;
 
@@ -286,7 +314,7 @@ export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
     // A function kept inside it is walked as its own (P317).
     const nested = ctx.functions.nestedIn(indexed);
     let created = false;
-    const draw = (each: IndexedFunction, at: TsNode): void => {
+    const draw = (each: IndexedFunction, at: TsNode, meta?: Readonly<Record<string, string>>): void => {
       // A function that calls itself says nothing about the shape of the
       // system, and a self-edge is read as a cycle by everything downstream.
       if (each.id === indexed.id) return;
@@ -302,19 +330,69 @@ export const callsPass = definePass('calls', (ctx: ReactExtractContext) => {
         confidence: 'static',
         file: indexed.file,
         line: lineOf(at),
+        ...(meta === undefined ? {} : { meta: { ...meta } }),
       });
     };
 
-    forEachCall(indexed.fn.body, (call) => {
+    /**
+     * A call through an element of a table written out (P399, as the server's
+     * walk since P398): an edge to what each element's member runs - a
+     * function or a method of this repository, or the calls of a function
+     * written in the element, read as the caller's own - each `via: "table"`
+     * with the key that selects it; elements not read are a row with the count.
+     */
+    const followTable = (dispatch: TableDispatch, at: TsNode, depth: number): void => {
+      let unreadValues = 0;
+      for (const row of dispatch.rows) {
+        const target = tableTargetOf(row.value);
+        const meta = { via: 'table', ...(row.selectedBy === undefined ? {} : { selectedBy: row.selectedBy }) };
+        if (target === undefined) {
+          unreadValues += 1;
+          continue;
+        }
+        const declaration = target.kind === 'method' ? target.method : target.kind === 'function' ? target.fn.declaration : target.fn;
+        const each = ctx.functions.get(declaration) ?? (target.kind === 'function' ? ctx.functions.of(target.fn) : undefined) ?? methodIndexed(ctx, declaration);
+        if (each !== undefined) {
+          draw(each, at, meta);
+          continue;
+        }
+        const body = target.kind === 'inline' ? target.fn.getBody() : undefined;
+        if (body === undefined) {
+          unreadValues += 1;
+          continue;
+        }
+        forEachCall(body, (inner) => visit(inner, meta, at, depth + 1));
+      }
+      if (dispatch.unread + unreadValues === 0) return;
+      ctx.report({
+        file: indexed.file,
+        line: lineOf(at),
+        reason: 'call-dynamic-receiver',
+        level: 'info',
+        hint: tableUnreadHint(dispatch, unreadValues),
+        symbol: `${indexed.name} -> ${(at as TsNode & { getExpression(): TsNode }).getExpression().getText()}`,
+        ...causeMeta({ cause: 'table-rows-unread' }),
+      });
+    };
+
+    const visit = (call: TsNode & { getExpression(): TsNode }, meta: Readonly<Record<string, string>> | undefined, at: TsNode, depth: number): void => {
       const callee = call.getExpression();
+      const dispatch = depth < TABLE_DEPTH ? tableCalled(callee, call) : undefined;
+      if (dispatch !== undefined) {
+        // A call whose table's elements are ways in of their own (a bot's listener split by prefix, P399): theirs.
+        if (!standsForWaysIn(ctx, call)) followTable(dispatch, at, depth);
+        return;
+      }
       const called = calledFunctions(ctx, callee, heldBy);
       if (called.length === 0) {
         const pkg = externalPackage(callee);
         if (pkg !== null) ctx.countExternalCall(pkg);
         return;
       }
-      for (const each of called) draw(each, call);
-    }, nested);
+      for (const each of called) draw(each, at, meta);
+    };
+
+    forEachCall(indexed.fn.body, (call) => visit(call, undefined, call, 0), nested);
     // A `new` in a plain script runs the constructor it names (P349): the
     // top of a script that only makes an instance draws it.
     if (ctx.functions.readsMembers) {

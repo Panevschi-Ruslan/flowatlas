@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-24T19:07:40.475Z",
+  "builtAt": "2026-11-25T12:49:25.058Z",
   "services": [
     {
       "name": "cms",
@@ -1348,27 +1348,11 @@
       "line": 13,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 4,
+      "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "Listener.start -> app.get",
       "meta": {
         "causes": [
-          {
-            "cause": "callback-param",
-            "sites": 2,
-            "samples": [
-              {
-                "file": "src/listener.ts",
-                "line": 14,
-                "symbol": "Listener.start -> res.json"
-              },
-              {
-                "file": "src/listener.ts",
-                "line": 14,
-                "symbol": "GET /api/admin@13 -> res.json"
-              }
-            ]
-          },
           {
             "cause": "module-not-installed",
             "package": "express",
@@ -1383,6 +1367,17 @@
                 "file": "src/listener.ts",
                 "line": 16,
                 "symbol": "Listener.start -> app.listen"
+              }
+            ]
+          },
+          {
+            "cause": "callback-param",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/listener.ts",
+                "line": 14,
+                "symbol": "GET /api/admin@13 -> res.json"
               }
             ]
           }

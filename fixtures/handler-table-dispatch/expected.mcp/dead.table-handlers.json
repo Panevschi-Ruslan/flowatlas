@@ -10,9 +10,9 @@
       "reason": "called",
       "evidence": {
         "callers": 1,
-        "caller": "staff-bot#src/staff-bot.ts:on callback_query@43"
+        "caller": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28"
       },
-      "from": "bot_event callback_query"
+      "from": "bot_callback view_order_*"
     },
     {
       "asked": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
@@ -23,7 +23,7 @@
       "verdict": "alive",
       "reason": "called",
       "evidence": {
-        "callers": 2,
+        "callers": 1,
         "caller": "entry:staff-bot:bot_command:orders"
       },
       "from": "bot_command orders"

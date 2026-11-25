@@ -1,4 +1,4 @@
-import { isMessageTypeNode, wasMissed, type GraphNode } from '@flowatlas/core';
+import { frameworkCallOf, isMessageTypeNode, wasMissed, type GraphNode } from '@flowatlas/core';
 import { classifyRoute, methodsOf, routeFactsOf, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -568,6 +568,8 @@ const candidatesEach = (
 /** The ways in an impact answer sums up by (P381): what a person reads "which screens break" as. */
 const kindOfWay = (node: GraphNode): string => {
   if (node.type === 'consumer') return 'consumers';
+  // A hook the framework calls at startup or shutdown (P399).
+  if (frameworkCallOf(node) !== undefined) return 'startup';
   switch (node.kind) {
     case 'screen':
       return 'screens';

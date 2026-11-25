@@ -261,9 +261,14 @@ const BOT_WEBHOOK_COMPACT_CASES = [
 
 /**
  * A bot whose buttons, commands and text go through tables of handlers the
- * code writes out (P398): who_calls on a button's handler names the
- * dispatcher, impact on the API method behind it counts the bot under bots
- * with no maybe row, and dead on the handler says alive.
+ * code writes out (P398): who_calls on a button's handler names the way in
+ * its prefix opens (P399, `bot_callback view_order_*`), impact on the API
+ * method behind it counts the bot under bots with no maybe row, and dead on
+ * the handler says alive. Since P399 also: dead on the `setup()` only Nest's
+ * `onModuleInit` calls, alive from startup; impact on the text router no
+ * longer reached through the method registering it; findings naming the
+ * button whose data no prefix takes; who_calls on what a React screen's and
+ * a plain script's tables run.
  */
 const TABLE_TARGET = 'staff-bot#src/staff-bot.ts:StaffBot.showOrder';
 const TABLE_API = 'shop-api#src/orders.service.ts:OrdersService.listActive';
@@ -271,6 +276,11 @@ const TABLE_CASES = [
   ['who_calls.table-handler', 'who_calls', { symbol: TABLE_TARGET }],
   ['impact.table-api', 'impact', { symbol: TABLE_API }],
   ['dead.table-handlers', 'dead', { ids: [TABLE_TARGET, 'staff-bot#src/staff-bot.ts:StaffBot.listOrders', 'staff-bot#src/replies.ts:replyStock'] }],
+  ['dead.lifecycle-setup', 'dead', { id: 'staff-bot#src/staff-bot.ts:StaffBot.setup' }],
+  ['impact.text-router', 'impact', { symbol: 'staff-bot#src/text-router.ts:TextRouter.route' }],
+  ['findings.prefix-buttons', 'findings', { kind: 'bot-button-unhandled' }],
+  ['who_calls.screen-table', 'who_calls', { symbol: 'shop-web#src/orders-api.ts:markReady' }],
+  ['who_calls.script-table', 'who_calls', { symbol: 'kiosk#js/kiosk.js:showStock' }],
 ];
 const TABLE_COMPACT_CASES = TABLE_CASES.map(([name, tool, args]) => [name, tool, { ...args, verbose: false }]);
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T12:03:47.051Z",
+  "builtAt": "2026-11-25T13:13:43.804Z",
   "services": [
     {
       "name": "shop-api",
@@ -220,6 +220,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -619,6 +623,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -802,21 +810,6 @@
       "returns": "void",
       "file": "src/courier-bot.ts",
       "line": 36
-    },
-    {
-      "from": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit",
-      "to": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
-      "type": "calls",
-      "confidence": "static",
-      "params": [
-        "{match:string[]}"
-      ],
-      "returns": "void",
-      "file": "src/courier-bot.ts",
-      "line": 26,
-      "meta": {
-        "via": "table"
-      }
     },
     {
       "from": "courier-bot#src/courier-bot.ts:CourierBot.onModuleInit",

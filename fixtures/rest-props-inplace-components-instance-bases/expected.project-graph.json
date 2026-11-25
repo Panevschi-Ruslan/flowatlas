@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-23T14:46:49.153Z",
+  "builtAt": "2026-11-25T13:03:24.491Z",
   "services": [
     {
       "name": "web",
@@ -513,6 +513,10 @@
         "signature": {
           "params": [],
           "returns": "any"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -539,6 +543,10 @@
         "signature": {
           "params": [],
           "returns": "any"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -586,6 +594,10 @@
         "signature": {
           "params": [],
           "returns": "any"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 8,
   "repo": "nest-prisma-base-url",
-  "generatedAt": "2026-11-23T14:44:23.328Z",
+  "generatedAt": "2026-11-25T12:57:58.200Z",
   "nodes": [
     {
       "id": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",
@@ -594,6 +594,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleDestroy",
+          "when": "shutdown"
         }
       }
     },

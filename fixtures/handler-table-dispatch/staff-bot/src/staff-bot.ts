@@ -1,8 +1,8 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import { Telegraf, type Context } from 'telegraf';
+import { Markup, Telegraf, type Context, type InlineButton } from 'telegraf';
 
 import { replyHelp } from './replies';
-import { StaffApi } from './staff.api';
+import { StaffApi, type ActiveOrder } from './staff.api';
 import { TextRouter } from './text-router';
 
 interface ButtonRoute {
@@ -71,6 +71,17 @@ export class StaffBot implements OnModuleInit {
 
   private async listOrders(ctx: Context): Promise<void> {
     const orders = await this.api.getActiveOrders();
-    await ctx.reply(orders.map((order) => order.summary).join('\n'));
+    for (const order of orders) {
+      await ctx.reply(order.summary, Markup.inlineKeyboard([this.buttonsFor(order)]));
+    }
+  }
+
+  /** Each order's buttons: two prefixes of the table, and one no element takes. */
+  private buttonsFor(order: ActiveOrder): InlineButton[] {
+    return [
+      Markup.button.callback('Details', `view_order_${order.id}`),
+      Markup.button.callback('Ready', `set_status_${order.id}`),
+      Markup.button.callback('Archive', `archive_order_${order.id}`),
+    ];
   }
 }
