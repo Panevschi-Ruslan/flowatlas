@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:04:32.114Z",
+  "builtAt": "2026-11-25T14:07:42.989Z",
   "services": [
     {
       "name": "shop",
@@ -196,6 +196,48 @@
           "returns": "void"
         },
         "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:audit#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "audit",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:ledger#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "ledger",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:stock#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {

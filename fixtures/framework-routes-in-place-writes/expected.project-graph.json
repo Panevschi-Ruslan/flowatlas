@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T12:49:25.058Z",
+  "builtAt": "2026-11-25T14:01:34.721Z",
   "services": [
     {
       "name": "cms",
@@ -132,6 +132,20 @@
           "returns": "void"
         },
         "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:jobs#JOBS_PORT",
+      "type": "config_key",
+      "label": "JOBS_PORT",
+      "repo": "jobs",
+      "file": "src/main.ts",
+      "line": 12,
+      "meta": {
+        "key": "JOBS_PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {

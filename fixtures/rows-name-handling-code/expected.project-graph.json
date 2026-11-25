@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:14:47.228Z",
+  "builtAt": "2026-11-25T14:07:16.994Z",
   "services": [
     {
       "name": "shop-api",
@@ -3284,6 +3284,15 @@
     }
   },
   "unresolved": [
+    {
+      "service": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 34,
+      "reason": "route-unguarded-among-guarded",
+      "message": "POST /api/orders/:param/expire has no guard in front of it, while the 2 other writes of OrdersController have ClientGuard, NoteGuard, ShopOpenGuard in front.",
+      "hint": "Put ClientGuard, NoteGuard, ShopOpenGuard in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).",
+      "symbol": "POST /api/orders/:param/expire"
+    },
     {
       "file": "src/stream/stream.controller.ts",
       "line": 15,

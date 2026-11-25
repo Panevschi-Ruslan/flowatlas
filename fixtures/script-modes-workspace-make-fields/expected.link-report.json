@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T13:04:32.114Z",
+  "builtAt": "2026-11-25T14:07:42.989Z",
   "configHash": "37faf70e2e78",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2438,
+      "durationMs": 1397,
       "packages": {
         "name": "admin",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./audit",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2258,
+      "durationMs": 1389,
       "packages": {
         "name": "@shop/audit",
         "runtime": [
@@ -48,7 +48,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2470,
+      "durationMs": 1400,
       "packages": {
         "name": "catalog",
         "runtime": [
@@ -66,7 +66,7 @@
       "edges": 24,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2363,
+      "durationMs": 1430,
       "packages": {
         "name": "jobs",
         "runtime": [
@@ -80,11 +80,11 @@
       "repo": "./ledger",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2444,
+      "durationMs": 1317,
       "packages": {
         "name": "@shop/ledger",
         "runtime": [
@@ -102,7 +102,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2269,
+      "durationMs": 1401,
       "packages": {
         "name": "metrics",
         "runtime": [
@@ -120,7 +120,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2357,
+      "durationMs": 1406,
       "packages": {
         "name": "reports",
         "runtime": [
@@ -138,7 +138,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2343,
+      "durationMs": 1365,
       "packages": {
         "name": "shop",
         "runtime": [
@@ -152,11 +152,11 @@
       "repo": "./stock",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
+      "nodes": 4,
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2437,
+      "durationMs": 1371,
       "packages": {
         "name": "stock",
         "runtime": [
@@ -204,7 +204,7 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 55,
+    "nodes": 58,
     "edges": 35,
     "types": 0,
     "missed": 9,

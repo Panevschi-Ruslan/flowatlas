@@ -1,6 +1,6 @@
 {
   "schemaVersion": 8,
-  "builtAt": "2026-11-25T12:56:03.398Z",
+  "builtAt": "2026-11-25T14:05:04.059Z",
   "services": [
     {
       "name": "gateway",
@@ -16,6 +16,19 @@
     }
   ],
   "nodes": [
+    {
+      "id": "config_key:orders#ORDERS_SERVICE_NAME",
+      "type": "config_key",
+      "label": "ORDERS_SERVICE_NAME",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "key": "ORDERS_SERVICE_NAME",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
     {
       "id": "entry:gateway:http:GET:/orders",
       "type": "entry",
