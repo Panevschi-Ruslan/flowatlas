@@ -11,6 +11,8 @@ import {
   type LoadedConfig,
 } from '@flowatlas/core';
 import { DOCS_FILE, openGraphDb } from '@flowatlas/linker';
+import { CARD_NAMES_FILE } from '../agents/card-names.js';
+import { EDITS_FILE } from '../agents/edit-match.js';
 import { NAMES_FILE } from '../agents/names.js';
 import { hashConfig } from '../build/cache.js';
 import { VERSION } from '../version.js';
@@ -47,7 +49,7 @@ export interface BundleManifest {
 const sha256 = (data: Buffer): string => createHash('sha256').update(data).digest('hex');
 
 /** The files beside the graph a pulled graph is asked with, where a build wrote them. */
-const BESIDE = ['project-graph.json', 'link-report.json', DOCS_FILE, FRESHNESS_FILE, NAMES_FILE, OBSERVED_FILE];
+const BESIDE = ['project-graph.json', 'link-report.json', DOCS_FILE, FRESHNESS_FILE, NAMES_FILE, CARD_NAMES_FILE, EDITS_FILE, OBSERVED_FILE];
 
 /** The database whole, write-ahead log folded in: a copy of the file alone can miss its last writes. */
 const databaseCopy = (dbPath: string, scratch: string): Buffer => {

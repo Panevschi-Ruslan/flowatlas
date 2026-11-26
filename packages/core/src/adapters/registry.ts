@@ -172,6 +172,17 @@ export class AdapterRegistry {
   }
 }
 
+/**
+ * The adapters a repository is read with, as configuration states them:
+ * with `adapters.auto` (the default) detection picks each slot and `force`
+ * replaces a slot it names; with `auto: false` nothing is detected, and only
+ * the adapters `force` names are used.
+ */
+export const adapterForceOf = (adapters: { readonly auto: boolean; readonly force: AdapterForce }): AdapterForce =>
+  adapters.auto
+    ? adapters.force
+    : (Object.fromEntries(ADAPTER_SLOTS.map((slot) => [slot, adapters.force[slot] ?? []])) as AdapterForce);
+
 /** An empty result, useful as a default and in tests. */
 export const noAdapters: DetectedAdapters = {
   entry: [],

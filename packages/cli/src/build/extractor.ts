@@ -1,6 +1,7 @@
 import {
   ADAPTER_SLOTS,
   AdapterRegistry,
+  adapterForceOf,
   type AdapterSlot,
   type FlowatlasConfig,
   type PackageJson,
@@ -104,7 +105,7 @@ export const adaptersBySlot = (
 ): Record<AdapterSlot, string[]> => {
   const detected = registry.detect(
     pkg,
-    forcedFor(type, config.adapters.auto ? config.adapters.force : {}),
+    forcedFor(type, adapterForceOf(config.adapters)),
     config,
     repoDir,
   );

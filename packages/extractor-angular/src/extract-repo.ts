@@ -36,6 +36,7 @@ import {
   type SourceRootOptions,
   type ServiceConfig,
   projectText,
+  adapterForceOf,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
 import { declaresAngular } from './framework.js';
@@ -276,7 +277,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const pkg: PackageJson = readResolvedPackageJson(rootDir) ?? {};
 
   const registry = options.registry ?? new AdapterRegistry();
-  const adapters = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});
+  const adapters = registry.detect(pkg, adapterForceOf(config.adapters));
 
   const builder = new GraphBuilder({
     repo,

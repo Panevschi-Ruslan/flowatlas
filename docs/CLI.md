@@ -64,6 +64,7 @@ bound or a choice of output, under its command.
 | `build --skip-frontend` | off | leave out the services a frontend extractor reads |
 | `build --on-pulled` | off | read the repositories checked out here and take the rest from the pulled graph |
 | `extract --no-types` | on (types) | skip type collection, leaving the registry empty |
+| `"adapters": { "auto": false }` | on (detection) | detect no adapter from the manifests; read with only those `adapters.force` names |
 | `"builtInShapes": false` | on | stop standing hand-written declarations in for packages that are not installed |
 | `"packageSources": false` | on | stop reading a package that is not installed from the repository that is its source |
 | `"settingFiles": { "read": false }` | on | stop reading base addresses from the repositories' own files |
@@ -6352,8 +6353,8 @@ read, naming the rule (`rule-invalid`).
 
 | Key | Type | Default | Means |
 |---|---|---|---|
-| `auto` | boolean | `true` | detect which adapters apply from each repository's manifest |
-| `force` | object | `{}` | use these adapters regardless of what was detected |
+| `auto` | boolean | `true` | detect which adapters apply from each repository's manifest; `false` detects nothing and reads with only the adapters `force` names |
+| `force` | object | `{}` | per slot (`entry`, `db`, `broker`, `frontend`), use these adapters in place of what was detected for that slot |
 | `db.localBaseClasses` | (string \| object)[] | `[]` | classes of your own that behave like a repository, so calls through them are data access — including classes a workspace package of yours declares. An entry may be `{ "name": "BaseRepository", "tableProperty": "collectionName" }` to say which property each class extending it sets to its table |
 | `db.tables` | object[] | `[]` | functions your data access goes through that name their table at the call — `insert('orders', row)` from a data kit of your own, installed or not: `{ "name", "package"?, "factory"?, "clientType"?, "table": argIndex \| "name", "op"?: "read" \| "write" \| "delete" }`; with `factory`, `name` is a method of the client that factory returns, and `clientType` the type a client handed in is declared as (see [Tables named in configuration](#tables-named-in-configuration)) |
 | `frontend.localClientClasses` | string[] | `[]` | classes of your own that make HTTP requests, so `get`/`post`/… called on them are requests |

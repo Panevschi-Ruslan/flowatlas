@@ -6,7 +6,7 @@ import type { GraphBuilder } from './builder.js';
 import { bindingNames, exportedNamesOf, parseSyntax } from './config-literal.js';
 import { isWithinDir, toPosixPath } from './ids.js';
 import { readResolvedPackageJson, type PackageJson } from './adapters/manifest.js';
-import type { AdapterRegistry } from './adapters/registry.js';
+import { adapterForceOf, type AdapterRegistry } from './adapters/registry.js';
 import type { FlowatlasConfig } from './config.js';
 import type { Unresolved } from './model/graph.js';
 import { boundedConfigHost } from './installs-above.js';
@@ -134,7 +134,7 @@ export const conventionsFor = (
 ): ProjectConventions[] => {
   if (registry === undefined) return [];
   const pkg = readResolvedPackageJson(rootDir) ?? {};
-  const stated = registry.conventions(pkg, rootDir, config?.adapters.auto === true ? config.adapters.force : {}, config);
+  const stated = registry.conventions(pkg, rootDir, config === undefined ? {} : adapterForceOf(config.adapters), config);
   // Before anything asks what the service is (P243).
   widenServiceExtent(rootDir, stated.flatMap((convention) => convention.extent ?? []));
   return stated;

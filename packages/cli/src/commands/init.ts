@@ -466,7 +466,7 @@ export const registerInit = (program: Command): void => {
     .option('--git-hooks', 'also install the git hooks that rebuild after a checkout or a merge')
     .option('--agents', "also write each assistant's guide to when to ask the graph")
     .option('--instructions', 'with --agents, also a marked block in AGENTS.md, CLAUDE.md and Copilot instructions')
-    .option('--hook', 'with --agents, also the Claude Code hook that says what a search could not see')
+    .option('--hook', 'with --agents, also the Claude Code hooks: what a search could not see, who uses a name an edit took out, and the graph’s answer for what a prompt names')
     .option('--shared', 'with --hook, in the committed .claude/settings.json')
     .action(async (opts: InitOptions) => {
       await runInit(opts);

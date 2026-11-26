@@ -469,7 +469,7 @@ export type {
 } from './adapters/locator.js';
 export type { FrontendAdapter, FrontendExtractOptions } from './adapters/frontend.js';
 
-export { ADAPTER_SLOTS, AdapterRegistry, noAdapters } from './adapters/registry.js';
+export { ADAPTER_SLOTS, AdapterRegistry, adapterForceOf, noAdapters } from './adapters/registry.js';
 export type { AdapterForce, AdapterSlot, DetectedAdapters, SlotAdapters } from './adapters/registry.js';
 
 export {
