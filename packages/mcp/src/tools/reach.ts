@@ -608,6 +608,56 @@ const RECEIVER_KINDS: Readonly<Record<string, string>> = { webhook: 'webhooks', 
  * apart: the routes of the changed code's own service that the other rows
  * request it through, the API being changed, never a webhook or a bot's way in.
  */
+/**
+ * The files of the components on the way, by repository (P406): every file
+ * the walk met code in that writes a component, the screen drawing what
+ * reaches the target, whether a router shows it (a way in, said in `byKind`)
+ * or nothing the graph reads does. A pilot asked which screens break when a
+ * route's response changes: `impact` said "1 way in breaks, all listed", the
+ * gateway route, and counted web and admin in `reachedByService` without a
+ * file, so the agent read both front ends to name them.
+ */
+const componentsOf = (
+  db: GraphDb,
+  nodes: Iterable<GraphNode>,
+  skip: (node: GraphNode) => boolean,
+  listed: ReadonlySet<string> = new Set(),
+): Record<string, string[]> | undefined => {
+  const drawn = new Set<string>();
+  for (const component of db.nodesByType('ui_component')) if (component.file !== undefined) drawn.add(`${component.repo}\u0000${component.file}`);
+  if (drawn.size === 0) return undefined;
+  const files = new Map<string, Set<string>>();
+  for (const node of nodes) {
+    if (node.file === undefined || skip(node) || !drawn.has(`${node.repo}\u0000${node.file}`)) continue;
+    if (listed.has(`${node.repo}\u0000${node.file}`)) continue;
+    files.set(node.repo, (files.get(node.repo) ?? new Set()).add(node.file));
+  }
+  if (files.size === 0) return undefined;
+  return Object.fromEntries([...files.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([repo, set]) => [repo, [...set].sort()]));
+};
+
+/** No way in, where components on the way call it (P406): "nothing reaches this" beside them read as nothing using it. */
+const COMPONENTS_NONE = 'no way in reaches this; the components on the way (components) call it';
+
+const componentsField = (components: Record<string, string[]> | undefined): { components?: Record<string, string[]> } =>
+  components === undefined ? {} : { components };
+
+/** The files a row already names, by `repo\0file`: a way in's, the code handling it, a maybe row's. */
+const filesNamed = (ways: readonly WayInFound[]): Set<string> => {
+  const named = new Set<string>();
+  for (const way of ways) for (const file of [way.node.file, way.by?.file]) if (file !== undefined) named.add(`${way.node.repo}\u0000${file}`);
+  return named;
+};
+
+/** The files `byKind` names, by `repo\0file`, a maybe row's without its mark. */
+const filesInKinds = (byKind: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> | undefined): Set<string> => {
+  const named = new Set<string>();
+  for (const services of Object.values(byKind ?? {})) {
+    for (const [repo, files] of Object.entries(services)) for (const file of files) named.add(`${repo}\u0000${file.replace(/ \(maybe\)$/, '')}`);
+  }
+  return named;
+};
+
 const byKindOf = (
   db: GraphDb,
   handle: Pick<DbHandle, 'config'>,
@@ -817,6 +867,17 @@ const impactOn = (
     .filter((repo) => !withEntry.has(repo))
     .sort();
 
+  const kinds = asked === undefined ? byKindOf(db, handle, ways, maybes, targets, walked, ownIds) : {};
+  const components =
+    asked === undefined
+      ? componentsOf(
+          db,
+          // The walk to the code only: what lies beyond a channel is counted in throughChannels, and named there.
+          walked.met,
+          (node) => ownIds.has(node.id) || !inScope(node),
+          new Set([...filesInKinds(kinds.byKind), ...filesNamed(crossed.flatMap((through) => through.ways))]),
+        )
+      : undefined;
   const { items, total, truncated, nextOffset } = truncate(listed, maxNodes, input.offset);
   // How many of the rows listed, on any page, reach the target through each way in they cross (P375): a route the
   // screens and bots listed request is a way in itself, and the rows say which reach through it.
@@ -875,7 +936,9 @@ const impactOn = (
           ? `no way in of ${rowsIn ?? ''} reaches this; ${elsewhere} in other services do`
           : throughs.length > 0
             ? beyondSaid(distinctWays(throughs).length)
-            : reached > 0
+            : components !== undefined
+              ? COMPONENTS_NONE
+              : reached > 0
               ? 'nothing in the graph reaches this from a way in; the callers may be behind a gap'
               : 'nothing reaches this';
   // The ways in beyond a channel, one call away (P372), only where `throughChannels` could not count them all: its walk
@@ -914,7 +977,9 @@ const impactOn = (
     ...(nextOffset === undefined ? {} : { nextOffset }),
     ...(entriesNone === undefined ? {} : { entriesNone }),
     // Every way in that breaks, on any page, by kind with the files handling them; the routes it runs behind apart (P381).
-    ...(asked === undefined ? byKindOf(db, handle, ways, maybes, targets, walked, ownIds) : {}),
+    ...kinds,
+    // The components on the way no row lists, by repository (P406): the screens drawing what reaches it.
+    ...componentsField(components),
     // How many things reach it at all, so no entry points is telling
     // rather than indistinguishable from nothing reaching it.
     reached,
@@ -1031,6 +1096,8 @@ interface CallersWaysIn {
   groups: number;
   /** The ways in the service filter left out (P381), each once. */
   filtered: number;
+  /** The components on the way, by repository (P406). */
+  components?: Record<string, string[]>;
 }
 
 /**
@@ -1051,6 +1118,7 @@ const callersWaysIn = (db: GraphDb, reader: ReachReader, groups: readonly Caller
   const crossings: Walked['crossings'] = [];
   const unwalked: string[] = [];
   const filtered = new Set<string>();
+  const met: GraphNode[] = [];
   let left = CALLERS_WALK_TOTAL;
   let cut = false;
   const add = (into: Map<string, Reaching<WayInFound>>, way: WayInFound, said: string): void => {
@@ -1084,6 +1152,7 @@ const callersWaysIn = (db: GraphDb, reader: ReachReader, groups: readonly Caller
       else if (!ends.has(top.node.id)) ends.set(top.node.id, top.node);
     }
     found.push(...walked.found);
+    for (const node of walked.met) if (!group.own.has(node.id) && keep(node)) met.push(node);
     for (const crossing of walked.crossings) {
       crossings.push(crossing);
       crossedBy.set(crossing.from.id, (crossedBy.get(crossing.from.id) ?? new Set()).add(group.said));
@@ -1112,6 +1181,7 @@ const callersWaysIn = (db: GraphDb, reader: ReachReader, groups: readonly Caller
     unwalked,
     groups: groups.length,
     filtered: filtered.size,
+    ...componentsField(componentsOf(db, met, (node) => owns.has(node.id), filesNamed([...ways.values(), ...maybes.values()].map((way) => way.item)))),
   };
 };
 
@@ -1138,7 +1208,9 @@ const callersWaysInSaid = (
         ? beyondSaid(beyond)
         : maybes > 0
           ? 'no way in reaches this; the maybe rows stop at an unread call'
-          : found.ends.length > 0 || found.unreached > 0
+          : found.components !== undefined
+            ? COMPONENTS_NONE
+            : found.ends.length > 0 || found.unreached > 0
             ? 'nothing in the graph reaches this from a way in; the callers may be behind a gap'
             : 'nothing reaches this';
   const behindGap = none !== undefined && found.filtered === 0 && beyond === 0 && maybes === 0 && found.ends.length > 0;
@@ -1162,6 +1234,7 @@ const callersWaysInSaid = (
       ...(maybes === 0 ? {} : { maybe }),
       ...(found.unreached === 0 ? {} : { unreached: found.unreached }),
       ...(throughs.length === 0 ? {} : { throughChannels: throughs }),
+      ...componentsField(found.components),
     },
     left: [
       ...[filterLeft(found.filtered, filter.rowsIn, filter.callersIn)].filter((item): item is string => item !== false),

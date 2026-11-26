@@ -401,6 +401,8 @@ export const requestsOutput = {
   requests: z
     .array(z.union([z.object({ route: z.string(), by: z.string().optional() }), z.object({ unjoined: z.string() }), z.object({ more: z.number() })]))
     .optional(),
+  /** The tables a method writes or deletes rows of (P406), as `writesOf` says it. */
+  writes: z.array(z.string()).optional(),
 };
 
 /** Whether a list is the whole answer, and what was left if not (P364). */

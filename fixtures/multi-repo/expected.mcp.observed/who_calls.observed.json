@@ -441,6 +441,11 @@
       "ways": 1
     }
   ],
+  "components": {
+    "web": [
+      "src/app/checkout.component.ts"
+    ]
+  },
   "complete": true,
   "next": [
     "cant_follow({service: \"web\"})",

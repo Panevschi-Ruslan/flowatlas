@@ -1,4 +1,8 @@
 @  Media.rating  reviews/src/index.ts:35
 Reachable from: no entry points. Also reaches kiosk, web, where the chain stops before an entry point
 Unreached: 3 chains end at code whose name its repository writes nowhere else, so nothing could break through them
-nothing in the graph reaches this from a way in; the callers may be behind a gap
+Components on the way:
+  kiosk  src/MovieCard.tsx
+  web  src/ShelfPage.tsx
+  web  src/TopRated.tsx
+no way in reaches this; the components on the way (components) call it

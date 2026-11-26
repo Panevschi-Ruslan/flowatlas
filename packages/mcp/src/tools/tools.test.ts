@@ -381,7 +381,8 @@ describe('the tools a session is offered', () => {
     // place's `service`, `in` and `handedBy`: 22,975, which the model never reads.
     // P405 names each `alsoOn` reader with its line (`senders` in who_emits), counts the rest in `alsoOnRest`, and adds
     // `readsNothing` to who_consumes and its rows and `rawPath` to list_entries' rows: 23,551, which the model never reads.
-    expect(output.length).toBeLessThan(23600);
+    // P406 says on a row the tables its method writes (`writes`) and on a dead route its declared path: 23,657.
+    expect(output.length).toBeLessThan(23700);
   });
 
   /**

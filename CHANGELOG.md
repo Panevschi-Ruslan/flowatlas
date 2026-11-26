@@ -39,6 +39,15 @@ sends), and the MCP server has 27 tools.
 
 ### Added
 
+- **What the public pilot spent turns on (P406).** `impact` and `who_calls`
+  say `components`, the files writing a component on the walk to the target
+  that no row names, so "which screens break" is one call where no router
+  shows them, and `settled` says how many; an address built on a property of
+  an imported `const` settings object (`settings.shippingBase`) is rooted at
+  the setting it reads, with its fallback; `find_symbol` rows say the tables
+  a method `writes`; `dead`'s route rows name the path as declared
+  (`DELETE /prices/:id`); and `check_contract` takes the method sending a
+  request as the call's `from`.
 - **What the pilot left open (P405).** `who_consumes` and `who_emits` rank
   `alsoOn` by the code reading (or sending) the field asked about, then by
   the handlers (or publishes) of the type, never cut a channel with any, name

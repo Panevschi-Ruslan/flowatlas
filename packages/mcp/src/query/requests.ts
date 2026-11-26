@@ -64,7 +64,7 @@ const injectedBy = (db: GraphDb, classId: string | undefined): Set<string> =>
   new Set(classId === undefined ? [] : db.edgesFrom(classId, ['injects']).map((edge) => edge.to));
 
 /** The request nodes a method sends, itself first, then through its helpers, each once. */
-const requestNodesOf = (db: GraphDb, start: GraphNode): GraphNode[] => {
+const requestNodesOf = (db: GraphDb, start: GraphNode, types: ReadonlySet<string> = REQUEST_TYPES): GraphNode[] => {
   const found: GraphNode[] = [];
   const seen = new Set<string>([start.id]);
   const injected = injectedBy(db, ownerOf(start.id));
@@ -77,7 +77,7 @@ const requestNodesOf = (db: GraphDb, start: GraphNode): GraphNode[] => {
         seen.add(edge.to);
         const to = db.node(edge.to);
         if (to === undefined || to.repo !== start.repo) continue;
-        if (REQUEST_TYPES.has(to.type)) found.push(to);
+        if (types.has(to.type)) found.push(to);
         else if (hop < HELPER_HOPS && CODE_TYPES.has(to.type)) {
           const owner = ownerOf(to.id);
           if (owner === undefined || !injected.has(owner)) next.push(to);
@@ -139,3 +139,40 @@ export const landingsOf = (db: GraphDb, requests: readonly GraphNode[]): Request
   ];
   return rows.length === 0 ? {} : { requests: rows };
 };
+
+/** A database query's node, and the operations of it that change rows. */
+const QUERY_TYPES: ReadonlySet<string> = new Set(['db_query']);
+const WRITE_OPS: ReadonlySet<string> = new Set(['write', 'delete']);
+
+export interface WritesSaid {
+  writes?: string[];
+}
+
+/**
+ * The tables a method or function writes or deletes rows of (P406), by the
+ * queries it makes itself or through a helper of its own class, as its
+ * requests are read: `writes: ["catalog_collections"]` on a find_symbol row.
+ * A pilot asked which methods of a service write to the database, and the
+ * agent read the class's file for what the graph had already read.
+ */
+export const writesOf = (db: GraphDb, node: GraphNode | undefined): WritesSaid => {
+  if (node === undefined || !CODE_TYPES.has(node.type)) return {};
+  const tables = new Set<string>();
+  for (const query of requestNodesOf(db, node, QUERY_TYPES)) {
+    const op = query.meta?.['op'];
+    if (typeof op !== 'string' || !WRITE_OPS.has(op)) continue;
+    const named = query.meta?.['tables'];
+    const list = Array.isArray(named) ? named.filter((table): table is string => typeof table === 'string') : [];
+    const one = query.meta?.['table'];
+    for (const table of list.length > 0 ? list : typeof one === 'string' ? [one] : []) tables.add(table);
+  }
+  return tables.size === 0 ? {} : { writes: [...tables].sort() };
+};
+
+/**
+ * The requests a method or function sends (P406), itself or through a helper
+ * of its own class, as `requestsOf` reads them: what `check_contract` takes a
+ * method `from` as, where the request, not the method, is the call's end.
+ */
+export const requestNodesFrom = (db: GraphDb, node: GraphNode | undefined): GraphNode[] =>
+  node === undefined || !CODE_TYPES.has(node.type) ? [] : requestNodesOf(db, node);

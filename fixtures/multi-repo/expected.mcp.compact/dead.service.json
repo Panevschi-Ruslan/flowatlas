@@ -26,7 +26,8 @@
             "loc": "src/app/orders-api.service.ts:106"
           }
         ]
-      }
+      },
+      "label": "POST /orders/:id/cancel"
     }
   ],
   "total": 3,

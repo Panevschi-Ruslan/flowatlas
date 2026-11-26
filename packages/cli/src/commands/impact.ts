@@ -96,6 +96,7 @@ const footerOf = (of: ImpactOf): string[] => {
     entriesNone?: string;
     left?: string[];
     unreached?: number;
+    components?: Record<string, string[]>;
     acrossChannel?: string;
     acrossConsumer?: string;
   };
@@ -119,6 +120,10 @@ const footerOf = (of: ImpactOf): string[] => {
     ...(answer.acrossChannel !== undefined || answer.acrossConsumer !== undefined || (of.throughChannels ?? []).length === 0
       ? []
       : ['Only beyond a channel, calling none of it (--channel <name> lists them):', ...throughByConsumer(of.throughChannels ?? []).map(throughLine)]),
+    // The component files on the way no row names (P406), by repository.
+    ...(answer.components === undefined
+      ? []
+      : ['Components on the way:', ...Object.entries(answer.components).flatMap(([repo, files]) => files.map((file) => `  ${repo}  ${file}`))]),
     ...(answer.entriesNone === undefined ? [] : [answer.entriesNone]),
     ...(answer.left ?? []).map((left) => `Left: ${left}`),
   ];

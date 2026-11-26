@@ -7,7 +7,7 @@ import { sampledIn } from '../query/observed.js';
 import { rankMatches } from '../query/names.js';
 import { MAX_NEXT, nextFor, withNext, withoutShown, withTraceFor } from '../query/next.js';
 import { declaredBy, isDeclared } from '../query/declared.js';
-import { requestsOf } from '../query/requests.js';
+import { requestsOf, writesOf } from '../query/requests.js';
 import { byWords, wordsLeft, WORDS_PAGE } from '../query/words.js';
 import { deadOptionsOf, reachOfVerdict, reachReader, REACHES, type Reach, type ReachReader } from '../query/ways-in.js';
 import {
@@ -126,8 +126,8 @@ const findOne = (db: GraphDb, input: FindAsked, query: string, reader: ReachRead
   if (ranked.length === 0) return findByWords(db, input, query, reader, args);
 
   const { items, total, truncated, nextOffset } = truncate(ranked, maxNodes, input.offset);
-  // A method that sends requests says where they land (P377).
-  const rows = items.map((match) => ({ ...reader.annotate(projectDetail(match.node, detail)), ...requestsOf(db, match.node) }));
+  // A method that sends requests says where they land (P377), and one that changes rows the tables it writes (P406).
+  const rows = items.map((match) => ({ ...reader.annotate(projectDetail(match.node, detail)), ...requestsOf(db, match.node), ...writesOf(db, match.node) }));
   return withNext(
     {
       matches: rows,
@@ -162,7 +162,7 @@ const findByWords = (db: GraphDb, input: FindAsked, query: string, reader: Reach
   const nextOffset = found.total > input.offset + found.rows.length ? input.offset + found.rows.length : undefined;
   const rows = found.rows.map((row) => {
     const node = db.node(row.id);
-    return node === undefined ? row : { ...row, ...requestsOf(db, node) };
+    return node === undefined ? row : { ...row, ...requestsOf(db, node), ...writesOf(db, node) };
   });
   return withNext(
     {

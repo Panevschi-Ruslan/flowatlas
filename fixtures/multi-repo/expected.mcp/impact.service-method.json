@@ -94,6 +94,11 @@
   "changing": [
     "entry:orders:http:GET:/orders/:param"
   ],
+  "components": {
+    "web": [
+      "src/app/checkout.component.ts"
+    ]
+  },
   "reached": 38,
   "entriesByService": {
     "orders": 1,

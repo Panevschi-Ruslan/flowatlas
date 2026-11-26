@@ -39,6 +39,11 @@
   "changing": [
     "entry:catalog-api:http:GET:/items/:param"
   ],
+  "components": {
+    "catalog-web": [
+      "src/app/item-card.component.ts"
+    ]
+  },
   "reached": 13,
   "entriesByService": {
     "catalog-api": 1,

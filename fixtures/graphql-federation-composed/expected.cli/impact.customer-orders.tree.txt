@@ -1,4 +1,7 @@
 @  Customer.orders  orders/src/index.ts:36
 Reachable from: no entry points. Also reaches kiosk, web, where the chain stops before an entry point
 Unreached: 2 chains end at code whose name its repository writes nowhere else, so nothing could break through them
-nothing in the graph reaches this from a way in; the callers may be behind a gap
+Components on the way:
+  kiosk  src/OrdersBoard.tsx
+  web  src/CustomerPage.tsx
+no way in reaches this; the components on the way (components) call it

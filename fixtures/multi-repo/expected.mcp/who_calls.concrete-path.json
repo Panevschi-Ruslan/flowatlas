@@ -87,8 +87,13 @@
         }
       ],
       "waysIn": [],
-      "waysInNone": "nothing in the graph reaches this from a way in; the callers may be behind a gap",
+      "waysInNone": "no way in reaches this; the components on the way (components) call it",
       "unreached": 2,
+      "components": {
+        "web": [
+          "src/app/checkout.component.ts"
+        ]
+      },
       "complete": true
     },
     {
@@ -241,6 +246,11 @@
           "ways": 1
         }
       ],
+      "components": {
+        "web": [
+          "src/app/checkout.component.ts"
+        ]
+      },
       "complete": true
     }
   ],

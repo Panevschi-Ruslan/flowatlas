@@ -85,6 +85,9 @@ interface DeadRow {
   /** For a route that is not `actionable` (P91): what it is. */
   class?: string;
   evidence?: Record<string, unknown>;
+  /** A way in's label, and its path as written where its parameters are named (P406): `GET /prices/:id`, not `:param`. */
+  label?: string;
+  rawPath?: string;
 }
 
 const rowOf = (
@@ -105,6 +108,19 @@ const rowOf = (
 };
 
 /**
+ * A way in's route as its service declares it (P406): the label, and the path
+ * with its parameters' names where they differ from `:param`, which the
+ * compact row folds into the label (`DELETE /prices/:id`). A pilot asked for
+ * the routes nothing calls "as the service declares them" and the agent ran
+ * `list_entries` beside `dead` for the names.
+ */
+const declaredOf = (node: GraphNode | undefined): { label?: string; rawPath?: string } => {
+  if (node === undefined) return {};
+  const raw = node.meta?.['rawPath'];
+  return { label: node.label, ...(typeof raw === 'string' && raw !== node.meta?.['path'] ? { rawPath: raw } : {}) };
+};
+
+/**
  * Every row of the kinds asked for, verdict first (the claims to act on at the
  * top), then by kind in `DEAD_KINDS` order, then in the order the analysis
  * lists them. The same functions `flowatlas dead` lists by (D1).
@@ -112,7 +128,7 @@ const rowOf = (
 export const deadRows = (db: GraphDb, options: DeadOptions, kinds: readonly DeadKind[]): DeadRow[] => {
   const report = db.report();
   const LISTS: Readonly<Record<DeadKind, () => DeadRow[]>> = {
-    entries: () => deadEntries(db, report, options).map((row) => rowOf(TYPE_OF.entries, row)),
+    entries: () => deadEntries(db, report, options).map((row) => ({ ...rowOf(TYPE_OF.entries, row), ...declaredOf(db.node(row.id)) })),
     channels: () =>
       deadChannels(db, report, options).map((row) =>
         rowOf(TYPE_OF.channels, { ...row, service: [...row.producers, ...row.consumers][0] ?? '' }),
@@ -147,6 +163,8 @@ const deadRowOutput = z.object({
   loc: z.string().optional(),
   class: z.string().optional(),
   evidence: evidenceOutput.optional(),
+  label: z.string().optional(),
+  rawPath: z.string().optional(),
 });
 
 /** What dead answers: one node's verdict, a page of rows, or the nodes a name could mean. */

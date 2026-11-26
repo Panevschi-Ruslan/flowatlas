@@ -1,5 +1,5 @@
 {
-  "settled": "3 ways in break, all listed; more beyond a channel, counted in throughChannels",
+  "settled": "3 ways in break, all listed; more beyond a channel, counted in throughChannels; 1 component file in web on the way, all listed in components",
   "target": {
     "id": "shop-api#src/orders/orders.service.ts:OrdersService.findOne",
     "line": 15,
@@ -42,6 +42,11 @@
   "changing": [
     "entry:shop-api:http:GET:/api/orders/:param"
   ],
+  "components": {
+    "web": [
+      "src/main.tsx"
+    ]
+  },
   "reached": 25,
   "entriesByService": {
     "shop-api": 2,

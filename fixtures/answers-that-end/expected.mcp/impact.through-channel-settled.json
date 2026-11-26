@@ -57,6 +57,11 @@
   "changing": [
     "entry:shop-api:http:GET:/api/orders/:param"
   ],
+  "components": {
+    "web": [
+      "src/main.tsx"
+    ]
+  },
   "reached": 25,
   "entriesByService": {
     "shop-api": 2,

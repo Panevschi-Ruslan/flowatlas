@@ -1,5 +1,5 @@
 {
-  "settled": "its request lands on PATCH /api/orders/status (shop-api), OrdersController.setStatus; no way in reaches it",
+  "settled": "its request lands on PATCH /api/orders/status (shop-api), OrdersController.setStatus; no way in reaches it; 1 component file in shop-web on the way, all listed in components",
   "target": {
     "id": "shop-web#src/orders-api.ts:markReady",
     "type": "function",
@@ -57,6 +57,11 @@
     }
   ],
   "waysIn": [],
-  "waysInNone": "nothing reaches this",
+  "waysInNone": "no way in reaches this; the components on the way (components) call it",
+  "components": {
+    "shop-web": [
+      "src/OrdersToolbar.tsx"
+    ]
+  },
   "complete": true
 }

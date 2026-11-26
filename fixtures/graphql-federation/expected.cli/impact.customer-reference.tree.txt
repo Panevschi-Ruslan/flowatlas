@@ -1,4 +1,6 @@
 @  Customer.__resolveReference  customers/src/customers/customers.resolver.ts:21
 Reachable from: no entry points. Also reaches web, where the chain stops before an entry point
 Unreached: 1 chain ends at code whose name its repository writes nowhere else, so nothing could break through it
-nothing in the graph reaches this from a way in; the callers may be behind a gap
+Components on the way:
+  web  src/OrdersPage.tsx
+no way in reaches this; the components on the way (components) call it

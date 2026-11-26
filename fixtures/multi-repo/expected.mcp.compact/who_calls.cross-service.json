@@ -1,5 +1,5 @@
 {
-  "settled": "6 ways in reach it, all listed; more beyond a channel, counted in throughChannels",
+  "settled": "6 ways in reach it, all listed; more beyond a channel, counted in throughChannels; 1 component file in web on the way, all listed in components",
   "target": {
     "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
     "line": 25,
@@ -272,5 +272,10 @@
       "ways": 1
     }
   ],
+  "components": {
+    "web": [
+      "src/app/checkout.component.ts"
+    ]
+  },
   "complete": true
 }

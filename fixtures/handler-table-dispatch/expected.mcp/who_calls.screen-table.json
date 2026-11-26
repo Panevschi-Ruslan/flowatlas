@@ -87,7 +87,12 @@
     }
   ],
   "waysIn": [],
-  "waysInNone": "nothing reaches this",
+  "waysInNone": "no way in reaches this; the components on the way (components) call it",
+  "components": {
+    "shop-web": [
+      "src/OrdersToolbar.tsx"
+    ]
+  },
   "complete": true,
   "next": [
     "impact({symbol: \"shop-web#src/orders-api.ts:markReady\"})",

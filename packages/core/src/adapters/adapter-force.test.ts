@@ -8,9 +8,9 @@ describe('adapterForceOf', () => {
   });
 
   it('with auto off, uses only what force names: every other slot is empty, so nothing is detected', () => {
-    expect(adapterForceOf({ auto: false, force: { db: ['prisma'] } })).toEqual({
+    expect(adapterForceOf({ auto: false, force: { db: ['some-orm'] } })).toEqual({
       entry: [],
-      db: ['prisma'],
+      db: ['some-orm'],
       broker: [],
       frontend: [],
     });

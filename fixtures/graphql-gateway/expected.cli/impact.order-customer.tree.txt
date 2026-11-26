@@ -6,5 +6,8 @@ Reachable from: no entry points. Also reaches admin, web, where the chain stops 
 Maybe, behind a call the reading could not follow:
   OrdersComponent (admin)  maybe, via graphql Order.customer (orders), gap gap:admin|src/app/orders.component.ts|di-type-unresolved
 Unreached: 1 chain ends at code whose name its repository writes nowhere else, so nothing could break through it
-nothing in the graph reaches this from a way in; the callers may be behind a gap
+Components on the way:
+  web  src/orders/OrderSummary.tsx
+  web  src/orders/OrdersPage.tsx
+no way in reaches this; the components on the way (components) call it
 Left: gaps: 1 chain stops at an unread call before any way in: the maybe row

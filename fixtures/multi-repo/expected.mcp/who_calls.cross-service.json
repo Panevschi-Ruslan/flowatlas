@@ -404,6 +404,11 @@
       "ways": 1
     }
   ],
+  "components": {
+    "web": [
+      "src/app/checkout.component.ts"
+    ]
+  },
   "complete": true,
   "next": [
     "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",

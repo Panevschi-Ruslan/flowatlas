@@ -16,4 +16,6 @@ Could break:
 Maybe, behind a call the reading could not follow:
   ItemsLookupService.byKey (catalog-web)  maybe, via GET /items/:param (catalog-api), gap gap:catalog-web|src/app/items-lookup.service.ts|navigation-unresolved
 Unreached: 1 chain ends at code whose name its repository writes nowhere else, so nothing could break through it
+Components on the way:
+  catalog-web  src/app/item-card.component.ts
 Left: gaps: 1 chain stops at an unread call before any way in: the maybe row

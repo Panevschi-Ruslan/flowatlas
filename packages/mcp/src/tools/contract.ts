@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { resolveChannelRef } from '../query/channel-ref.js';
 import { nearNames } from '../query/names.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
+import { requestNodesFrom } from '../query/requests.js';
 import { loadObserved } from '../query/observed.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { reachReader } from '../query/ways-in.js';
@@ -475,10 +476,18 @@ export const registerContract = (server: McpServer, ctx: ToolContext): void => {
           );
         }
 
-        const candidates = db
+        const direct = db
           .edgesFrom(parsed.from)
           .filter((edge) => edge.to === parsed.to)
           .filter((edge) => parsed.type === undefined || edge.type === parsed.type);
+        // A method named as the sending end (P406): the request it makes to `to`, itself or through a helper of its
+        // own class. A pilot named the client's method and was told "no call from" it, then asked twice more.
+        const candidates =
+          direct.length > 0
+            ? direct
+            : requestNodesFrom(db, db.node(parsed.from))
+                .flatMap((request) => db.edgesFrom(request.id, [...REQUEST_EDGES]))
+                .filter((edge) => edge.to === parsed.to);
         const edge = candidates[0];
         if (edge === undefined) {
           // The calls there are, from the one end or into the other (P382): each the call that checks it.

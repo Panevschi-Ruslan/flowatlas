@@ -6,7 +6,9 @@
       "verdict": "dead",
       "reason": "no http_calls/hits from any repo (may be a public API)",
       "service": "orders",
-      "loc": "src/aliases/current-aliases.controller.ts:11"
+      "loc": "src/aliases/current-aliases.controller.ts:11",
+      "label": "GET /a/:param",
+      "rawPath": "/a/:slug"
     },
     {
       "id": "entry:orders:http:POST:/orders",
@@ -14,7 +16,8 @@
       "verdict": "dead",
       "reason": "no http_calls/hits from any repo (may be a public API)",
       "service": "orders",
-      "loc": "src/orders/orders.controller.ts:31"
+      "loc": "src/orders/orders.controller.ts:31",
+      "label": "POST /orders"
     },
     {
       "id": "channel:order.archived",
@@ -41,7 +44,8 @@
             "loc": "src/clients/orders.client.ts:59"
           }
         ]
-      }
+      },
+      "label": "GET /orders/latest"
     },
     {
       "id": "entry:orders:http:POST:/orders/:param/archive",
@@ -59,7 +63,9 @@
             "loc": "src/clients/orders.client.ts:44"
           }
         ]
-      }
+      },
+      "label": "POST /orders/:param/archive",
+      "rawPath": "/orders/:id/archive"
     }
   ],
   "total": 5,

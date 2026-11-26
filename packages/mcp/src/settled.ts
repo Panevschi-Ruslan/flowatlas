@@ -59,6 +59,18 @@ const throughOf = (answer: Plain): string => {
   return Array.isArray(answer.throughChannels) && answer.throughChannels.length > 0 ? '; more beyond a channel, counted in throughChannels' : '';
 };
 
+/**
+ * The components on the way, said beside the ways in (P406): "no way in
+ * reaches it" said of a gateway route two screens request, with no router
+ * showing them, read as nothing using it.
+ */
+const componentsSaid = (answer: Plain): string => {
+  if (!isPlain(answer.components)) return '';
+  const repos = Object.keys(answer.components);
+  const files = Object.values(answer.components).reduce<number>((sum, list) => sum + rowsIn(list), 0);
+  return files === 0 ? '' : `; ${plural(files, 'component file')} in ${repos.join(', ')} on the way, all listed in components`;
+};
+
 /** How many rows a list holds. */
 const rowsIn = (value: unknown): number => (Array.isArray(value) ? value.length : 0);
 
@@ -66,7 +78,7 @@ const rowsIn = (value: unknown): number => (Array.isArray(value) ? value.length 
 const impactSettled = (answer: Plain): string | undefined => {
   if (!Array.isArray(answer.entries)) return undefined;
   const total = typeof answer.total === 'number' ? answer.total : rowsIn(answer.entries);
-  return `${total === 0 ? 'no way in breaks' : `${total === 1 ? '1 way in breaks' : `${total} ways in break`}, all listed`}${throughOf(answer)}`;
+  return `${total === 0 ? 'no way in breaks' : `${total === 1 ? '1 way in breaks' : `${total} ways in break`}, all listed`}${throughOf(answer)}${componentsSaid(answer)}`;
 };
 
 /** who_calls: every way in that reaches it is listed, and where its requests land. */
@@ -74,7 +86,7 @@ const whoCallsSettled = (answer: Plain): string | undefined => {
   if (!Array.isArray(answer.waysIn)) return undefined;
   const ways = rowsIn(answer.waysIn);
   const landed = isPlain(answer.target) ? landedOf(answer.target.requests) : undefined;
-  const reached = `${ways === 0 ? 'no way in reaches it' : `${ways === 1 ? '1 way in reaches it' : `${ways} ways in reach it`}, all listed`}${throughOf(answer)}`;
+  const reached = `${ways === 0 ? 'no way in reaches it' : `${ways === 1 ? '1 way in reaches it' : `${ways} ways in reach it`}, all listed`}${throughOf(answer)}${componentsSaid(answer)}`;
   return landed === undefined ? reached : `${landed}; ${reached}`;
 };
 

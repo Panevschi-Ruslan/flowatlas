@@ -889,6 +889,37 @@ the first answer could have settled.
   Past `MAX_ANSWER_CHARS` the tree's deepest rows are cut first, a level at a
   time, `requests` kept whole and the cut said in `left`.
 
+#### What the public pilot spent turns on (P406)
+
+The public benchmark's pilot on the generated project took several turns on
+five questions whose first answer the graph could have given whole.
+
+- **The screens on the way.** `impact` and `who_calls` say `components`: the
+  files that write a component, by repository, on the walk to the target,
+  where no row already names them (a screen a router shows is a way in, in
+  `byKind`). A route two screens request through the gateway, no router
+  showing either, answered "1 way in breaks, all listed" and counted the two
+  front ends in `reachedByService` without a file; now `settled` says
+  `"1 way in breaks, all listed; 2 component files in admin, web on the way,
+  all listed in components"`, and with no way in, `waysInNone` and
+  `entriesNone` say the components call it, not that nothing does. What lies
+  beyond a channel stays in `throughChannels`. `flowatlas impact` lists them
+  under the tree.
+- **An address on an imported settings object.** `settings.shippingBase`,
+  with `export const settings = { shippingBase: process.env.SHIPPING_URL ??
+  'http://shipping.internal' }` in another module, is rooted at
+  `SHIPPING_URL` with its fallback, as a constant imported the same way is;
+  only a `const` of the repository is followed.
+- **The tables a method writes.** `find_symbol` rows of a method or function
+  say `writes: ["catalog_collections"]` where it writes or deletes rows, by
+  the queries it makes itself or through a helper of its own class.
+- **A route nothing calls, as declared.** `dead`'s rows of routes carry the
+  label and, where the parameters are named, `rawPath`; a compact row says
+  `DELETE /prices/:id` in its label, not `:param`.
+- **A method as a call's end.** `check_contract({from, to})` with `from` a
+  method or function checks the request it makes to `to`, itself or through
+  a helper of its own class, where it answered "no call from" the method.
+
 #### What the pilot left open (P405)
 
 A pilot after P404 took several turns on each of five questions whose first

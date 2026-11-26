@@ -400,7 +400,22 @@ const bindings = (
  * node, read in a possibly different scope — which is what `Bound` is.
  */
 const substituted = (name: Identifier, scope: Scope): Bound | null => {
-  const declaration = symbolBehind(name)?.getDeclarations()[0];
+  const symbol = symbolBehind(name);
+  let declaration = symbol?.getDeclarations()[0];
+  // An object imported from another module of the repository is the `const` it declares (P406), as a constant
+  // is (P275): `settings.shippingBase`, with `export const settings = { shippingBase: process.env.SHIPPING_URL ?? … }`
+  // in `settings.ts`, is rooted at SHIPPING_URL. Only a `const` of the repository: a `let` may be given another.
+  if (declaration !== undefined && (Node.isImportSpecifier(declaration) || Node.isImportClause(declaration))) {
+    const aliased = symbol?.getAliasedSymbol()?.getDeclarations()[0];
+    declaration =
+      aliased !== undefined &&
+      Node.isVariableDeclaration(aliased) &&
+      aliased.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const &&
+      !aliased.getSourceFile().isInNodeModules() &&
+      !aliased.getSourceFile().isDeclarationFile()
+        ? aliased
+        : undefined;
+  }
   if (declaration === undefined) return null;
   if (Node.isParameterDeclaration(declaration)) return scope.bound.get(declaration) ?? null;
   if (Node.isVariableDeclaration(declaration)) {
