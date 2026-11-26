@@ -3350,6 +3350,10 @@ sends), and the MCP server has 27 tools.
 
 ### Fixed
 
+- **The package installs.** `@flowatlas/graphql`, a private package of this
+  repository, was among the command's `dependencies`, so the packed command
+  imported it from npm, which has none; it is bundled with the others, and
+  the bundle refuses a `@flowatlas/` dependency.
 - **Three switches that did not do what the docs say.** `adapters.auto:
   false` detects no adapter and reads with only those `adapters.force` names
   (it dropped `force` and detected anyway); a team bundle carries the prompt

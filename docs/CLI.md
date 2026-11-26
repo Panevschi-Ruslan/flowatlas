@@ -2392,8 +2392,10 @@ reach it, with its `gap`; `Unreached:`, how many chains end at code whose name
 its repository writes nowhere else; `Only beyond a channel, calling none of
 it:`, each consumer on the way taking messages from a channel, with its
 channels, how many distinct ways in lie beyond them and the nearest few, one
-line per consumer (the tool's `throughChannels`, P372 and P378); and
-what the answer left, each a `Left:` line. The walk never goes back along a
+line per consumer (the tool's `throughChannels`, P372 and P378);
+`Components on the way:`, the files writing a component on the walk to the
+symbol that no line above names, by repository (a screen no router shows, the
+tool's `components`, P406); and what the answer left, each a `Left:` line. The walk never goes back along a
 navigation, nor from a guard to the screens it guards unless the guard's own
 code calls the symbol. `--channel <name>` lists the ways in beyond that channel
 instead, with the chains to them through it; given a consumer a line names, the

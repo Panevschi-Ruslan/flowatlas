@@ -27,6 +27,15 @@ const manifest = JSON.parse(readFileSync(join(cli, 'package.json'), 'utf8'));
 /** Dependencies the command declares, which npm installs beside it. */
 const external = Object.keys(manifest.dependencies ?? {});
 
+// A package of this repository is bundled, never installed: they are private, so one left in `dependencies` is
+// imported from a package npm does not have, and the published command fails to install. 0.7.0 was packed so once,
+// `@flowatlas/graphql` among the dependencies; it belongs in `devDependencies` with the others.
+const ours = external.filter((name) => name.startsWith('@flowatlas/'));
+if (ours.length > 0) {
+  console.error(`bundle: ${ours.join(', ')} in packages/cli dependencies would be installed from npm, which has none: move to devDependencies, which are bundled`);
+  process.exit(1);
+}
+
 // The chunks are named by their hash, so a build over an earlier one leaves the
 // earlier chunks beside the new ones, and `files: ["dist"]` would ship them all
 // (P198): a release packed after an incremental build carried every chunk of

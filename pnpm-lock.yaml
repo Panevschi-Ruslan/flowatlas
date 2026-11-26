@@ -166,9 +166,6 @@ importers:
       '@angular/compiler':
         specifier: ^19.2.0
         version: 19.2.25
-      '@flowatlas/graphql':
-        specifier: workspace:*
-        version: link:../graphql
       '@inquirer/prompts':
         specifier: ^8.7.2
         version: 8.7.2(@types/node@26.5.0)
@@ -224,6 +221,9 @@ importers:
       '@flowatlas/extractor-react':
         specifier: workspace:*
         version: link:../extractor-react
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       '@flowatlas/linker':
         specifier: workspace:*
         version: link:../linker

@@ -74,7 +74,6 @@
   },
   "dependencies": {
     "@angular/compiler": "^19.2.0",
-    "@flowatlas/graphql": "workspace:*",
     "@inquirer/prompts": "^8.7.2",
     "@modelcontextprotocol/sdk": "^1.22.0",
     "better-sqlite3": "^13.0.3",
@@ -95,6 +94,7 @@
     "@flowatlas/extractor-angular": "workspace:*",
     "@flowatlas/extractor-react": "workspace:*",
     "@flowatlas/extractor-nestjs": "workspace:*",
+    "@flowatlas/graphql": "workspace:*",
     "@flowatlas/linker": "workspace:*",
     "@flowatlas/mcp": "workspace:*",
     "@flowatlas/terraform": "workspace:*",
