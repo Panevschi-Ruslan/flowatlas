@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { openGraphDb, type GraphDb } from '@flowatlas/linker';
 import { NAMES_FILE } from './names.js';
 import { crossingNamesOf, type CrossingName } from '@flowatlas/mcp';
@@ -44,7 +44,7 @@ export const editIndexOf = (names: readonly CrossingName[], services: Record<str
   for (const name of names) {
     const dir = services[name.service];
     if (dir === undefined) continue;
-    const path = join(dir, name.file);
+    const path = posix.join(dir, name.file);
     if (!texts.has(path)) texts.set(path, readText(path));
     const text = texts.get(path);
     if (text === undefined) continue;
