@@ -1,7 +1,7 @@
-import { join, resolve } from 'node:path';
 import { ts, type Project } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
 import type { GraphNode } from './model/nodes.js';
+import { sourceFileIn } from './repo-paths.js';
 
 /**
  * Code its repository writes nowhere (P370).
@@ -110,7 +110,7 @@ const HOOK = /^ng[A-Z]/;
 /** The class a node of `Class.member` is a member of, and the member, by the node's file. */
 const memberOf = (project: Pick<Project, 'getSourceFile'>, repoDir: string, node: GraphNode): { owner: ts.ClassLikeDeclaration; member?: ts.ClassElement } | undefined => {
   if (node.file === undefined) return undefined;
-  const source = project.getSourceFile(join(resolve(repoDir), node.file));
+  const source = sourceFileIn(project, repoDir, node.file);
   if (source === undefined) return undefined;
   const dot = node.label.lastIndexOf('.');
   const className = dot < 0 ? node.label : node.label.slice(0, dot);
@@ -136,7 +136,7 @@ const memberOf = (project: Pick<Project, 'getSourceFile'>, repoDir: string, node
  */
 const exportedAsDefault = (project: Pick<Project, 'getSourceFile'>, repoDir: string, file: string | undefined, name: string): boolean => {
   if (file === undefined) return false;
-  const source = project.getSourceFile(join(resolve(repoDir), file));
+  const source = sourceFileIn(project, repoDir, file);
   const declarations = source?.getExportedDeclarations().get('default') ?? [];
   return declarations.some((declaration) => {
     const named = (declaration as { getName?: () => string | undefined }).getName?.();

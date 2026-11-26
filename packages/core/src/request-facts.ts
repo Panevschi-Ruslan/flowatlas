@@ -1,9 +1,9 @@
-import { resolve as resolvePath, sep } from 'node:path';
 import type { CallExpression, NewExpression, Node as TsNode, ObjectLiteralExpression, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
 import { PLATFORM_HEADERS } from './built-query.js';
 import { headersAHookAdds, type HookHanded } from './hook-headers.js';
+import { inRepo, repoRelativeOf, sourceFileIn } from './repo-paths.js';
 import type { GraphNode } from './model/nodes.js';
 import { definePass, type ExtractorPass } from './passes.js';
 
@@ -219,11 +219,7 @@ export const statusComparisonsIn = (body: TsNode): Array<{ status: number; line:
 };
 
 /** The repository-relative path of a source file, with forward slashes. */
-const relativeOf = (host: RequestFactsHost, source: SourceFile): string => {
-  const path = source.getFilePath();
-  const root = resolvePath(host.repoDir);
-  return path.startsWith(root + sep) || path.startsWith(`${root}/`) ? path.slice(root.length + 1).split(sep).join('/') : path;
-};
+const relativeOf = (host: RequestFactsHost, source: SourceFile): string => repoRelativeOf(host.repoDir, source.getFilePath());
 
 /** Where a request's id says it is written: `file`, line and column. */
 const siteOfId = (id: string): { file: string; line: number; column: number } | undefined => {
@@ -236,7 +232,7 @@ const siteOfId = (id: string): { file: string; line: number; column: number } | 
 
 /** The call (or construction) a request is written as: the one starting at its line and column. */
 const callAt = (host: RequestFactsHost, file: string, line: number, column: number): CallExpression | NewExpression | undefined => {
-  const source = host.project.getSourceFile(resolvePath(host.repoDir, file));
+  const source = sourceFileIn(host.project, host.repoDir, file);
   if (source === undefined) return undefined;
   let position: number;
   try {
@@ -268,7 +264,7 @@ const outermostFunction = (node: TsNode): TsNode | undefined => {
 /** The function declared at a node's line in its file: how a caller's body is found from its node. */
 const functionAtNode = (host: RequestFactsHost, node: GraphNode): TsNode | undefined => {
   if (node.file === undefined || node.line === undefined) return undefined;
-  const source = host.project.getSourceFile(resolvePath(host.repoDir, node.file));
+  const source = sourceFileIn(host.project, host.repoDir, node.file);
   if (source === undefined) return undefined;
   return source.getDescendants().find(
     (at) =>
@@ -413,10 +409,9 @@ const everyRequestOf = (host: RequestFactsHost, clients: readonly RequestClient[
   for (const { client } of described) found.set(client, { headers: new Set() });
   if (described.length === 0) return found;
   const byDefaults = described.filter(({ every }) => every.defaults === true).map(({ client }) => found.get(client)!);
-  const root = resolvePath(host.repoDir);
   for (const source of host.project.getSourceFiles()) {
     const path = source.getFilePath();
-    if (!path.startsWith(root) || path.includes('/node_modules/') || source.isDeclarationFile()) continue;
+    if (!inRepo(host.repoDir, path) || path.includes('/node_modules/') || source.isDeclarationFile()) continue;
     const text = source.getFullText();
     if (!described.some(({ every }) => every.marks.test(text))) continue;
     const file = relativeOf(host, source);
