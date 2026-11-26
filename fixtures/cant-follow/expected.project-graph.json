@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:36.360Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:02.928Z",
   "services": [
     {
       "name": "storefront",
@@ -110,7 +110,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -162,7 +168,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -183,7 +196,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -320,7 +340,17 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "quantity",
+            "line": 12
+          },
+          {
+            "field": "sku",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -339,7 +369,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

@@ -1,21 +1,36 @@
-import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
+import { Project, SyntaxKind, type CallExpression, type SourceFile, type TemplateExpression } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { UNREAD_SPAN } from './ids.js';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
+  callSitesOf,
+  componentHeldBy,
+  componentWrittenIn,
+  dispatchOf,
   constantMethodResult,
   constantPropertyValue,
   forwardedFrom,
   forwardNoWorse,
   parameterBehind,
   argumentAlong,
+  optionVerbAlong,
+  optionVerbOf,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
   literalChoices,
+  memberBehind,
+  splitAtParameter,
+  continuesHost,
   returnedExpression,
   rootSettingAddress,
-  rootSettingKey,
+  valueAfterHost,
+  valueAtPort,
+  atPortPlace,
+  numberAfterHost,
+  portWithoutColonRow,
+  writtenNumber,
+  writtenSpan,
 } from './trace.js';
 
 const HEADER = `
@@ -42,7 +57,7 @@ const ROOTS = ['environment'] as const;
 const readSetting = (node: Parameters<typeof settingKeyIn>[0]) => settingKeyIn(node, ROOTS);
 
 /** How a browser application is read, with both halves of an address followed. */
-const settingBehind = (node: Parameters<typeof rootSettingKey>[0]) => {
+const settingBehind = (node: Parameters<typeof rootSettingAddress>[0]) => {
   const returned = returnedExpression(node);
   if (returned !== null) {
     const inner = resolveStaticString(returned, {
@@ -54,8 +69,8 @@ const settingBehind = (node: Parameters<typeof rootSettingKey>[0]) => {
     const [key] = inner?.envRefs ?? [];
     if (key !== undefined) return { key, prefix: inner?.value ?? '' };
   }
-  const key = rootSettingKey(node, { readSetting });
-  return key === null ? null : { key };
+  const key = rootSettingAddress(node, { readSetting })?.key;
+  return key === undefined ? null : { key };
 };
 
 const read = (file: SourceFile) =>
@@ -144,6 +159,194 @@ describe('a settings value kept in a static property', () => {
       key: 'apiUrl',
       prefix: '/orders',
     });
+  });
+
+  // A constant that is a chain of `||` over settings (P292): the first
+  // setting, read through the function that only puts a scheme in front of
+  // it, is the root, and the text the chain ends in is its fallback.
+  it('roots a chain of || at its first setting, through a function that only normalises it, with the text it ends in as the fallback', () => {
+    const file = parse(`
+      declare const other: { url: string };
+      function withScheme(url: string | undefined): string {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        return \`https://\${url}\`;
+      }
+      const PREVIEW = other.url ? \`https://\${other.url}\` : '';
+      const APP_URL = withScheme(environment.apiUrl) || PREVIEW || 'http://localhost:3000';
+      http.get(\`\${APP_URL}/api/me\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '', otherwise: 'http://localhost:3000', otherwiseFile: '/a.ts' });
+  });
+
+  // P296: a chain read as one step however long, later settings as further
+  // fallbacks, and the fallback said where it is written.
+  it('reads a long chain of || as one step, the settings after the first as where it goes next', () => {
+    const file = parse(`
+      function withScheme(url: string | undefined): string {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        return \`https://\${url}\`;
+      }
+      declare const other: { a: string; b: string; c: string };
+      const A = other.a ? \`https://\${other.a}\` : '';
+      const B = other.b ? \`https://\${other.b}.example.test\` : '';
+      const C = other.c ? \`https://\${other.c}\` : '';
+      const APP_URL = withScheme(environment.apiUrl) || A || B || C || environment.secondUrl || environment.thirdUrl || 'http://localhost:3000';
+      http.get(\`\${APP_URL}/api/me\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({
+      key: 'apiUrl',
+      prefix: '',
+      also: ['secondUrl', 'thirdUrl'],
+      otherwise: 'http://localhost:3000',
+      otherwiseFile: '/a.ts',
+    });
+  });
+
+  it('says a chain written in another module falls back in that module', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    project.createSourceFile('constants.ts', `${HEADER}export const APP_URL = environment.apiUrl ?? environment.secondUrl ?? 'http://localhost:3000';`);
+    const file = project.createSourceFile('a.ts', `${HEADER}import { APP_URL } from './constants';\nhttp.get(\`\${APP_URL}/api/me\`);`);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({
+      key: 'apiUrl',
+      prefix: '',
+      also: ['secondUrl'],
+      otherwise: 'http://localhost:3000',
+      otherwiseFile: '/constants.ts',
+    });
+  });
+
+  it('reads a function per branch where its arguments settle the branch, and both as a condition in place where nothing does', () => {
+    const settled = parse(`
+      function pick(url: string, flag: boolean): string {
+        if (flag) return \`\${url}/admin\`;
+        return url;
+      }
+      const BASE = pick(environment.apiUrl, true);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    const opening = address(settled).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '/admin' });
+    const other = parse(`
+      function pick(url: string, flag: boolean): string {
+        if (!flag) { return url; }
+        return \`\${url}/admin\`;
+      }
+      const BASE = pick(environment.apiUrl, false);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    expect(rootSettingAddress(address(other).getDescendantsOfKind(SyntaxKind.Identifier)[0]!, { readSetting })).toEqual({ key: 'apiUrl', prefix: '' });
+    const open = parse(`
+      declare const flag: boolean;
+      function pick(url: string, admin: boolean): string {
+        if (admin) return \`\${url}/admin\`;
+        return url;
+      }
+      const BASE = pick(environment.apiUrl, flag);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    // P302: the two returns agree on the setting, and on the path as far as
+    // they agree with the rest a hole, as the same condition written in place does.
+    expect(rootSettingAddress(address(open).getDescendantsOfKind(SyntaxKind.Identifier)[0]!, { readSetting })).toEqual({ key: 'apiUrl', prefix: UNREAD_SPAN });
+  });
+
+  // P302: branches nobody settles that read different settings are one of the
+  // two: the first is the key, the second where it may go instead, guessed.
+  it('reads a condition nobody settles over two settings as the first with the second as also, in place and in a helper alike', () => {
+    const expected = { key: 'apiUrl', prefix: '', guessed: true, also: ['devUrl'], either: ['apiUrl', 'devUrl'] };
+    const inPlace = parse(`
+      declare const isProd: boolean;
+      http.get(\`\${isProd ? environment.apiUrl : environment.devUrl}/orders\`);
+    `);
+    const branch = address(inPlace).getDescendantsOfKind(SyntaxKind.ConditionalExpression)[0]!;
+    expect(rootSettingAddress(branch, { readSetting })).toEqual(expected);
+    const call = (file: SourceFile) => address(file).getDescendantsOfKind(SyntaxKind.CallExpression)[0]!;
+    const helper = parse(`
+      declare const isProd: boolean;
+      const base = () => isProd ? environment.apiUrl : environment.devUrl;
+      http.get(\`\${base()}/orders\`);
+    `);
+    expect(rootSettingAddress(call(helper), { readSetting })).toEqual(expected);
+    const returns = parse(`
+      declare const isProd: boolean;
+      function base(): string {
+        if (isProd) return \`\${environment.apiUrl}/v1\`;
+        return \`\${environment.devUrl}/v1\`;
+      }
+      http.get(\`\${base()}/orders\`);
+    `);
+    expect(rootSettingAddress(call(returns), { readSetting })).toEqual({ key: 'apiUrl', prefix: '/v1', guessed: true, also: ['devUrl'], either: ['apiUrl', 'devUrl'] });
+    const fallback = parse(`
+      declare const isProd: boolean;
+      const base = () => isProd ? environment.apiUrl : environment.devUrl ?? 'http://localhost:4000';
+      http.get(\`\${base()}/orders\`);
+    `);
+    expect(rootSettingAddress(call(fallback), { readSetting })).toEqual({ ...expected, otherwise: 'http://localhost:4000', otherwiseFile: '/a.ts' });
+  });
+
+  // P309: every branch's setting is an equal candidate, nested conditions too.
+  it('keeps the settings of every branch nobody settles in either, the first branch first', () => {
+    const nested = parse(`
+      declare const isProd: boolean;
+      declare const isStage: boolean;
+      http.get(\`\${isProd ? environment.apiUrl : isStage ? environment.stageUrl : environment.devUrl}/orders\`);
+    `);
+    const branch = address(nested).getDescendantsOfKind(SyntaxKind.ConditionalExpression)[0]!;
+    expect(rootSettingAddress(branch, { readSetting })).toMatchObject({ key: 'apiUrl', either: ['apiUrl', 'stageUrl', 'devUrl'] });
+    // One setting on both sides is no choice between settings.
+    const same = parse(`
+      declare const isProd: boolean;
+      http.get(\`\${isProd ? \`\${environment.apiUrl}/v1\` : \`\${environment.apiUrl}/v2\`}/orders\`);
+    `);
+    expect(rootSettingAddress(address(same).getDescendantsOfKind(SyntaxKind.ConditionalExpression)[0]!, { readSetting })?.either).toBeUndefined();
+  });
+
+  // P302: a function handed nothing that reads the setting inside is the setting.
+  it('reads a function called with no arguments as what it returns', () => {
+    const call = (file: SourceFile) => address(file).getDescendantsOfKind(SyntaxKind.CallExpression)[0]!;
+    const plain = parse(`
+      function apiBase() { return environment.apiUrl ?? 'http://localhost:4000'; }
+      http.get(\`\${apiBase()}/users\`);
+    `);
+    expect(rootSettingAddress(call(plain), { readSetting })).toEqual({ key: 'apiUrl', prefix: '', otherwise: 'http://localhost:4000', otherwiseFile: '/a.ts' });
+    const member = parse(`
+      const urls = { api: () => \`\${environment.apiUrl}/api\` };
+      http.get(\`\${urls.api()}/users\`);
+    `);
+    expect(rootSettingAddress(call(member), { readSetting })).toEqual({ key: 'apiUrl', prefix: '/api' });
+    // A parameter it is not handed holds its default, which settles the branch.
+    const optional = parse(`
+      function api(tail = '') { return tail ? \`\${environment.apiUrl}/\${tail}\` : environment.apiUrl; }
+      http.get(\`\${api()}/users\`);
+    `);
+    expect(rootSettingAddress(call(optional), { readSetting })).toEqual({ key: 'apiUrl', prefix: '' });
+  });
+
+  it('reads a function an object holds as a plain one', () => {
+    const file = parse(`
+      const urls = {
+        withScheme(url: string): string { return url.startsWith('http') ? url : \`https://\${url}\`; },
+        under: (url: string) => \`\${url}/api\`,
+      };
+      const BASE = urls.under(urls.withScheme(environment.apiUrl));
+      http.get(\`\${BASE}/orders\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '/api' });
+  });
+
+  it('reads the path a function writes after the setting it is handed', () => {
+    const file = parse(`
+      const under = (base: string) => \`\${base}/api\`;
+      const BASE = under(environment.apiUrl);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '/api' });
   });
 
   it('holds a piece of the field nobody can read as a hole rather than dropping it', () => {
@@ -270,7 +473,7 @@ describe('what the settings reader is asked', () => {
       }
     `);
     const asked: string[] = [];
-    rootSettingKey(address(file), {
+    rootSettingAddress(address(file), {
       readSetting: (node) => {
         asked.push(node.getKindName());
         return null;
@@ -452,6 +655,69 @@ describe('the verb a wrapper is handed', () => {
 });
 
 /**
+ * A verb read out of a member of the options a wrapper is handed, with a
+ * default it falls back to (R179): left out, handed `undefined`, handed an
+ * object with no such member, one that writes it, one held by a `const`, and
+ * one spreading another that may carry it.
+ */
+describe('the verb an options member gives, or its default', () => {
+  const source = `
+    declare function fetch(url: string, init?: { method?: string }): Promise<unknown>;
+    declare const more: { method?: string };
+    const READ = { method: 'GET' };
+    const send = async (url: string, body?: unknown, options?: { method?: string }) => {
+      const method = options?.method || 'POST';
+      return fetch(url, { method, ...options });
+    };
+    const create = () => send('/api/orders', {});
+    const me = () => send('/api/orders/me', {}, { method: 'GET' });
+    const drop = () => send('/api/orders/1', undefined, { method: 'delete' });
+    const quiet = () => send('/api/orders/2', {}, undefined);
+    const tagged = () => send('/api/orders/3', {}, { cache: 'no-store' } as { method?: string });
+    const held = () => send('/api/orders/4', {}, READ);
+    const spread = () => send('/api/orders/5', {}, { ...more });
+    const along = (options?: { method?: string }) => send('/api/orders/6', {}, options);
+    const outer = () => along({ method: 'PUT' });
+  `;
+  const fetchCall = (file: SourceFile): CallExpression =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!;
+  const optionVerb = (file: SourceFile) => {
+    const options = fetchCall(file).getArguments()[1]!.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    return optionVerbOf(options.getProperty('method'))!;
+  };
+
+  it('finds the member and the default a `{ method }` names through its const', () => {
+    const found = optionVerb(parse(source));
+    expect([found.parameter.getName(), found.key, found.otherwise]).toEqual(['options', 'method', 'POST']);
+    // A parameter of its own is the other reading's, and a default that is no verb is nothing.
+    expect(optionVerbOf(parse(`const f = (method: string) => method;`).getDescendantsOfKind(SyntaxKind.Identifier).at(-1))).toBeUndefined();
+    const notVerb = parse(`const f = (o?: { m?: string }) => { const m = o?.m ?? 'fast'; return m; };`);
+    expect(optionVerbOf(notVerb.getDescendantsOfKind(SyntaxKind.Identifier).at(-1))).toBeUndefined();
+  });
+
+  it('reads each caller along the calls the address was followed out through', () => {
+    const file = parse(source);
+    const found = optionVerb(file);
+    const path = parameterBehind(fetchCall(file).getArguments()[0]!)!;
+    const said = forwardedFrom(path)
+      .calls.map((each) => `${each.site.getText()} ${optionVerbAlong(found, each.hops) ?? 'unread'}`)
+      .sort();
+    // The address of the sixth is settled where it is written, so its options
+    // are still a parameter there and the verb is not read further out.
+    expect(said).toEqual([
+      "send('/api/orders', {}) POST",
+      "send('/api/orders/1', undefined, { method: 'delete' }) DELETE",
+      "send('/api/orders/2', {}, undefined) POST",
+      "send('/api/orders/3', {}, { cache: 'no-store' } as { method?: string }) POST",
+      "send('/api/orders/4', {}, READ) GET",
+      "send('/api/orders/5', {}, { ...more }) unread",
+      "send('/api/orders/6', {}, options) unread",
+      "send('/api/orders/me', {}, { method: 'GET' }) GET",
+    ]);
+  });
+});
+
+/**
  * Whatever else a wrapper is handed beside the address (P128): its body, read
  * along the same calls, out through a wrapper that hands it on and stopping at
  * the caller that writes it, or at the parameter of the caller the request is
@@ -506,5 +772,504 @@ describe('an argument a caller leaves out', () => {
     expect(of(0)).toEqual(["''", "'/1'"]);
     // No default: a caller that hands nothing hands nothing worth following.
     expect(of(1)).toEqual([]);
+  });
+});
+
+/**
+ * A wrapper that takes its request as one object and its members out where the
+ * parameter is written (P269): `({ url = '', method = 'GET' }) => fetch(url,
+ * { method })`. The address and the verb are each a member of what a caller
+ * hands it, and the default where the caller's object writes none.
+ */
+describe('a member a wrapper takes out of the object it is handed', () => {
+  const source = `
+    declare function fetch(url: string, init?: { method?: string }): Promise<unknown>;
+    declare const elsewhere: { url: string };
+    const request = ({ url = '', method = 'GET' }: { url?: string; method?: string }) => fetch(\`\${url}?x=1\`, { method });
+    const list = () => request({ url: '/api/basket' });
+    const add = () => request({ url: '/api/basket', method: 'POST' });
+    const bare = () => request({});
+    const passed = (options: { url: string; method?: string }) => request(options);
+    const outer = () => passed({ url: '/api/outer', method: 'DELETE' });
+    const unknown = () => request(elsewhere);
+  `;
+  const fetchCall = (file: SourceFile): CallExpression =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!;
+
+  it('splits the address at the member and finds each caller\'s, through a wrapper that hands the object on', () => {
+    const file = parse(source);
+    const split = splitAtParameter(fetchCall(file).getArguments()[0]!, { readSetting: () => null })!;
+    expect([split.member?.key, split.before, split.after]).toEqual(['url', '', '?x=1']);
+    const verb = optionVerbOf(fetchCall(file).getArguments()[1]!.asKindOrThrow(SyntaxKind.ObjectLiteralExpression).getProperty('method'))!;
+    expect([verb.key, verb.otherwise]).toEqual(['method', 'GET']);
+    const said = forwardedFrom(split.parameter, undefined, split.member)
+      .calls.map((each) => `${each.argument.getText()} ${optionVerbAlong(verb, each.hops) ?? 'unread'}`)
+      .sort();
+    // `bare` hands an object with no `url`: the default. `unknown` hands one
+    // nobody here wrote, and is not a caller this can draw on.
+    expect(said).toEqual(["'' GET", "'/api/basket' GET", "'/api/basket' POST", "'/api/outer' DELETE"]);
+  });
+
+  it('is a member only of a parameter, not of a value destructured anywhere else', () => {
+    const file = parse(`const { url } = { url: '/x' }; export const u = url;`);
+    expect(memberBehind(file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!)).toBeUndefined();
+  });
+});
+
+describe('a method called through a receiver the checker types as nothing (P336)', () => {
+  /** The calls `callSitesOf` finds of `health` of the class or object named, as the text of each, with how each dispatches. */
+  const sitesOf = (source: string, owner: string): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false } });
+    const file = project.createSourceFile('a.js', source);
+    const holder = file.getClass(owner) ?? file.getVariableDeclarationOrThrow(owner).getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    const method = holder.getDescendantsOfKind(SyntaxKind.MethodDeclaration).find((each) => each.getName() === 'health');
+    if (method === undefined) throw new Error('no health');
+    return callSitesOf(method)
+      .map((call) => `${call.getText()} ${dispatchOf(call, method)}`)
+      .sort();
+  };
+
+  const SOURCE = [
+    'class Reader { health() { return 1; } }',
+    'class Fast extends Reader {}',
+    'class Other { health() { return 2; } }',
+    'function check(reader) { return reader.health(); }',
+    'function either(probe) { return probe.health(); }',
+    'function none(thing) { return thing.health(); }',
+    'check(new Reader());',
+    'check(new Fast());',
+    'either(new Reader());',
+    'either(new Other());',
+    'none(new Other());',
+    'class Board { constructor(reader) { this.reader = reader; } show() { return this.reader.health(); } }',
+    'new Board(new Reader());',
+    'const loose = { health() { return 3; } };',
+    'function poll(target) { return target.health(); }',
+    'poll(loose);',
+  ].join('\n');
+
+  it('finds the calls whose receiver is handed an instance of the class, running it where every value is one', () => {
+    expect(sitesOf(SOURCE, 'Reader')).toEqual(['probe.health() undecided', 'reader.health() runs', 'this.reader.health() runs']);
+  });
+
+  it('leaves out a call handed only instances of another class, and finds a call on an object written in place', () => {
+    expect(sitesOf(SOURCE, 'Other')).toEqual(['probe.health() undecided', 'thing.health() runs']);
+    expect(sitesOf(SOURCE, 'loose')).toEqual(['target.health() runs']);
+  });
+
+  it('follows the receiver into a member of an object, a value a function returns and an element of a list (P342)', () => {
+    const source = [
+      'class Reader { health() { return 1; } }',
+      'class Other { health() { return 2; } }',
+      'function viaOptions(options) { return options.reader.health(); }',
+      'viaOptions({ reader: new Reader() });',
+      'class Deps { constructor(deps) { this.deps = deps; } run() { return this.deps.client.health(); } }',
+      'new Deps({ client: new Reader() });',
+      'function viaFactory(make) { return make().health(); }',
+      'viaFactory(() => new Reader());',
+      'function viaSource(source) { const got = source.get(); return got.health(); }',
+      'viaSource({ get() { return new Reader(); } });',
+      'function first(readers) { return readers[0].health(); }',
+      'first([new Reader()]);',
+      'function every(readers) { for (const each of readers) each.health(); }',
+      'every([new Reader(), new Other()]);',
+      'function walk(readers) { readers.forEach((one) => one.health()); }',
+      'walk([new Other()]);',
+      'function taken({ deps: { reader } }) { return reader.health(); }',
+      'taken({ deps: { reader: new Reader() } });',
+      'function filled(made) { const list = []; list.push(made); return list.at(0).health(); }',
+      'filled(new Reader());',
+    ].join('\n');
+    expect(sitesOf(source, 'Reader')).toEqual([
+      'each.health() undecided',
+      'got.health() runs',
+      'list.at(0).health() runs',
+      'make().health() runs',
+      'options.reader.health() runs',
+      'reader.health() runs',
+      'readers[0].health() runs',
+      'this.deps.client.health() runs',
+    ]);
+    expect(sitesOf(source, 'Other')).toEqual(['each.health() undecided', 'one.health() runs']);
+  });
+
+  it('reads a component\'s props as what each element written with it as its tag hands it (P342)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, jsx: 1 } });
+    const file = project.createSourceFile(
+      'a.jsx',
+      [
+        'class Reader { health() { return 1; } }',
+        'function Feed({ reader }) { reader.health(); return null; }',
+        'function Panel(props) { props.reader.health(); return null; }',
+        'class Board extends Base { show() { return this.props.reader.health(); } }',
+        'export const page = () => <div><Feed reader={new Reader()} /><Panel reader={new Reader()} /><Board reader={new Reader()} /></div>;',
+      ].join('\n'),
+    );
+    const method = file.getClassOrThrow('Reader').getMethodOrThrow('health');
+    expect(callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort()).toEqual([
+      'props.reader.health() runs',
+      'reader.health() runs',
+      'this.props.reader.health() runs',
+    ]);
+  });
+
+  it('reads the props of a component wrapped in calls, and a rest of props spread into an element (P349)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, jsx: 1 } });
+    const file = project.createSourceFile(
+      'a.jsx',
+      [
+        "import ui, { memo, forwardRef } from 'ui-kit';",
+        'class Reader { health() { return 1; } }',
+        'class Other { health() { return 2; } }',
+        'const Feed = memo(function Feed({ reader }) { reader.health(); return null; });',
+        'const Field = memo(forwardRef((props, ref) => { props.reader.health(); return null; }));',
+        'const Pane = ui.memo(({ probe }) => { probe.health(); return null; });',
+        'function Shell({ title, ...rest }) { return <Pane {...rest} />; }',
+        'export const page = () => <div><Feed reader={new Reader()} /><Field reader={new Reader()} /><Shell title="a" probe={new Other()} /></div>;',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = file.getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['props.reader.health() runs', 'reader.health() runs']);
+    expect(sites('Other')).toEqual(['probe.health() runs']);
+  });
+
+  it('reads a parameter the injector hands as the instance each provider of its token gives (P349)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, experimentalDecorators: true } });
+    project.createSourceFile(
+      'shared.js',
+      [
+        "import { Injectable } from '@nestjs/common';",
+        'export class Reader { health() { return 1; } }',
+        'export class Other { health() { return 2; } }',
+        'export class Mirror { health() { return 3; } }',
+        'export class Keeper { health() { return 4; } }',
+        "export const SHARED = [Reader, { provide: 'MIRROR', useValue: new Mirror() }];",
+        "export function more() { return [{ provide: 'KEEP', useClass: Keeper }, { provide: 'ALIAS', useExisting: 'KEEP' }]; }",
+      ].join('\n'),
+    );
+    project.createSourceFile(
+      'jobs.js',
+      [
+        "import { Dependencies, Inject, Injectable, Module } from '@nestjs/common';",
+        "import { Reader, Other, SHARED, more } from './shared';",
+        // By the class `@Dependencies` lists at its place, plain JavaScript's way.
+        '@Injectable()',
+        '@Dependencies(Reader)',
+        'export class Poller { constructor(reader) { this.reader = reader; } poll() { return this.reader.health(); } }',
+        // By a token: a value made with `new`, a class `useClass` names, a token `useExisting` hands on.
+        '@Injectable()',
+        "export class Watch { constructor(@Inject('MIRROR') mirror, @Inject('ALIAS') keeper) { this.mirror = mirror; this.keeper = keeper; } run() { this.mirror.health(); return this.keeper.health(); } }",
+        '@Injectable()',
+        "export class Spare { constructor(@Inject('NONE') none) { this.none = none; } run() { return this.none.health(); } }",
+        '@Module({ providers: [...SHARED, ...more(), Poller, Watch, Spare] })',
+        'export class JobsModule {}',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = project.getSourceFileOrThrow('shared.js').getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['this.reader.health() runs']);
+    expect(sites('Mirror')).toEqual(['this.mirror.health() runs']);
+    expect(sites('Keeper')).toEqual(['this.keeper.health() runs']);
+    // A token nothing provides hands nothing read: no call of any class.
+    expect(sites('Other')).toEqual([]);
+  });
+
+  it('reads a component a wrapper takes after its options, and a rest of props as the props less the members named beside it (P353)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, jsx: 1 } });
+    const file = project.createSourceFile(
+      'a.jsx',
+      [
+        "import { memo } from 'ui-kit';",
+        'function withOptions(options, Component) { return Component; }',
+        'class Reader { health() { return 1; } }',
+        'class Other { health() { return 2; } }',
+        'const Board = withOptions({ name: "board" }, function Board({ reader }) { reader.health(); return null; });',
+        'const Chart = withOptions({ name: "chart" }, memo((props) => { props.reader.health(); return null; }));',
+        // A comparator written after the component is no component.
+        'const Row = memo((props) => null, (before, after) => { after.probe.health(); return true; });',
+        'function Badge({ probe }) { if (probe) probe.health(); return null; }',
+        'function Frame({ probe, reader, ...rest }) { rest.probe.health(); const { probe: kept } = rest; kept.health(); return <Badge {...rest} />; }',
+        'export const page = () => <div><Board reader={new Reader()} /><Chart reader={new Reader()} /><Row probe={new Other()} /><Frame probe={new Other()} reader={new Reader()} /></div>;',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = file.getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['props.reader.health() runs', 'reader.health() runs']);
+    // `rest` lacks `probe`: neither `rest.probe`, `kept` nor `Badge`'s `probe` from the spread holds the instance `Frame` is handed, and the comparator is handed nothing read.
+    expect(sites('Other')).toEqual([]);
+    const declaration = file.getVariableDeclarationOrThrow('Board');
+    const fn = componentWrittenIn(declaration.getInitializerOrThrow());
+    expect(fn?.getKind()).toBe(SyntaxKind.FunctionExpression);
+    expect(fn === undefined ? undefined : componentHeldBy(fn)).toBe(declaration);
+    const comparator = file.getVariableDeclarationOrThrow('Row').getInitializerIfKindOrThrow(SyntaxKind.CallExpression).getArguments()[1];
+    expect(comparator === undefined ? undefined : componentHeldBy(comparator)).toBeUndefined();
+  });
+
+  it('reads a provider list a function reached through an object builds (P353)', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true, checkJs: false, experimentalDecorators: true } });
+    project.createSourceFile(
+      'shared.js',
+      [
+        'export class Reader { health() { return 1; } }',
+        'export class Mirror { health() { return 2; } }',
+        'export class Keeper { health() { return 3; } }',
+        'export class Spare { health() { return 4; } }',
+        "export class Providers { static all() { return [{ provide: 'READER', useValue: new Reader() }]; } }",
+        "function spare() { return [{ provide: 'SPARE', useValue: new Spare() }]; }",
+        "export const registry = { mirror: () => [{ provide: 'MIRROR', useValue: new Mirror() }], keeper() { return [{ provide: 'KEEP', useClass: Keeper }]; }, spare };",
+      ].join('\n'),
+    );
+    project.createSourceFile(
+      'jobs.js',
+      [
+        "import { Inject, Injectable, Module } from '@nestjs/common';",
+        "import { Providers, registry } from './shared';",
+        '@Injectable()',
+        "export class Watch { constructor(@Inject('READER') reader, @Inject('MIRROR') mirror, @Inject('KEEP') keeper, @Inject('SPARE') spare) { this.reader = reader; this.mirror = mirror; this.keeper = keeper; this.spare = spare; }",
+        '  run() { this.reader.health(); this.mirror.health(); this.spare.health(); return this.keeper.health(); } }',
+        '@Module({ providers: [...Providers.all(), ...registry.mirror(), ...registry.keeper(), ...registry.spare(), Watch] })',
+        'export class JobsModule {}',
+      ].join('\n'),
+    );
+    const sites = (owner: string): string[] => {
+      const method = project.getSourceFileOrThrow('shared.js').getClassOrThrow(owner).getMethodOrThrow('health');
+      return callSitesOf(method).map((call) => `${call.getText()} ${dispatchOf(call, method)}`).sort();
+    };
+    expect(sites('Reader')).toEqual(['this.reader.health() runs']);
+    expect(sites('Mirror')).toEqual(['this.mirror.health() runs']);
+    expect(sites('Keeper')).toEqual(['this.keeper.health() runs']);
+    expect(sites('Spare')).toEqual(['this.spare.health() runs']);
+  });
+});
+
+describe('a function a library composes into another (P285)', () => {
+  /** The calls `callSitesOf` finds of `run`, as the text of each. */
+  const sitesOfRun = (files: Record<string, string>): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
+    const run = project.getSourceFileOrThrow('run.ts').getVariableDeclarationOrThrow('run');
+    return callSitesOf(run)
+      .map((call) => call.getText())
+      .sort();
+  };
+
+  it('is called by each call of what flow, a namespace pipe or flowRight makes of it', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'quiet.ts': [
+        `import { flow } from 'fp-ts/function';`,
+        `import * as R from 'ramda';`,
+        `import flowRight from 'lodash/flowRight';`,
+        `import { run } from './run';`,
+        `export const quiet = flow(run, (result) => result);`,
+        `export const piped = R.pipe(run, String);`,
+        `export const right = flowRight(String, run);`,
+        `export const twice = flow(quiet, String);`,
+      ].join('\n'),
+      'use.ts': [
+        `import { quiet, piped, right, twice } from './quiet';`,
+        `import { run } from './run';`,
+        `run({ query: 'a' }); quiet({ query: 'b' }); piped({ query: 'c' }); right({ query: 'd' }); twice({ query: 'e' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([`piped({ query: 'c' })`, `quiet({ query: 'b' })`, `right({ query: 'd' })`, `run({ query: 'a' })`, `twice({ query: 'e' })`]);
+  });
+
+  it('is called where the composition is called in place, and through a let, a field, a member and a composition handed on (P293)', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'held.ts': [
+        `import { flow } from 'lodash';`,
+        `import { run } from './run';`,
+        `flow(run, String)({ query: 'a' });`,
+        `let later = flow(run, String);`,
+        `later({ query: 'b' });`,
+        `export const helpers = { quiet: flow(run, String) };`,
+        `helpers.quiet({ query: 'c' });`,
+        `export class Store {`,
+        `  load = flow(run, String);`,
+        `  save: (args: { query: string }) => string;`,
+        `  constructor() { this.save = flow(run, String); }`,
+        `  go() { this.load({ query: 'd' }); this.save({ query: 'e' }); }`,
+        `}`,
+        `flow(flow(run, String), String)({ query: 'f' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([
+      `flow(flow(run, String), String)({ query: 'f' })`,
+      `flow(run, String)({ query: 'a' })`,
+      `helpers.quiet({ query: 'c' })`,
+      `later({ query: 'b' })`,
+      `this.load({ query: 'd' })`,
+      `this.save({ query: 'e' })`,
+    ]);
+  });
+
+  it("is called through Remeda's data-last pipe, and through a composition a module exports as its default (P297)", () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'remeda.ts': [
+        `import { pipe, piped } from 'remeda';`,
+        `import * as R from 'remeda';`,
+        `import { run } from './run';`,
+        `export const quiet = piped(run, String);`,
+        `export const older = R.createPipe(run, String);`,
+        // Remeda's own pipe hands a value first: no composition.
+        `export const applied = pipe(run, (fn) => fn);`,
+      ].join('\n'),
+      'default.ts': [`import flow from 'lodash/flow';`, `import { run } from './run';`, `export default flow(run, String);`].join('\n'),
+      'use.ts': [
+        `import { applied, older, quiet } from './remeda';`,
+        `import loadQuiet from './default';`,
+        `quiet({ query: 'a' }); older({ query: 'b' }); applied({ query: 'c' }); loadQuiet({ query: 'd' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([`loadQuiet({ query: 'd' })`, `older({ query: 'b' })`, `quiet({ query: 'a' })`]);
+  });
+
+  it('is not called through a value-first pipe, a function handed later, or a composer of no library', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'other.ts': [
+        `import { pipe, flow } from 'fp-ts/function';`,
+        `import { run } from './run';`,
+        `declare const compose: (...fns: unknown[]) => (args: unknown) => unknown;`,
+        `export const applied = pipe(run, (fn) => fn);`,
+        `export const later = flow(String, run);`,
+        `export const own = compose(String, run);`,
+        `applied({ query: 'a' }); later('b'); own('c');`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([]);
+  });
+});
+
+describe('a value written straight after a host (P312)', () => {
+  const after = (source: string) => {
+    const value = valueAfterHost(address(parse(source)));
+    return value === undefined ? undefined : { text: value.getText(), own: continuesHost(value) };
+  };
+
+  it('is found after the host with a path after it, and is the host\'s own only where everything it is followed to is a port or the rest of its name', () => {
+    expect(after("function go(t: string) { return http.get(`https://shop${t}/orders`); } go('.example'); go('-eu.example');")).toEqual({ text: 't', own: true });
+    expect(after("function go(v: string) { return http.get(`https://shop.example${v}/orders`); } go('/v1'); go('/v2');")).toEqual({ text: 'v', own: false });
+    expect(after("function go(p: string) { return http.get(`http://localhost${p}/orders`); } go(':3000'); go(':3001');")).toEqual({ text: 'p', own: true });
+    expect(after("function go(p: string) { return http.get(`http://localhost${p}/orders`); } go(':3000'); go('/v1');")).toEqual({ text: 'p', own: false });
+    expect(after('function go(p: number) { return http.get(`http://localhost${p}/orders`); }')).toEqual({ text: 'p', own: true });
+    expect(after("declare const on: boolean; declare const n: number; function go() { return http.get('http://localhost' + (on ? `:${n}` : '') + '/orders'); }")).toEqual({ text: "on ? `:${n}` : ''", own: true });
+    expect(after('declare const x: string; function go() { return http.get(`https://shop.example${x}/orders`); }')).toEqual({ text: 'x', own: false });
+  });
+
+  it('is none after a colon, a dot or a dash, after a slash, or with nothing after it', () => {
+    expect(after('declare const x: string; function go() { return http.get(`http://localhost:${x}/orders`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://calendar.example.${x}/api/v1`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://shop-${x}/orders`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://shop.example/${x}/orders`); }')).toBeUndefined();
+    expect(after('declare const x: string; function go() { return http.get(`https://shop.example${x}`); }')).toBeUndefined();
+  });
+});
+
+describe('a host or a port the evaluator does not read, read as the address readers read it (P318)', () => {
+  it('locates a value after a host a method answers, and reads a port a class keeps as one', () => {
+    const behind = address(
+      parse(`
+        class Ports { static stock = ':4700'; }
+        class Probe {
+          origin() { return 'http://localhost'; }
+          check(port: string) { return http.get(\`\${this.origin()}\${port}/health\`); }
+        }
+        new Probe().check(':4600');
+        new Probe().check(Ports.stock);
+      `),
+    );
+    const value = valueAfterHost(behind);
+    expect(value?.getText()).toBe('port');
+    expect(continuesHost(value!)).toBe(true);
+    // A reader that reads nothing the evaluator does not: the host is not located.
+    expect(valueAfterHost(behind, () => null)).toBeUndefined();
+  });
+
+  it("finds the value in a host's port place, and nothing where the text before it is no host and a colon", () => {
+    const port = (source: string) => valueAtPort(address(parse(source)))?.getText();
+    expect(port('function go(port: number) { return http.get(`http://localhost:${port}/health`); }')).toBe('port');
+    expect(port("function go(port: number) { return http.get('http://localhost:' + port + '/health'); }")).toBe('port');
+    expect(port('function go(port: number) { return http.get(`http://localhost${port}/health`); }')).toBeUndefined();
+    expect(port('function go(id: number) { return http.get(`http://localhost:4600/orders/${id}`); }')).toBeUndefined();
+  });
+
+  it('reads a span a class writes down: a method answering one string, a field holding one, a host only at the opening', () => {
+    const file = parse(`
+      class Api {
+        static origin = 'https://shop.example';
+        static prefix = '/v1';
+        version() { return '/v2'; }
+        go() { return http.get(\`\${Api.origin}\${Api.prefix}\${this.version()}\`); }
+      }
+    `);
+    const [origin, prefix, version] = (address(file) as TemplateExpression).getTemplateSpans().map((span) => span.getExpression());
+    expect(writtenSpan(origin!, true)).toBe('https://shop.example');
+    expect(writtenSpan(origin!, false)).toBeNull();
+    expect(writtenSpan(prefix!, false)).toBe('/v1');
+    expect(writtenSpan(version!, false)).toBe('/v2');
+  });
+});
+
+describe('a number a port place holds, and one written straight after a host (P324)', () => {
+  it('reads a number a class or a module keeps: a field, a getter, a field the constructor writes, a method answering one', () => {
+    const file = parse(`
+      const KEPT = 4900;
+      class Ports {
+        static stock = 4700;
+        static get catalog() { return 4600; }
+        static label = ':4700';
+      }
+      class Local {
+        port: number;
+        constructor() { this.port = 4800; }
+        other() { return 5000; }
+        go() { return http.get(\`\${Ports.stock}\${Ports.catalog}\${KEPT}\${this.port}\${this.other()}\${Ports.label}\`); }
+      }
+    `);
+    const spans = (address(file) as TemplateExpression).getTemplateSpans().map((span) => writtenNumber(span.getExpression()));
+    expect(spans).toEqual(['4700', '4600', '4900', '4800', '5000', null]);
+  });
+
+  it('finds a number glued to a whole host, through a template or a + chain, and nothing after a colon, a dot or before more of the name', () => {
+    const glued = (source: string) => {
+      const found = numberAfterHost(address(parse(source)));
+      return found === undefined ? undefined : [found.host, found.number];
+    };
+    expect(glued('const PORT = 4600; http.get(`http://localhost${PORT}/health`);')).toEqual(['localhost', '4600']);
+    expect(glued("class P { static port = 4700; } http.get('http://127.0.0.1' + P.port + '/health');")).toEqual(['127.0.0.1', '4700']);
+    expect(glued('const PORT = 4600; http.get(`http://localhost:${PORT}/health`);')).toBeUndefined();
+    expect(glued("const PORT = ':4600'; http.get(`http://localhost${PORT}/health`);")).toBeUndefined();
+    expect(glued('const N = 3; http.get(`http://node${N}.cluster.example/jobs`);')).toBeUndefined();
+    expect(glued('const N = 3; http.get(`http://shop.example/items/${N}`);')).toBeUndefined();
+  });
+
+  it('says a port place, and reads a number there when an address is split at a parameter, never one in the path', () => {
+    expect(atPortPlace('http://localhost:')).toBe(true);
+    expect(atPortPlace('http://localhost')).toBe(false);
+    expect(atPortPlace('http://localhost:4600/items:')).toBe(false);
+    const file = parse(`
+      class Ports { static stock = 4700; static page = 20; }
+      function go(path: string) { return http.get(\`http://localhost:\${Ports.stock}/\${Ports.page}\${path}\`); }
+    `);
+    const split = splitAtParameter(address(file), { readSetting: () => null })!;
+    // The page size is the path's: a hole, never read as the number it holds.
+    expect(split.before).toBe(`http://localhost:4700/${UNREAD_SPAN}`);
+  });
+
+  it('builds the row said of a number with no colon: action after localhost or numbers, info after a name', () => {
+    const local = portWithoutColonRow({ number: '4600', host: 'localhost' }, 'a.ts', 3, 'fetch(x)');
+    expect([local.reason, local.level, local.meta]).toEqual(['address-port-without-colon', undefined, { number: '4600', host: 'localhost' }]);
+    expect(portWithoutColonRow({ number: '3', host: 'worker' }, 'a.ts', 3, 'fetch(x)').level).toBe('info');
   });
 });

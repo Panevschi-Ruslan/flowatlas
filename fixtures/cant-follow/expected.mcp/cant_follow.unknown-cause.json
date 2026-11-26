@@ -22,6 +22,7 @@
     "other-type",
     "re-export-missing",
     "seen-not-in-code",
+    "table-rows-unread",
     "this-outside-class",
     "token-ambiguous",
     "token-not-provided",

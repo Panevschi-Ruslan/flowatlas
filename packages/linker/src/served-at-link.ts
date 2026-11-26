@@ -1,0 +1,154 @@
+import { atChosenHost, matchServedAt, SERVED_AT_META, servedAtOf, type GraphNode, type ServedAt } from '@flowatlas/core';
+import type { Finding } from './http-link.js';
+import { cmp } from './order.js';
+import { isMatch, matchRoute } from './route-match.js';
+
+/**
+ * A request whose address is written out at the place a deployment's API is
+ * served, with the part the platform assigns in it (P284).
+ *
+ * `https://<id>.<gateway host of a region>/<stage>/orders` names an API by an
+ * id no file of the project holds. The routes of every API a deployment
+ * declares record where it is served (`servedAt`): the host with that id left
+ * open, and the stage in front of every route. Where exactly one API of the
+ * project is served at the host and stage the request writes, it is taken as
+ * that API's, the path after the stage asked of its routes - a guess, because
+ * another API of the same place would read the same, and the edge and a note
+ * say so. Of several APIs served there, the ones with a route that answers
+ * are asked before the rest, a stage the deployment fixes before one it
+ * leaves to whoever runs it, and of those one it deploys to by default at the
+ * stage the request writes before the rest (P294); where several are still
+ * left, a row names them.
+ */
+
+/** The API a request was taken as, and what it asks of it. */
+export interface ServedApi {
+  readonly service: string;
+  readonly api: string;
+  /** The path asked of the API, after its stage. */
+  readonly path: string;
+  /** The routes of that API. */
+  readonly routes: readonly GraphNode[];
+  readonly served: ServedAt;
+  /** The segments the request writes where the stage is. */
+  readonly written: readonly string[];
+  /** The address as the request writes it. */
+  readonly address: string;
+}
+
+export type ServedAnswer =
+  | { readonly kind: 'one'; readonly found: ServedApi }
+  | { readonly kind: 'several'; readonly host: string; readonly apis: readonly string[] };
+
+/** How well a place open at a chosen stage says the request's: the stage it writes, then the one nothing chooses (P308). */
+const rankOf = (served: ServedAt, written: readonly string[]): number =>
+  (served.chosenDefault !== undefined && served.chosenDefault === written.join('/') ? 2 : 0) + (served.chosenIn === undefined ? 1 : 0);
+
+/** Every route of every service, read as where its API is served. */
+export const apiServedAt = (
+  method: string,
+  host: string,
+  path: string,
+  address: string,
+  services: readonly string[],
+  routesOf: (service: string) => readonly GraphNode[] | undefined,
+): ServedAnswer | undefined => {
+  const byApi = new Map<string, { found: ServedApi; routes: GraphNode[]; exact: boolean }>();
+  for (const service of services) {
+    for (const route of routesOf(service) ?? []) {
+      for (const served of servedAtOf(route.meta?.[SERVED_AT_META])) {
+        const match = matchServedAt(host, path, served);
+        if (match === undefined) continue;
+        // An HTTP API and a REST API of one service may share a name; where each is served tells them apart.
+        const key = [service, served.api, served.host, ...served.base].join('\0');
+        const at = byApi.get(key) ?? {
+          found: { service, api: served.api, path: match.path, routes: [], served, written: match.written, address },
+          routes: [],
+          exact: !served.base.includes('*') && served.chosenHost === undefined,
+        };
+        // One API open at a stage the deployment chooses may name several it
+        // takes - a Terraform workspace's each (P308): the one the request
+        // writes is said, else the one where nothing chooses.
+        if (byApi.has(key) && rankOf(served, match.written) > rankOf(at.found.served, at.found.written)) {
+          at.found = { ...at.found, path: match.path, served, written: match.written };
+        }
+        if (!at.routes.includes(route)) at.routes.push(route);
+        byApi.set(key, at);
+      }
+    }
+  }
+  const answers = (each: { found: ServedApi; routes: GraphNode[] }): boolean => {
+    const found = matchRoute(method, each.found.path, each.routes);
+    return isMatch(found) || found.reason === 'ambiguous';
+  };
+  // An API reached only because its region is left open - the address names
+  // another than the one it is deployed to by default - is taken only where it
+  // has a route for the request: an address of another region with no such
+  // route is more likely somebody else's (P298).
+  const all = [...byApi.values()].filter((each) => each.found.served.chosenHost === undefined || atChosenHost(host, each.found.served) || answers(each));
+  // An API with a route for the request, before one without (an HTTP API at
+  // its default stage is served at every path of the host its REST API is).
+  const answering = all.filter(answers);
+  const among = answering.length > 0 ? answering : all;
+  const exact = among.filter((each) => each.exact);
+  // Of the stages left to whoever deploys, the ones deployed to where nothing chooses at the stage the request writes (P294),
+  // and of the regions so left, the one deployed to where nothing chooses at the host it writes (P298).
+  const byDefault = among.filter((each) => {
+    if (each.exact) return false;
+    const { served, written } = each.found;
+    const stageHolds = !served.base.includes('*') || (served.chosenDefault !== undefined && written.join('/') === served.chosenDefault);
+    return stageHolds && (served.chosenHost === undefined || atChosenHost(host, served));
+  });
+  const asked = exact.length > 0 ? exact : byDefault.length > 0 ? byDefault : among;
+  const [only] = asked;
+  if (only === undefined) return undefined;
+  if (asked.length === 1) return { kind: 'one', found: { ...only.found, routes: only.routes } };
+  return { kind: 'several', host, apis: asked.map((each) => `${each.found.service} ${each.found.api}`).sort(cmp) };
+};
+
+/** The place an API is served, as a person reads it: `*.gateway.example.test/prod`. */
+const placeOf = (served: ServedAt): string => `${served.host}${served.base.map((segment) => `/${segment}`).join('')}`;
+
+/**
+ * The stage a place chosen when the deployment is run is at, as a person
+ * reads it: the one where none is given, or the one a choice deploys to -
+ * `live in the workspace production` - only the default being the stage
+ * where none is given (P308).
+ */
+const chosenStage = (served: ServedAt): string =>
+  served.chosenDefault === undefined
+    ? 'one where none is given'
+    : served.chosenIn === undefined
+      ? `${served.chosenDefault} where none is given`
+      : `${served.chosenDefault} in ${served.chosenIn}`;
+
+/** What is said beside a request taken as an API's by where it is served. `info`: nothing is wrong. */
+export const servedAtFinding = (found: ServedApi): Finding => {
+  const chosen = found.served.base.includes('*');
+  const stage = found.written.join('/');
+  return {
+    reason: 'base-url-from-files',
+    level: 'info',
+    message:
+      `${found.address} names its API by an id no file holds; it is taken as ${found.api} of ${found.service}, the API of the project served at ${placeOf(found.served)} with a route for it` +
+      (chosen
+        ? `, at whatever stage it is run with (${chosenStage(found.served)}), so ${stage === '' ? 'the address' : `the stage ${stage}`} is taken as one of its`
+        : '') +
+      // A custom domain one workspace maps the API onto, not the one where none is selected (P322).
+      (!chosen && found.served.chosenIn !== undefined ? `, the domain ${found.served.chosenIn} maps it onto` : '') +
+      (found.served.chosenHost === undefined
+        ? ''
+        : found.served.hostChosenBy === undefined
+          ? `, in whatever region it is deployed to (${found.served.chosenHost} where none is given)`
+          : `, at whatever host ${found.served.hostChosenBy} names (${found.served.chosenHost} where none is given)`) +
+      `, and the request as one for ${found.path} on it`,
+    hint: 'Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.',
+  };
+};
+
+/** What is said where several APIs are served where the request is written. */
+export const servedAmbiguousFinding = (method: string, path: string, host: string, apis: readonly string[]): Finding => ({
+  reason: 'ambiguous-route-target',
+  message: `${method} ${host}${path} names its API by an id no file holds, and ${apis.length} APIs of the project are served there: ${apis.join(', ')}`,
+  hint: 'Set services[].hosts of the service whose API it is to this host, or annotate the request with @flowatlas-calls <service> <METHOD> <path>.',
+});

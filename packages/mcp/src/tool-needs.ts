@@ -33,6 +33,8 @@ export interface ToolFacts {
   sources: boolean;
   /** The server was handed the pattern tester. */
   tester: boolean;
+  /** The server was handed the change checker, which builds the changed services (P387). */
+  changer?: boolean;
 }
 
 interface NeedRow {
@@ -112,6 +114,12 @@ export const NEEDS = {
     missing: 'the server was started without the readers that run a pattern',
     appears: 'under flowatlas mcp',
   },
+  changer: {
+    from: 'server options',
+    holds: (facts) => facts.graph !== undefined && facts.sources && facts.changer === true,
+    missing: 'the server was started without a configuration and the builder that compares the working tree',
+    appears: 'under flowatlas mcp with a configuration',
+  },
 } as const satisfies Record<string, NeedRow>;
 
 export type Need = keyof typeof NEEDS;
@@ -144,6 +152,7 @@ export const TOOL_NEEDS = {
   what_changed: ['changes'],
   check_rules: ['rules'],
   test_pattern: ['tester'],
+  check_change: ['changer'],
   hot_paths: ['observed'],
   slow_steps: ['observed'],
   trace_for: ['observed'],

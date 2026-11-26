@@ -1,0 +1,53 @@
+{
+  "Comment": "Fulfils an order: reserves the stock, charges the card, waits for a person to approve a large order, and ships it.",
+  "StartAt": "ReserveStock",
+  "States": {
+    "ReserveStock": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "shop-reserve-stock",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.reservation",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "ChargeCard"
+    },
+    "ChargeCard": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:eu-west-1:000000000000:function:shop-bill-order",
+      "ResultPath": "$.charge",
+      "Next": "AwaitApproval"
+    },
+    "AwaitApproval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      "Parameters": {
+        "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/000000000000/shop-approvals",
+        "MessageBody": {
+          "orderId.$": "$.orderId",
+          "token.$": "$$.Task.Token"
+        }
+      },
+      "ResultPath": "$.approval",
+      "Next": "ShipParcel"
+    },
+    "ShipParcel": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Parameters": {
+        "Cluster": "shop-shipping",
+        "TaskDefinition": "shop-label-printer"
+      },
+      "TimeoutSeconds": 900,
+      "End": true
+    }
+  }
+}

@@ -4,7 +4,9 @@
     "type": "method",
     "label": "OrdersService.findOne",
     "loc": "src/orders/orders.service.ts:25",
-    "service": "orders"
+    "service": "orders",
+    "reach": "alive",
+    "from": "GET /orders/:param"
   },
   "callers": [
     {
@@ -12,7 +14,10 @@
         "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
         "type": "method",
         "label": "OrdersController.findOne",
-        "loc": "src/orders/orders.controller.ts:25"
+        "loc": "src/orders/orders.controller.ts:25",
+        "endLine": 28,
+        "reach": "alive",
+        "from": "GET /orders/:param"
       },
       "edge": {
         "type": "calls",
@@ -29,7 +34,8 @@
             "type": "entry",
             "label": "GET /orders/:param",
             "loc": "src/orders/orders.controller.ts:25",
-            "kind": "http"
+            "kind": "http",
+            "reach": "alive"
           },
           "edge": {
             "type": "handles",
@@ -46,7 +52,9 @@
                 "type": "http_out",
                 "label": "GET /orders/:param",
                 "loc": "src/clients/orders.client.ts:33",
-                "service": "gateway"
+                "service": "gateway",
+                "reach": "alive",
+                "from": "GET /orders/:param"
               },
               "edge": {
                 "type": "http_calls",
@@ -59,7 +67,10 @@
                     "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
                     "type": "method",
                     "label": "OrdersClient.fetchOne",
-                    "loc": "src/clients/orders.client.ts:32"
+                    "loc": "src/clients/orders.client.ts:32",
+                    "endLine": 34,
+                    "reach": "alive",
+                    "from": "GET /orders/:param"
                   },
                   "edge": {
                     "type": "calls",
@@ -71,7 +82,10 @@
                         "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
                         "type": "method",
                         "label": "OrdersController.findOne",
-                        "loc": "src/orders/orders.controller.ts:30"
+                        "loc": "src/orders/orders.controller.ts:30",
+                        "endLine": 33,
+                        "reach": "alive",
+                        "from": "GET /orders/:param"
                       },
                       "edge": {
                         "type": "calls",
@@ -88,7 +102,8 @@
                             "type": "entry",
                             "label": "GET /orders/:param",
                             "loc": "src/orders/orders.controller.ts:30",
-                            "kind": "http"
+                            "kind": "http",
+                            "reach": "alive"
                           },
                           "edge": {
                             "type": "handles",
@@ -111,20 +126,37 @@
       ]
     }
   ],
-  "truncated": "5 more nodes past depth 6; raise depth",
-  "stoppedBy": [
-    "depth"
+  "waysIn": [
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:30",
+      "service": "gateway",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 6,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40",
+      "service": "gateway",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 10,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+    }
   ],
-  "frontier": [
-    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
-    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
-    "entry:billing:http:POST:/invoices",
-    "entry:gateway:http:GET:/orders/:param"
+  "complete": false,
+  "left": [
+    "filter: 4 ways in in other services left out (service: gateway)"
   ],
   "next": [
-    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 12, service: \"gateway\"})",
-    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
-    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})",
-    "impact({symbol: \"entry:orders:http:GET:/orders/:param\"})"
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})"
   ]
 }

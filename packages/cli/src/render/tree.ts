@@ -107,8 +107,9 @@ export const renderTree = (tree: FlowNode, options: RenderOptions): string => {
       const at = guardLoc(guard);
       push(
         depth + 1,
-        `${cell(guardPrefixFor(guard.kind, ascii))}${paint(guard.label)}`,
-        at === undefined ? '' : `${service === undefined ? '' : `${service}/`}${at}`,
+        // A check for some of what the step answers says which (P252).
+        `${cell(guardPrefixFor(guard.kind, ascii))}${paint(guard.label)}${guard.for === undefined ? '' : faint(` for ${guard.for.join(', ')}`)}`,
+        at === undefined ? '' : `${(guard.service ?? service) === undefined ? '' : `${guard.service ?? service}/`}${at}`,
       );
     }
 

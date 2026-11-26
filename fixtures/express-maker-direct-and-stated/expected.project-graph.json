@@ -1,0 +1,896 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:52.872Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/catalog.routes.ts:GET /@23",
+      "type": "function",
+      "label": "GET /@23",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "api#src/catalog.routes.ts:GET /products@12",
+      "type": "function",
+      "label": "GET /products@12",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "api#src/orders.controller.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "api",
+      "file": "src/orders.controller.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "api#src/orders.controller.ts:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "api",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "unknown"
+            },
+            {
+              "name": "res",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 9,
+            "why": "handed to res.status(201).json"
+          }
+        ]
+      }
+    },
+    {
+      "id": "api#src/server.ts:GET /health@24",
+      "type": "function",
+      "label": "GET /health@24",
+      "repo": "api",
+      "file": "src/server.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "api#src/server.ts:GET /stats@19",
+      "type": "function",
+      "label": "GET /stats@19",
+      "repo": "api",
+      "file": "src/server.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "api#src/server.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "api",
+      "file": "src/server.ts",
+      "line": 14,
+      "kind": "function"
+    },
+    {
+      "id": "entry:api:http:GET:/api/admin/stats",
+      "type": "entry",
+      "label": "GET /api/admin/stats",
+      "repo": "api",
+      "file": "src/server.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin/stats",
+        "rawPath": "/api/admin/stats",
+        "adapter": "express-routes",
+        "registration": "admin.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/catalog/products",
+      "type": "entry",
+      "label": "GET /api/catalog/products",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/catalog/products",
+        "rawPath": "/api/catalog/products",
+        "adapter": "express-routes",
+        "registration": "catalogRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/catalog/reviews",
+      "type": "entry",
+      "label": "GET /api/catalog/reviews",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/catalog/reviews",
+        "rawPath": "/api/catalog/reviews",
+        "adapter": "express-routes",
+        "registration": "reviewsRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "api",
+      "file": "src/orders.routes.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "api",
+      "file": "src/server.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "api",
+      "file": "src/orders.routes.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "express-routes",
+        "registration": "ordersRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 28
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 5,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:adminStats",
+      "type": "function",
+      "label": "adminStats",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:listReviews",
+      "type": "function",
+      "label": "listReviews",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/api.ts:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "total",
+              "type": "number"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:13:35",
+      "type": "ui_api_call",
+      "label": "GET /api/catalog/products",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/catalog/products",
+        "path": "/api/catalog/products",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:15:34",
+      "type": "ui_api_call",
+      "label": "GET /api/catalog/reviews",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/catalog/reviews",
+        "path": "/api/catalog/reviews",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:17:33",
+      "type": "ui_api_call",
+      "label": "GET /api/admin/stats",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/admin/stats",
+        "path": "/api/admin/stats",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:5:33",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/api.ts:8:3",
+      "type": "ui_api_call",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "src/api.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": "{total:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "total"
+        ],
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:GET:/api/admin/stats",
+      "to": "api#src/server.ts:GET /stats@19",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{orders:number}",
+      "file": "src/server.ts",
+      "line": 19,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/admin/stats",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/catalog/products",
+      "to": "api#src/catalog.routes.ts:GET /products@12",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{sku:string}[]",
+      "file": "src/catalog.routes.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/catalog/products",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/catalog/reviews",
+      "to": "api#src/catalog.routes.ts:GET /@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog.routes.ts",
+      "line": 23,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/catalog/reviews",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/orders",
+      "to": "api#src/orders.controller.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}[]",
+      "file": "src/orders.controller.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/orders",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/server.ts:GET /health@24",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 24,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/orders",
+      "to": "api#src/orders.controller.ts:placeOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/orders",
+      "to": "api#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "shop#src/api.ts:adminStats",
+      "to": "ui_api_call:shop#src/api.ts:17:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 17
+    },
+    {
+      "from": "shop#src/api.ts:listOrders",
+      "to": "ui_api_call:shop#src/api.ts:5:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#src/api.ts:listProducts",
+      "to": "ui_api_call:shop#src/api.ts:13:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 13
+    },
+    {
+      "from": "shop#src/api.ts:listReviews",
+      "to": "ui_api_call:shop#src/api.ts:15:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#src/api.ts:placeOrder",
+      "to": "ui_api_call:shop#src/api.ts:8:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:13:35",
+      "to": "entry:api:http:GET:/api/catalog/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/api.ts",
+      "line": 13,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:15:34",
+      "to": "entry:api:http:GET:/api/catalog/reviews",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/api.ts",
+      "line": 15,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:17:33",
+      "to": "entry:api:http:GET:/api/admin/stats",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/api.ts",
+      "line": 17,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:5:33",
+      "to": "entry:api:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 5,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/api.ts:8:3",
+      "to": "entry:api:http:POST:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 8,
+      "params": [
+        "{total:number}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/catalog.routes.ts",
+      "line": 13,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 7,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /products@12 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/catalog.routes.ts",
+                "line": 13,
+                "symbol": "GET /products@12 -> res.json"
+              },
+              {
+                "file": "src/catalog.routes.ts",
+                "line": 24,
+                "symbol": "GET /@23 -> res.json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 20,
+                "symbol": "GET /stats@19 -> res.json"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "express",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/orders.controller.ts",
+                "line": 5,
+                "symbol": "listOrders -> res.json"
+              },
+              {
+                "file": "src/orders.controller.ts",
+                "line": 9,
+                "symbol": "placeOrder -> res.status(201).json"
+              },
+              {
+                "file": "src/orders.controller.ts",
+                "line": 9,
+                "symbol": "placeOrder -> res.status"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/orders.controller.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Request",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/orders.controller.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Response",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Request",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Response",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      },
+      "service": "api"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "services": [
+    {
+      "name": "lending-api",
+      "repo": "./lending-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["LENDING_API_URL"]
+    },
+    {
+      "name": "lending-gateway",
+      "repo": "./lending-gateway",
+      "type": "nestjs",
+      "baseUrlEnv": ["LENDING_GATEWAY_URL"]
+    },
+    {
+      "name": "reader-web",
+      "repo": "./reader-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "lending-api" }
+    },
+    {
+      "name": "desk-bot",
+      "repo": "./desk-bot",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

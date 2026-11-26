@@ -1,0 +1,304 @@
+import {
+  DISCRIMINATOR_META,
+  FORWARDS_UNREAD_META,
+  isMessageTypeNode,
+  makeMessageTypeId,
+  MESSAGE_TYPE_KIND,
+  MESSAGE_TYPE_UNREAD_META,
+  messageTypesOf,
+  restSelectionsOf,
+  SELECTED_BY_META,
+  SELECTION_DIFFERS_META,
+  selectionsOf,
+  SELECTS_META,
+  UNREACHED_META,
+  type GraphEdge,
+  type GraphNode,
+  type RestSelection,
+  type Selection,
+  type Unresolved,
+} from '@flowatlas/core';
+import { channelsUnknown, messageTypeFacts, unselectedSaid, type MessageTypeLookup } from './analysis/message-types.js';
+import { EVERY_CHANNEL_VIA } from './every-channel-link.js';
+import { markTypeNamesWritten, type TypeNameSources } from './type-names.js';
+import { cmp, edgeKey } from './order.js';
+
+/**
+ * Draws the types of message each channel carries (P358), once the whole
+ * project is here.
+ *
+ * Each repository's reader recorded what it read where it read it: the type a
+ * publish writes, on its producer, and the types a consumer's handler chooses
+ * on, on its consumer. Which channel either is on is only settled here - a
+ * channel joined across repositories, a pattern matched against every channel,
+ * a stream a browser holds open - so the types are drawn here too: a type node
+ * per channel and value, every publish of it `emits` to it, every handler
+ * that selects it `consumes` from it. The parent channel's own edges stay as
+ * they were.
+ *
+ * A type published on a channel whose consumers choose by type, and chosen by
+ * none of them, is a finding: the design says each type has its handler, and
+ * this one has none.
+ */
+export const joinMessageTypes = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>, sources?: TypeNameSources): Unresolved[] => {
+  const from = new Map<string, GraphEdge[]>();
+  const to = new Map<string, GraphEdge[]>();
+  const index = (edge: GraphEdge): void => {
+    from.set(edge.from, [...(from.get(edge.from) ?? []), edge]);
+    to.set(edge.to, [...(to.get(edge.to) ?? []), edge]);
+  };
+  for (const edge of edges.values()) index(edge);
+  const add = (edge: GraphEdge): void => {
+    const key = edgeKey(edge);
+    if (edges.has(key)) return;
+    edges.set(key, edge);
+    index(edge);
+  };
+
+  const channelOf = (id: string): GraphNode | undefined => {
+    const node = nodes.get(id);
+    return node?.type === 'channel' && !isMessageTypeNode(node) ? node : undefined;
+  };
+  const typeNode = (channel: GraphNode, value: string, discriminator: unknown, at: GraphNode): GraphNode => {
+    const id = makeMessageTypeId(channel.id, value);
+    const existing = nodes.get(id);
+    if (existing !== undefined) return existing;
+    const node: GraphNode = {
+      id,
+      type: 'channel',
+      label: `${channel.label}#${value}`,
+      repo: at.repo,
+      ...(at.file === undefined ? {} : { file: at.file }),
+      ...(at.line === undefined ? {} : { line: at.line }),
+      kind: MESSAGE_TYPE_KIND,
+      meta: {
+        channel: channel.id,
+        messageType: value,
+        ...(typeof discriminator === 'string' ? { [DISCRIMINATOR_META]: discriminator } : {}),
+        ...(channel.meta?.['channelKind'] === undefined ? {} : { channelKind: channel.meta['channelKind'] }),
+      },
+    };
+    nodes.set(id, node);
+    return node;
+  };
+
+  const sorted = [...nodes.values()].sort((a, b) => cmp(a.id, b.id));
+  for (const producer of sorted) {
+    if (producer.type !== 'producer') continue;
+    const types = messageTypesOf(producer);
+    if (types.length === 0) continue;
+    for (const edge of from.get(producer.id) ?? []) {
+      if (edge.type !== 'emits') continue;
+      const channel = channelOf(edge.to);
+      if (channel === undefined) continue;
+      for (const value of types) {
+        const type = typeNode(channel, value, producer.meta?.[DISCRIMINATOR_META], producer);
+        add({
+          from: producer.id,
+          to: type.id,
+          type: 'emits',
+          confidence: edge.confidence,
+          ...(edge.file === undefined ? {} : { file: edge.file }),
+          ...(edge.line === undefined ? {} : { line: edge.line }),
+          ...(edge.params === undefined ? {} : { params: [...edge.params] }),
+          ...(edge.returns === undefined ? {} : { returns: edge.returns }),
+          ...(edge.meta?.['because'] === undefined ? {} : { meta: { because: edge.meta['because'] } }),
+        });
+      }
+    }
+  }
+  // A per-scope hub's own channel that is handed other channels by name stands
+  // for their messages (P362): where nothing written to it says a type, the
+  // types its screens choose are drawn on those channels, not on it.
+  const typed = (channel: GraphNode): boolean =>
+    !Array.isArray(channel.meta?.['forwards']) ||
+    (to.get(channel.id) ?? []).some((edge) => edge.type === 'emits' && messageTypesOf(nodes.get(edge.from)).length > 0);
+  /**
+   * What the publishes on a channel say of the types it carries (P362): the
+   * types read, and whether any publish's type was not read. A consumer joined
+   * to several channels through one stream selects a type on each only where
+   * it may be there: a channel whose publishes include it, or one with a
+   * publish whose type was not read (a guess); a channel none of whose
+   * publishes were read for a type keeps every type selected on it.
+   */
+  const published = new Map<string, { types: Set<string>; unread: boolean }>();
+  const publishedOn = (channelId: string): { types: Set<string>; unread: boolean } => {
+    const known = published.get(channelId);
+    if (known !== undefined) return known;
+    const types = new Set<string>();
+    let unread = false;
+    for (const edge of to.get(channelId) ?? []) {
+      if (edge.type !== 'emits') continue;
+      const producer = nodes.get(edge.from);
+      for (const value of messageTypesOf(producer)) types.add(value);
+      if (typeof producer?.meta?.[MESSAGE_TYPE_UNREAD_META] === 'string') unread = true;
+    }
+    const made = { types, unread };
+    published.set(channelId, made);
+    return made;
+  };
+  // Asked the way `dead` and the server ask it: by the finding below, and by the else handlers' remaining types.
+  const lookup: MessageTypeLookup = {
+    node: (id) => nodes.get(id),
+    edgesFrom: (id, types) => (from.get(id) ?? []).filter((edge) => types === undefined || types.includes(edge.type)),
+    edgesTo: (id, types) => (to.get(id) ?? []).filter((edge) => types === undefined || types.includes(edge.type)),
+    nodesByType: (type) => [...nodes.values()].filter((node) => node.type === type),
+  };
+
+  /**
+   * Every type the channels a consumer receives carry, where that is known
+   * whole (P400): each channel's publishes all say their type and some do,
+   * and no stream route or hub feeding it relays a channel not read.
+   * Undefined otherwise.
+   */
+  const remainingOn = (consumer: GraphNode): Set<string> | undefined => {
+    const consuming = (to.get(consumer.id) ?? []).filter((edge) => edge.type === 'consumes' && edge.meta?.['via'] !== EVERY_CHANNEL_VIA);
+    const channels = [...new Map(consuming.flatMap((edge) => channelOf(edge.from) ?? []).map((channel) => [channel.id, channel] as const)).values()];
+    if (channels.length === 0 || channelsUnknown(lookup, consuming) !== undefined) return undefined;
+    const types = new Set<string>();
+    for (const channel of channels) {
+      if (!typed(channel) || typeof channel.meta?.[FORWARDS_UNREAD_META] === 'number') return undefined;
+      const carried = publishedOn(channel.id);
+      if (carried.unread || carried.types.size === 0) return undefined;
+      for (const value of carried.types) types.add(value);
+    }
+    return types;
+  };
+  /** The consumer an else's handler runs as, drawn as the reader draws a chosen handler's: false where it cannot be. */
+  const drawRestConsumer = (dispatcher: GraphNode, rest: RestSelection): boolean => {
+    if (nodes.has(rest.consumer)) return true;
+    const handler = rest.handler === undefined ? undefined : nodes.get(rest.handler);
+    if (handler === undefined) return false;
+    nodes.set(rest.consumer, {
+      id: rest.consumer,
+      type: 'consumer',
+      label: handler.label,
+      repo: handler.repo,
+      ...(handler.file === undefined ? {} : { file: handler.file }),
+      ...(handler.line === undefined ? {} : { line: handler.line }),
+      ...(dispatcher.kind === undefined ? {} : { kind: dispatcher.kind }),
+      meta: {
+        ...(dispatcher.kind === undefined ? {} : { kind: dispatcher.kind }),
+        ...(dispatcher.meta?.['adapter'] === undefined ? {} : { adapter: dispatcher.meta['adapter'] }),
+        [SELECTED_BY_META]: dispatcher.id,
+        ...(typeof dispatcher.meta?.[UNREACHED_META] === 'string' ? { [UNREACHED_META]: dispatcher.meta[UNREACHED_META] } : {}),
+      },
+    });
+    add({
+      from: rest.consumer,
+      to: handler.id,
+      type: 'handles',
+      confidence: 'static',
+      ...(handler.file === undefined ? {} : { file: handler.file }),
+      ...(handler.line === undefined ? {} : { line: handler.line }),
+    });
+    return true;
+  };
+
+  // The handler of an else or a default takes the types the channel carries that the branches before it do not
+  // choose (P400), where those are known whole; elsewhere it chooses none, as before.
+  for (const consumer of sorted) {
+    if (consumer.type !== 'consumer') continue;
+    const rests = restSelectionsOf(consumer);
+    if (rests.length === 0) continue;
+    const remaining = remainingOn(consumer);
+    if (remaining === undefined) continue;
+    const selections = selectionsOf(consumer);
+    const added: Selection[] = [];
+    for (const rest of rests) {
+      const left = [...remaining].filter((value) => !rest.excluding.includes(value)).sort(cmp);
+      if (left.length === 0) continue;
+      const own = [...new Set(selections.filter((selection) => selection.consumer === rest.consumer).map((selection) => selection.type))].sort(cmp);
+      if (own.length > 0) {
+        // Its parameter's type already says which it takes: where the else's remaining types say otherwise, said so (P397).
+        const handler = nodes.get(rest.consumer);
+        const differs = own.length !== left.length || own.some((value) => !left.includes(value));
+        if (differs && handler !== undefined && handler.meta?.[SELECTION_DIFFERS_META] === undefined) {
+          handler.meta = { ...handler.meta, [SELECTION_DIFFERS_META]: `its parameter's type says ${own.join(', ')}; the else it is called in takes the remaining ${left.join(', ')}` };
+        }
+        continue;
+      }
+      if (!drawRestConsumer(consumer, rest)) continue;
+      for (const value of left) added.push({ type: value, consumer: rest.consumer, via: 'else', line: rest.line, ...(rest.file === undefined ? {} : { file: rest.file }) });
+    }
+    if (added.length === 0) continue;
+    const all = [...selections, ...added].sort((a, b) => cmp(a.type, b.type) || cmp(a.consumer, b.consumer));
+    consumer.meta = { ...consumer.meta, [SELECTS_META]: all };
+  }
+
+  for (const consumer of sorted) {
+    if (consumer.type !== 'consumer') continue;
+    const selections = selectionsOf(consumer);
+    if (selections.length === 0) continue;
+    for (const edge of to.get(consumer.id) ?? []) {
+      if (edge.type !== 'consumes') continue;
+      const channel = channelOf(edge.from);
+      if (channel === undefined || !typed(channel)) continue;
+      const carried = publishedOn(channel.id);
+      // A subscriber to every channel of a bus (P369) did not choose this
+      // channel: a type it selects is on it only where a publish there sends
+      // that type, or sends a type not read (a guess, drawn `heuristic`), never
+      // on a channel whose publishes send no type at all (P374).
+      const everyChannel = edge.meta?.['via'] === EVERY_CHANNEL_VIA;
+      for (const selection of selections) {
+        if (!nodes.has(selection.consumer)) continue;
+        const read = carried.types.has(selection.type) || (carried.types.size === 0 && !everyChannel);
+        if (!read && !carried.unread) continue;
+        const type = typeNode(channel, selection.type, consumer.meta?.[DISCRIMINATOR_META], consumer);
+        add({
+          from: type.id,
+          to: selection.consumer,
+          type: 'consumes',
+          confidence: selection.heuristic === true || !read ? 'heuristic' : edge.confidence,
+          file: selection.file ?? consumer.file ?? '',
+          line: selection.line,
+          meta: { selectedBy: consumer.id, via: selection.via },
+        });
+      }
+    }
+  }
+
+  // Where each type's name is written in the code the build read (P404): what "nothing selects it" can rule out.
+  if (sources !== undefined) markTypeNamesWritten(nodes, lookup, sources);
+
+  const modules = new Set(lookup.nodesByType('module').map((node) => node.repo));
+  const rows: Unresolved[] = [];
+  for (const type of [...nodes.values()].filter(isMessageTypeNode).sort((a, b) => cmp(a.id, b.id))) {
+    const facts = messageTypeFacts(lookup, type, modules);
+    const [first] = facts.producers;
+    if (first === undefined) continue;
+    // Only where the channel's consumers choose by type: elsewhere a type is
+    // simply passed on, and nothing says each should have a handler.
+    if (!facts.receivers.some((receiver) => receiver.takes === 'selects')) continue;
+    const said = unselectedSaid(facts);
+    if (said === undefined) continue;
+    rows.push({
+      file: first.file ?? '',
+      line: first.line ?? 0,
+      reason: 'message-type-unselected',
+      message: said.said,
+      // The publish, which is code to read; the type is in `meta`.
+      symbol: first.id,
+      service: first.repo,
+      meta: {
+        type: type.id,
+        channel: facts.channel?.id,
+        messageType: facts.value,
+        sureness: said.sureness,
+        // A consumer choosing it may receive this channel through one not read (P400): the findings hold the row back.
+        ...(said.held === undefined ? {} : { [UNSELECTED_HELD_META]: said.held }),
+      },
+    });
+  }
+  return rows;
+};
+
+/**
+ * On a `message-type-unselected` row (P400): why "nothing selects it" is not
+ * a finding, a consumer choosing the type receiving channels not all read.
+ */
+export const UNSELECTED_HELD_META = 'heldBecause';
+
+/** The type nodes no live code selects, where the channel's consumers choose by type. */
+export const unselectedTypesOf = (rows: readonly Unresolved[]): string[] =>
+  [...new Set(rows.flatMap((row) => (row.reason === 'message-type-unselected' && typeof row.meta?.['type'] === 'string' ? [row.meta['type']] : [])))].sort(cmp);

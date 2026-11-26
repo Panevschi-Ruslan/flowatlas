@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:49:25.081Z",
+  "configHash": "6a8221edd12d",
+  "services": [
+    {
+      "name": "board-web",
+      "repo": "./board-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 28,
+      "edges": 23,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 3862,
+      "packages": {
+        "name": "board-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "digest-worker",
+      "repo": "./digest-worker",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 16,
+      "types": 2,
+      "unresolved": 5,
+      "durationMs": 5121,
+      "packages": {
+        "name": "digest-worker",
+        "runtime": [
+          "redis"
+        ],
+        "dev": [
+          "@cloudflare/workers-types"
+        ]
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 39,
+      "edges": 31,
+      "types": 9,
+      "unresolved": 3,
+      "durationMs": 5624,
+      "packages": {
+        "name": "gateway",
+        "runtime": [
+          "hono",
+          "redis"
+        ],
+        "dev": [
+          "@cloudflare/workers-types"
+        ]
+      }
+    },
+    {
+      "name": "planner",
+      "repo": "./planner",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 25,
+      "edges": 19,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 6297,
+      "packages": {
+        "name": "planner",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "redis"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 7,
+    "resolved": 7,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 5,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 12,
+    "called": 7,
+    "uncalled": [
+      "entry:gateway:http:POST:/boards/:param/presence",
+      "entry:gateway:http:POST:/boards/:param/presence/leave",
+      "entry:planner:http:POST:/alerts",
+      "entry:planner:http:POST:/boards/:param/cards",
+      "entry:planner:http:POST:/digest"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 11,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "src/index.ts",
+      "line": 38,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: wrangler.jsonc binds ARCHIVE to the class ArchiveFeed, which this repository does not declare.",
+      "hint": "Export ArchiveFeed from the worker's entry, or correct class_name in wrangler.jsonc.",
+      "symbol": "GET /boards/:param/archive"
+    },
+    {
+      "service": "gateway",
+      "file": "src/index.ts",
+      "line": 41,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: wrangler.jsonc binds LEDGER to the class LedgerFeed of the worker ledger-worker, whose code is read with that worker.",
+      "hint": "Annotate the handler with @Consumes('<channel>') for what LedgerFeed relays.",
+      "symbol": "GET /ledger/stream"
+    }
+  ],
+  "totals": {
+    "nodes": 113,
+    "edges": 107,
+    "types": 11,
+    "missed": 10,
+    "sites": 10,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 10
+  }
+}

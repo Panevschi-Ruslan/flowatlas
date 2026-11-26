@@ -1,0 +1,20 @@
+{
+  "entries": [
+    {
+      "id": "entry:lending-api:http:DELETE:/books/:param/hold",
+      "label": "DELETE /books/:bookId/hold",
+      "loc": "src/books.controller.ts:33"
+    },
+    {
+      "id": "entry:lending-api:http:POST:/books/:param/extend",
+      "label": "POST /books/:bookId/extend",
+      "loc": "src/books.controller.ts:38"
+    }
+  ],
+  "total": 2,
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:lending-api:http:DELETE:/books/:param/hold\"})",
+    "impact({symbol: \"entry:lending-api:http:DELETE:/books/:param/hold\"})"
+  ]
+}

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-two-applications",
-  "generatedAt": "2026-10-07T14:34:34.365Z",
+  "generatedAt": "2026-11-23T14:44:45.638Z",
   "nodes": [
     {
       "id": "entry:nest-two-applications:http:GET:/legacy",
@@ -126,7 +126,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -165,7 +166,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -205,7 +207,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -231,7 +234,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -269,7 +273,19 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 14
+          },
+          {
+            "port": 3001,
+            "file": "src/worker/main.ts",
+            "line": 15
+          }
+        ]
       }
     }
   ],

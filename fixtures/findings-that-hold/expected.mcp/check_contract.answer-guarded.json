@@ -1,0 +1,73 @@
+{
+  "entry": "entry:stores-api:http:GET:/stores/:param",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:stores-api#StoreCard",
+    "reads": [
+      {
+        "field": "name",
+        "id": "shop-web#src/screens/StorePage.tsx:StorePage",
+        "line": 43
+      },
+      {
+        "field": "rating",
+        "id": "shop-web#src/screens/StorePage.tsx:StorePage",
+        "line": 45
+      },
+      {
+        "field": "changesFromPrevious",
+        "id": "shop-web#src/screens/StorePage.tsx:changeSummary",
+        "line": 27,
+        "guarded": true
+      },
+      {
+        "field": "changesFromPrevious.added",
+        "id": "shop-web#src/screens/StorePage.tsx:changeSummary",
+        "line": 29,
+        "guarded": true
+      },
+      {
+        "field": "distance",
+        "id": "shop-web#src/screens/StorePage.tsx:distanceLabel",
+        "line": 20,
+        "guarded": true
+      },
+      {
+        "field": "address",
+        "id": "shop-web#src/screens/StorePage.tsx:distanceLabel",
+        "line": 21,
+        "guarded": true
+      }
+    ],
+    "missing": [
+      {
+        "field": "rating",
+        "id": "shop-web#src/screens/StorePage.tsx:StorePage",
+        "line": 45
+      },
+      {
+        "field": "changesFromPrevious",
+        "id": "shop-web#src/screens/StorePage.tsx:changeSummary",
+        "line": 27,
+        "guarded": true
+      },
+      {
+        "field": "distance",
+        "id": "shop-web#src/screens/StorePage.tsx:distanceLabel",
+        "line": 20,
+        "guarded": true
+      }
+    ],
+    "unused": [
+      {
+        "field": "id"
+      }
+    ]
+  },
+  "callers": 1,
+  "complete": true,
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-web#src/screens/StorePage.tsx:14:26\", to: \"entry:stores-api:http:GET:/stores/:param\"})"
+  ]
+}

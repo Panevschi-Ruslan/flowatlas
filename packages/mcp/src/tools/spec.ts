@@ -18,6 +18,7 @@ import {
 } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { resolveChannelRef } from '../query/channel-ref.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { READ_ONLY, withDb, type ToolContext } from './common.js';
 
@@ -46,7 +47,7 @@ export const registerSpec = (server: McpServer, ctx: ToolContext): void => {
     'get_spec',
     {
       title: 'Read the API document',
-      description: 'Routes as OpenAPI 3.1 or channels as AsyncAPI 3.0, written from the graph; path for one operation.',
+      description: 'Routes as OpenAPI 3.1 or channels as AsyncAPI 3.0 (`kind`), written from the graph; `path` ("GET /orders/{id}", a channel address) for one operation.',
       inputSchema: {
         service: z.string(),
         kind: z.enum(['openapi', 'asyncapi']).optional(),
@@ -71,7 +72,12 @@ export const registerSpec = (server: McpServer, ctx: ToolContext): void => {
         }
         const kind = specs[0]!.kind;
         if (input.path !== undefined) {
-          const found = specs.flatMap((spec) => findOperations(spec, input.path as string).map((operation) => ({ spec, operation })));
+          const operationsAt = (path: string) => specs.flatMap((spec) => findOperations(spec, path).map((operation) => ({ spec, operation })));
+          let found = operationsAt(input.path);
+          // A channel written with placeholders or as a value it takes (P360): the one channel it denotes.
+          const channel = found.length === 0 ? resolveChannelRef(db, input.path) : undefined;
+          const channelUsed = channel === undefined || 'candidates' in channel ? undefined : channel.node.id;
+          if (channelUsed !== undefined) found = operationsAt(channelUsed.slice('channel:'.length));
           if (found.length === 0) {
             return {
               error: `no operation of ${input.service} answers ${JSON.stringify(input.path)}`,
@@ -86,6 +92,7 @@ export const registerSpec = (server: McpServer, ctx: ToolContext): void => {
               service: input.service,
               kind: first!.spec.kind,
               operations: found.map(({ operation }) => operation.key),
+              ...(channelUsed === undefined ? {} : { channelUsed }),
               spec: text.text,
               ...(text.truncated === undefined ? {} : { truncated: text.truncated }),
             },

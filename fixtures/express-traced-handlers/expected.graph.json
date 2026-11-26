@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "express-traced-handlers",
-  "generatedAt": "2026-10-08T09:12:33.896Z",
+  "generatedAt": "2026-11-23T14:34:57.774Z",
   "nodes": [
     {
       "id": "entry:express-traced-handlers:http:GET:/loans",
@@ -190,7 +190,13 @@
             }
           ],
           "returns": "type:express#Response<unknown>"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "isbn",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -213,7 +219,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -236,7 +243,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -259,7 +267,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -281,7 +290,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 9102,
+            "file": "src/server.ts",
+            "line": 9
+          }
+        ]
       }
     }
   ],

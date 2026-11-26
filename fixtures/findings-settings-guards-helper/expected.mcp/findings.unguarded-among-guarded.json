@@ -1,0 +1,50 @@
+{
+  "kind": "unguarded-among-guarded",
+  "rows": [
+    {
+      "kind": "unguarded-among-guarded",
+      "id": "entry:shipping:http:DELETE:/claims/:param",
+      "method": "shipping#src/claims/claims.controller.ts:ClaimsController.remove",
+      "service": "shipping",
+      "loc": "src/claims/claims.controller.ts:40",
+      "message": "DELETE /claims/:param has no guard in front of it, while the 2 other writes of ClaimsController have StaffGuard in front.",
+      "precision": "high",
+      "evidence": "every other write of its router is guarded and the routes of src/claims/claims.controller.ts were read whole; no public marker is on it",
+      "rank": 1,
+      "reach": {
+        "guardedSiblings": 2,
+        "writes": 0,
+        "reads": 0
+      },
+      "next": "get_flow({entry: \"entry:shipping:http:DELETE:/claims/:param\"})"
+    },
+    {
+      "kind": "unguarded-among-guarded",
+      "id": "entry:shipping:http:DELETE:/pickups/:param",
+      "method": "shipping#src/pickups/pickups.controller.ts:PickupsController.cancel",
+      "service": "shipping",
+      "loc": "src/pickups/pickups.controller.ts:23",
+      "message": "DELETE /pickups/:param has no guard in front of it, because StaffGuard (skipped by @SkipStaffCheck), while the 2 other writes of PickupsController have StaffGuard in front.",
+      "precision": "high",
+      "evidence": "every other write of its router is guarded and the routes of src/pickups/pickups.controller.ts were read whole; no public marker is on it",
+      "rank": 2,
+      "reach": {
+        "guardedSiblings": 2,
+        "writes": 0,
+        "reads": 0
+      },
+      "next": "get_flow({entry: \"entry:shipping:http:DELETE:/pickups/:param\"})"
+    }
+  ],
+  "total": 2,
+  "heldBack": {
+    "config-not-set": {
+      "count": 2,
+      "why": "doppler run in Dockerfile hands settings in when it runs, which no file read names"
+    }
+  },
+  "next": [
+    "get_flow({entry: \"entry:shipping:http:DELETE:/claims/:param\"})",
+    "get_flow({entry: \"entry:shipping:http:DELETE:/pickups/:param\"})"
+  ]
+}

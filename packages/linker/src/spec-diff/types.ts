@@ -12,8 +12,12 @@
 import type { Confidence } from '@flowatlas/core';
 import type { SpecCaller, SpecKind } from '../document/written.js';
 
-/** Version of `spec-diff.json` (and of `diff.json`'s `spec`), independent of every other format. */
-export const SPEC_DIFF_FORMAT_VERSION = 1;
+/**
+ * Version of `spec-diff.json` (and of `diff.json`'s `spec`), independent of
+ * every other format. 2 (P390): a change may carry `use`, the report
+ * `coverage`.
+ */
+export const SPEC_DIFF_FORMAT_VERSION = 2;
 
 /** The file `flowatlas spec diff` leaves beside the graph, whatever it printed. */
 export const SPEC_DIFF_FILE = 'spec-diff.json';
@@ -101,6 +105,114 @@ export interface SpecChange {
   confidence: Confidence;
   /** `kind|document|operation|field`, what a baseline and a SARIF fingerprint key on. */
   key: string;
+  /**
+   * What the change does to the code that uses it (P390), read off both
+   * sides' graphs: set by `diff --spec` and `spec diff`, never by a document
+   * comparison alone. `level` is then `use.level`.
+   */
+  use?: SpecChangeUse;
+}
+
+/**
+ * Which way a change moves a contract (oasdiff's model, P390): narrowing what
+ * a route accepts or widening what it answers or a message carries breaks the
+ * other end (`breaking`); the reverse cannot (`compatible`); what neither side
+ * settles - a field the receiver stops reading, which a validator may drop or
+ * refuse - is `unconfirmed`.
+ */
+export const SPEC_CHANGE_DIRECTIONS = ['breaking', 'compatible', 'unconfirmed'] as const;
+export type SpecChangeDirection = (typeof SPEC_CHANGE_DIRECTIONS)[number];
+
+/**
+ * What one consumer does with what changed: `reads` the field, `sends` it,
+ * `omits` a field now required, `joined` (it calls the route or takes the
+ * message at all), `opaque` (the value reaches it whole: spread, forwarded,
+ * handed outside the repository), `unread` (it was not read for the fields it
+ * reads), `unknown` (what it reads of this part is not read at all, as a
+ * response's fields are not yet), `ignores` (read whole, and it neither reads
+ * nor sends what changed).
+ */
+export const SPEC_USE_HOWS = ['reads', 'sends', 'omits', 'joined', 'opaque', 'unread', 'unknown', 'ignores'] as const;
+export type SpecUseHow = (typeof SPEC_USE_HOWS)[number];
+
+/** One consumer of a change, with what it does with it and where. */
+export interface SpecUseReader {
+  /** The consumer, the request or the publisher, as `callers` names it. */
+  id: string;
+  service: string;
+  file?: string;
+  line?: number;
+  how: SpecUseHow;
+  /** A few words: "reads `label`, line 16", "sends name, price; no `currency`". */
+  said: string;
+  /** The level this consumer alone gives the change. */
+  level: SpecChangeLevel;
+}
+
+/** The steps of a flow, as `use.flows` names them, from the way in to the consumer. */
+export const SPEC_FLOW_STEPS = ['way in', 'code', 'request', 'route', 'handler', 'publish', 'channel', 'consumer'] as const;
+export type SpecFlowStepKind = (typeof SPEC_FLOW_STEPS)[number];
+
+/** One step of a flow across repositories: way in -> client call -> route -> handler -> publish -> consumer. */
+export interface SpecFlowStep {
+  id: string;
+  step: SpecFlowStepKind;
+  label: string;
+  service: string;
+  file?: string;
+  line?: number;
+}
+
+/**
+ * Where a change is placed on the head side (P390), since a pull request is
+ * annotated only on lines it holds: the operation's own line where it
+ * survives (`same`), the nearest line of its file that survives where it
+ * went (`nearest`, `from` the line it had), or no line at all where the file
+ * went too (`summary`: said with the summary, never on a guessed line).
+ */
+export interface SpecAnchor {
+  how: 'same' | 'nearest' | 'summary';
+  file?: string;
+  line?: number;
+  from?: { file: string; line?: number };
+}
+
+/** The order to deploy a change in, so no consumer meets it before it can: who goes first, and why. */
+export interface SpecDeployOrder {
+  first: 'consumers' | 'producers' | 'callers' | 'server';
+  said: string;
+}
+
+/** What a change does to the code that uses it (P390). */
+export interface SpecChangeUse {
+  direction: SpecChangeDirection;
+  /** Why the direction is what it is, in a few words. */
+  why: string;
+  /**
+   * The level from use: `error` when a joined consumer reads the field,
+   * sends one now invalid or omits one now required; `info` when no consumer
+   * reads it, among `among`; `warning` where one reaches it opaquely or what
+   * it reads is not known.
+   */
+  level: SpecChangeLevel;
+  /** One line: "1 of 1 caller omits `currency`", "no consumer reads it, among 2". */
+  verdict: string;
+  /** The consumers counted: the callers on the base side. */
+  among: number;
+  /** Each consumer and what it does with the change, the loudest first. */
+  readers: SpecUseReader[];
+  /** Flows from a way in to the consumers it breaks or may break, across repositories; at most three. */
+  flows: SpecFlowStep[][];
+  deployOrder?: SpecDeployOrder;
+  anchor?: SpecAnchor;
+}
+
+/** What a usage verdict could see (P390): the consumers it counted, in the repositories read. */
+export interface SpecCoverage {
+  consumers: number;
+  repositories: number;
+  /** "3 consumers in 5 repositories; consumers outside them unknown". */
+  said: string;
 }
 
 export interface SpecDiffSummary {
@@ -120,4 +232,6 @@ export interface SpecDiffReport {
   documents: { base: number; head: number };
   changes: SpecChange[];
   summary: SpecDiffSummary;
+  /** With usage verdicts (P390): the consumers counted and where; consumers outside them are unknown. */
+  coverage?: SpecCoverage;
 }

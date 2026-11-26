@@ -1,0 +1,17 @@
+{
+  "name": "cms",
+  "private": true,
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start"
+  },
+  "dependencies": {
+    "@shop/strapi-plugin-notes": "file:./src/plugins/local-notes",
+    "@strapi/strapi": "^5.10.0",
+    "@studio/strapi-plugin-printer": "^2.1.0",
+    "strapi-plugin-colors": "^1.2.0",
+    "strapi-plugin-map-view": "^0.4.0",
+    "strapi-plugin-maps": "^1.0.0",
+    "strapi-plugin-pins": "^2.0.0"
+  }
+}

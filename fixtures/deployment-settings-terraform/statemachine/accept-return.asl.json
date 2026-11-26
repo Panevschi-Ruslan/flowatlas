@@ -1,0 +1,20 @@
+{
+  "Comment": "Accepts a returned parcel once the warehouse confirms it; the whole execution is bounded at a week.",
+  "StartAt": "AwaitInspection",
+  "TimeoutSeconds": 604800,
+  "States": {
+    "AwaitInspection": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage.waitForTaskToken",
+      "Parameters": {
+        "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/000000000000/shop-inspections",
+        "MessageBody": {
+          "returnId.$": "$.returnId",
+          "token.$": "$$.Task.Token"
+        }
+      },
+      "HeartbeatSeconds": 3600,
+      "End": true
+    }
+  }
+}

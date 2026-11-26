@@ -1,6 +1,6 @@
-import { callSitesOf as callSitesOfFunction, evaluateExpression, wasRead, type NamedFunction } from '@flowatlas/core';
-import type { CallExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { callSitesOf as callSitesOfFunction, evaluateExpression, startLineOf, UNREAD_SPAN, wasRead, type NamedFunction } from '@flowatlas/core';
+import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { analyzeApiUrl, type ApiUrl, type Bindings } from './url.js';
@@ -39,6 +39,89 @@ const FORWARD_DEPTH = 3;
 
 const isRead = (address: ApiUrl): boolean => address.path !== null && wasRead(address.path);
 
+/**
+ * Whether an address names a host part of which is a value nobody read
+ * where it is written: `localhost:${…}`, `localhost${…}` (P318). Such a
+ * value is a port or the rest of the name, which the callers may hand.
+ */
+const hostUnread = (address: ApiUrl): boolean => address.host !== null && address.host.includes(UNREAD_SPAN);
+
+/** Whether an address is read whole: its path, and the host it names (P318). */
+const isSettled = (address: ApiUrl): boolean => isRead(address) && !hostUnread(address);
+
+/**
+ * The parameter a name was declared in: the parameter itself, or a member taken
+ * out of it where it is written - `({ url = '', method = 'GET' }: Options)`,
+ * which is how a wrapper that takes its request as one object is commonly
+ * written (P269).
+ */
+const parameterOf = (declaration: TsNode): TsNode | undefined => {
+  let at: TsNode | undefined = declaration;
+  while (at !== undefined && Node.isBindingElement(at)) at = at.getParent()?.getParent();
+  return at !== undefined && Node.isParameterDeclaration(at) ? at : undefined;
+};
+
+/** The object a caller writes for an options parameter: in place, or held by a `const` it names. */
+const objectHandedAs = (argument: TsNode): ObjectLiteralExpression | undefined => {
+  let value: TsNode | undefined = argument;
+  for (let step = 0; value !== undefined && step < 4; step += 1) {
+    if (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isSatisfiesExpression(value)) {
+      value = value.getExpression();
+      continue;
+    }
+    if (Node.isObjectLiteralExpression(value)) return value;
+    if (!Node.isIdentifier(value)) return undefined;
+    const declaration: TsNode | undefined = value.getSymbol()?.getDeclarations()[0];
+    value =
+      declaration !== undefined &&
+      Node.isVariableDeclaration(declaration) &&
+      declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
+        ? declaration.getInitializer()
+        : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * What a caller hands each member a parameter takes out of its object, where it
+ * takes them out where it is written (P269).
+ *
+ * `request({ url: `${basePath}/cart`, method: 'POST' })` into `({ url = '',
+ * method = 'GET' }) => fetch(url, { method })`: `url` is what the caller wrote
+ * under `url`, and a member the caller leaves out holds the default the wrapper
+ * writes - only a constant one, as for a parameter left out. An object that
+ * spreads another may carry any member, so a member it does not write is left
+ * unbound rather than given the default.
+ */
+const membersBound = (parameter: ParameterDeclaration, argument: TsNode | undefined, values: Map<TsNode, TsNode>): void => {
+  const pattern = parameter.getNameNode();
+  if (!Node.isObjectBindingPattern(pattern)) return;
+  const object = argument === undefined ? undefined : objectHandedAs(argument);
+  // Handed something that is not an object written here: what it holds is not
+  // written anywhere this can read, so nothing is bound.
+  if (argument !== undefined && object === undefined) return;
+  const spreads = object?.getProperties().some((property) => Node.isSpreadAssignment(property)) === true;
+  for (const element of pattern.getElements()) {
+    if (element.getDotDotDotToken() !== undefined || !Node.isIdentifier(element.getNameNode())) continue;
+    const key = element.getPropertyNameNode()?.getText() ?? element.getName();
+    const property = object?.getProperty(key);
+    const written = property === undefined
+      ? undefined
+      : Node.isPropertyAssignment(property)
+        ? property.getInitializer()
+        : Node.isShorthandPropertyAssignment(property)
+          ? property.getNameNode()
+          : undefined;
+    if (written !== undefined) {
+      values.set(element, written);
+      continue;
+    }
+    if (property !== undefined || spreads) continue;
+    const fallback = element.getInitializer();
+    if (fallback !== undefined && evaluateExpression(fallback).resolved) values.set(element, fallback);
+  }
+};
+
 /** The parameters of a function, however the function was written. */
 const parametersOf = (fn: NamedFunction): ParameterDeclaration[] => {
   const declaration = fn.declaration;
@@ -67,7 +150,9 @@ const readsParameter = (value: TsNode, fn: NamedFunction): boolean => {
   const named = (node: TsNode): boolean => {
     if (!Node.isIdentifier(node)) return false;
     const declaration = node.getSymbol()?.getDeclarations()[0];
-    return declaration !== undefined && parameters.has(declaration);
+    if (declaration === undefined) return false;
+    const parameter = parameterOf(declaration);
+    return parameter !== undefined && parameters.has(parameter);
   };
   if (named(value)) return true;
   let found = false;
@@ -88,9 +173,39 @@ const readsParameter = (value: TsNode, fn: NamedFunction): boolean => {
  */
 const callSitesOf = (fn: NamedFunction): CallExpression[] => {
   const declaration = fn.declaration;
-  return Node.isFunctionDeclaration(declaration) || Node.isVariableDeclaration(declaration)
-    ? callSitesOfFunction(declaration)
-    : [];
+  if (Node.isFunctionDeclaration(declaration) || Node.isVariableDeclaration(declaration) || Node.isMethodDeclaration(declaration)) return callSitesOfFunction(declaration);
+  // A method written as an arrow held by a field of its class (P293).
+  const holder = Node.isArrowFunction(declaration) || Node.isFunctionExpression(declaration) ? declaration.getParent() : undefined;
+  return holder !== undefined && Node.isPropertyDeclaration(holder) ? callSitesOfFunction(holder) : [];
+};
+
+/**
+ * A method of a class of the repository, indexed as a function where it is
+ * met as a caller (P293): `load() { return runQuery(OrdersDocument) }`, or
+ * `load = () => …`. Named `Class.method`, as every reader names a method; no
+ * function of a class nobody names, nor of a package.
+ */
+export const methodIndexed = (ctx: ReactExtractContext, member: TsNode): IndexedFunction | undefined => {
+  if (!Node.isMethodDeclaration(member) && !Node.isPropertyDeclaration(member) && !Node.isGetAccessorDeclaration(member) && !Node.isSetAccessorDeclaration(member)) return undefined;
+  const owner = member.getParent();
+  const className = Node.isClassDeclaration(owner) ? owner.getName() : undefined;
+  if (className === undefined || member.getSourceFile().isInNodeModules() || member.getSourceFile().isDeclarationFile()) return undefined;
+  // A getter runs where its property is read, a setter where it is written (P311).
+  if (Node.isGetAccessorDeclaration(member) || Node.isSetAccessorDeclaration(member)) {
+    const body = member.getBody();
+    if (body === undefined) return undefined;
+    const name = Node.isSetAccessorDeclaration(member) ? `${className}.${member.getName()}=` : `${className}.${member.getName()}`;
+    return ctx.functions.adoptCaller({ name, declaration: member, body, line: startLineOf(member) });
+  }
+  if (Node.isMethodDeclaration(member)) {
+    const body = member.getBody();
+    if (body === undefined) return undefined;
+    return ctx.functions.adoptCaller({ name: `${className}.${member.getName()}`, declaration: member, body, line: startLineOf(member) });
+  }
+  const initializer = member.getInitializer();
+  const written = initializer === undefined ? undefined : unwrapped(initializer);
+  if (written === undefined || (!Node.isArrowFunction(written) && !Node.isFunctionExpression(written))) return undefined;
+  return ctx.functions.adoptCaller({ name: `${className}.${member.getName()}`, declaration: written, body: written.getBody(), line: startLineOf(member) });
 };
 
 /** What a call passed for each of the called function's parameters. */
@@ -99,6 +214,7 @@ const bindingsAt = (fn: NamedFunction, call: CallExpression): Bindings => {
   const args = call.getArguments();
   parametersOf(fn).forEach((parameter, index) => {
     const argument = args[index];
+    membersBound(parameter, argument, values);
     if (argument !== undefined) {
       values.set(parameter, argument);
       return;
@@ -131,17 +247,33 @@ const withOuter = (bindings: Bindings | undefined, outer: Bindings): Bindings =>
 const outermostValues = (bindings: Bindings): TsNode[] =>
   bindings.under === undefined ? [...bindings.values.values()] : outermostValues(bindings.under);
 
+/**
+ * A class whose methods are no caller to follow out through: one the request
+ * pass reads as a client of the repository's own, whose calls are drawn at
+ * its callers already (P293).
+ */
+export type ClientClass = (cls: ClassDeclaration) => boolean;
+
 /** The indexed function a call is written inside, when this repository declares it. */
 export const enclosingIndexed = (
   ctx: ReactExtractContext,
   call: TsNode,
+  isClient: ClientClass = () => false,
 ): IndexedFunction | undefined => {
+  let inClass = false;
   for (let at = call.getParent(); at !== undefined; at = at.getParent()) {
-    if (Node.isSourceFile(at)) return undefined;
+    // The top of a plain script is a function of its own where it writes a
+    // call (P334); a class's methods are not run there.
+    if (Node.isSourceFile(at)) return inClass ? undefined : ctx.functions.scriptMember(at);
+    if (Node.isClassDeclaration(at) && isClient(at)) return undefined;
+    if (Node.isClassDeclaration(at) || Node.isClassExpression(at)) inClass = true;
+    const owner = at.getParent();
     const indexed =
       Node.isFunctionDeclaration(at) || Node.isVariableDeclaration(at) || Node.isPropertyAssignment(at)
         ? ctx.functions.get(at)
-        : undefined;
+        : owner !== undefined && Node.isClassDeclaration(owner) && isClient(owner)
+          ? undefined
+          : (ctx.functions.scriptMember(at) ?? methodIndexed(ctx, at));
     if (indexed !== undefined) return indexed;
     // An arrow written inside another function belongs to whatever declares
     // that one, so the walk carries on rather than stopping at it.
@@ -169,6 +301,7 @@ export const requestsOf = (
   urlArg: TsNode,
   owner: IndexedFunction,
   site: RequestSite,
+  isClient?: ClientClass,
 ): ReadRequest[] => {
   const sharedPackages = ctx.config.sharedPackages;
 
@@ -191,8 +324,14 @@ export const requestsOf = (
       ...(depth === 0 ? {} : { through: owner.name }),
       calls: chain,
     };
-    if (isRead(here)) return [inPlace];
+    if (isSettled(here)) return [inPlace];
     if (depth >= FORWARD_DEPTH) return [inPlace];
+    // A request whose path is read here and whose host is not -
+    // `http://localhost:${port}/health` - is followed out for its host alone
+    // (P318): a caller is drawn on only where it settles the host, one per
+    // caller, `localhost:3000` and `localhost:4000`; one that does not leaves
+    // the request here, as one that does not read a path does.
+    const drawn = (address: ApiUrl): boolean => (isRead(here) ? isSettled(address) : isRead(address));
 
     // What is still missing is written in `at`, whether that is the argument
     // the request was given or the argument the last frame passed on.
@@ -202,7 +341,7 @@ export const requestsOf = (
     const out: ReadRequest[] = [];
     let unread = 0;
     for (const call of callSitesOf(at.fn)) {
-      const caller = enclosingIndexed(ctx, call);
+      const caller = enclosingIndexed(ctx, call, isClient);
       // A caller outside any function this repository indexes — a value written
       // at the top of a module, a call inside markup — is still a caller. It
       // cannot be attributed, so the wrapper keeps its own row rather than the
@@ -220,7 +359,7 @@ export const requestsOf = (
         [...chain, call],
       );
       for (const request of found) {
-        if (isRead(request.address)) out.push(request);
+        if (drawn(request.address)) out.push(request);
         else unread += 1;
       }
     }
@@ -229,4 +368,171 @@ export const requestsOf = (
   };
 
   return outward(owner, undefined, 0, new Set([owner.id]), site.call, []);
+};
+
+/** A value a function was handed, read at one of its callers (P275). */
+export interface HandedAtCaller {
+  /** The call that hands it: the outermost one it was followed out to. */
+  readonly call: CallExpression;
+  /** The function that call is written in, where the repository declares one. */
+  readonly caller: IndexedFunction | undefined;
+  /** What the caller hands, where it hands something this can point at. */
+  readonly value: TsNode | undefined;
+  /** The calls followed out through, innermost first. */
+  readonly calls: readonly CallExpression[];
+  /** The function the value is used in, innermost. */
+  readonly through: string;
+}
+
+/**
+ * Functions of a reactivity library that answer the object they are handed:
+ * `const args = reactive(options)` reads `args.query` as `options.query`.
+ */
+const SAME_OBJECT = new Set(['reactive', 'readonly', 'shallowReactive', 'shallowReadonly', 'toRaw', 'markRaw']);
+const SAME_OBJECT_FROM = /^(vue|@vue\/(reactivity|runtime-core|composition-api))$/;
+
+const unwrapped = (node: TsNode): TsNode => {
+  let at = node;
+  while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isSatisfiesExpression(at) || Node.isNonNullExpression(at)) at = at.getExpression();
+  return at;
+};
+
+/** Whether a callee is one of {@link SAME_OBJECT}, imported from its library. */
+const answersWhatItIsHanded = (callee: TsNode): boolean => {
+  if (!Node.isIdentifier(callee)) return false;
+  for (const declaration of callee.getSymbol()?.getDeclarations() ?? []) {
+    if (!Node.isImportSpecifier(declaration)) continue;
+    return SAME_OBJECT.has(declaration.getName()) && SAME_OBJECT_FROM.test(declaration.getImportDeclaration().getModuleSpecifierValue());
+  }
+  return false;
+};
+
+/**
+ * The parameter a value is, or the member of one it reads: `doc`, `args.query`,
+ * `({ query })`'s `query`, through a `const` that names it or holds what a
+ * reactivity function made of it.
+ */
+const parameterRead = (value: TsNode, depth = 0): { parameter: ParameterDeclaration; member?: string } | undefined => {
+  if (depth > 4) return undefined;
+  const at = unwrapped(value);
+  if (Node.isPropertyAccessExpression(at)) {
+    const inner = parameterRead(at.getExpression(), depth + 1);
+    return inner !== undefined && inner.member === undefined ? { parameter: inner.parameter, member: at.getName() } : undefined;
+  }
+  if (!Node.isIdentifier(at)) return undefined;
+  const holder = at.getParent();
+  const symbol = holder !== undefined && Node.isShorthandPropertyAssignment(holder) ? holder.getValueSymbol() : at.getSymbol();
+  const declaration = symbol?.getDeclarations()[0];
+  if (declaration === undefined) return undefined;
+  if (Node.isParameterDeclaration(declaration)) return Node.isIdentifier(declaration.getNameNode()) ? { parameter: declaration } : undefined;
+  if (Node.isBindingElement(declaration)) {
+    const pattern = declaration.getParent();
+    const parameter = pattern?.getParent();
+    if (!Node.isObjectBindingPattern(pattern) || parameter === undefined || !Node.isParameterDeclaration(parameter) || declaration.getDotDotDotToken() !== undefined) return undefined;
+    return { parameter, member: declaration.getPropertyNameNode()?.getText() ?? declaration.getName() };
+  }
+  if (!Node.isVariableDeclaration(declaration) || declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  const initializer = declaration.getInitializer();
+  if (initializer === undefined) return undefined;
+  const held = unwrapped(initializer);
+  if (Node.isIdentifier(held) || Node.isPropertyAccessExpression(held)) return parameterRead(held, depth + 1);
+  if (Node.isCallExpression(held) && held.getArguments().length === 1 && answersWhatItIsHanded(held.getExpression())) return parameterRead(held.getArguments()[0] as TsNode, depth + 1);
+  return undefined;
+};
+
+/** The indexed function a parameter belongs to: a declaration, or the `const` an arrow or a function expression is held by. */
+const functionOfParameter = (ctx: ReactExtractContext, parameter: ParameterDeclaration): IndexedFunction | undefined => {
+  const fn = parameter.getParent();
+  if (Node.isFunctionDeclaration(fn)) return ctx.functions.get(fn);
+  // A method handing its own parameter on, followed out to its callers (P293),
+  // and a plain script's member: an object's method, a prototype's function (P310).
+  if (Node.isMethodDeclaration(fn)) return ctx.functions.scriptMember(fn) ?? methodIndexed(ctx, fn);
+  if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return undefined;
+  const member = ctx.functions.scriptMember(fn);
+  if (member !== undefined) return member;
+  let holder: TsNode | undefined = fn.getParent();
+  while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) holder = holder.getParent();
+  if (holder !== undefined && Node.isPropertyDeclaration(holder)) return methodIndexed(ctx, holder);
+  return holder !== undefined && (Node.isVariableDeclaration(holder) || Node.isPropertyAssignment(holder)) ? ctx.functions.get(holder) : undefined;
+};
+
+/** What one caller hands for a parameter, or for the member of it a function reads. */
+const handedFor = (call: CallExpression, index: number, member: string | undefined): TsNode | undefined => {
+  const argument = call.getArguments()[index];
+  if (argument === undefined || member === undefined) return argument;
+  const object = objectHandedAs(argument);
+  const property = object?.getProperty(member);
+  if (property === undefined) return undefined;
+  if (Node.isPropertyAssignment(property)) return property.getInitializer();
+  if (Node.isShorthandPropertyAssignment(property)) return property.getNameNode();
+  return undefined;
+};
+
+/**
+ * What each caller of the function a value is used in hands for it, where the
+ * value is one of that function's parameters or a member of one (P275):
+ * `runQuery({ query: OrdersDocument })` hands `args.query` in
+ * `createRequest(args.query)` the document `OrdersDocument`. Followed out
+ * again where what a caller hands is its own parameter, as far as
+ * {@link FORWARD_DEPTH} calls; `settled` says a value needs no further
+ * following. Undefined where the value is not a parameter of a function this
+ * repository declares.
+ */
+export const handedOutward = (
+  ctx: ReactExtractContext,
+  value: TsNode,
+  settled: (value: TsNode) => boolean,
+): HandedAtCaller[] | undefined => {
+  const outward = (at: TsNode, depth: number, chain: readonly CallExpression[], seen: ReadonlySet<string>, innermost?: string): HandedAtCaller[] | undefined => {
+    const read = parameterRead(at);
+    if (read === undefined) return undefined;
+    const fn = functionOfParameter(ctx, read.parameter);
+    if (fn === undefined || seen.has(fn.id)) return undefined;
+    const index = parametersOf(fn.fn).indexOf(read.parameter);
+    if (index === -1) return undefined;
+    const found: HandedAtCaller[] = [];
+    for (const call of callSitesOf(fn.fn)) {
+      const caller = enclosingIndexed(ctx, call);
+      const handed = handedFor(call, index, read.member);
+      const calls = [...chain, call];
+      const further =
+        handed === undefined || settled(handed) || depth + 1 >= FORWARD_DEPTH ? undefined : outward(handed, depth + 1, calls, new Set([...seen, fn.id]), innermost ?? fn.name);
+      if (further !== undefined && further.length > 0) found.push(...further);
+      else found.push({ call, caller, value: handed, calls, through: innermost ?? fn.name });
+    }
+    return found;
+  };
+  return outward(value, 0, [], new Set());
+};
+
+/** Whether a value is a parameter of a function this repository declares, or a member of one: what {@link handedOutward} follows. */
+export const isHandedParameter = (ctx: ReactExtractContext, value: TsNode): boolean => {
+  const read = parameterRead(value);
+  return read !== undefined && functionOfParameter(ctx, read.parameter) !== undefined;
+};
+
+/**
+ * The methods of the repository's classes whose bodies are read for requests
+ * of their own (P297): `class OrdersStore { load() { return fetch('/api/orders') } }`
+ * makes its request from `OrdersStore.load`, as a function of the module
+ * would. Not a class the request pass reads as a client of the repository's
+ * own, whose methods are read at their callers; not a class written inside a
+ * function this reading indexes, whose body is read with that function's.
+ */
+export const classMethods = (ctx: ReactExtractContext, isClientClass: ClientClass = () => false): IndexedFunction[] => {
+  const out: IndexedFunction[] = [];
+  for (const source of ctx.project.getSourceFiles()) {
+    if (source.isDeclarationFile() || source.isInNodeModules()) continue;
+    for (const cls of source.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
+      if (cls.getName() === undefined || ctx.functions.get(cls) !== undefined) continue;
+      // Inside a function; the top of a script (P334), though a function, holds its classes as any file does.
+      if (cls.getAncestors().some((at) => !Node.isSourceFile(at) && ctx.functions.get(at as never) !== undefined)) continue;
+      if (isClientClass(cls)) continue;
+      for (const member of cls.getMembers()) {
+        const indexed = methodIndexed(ctx, member);
+        if (indexed !== undefined) out.push(indexed);
+      }
+    }
+  }
+  return out;
 };

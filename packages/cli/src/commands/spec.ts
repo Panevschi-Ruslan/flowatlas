@@ -15,7 +15,7 @@ import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { loadConfig, serviceDirOf, toPosixPath, type LoadedConfig } from '@flowatlas/core';
 import {
   DEFAULT_SPEC_DEPTH,
-  diffSpecs,
+  openGraphDb,
   parseSpecDiff,
   routeInventory,
   SPEC_DIFF_FILE,
@@ -45,7 +45,7 @@ import {
   summariseSpecDiff,
   type SpecFormat,
 } from '../report/spec.js';
-import { specsOfGraph } from '../report/spec-delta.js';
+import { specBetween } from '../report/spec-delta.js';
 import { deliverSarif, sarifBound, sarifLevelFlag, sarifPathsOf, specFindings, toSarif, withSarifOptions } from '../sarif/index.js';
 import { VERSION } from '../version.js';
 import { buildSides, collect, oneOf, sharedBuild, whole } from './diff.js';
@@ -268,11 +268,15 @@ export const runSpecDiff = async (baseRef: string, headRef: string | undefined, 
   const workDir = mkdtempSync(join(tmpdir(), 'flowatlas-spec-diff-'));
   try {
     const built = await buildSides(loaded, baseRef, head, services, sharedBuild(workDir, outputDir, options));
-    const report = diffSpecs(
-      specsOfGraph(loaded, built.base.graph, { services, depth }),
-      specsOfGraph(loaded, built.head.graph, { services, depth }),
-      { depth },
-    );
+    // Each change with what it does to the code that uses it (P390), read off both sides' graphs.
+    const dbs = { base: openGraphDb(built.base.dbPath), head: openGraphDb(built.head.dbPath) };
+    let report: SpecDiffReport;
+    try {
+      report = specBetween(loaded, built.base.graph, built.head.graph, { services, depth, use: dbs });
+    } finally {
+      dbs.base.close();
+      dbs.head.close();
+    }
     parseSpecDiff(report);
     const file = join(outputDir, SPEC_DIFF_FILE);
     writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
@@ -285,6 +289,7 @@ export const runSpecDiff = async (baseRef: string, headRef: string | undefined, 
         toSarif({
           command: 'spec-diff',
           version: VERSION,
+          ...(report.coverage === undefined ? {} : { notes: [{ level: 'note' as const, text: report.coverage.said }] }),
           findings: specFindings(report.changes),
           paths: sarifPathsOf({ config: loaded.configPath }, options.sarifRoot),
           maxResults: sarifBound(undefined),
@@ -368,7 +373,15 @@ export const registerSpec = (program: Command): void => {
     .option('--out <dir>', `where to write ${SPEC_DIFF_FILE} (default: the configured output)`)
     .option('--no-cache', 'read every commit again rather than believing the cache')
     .option('--keep-worktrees', 'leave the detached checkouts on disk, for debugging');
-  withSarifOptions(diff, { output: false }).action(async (baseRef: string, headRef: string | undefined, options: SpecDiffOptions) => {
+  withSarifOptions(diff, { output: false }).action(async (baseRef: string, headRef: string | undefined, own: SpecDiffOptions) => {
+    // `spec` declares --config, --format, --output and the rest too, and commander hands a flag both declare to
+    // `spec`: `spec diff main --format sarif --config x.json` must still compare x.json's project as SARIF (P390).
+    const parent = spec.opts<Record<string, unknown>>();
+    const options = { ...own } as SpecDiffOptions & Record<string, unknown>;
+    for (const [key, value] of Object.entries(parent)) {
+      const mine = options[key];
+      if (value !== undefined && (mine === undefined || (Array.isArray(mine) && mine.length === 0))) options[key] = value;
+    }
     const { exitCode, unread, report } = await runSpecDiff(baseRef, headRef, options);
     if (exitCode !== EXIT.ok) {
       throw new CliError(

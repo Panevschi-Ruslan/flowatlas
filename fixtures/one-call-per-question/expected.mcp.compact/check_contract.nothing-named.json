@@ -1,0 +1,7 @@
+{
+  "error": "name what to check: a route, a channel, or both ends of a call",
+  "next": [
+    "check_contract({edge: \"PATCH /api/orders/:param/cancel\"})",
+    "check_contract({channel: \"channel:desk_events\"})"
+  ]
+}

@@ -359,3 +359,122 @@ describe('a check thrown through a helper, and a route public by marker only (P9
     expect(auditRoutes(nodes, edges, OPTIONS).map((row) => [row.reason, row.level])).toEqual([['route-unguarded', undefined]]);
   });
 });
+
+describe('a route a router trying routes in order never reaches (P385)', () => {
+  const route = (path: string, line: number, extra: Record<string, unknown> = {}, file = 'src/orders.controller.ts'): GraphNode =>
+    node(`entry:api:http:GET:${path}`, 'entry', {
+      kind: 'http',
+      file,
+      line,
+      meta: { method: 'GET', path, adapter: 'nestjs-http', controller: 'OrdersController', ...extra },
+    });
+
+  const audit = (routes: GraphNode[], edges: GraphEdge[] = [], extra: GraphNode[] = []) =>
+    auditRoutes(new Map([...routes, ...extra].map((item) => [item.id, item])), edges, OPTIONS);
+
+  it('finds a spelled-out route registered after a parameter route, naming both lines and the callers it lost', () => {
+    const param = route('/orders/:param', 14);
+    const latest = route('/orders/latest', 20);
+    const caller = node('web#OrdersApi.latest', 'method', { label: 'OrdersApi.latest', repo: 'web' });
+    const request = node('ui_api_call:web#src/orders-api.ts:24:12', 'ui_api_call', { repo: 'web' });
+    const rows = audit(
+      [param, latest],
+      [edge(caller.id, 'calls', request.id), edge(request.id, 'hits', param.id, { meta: { shadows: [latest.id] } })],
+      [caller, request],
+    );
+    expect(rows.map((row) => row.reason)).toEqual(['route-shadowed-by-earlier']);
+    expect(rows[0]?.line).toBe(20);
+    expect(rows[0]?.message).toContain('GET /orders/:param (src/orders.controller.ts:14), registered before it on OrdersController');
+    expect(rows[0]?.message).toContain('1 caller asking for it lands on GET /orders/:param: OrdersApi.latest.');
+    expect(latest.meta?.['shadowedBy']).toBe(param.id);
+  });
+
+  it('says nothing where the spelled-out route comes first, or the router ranks by specificity', () => {
+    expect(audit([route('/orders/latest', 10), route('/orders/:param', 20)])).toEqual([]);
+    expect(audit([route('/orders/:param', 10, { routeOrder: 'specificity' }), route('/orders/latest', 20, { routeOrder: 'specificity' })])).toEqual([]);
+  });
+
+  it('notes two routers whose order was not read, at info', () => {
+    const rows = audit([
+      route('/orders/:param', 10),
+      route('/orders/export', 5, { controller: 'ExportsController' }, 'src/exports.controller.ts'),
+    ]);
+    expect(rows.map((row) => [row.reason, row.level])).toEqual([['route-order-unread', 'info']]);
+  });
+});
+
+describe('the one write of its router left open among guarded ones (P401)', () => {
+  /** A controller's routes: each `[method, path, guarded, decorators?]`, none reaching stored data. */
+  const controller = (routes: ReadonlyArray<readonly [string, string, boolean, string[]?]>) => {
+    const nodes: GraphNode[] = [node('api#StaffGuard', 'provider', { label: 'StaffGuard' })];
+    const edges: GraphEdge[] = [];
+    routes.forEach(([method, path, guarded, decorators = []], index) => {
+      const id = `entry:api:http:${method}:${path}`;
+      nodes.push(
+        node(id, 'entry', {
+          kind: 'http',
+          file: 'src/claims.controller.ts',
+          line: 10 + index * 5,
+          meta: { method, path, controller: 'ClaimsController', decorators: decorators.map((name) => ({ name, args: [] })) },
+        }),
+      );
+      if (guarded) edges.push(edge(id, 'guarded_by', 'api#StaffGuard', { meta: { layer: 'guard' } }));
+    });
+    return { nodes: new Map(nodes.map((item) => [item.id, item])), edges };
+  };
+
+  it('names the open delete beside two guarded writes, though it reaches no stored data, and never the open read', () => {
+    const claims = controller([
+      ['GET', '/claims', false],
+      ['POST', '/claims', true],
+      ['POST', '/claims/:param/notes', true],
+      ['DELETE', '/claims/:param', false],
+    ]);
+    const rows = auditRoutes(claims.nodes, claims.edges, OPTIONS);
+    expect(rows.map((row) => [row.reason, row.symbol])).toEqual([['route-unguarded-among-guarded', 'DELETE /claims/:param']]);
+    expect(rows[0]?.message).toBe('DELETE /claims/:param has no guard in front of it, while the 2 other writes of ClaimsController have StaffGuard in front.');
+    expect(rows[0]).not.toHaveProperty('level');
+  });
+
+  it('names a write whose guard a decorator switches off with no word that it is public, never one marked public', () => {
+    const skip = { ...OPTIONS, skipGuardDecorators: { SkipStaffCheck: ['StaffGuard'] } };
+    const skipped = controller([
+      ['POST', '/claims', true],
+      ['PUT', '/claims/:param', true],
+      ['DELETE', '/claims/:param', true, ['SkipStaffCheck']],
+    ]);
+    const [row] = auditRoutes(skipped.nodes, skipped.edges, skip);
+    expect(row).toMatchObject({ reason: 'route-unguarded-among-guarded', symbol: 'DELETE /claims/:param' });
+    expect(row?.message).toContain('because StaffGuard (skipped by @SkipStaffCheck)');
+    const marked = controller([
+      ['POST', '/claims', true],
+      ['PUT', '/claims/:param', true],
+      ['DELETE', '/claims/:param', false, ['Public']],
+    ]);
+    expect(auditRoutes(marked.nodes, marked.edges, OPTIONS)).toEqual([]);
+  });
+
+  it('names nobody where two writes are open, every write is guarded, or fewer than two other writes are', () => {
+    const one = controller([
+      ['PATCH', '/claims/:param', true],
+      ['DELETE', '/claims/:param', false],
+    ]);
+    expect(auditRoutes(one.nodes, one.edges, OPTIONS)).toEqual([]);
+    const two = controller([
+      ['POST', '/claims', false],
+      ['DELETE', '/claims/:param', false],
+      ['PATCH', '/claims/:param', true],
+    ]);
+    expect(auditRoutes(two.nodes, two.edges, OPTIONS)).toEqual([]);
+    const all = controller([
+      ['POST', '/claims', true],
+      ['DELETE', '/claims/:param', true],
+    ]);
+    expect(auditRoutes(all.nodes, all.edges, OPTIONS)).toEqual([]);
+    const alone = controller([
+      ['GET', '/claims', true],
+      ['DELETE', '/claims/:param', false],
+    ]);
+    expect(auditRoutes(alone.nodes, alone.edges, OPTIONS)).toEqual([]);
+  });
+});

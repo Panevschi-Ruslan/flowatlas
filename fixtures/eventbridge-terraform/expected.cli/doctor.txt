@@ -1,9 +1,13 @@
-unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 1 to act on · missed: 1 · notes: 0 · findings: 0
+unresolved: 2 to act on · missed: 1 · notes: 0 · findings: 1
+  1 finding: 1 function task retrying no transient error
   channel-dynamic: 1 row
     The channel name cannot be read here. Annotate publishLibraryEvent with the channel it uses.
       circulation/src/lib/events.ts:15  publishLibraryEvent -> detailType
+  workflow-function-unretried (finding): 1 row
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      circulation/statemachines/loan-review.asl.json:5  loan-review: ReviewLoan invokes a function and retries none of the platform's transient errors, so one fails the execution
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
@@ -12,8 +16,10 @@ desync: none
 
 contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 1 now, +1)
+baseline: missing (0 accepted, 2 now, +2)
   no baseline at <root>/fixtures/eventbridge-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   channel-dynamic: 0 → 1 (+1)
-  new (1):
+  workflow-function-unretried: 0 → 1 (+1)
+  new (2):
     circulation|src/lib/events.ts|producer:circulation#src/lib/events.ts:15:9|channel-dynamic
+    circulation|statemachines/loan-review.asl.json|circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan|workflow-function-unretried

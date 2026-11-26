@@ -7,32 +7,50 @@ import {
   groupFailures,
   type FailureGroup,
   gapIdOf,
+  FIELDS_READ_META,
+  isHttpMethod,
+  isMessageTypeNode,
   isRule,
+  normalizePath,
+  PARAM_PLACEHOLDER,
+  makeMessageTypeId,
+  type FieldRead,
   rowKindOf,
   placeIdOf,
   rankByReach,
   readAccepted,
+  SCREENS_META,
   waysInOf,
   type AcceptedRead,
   type GraphNode,
   type RowKind,
 } from '@flowatlas/core';
-import { acceptedSplitOf, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, messageTypeFacts, unselectedSaid, type AnchoredUnresolvedRow, type GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail, truncate } from '../query/detail.js';
-import { hintsFor, MAX_NEXT, withNext, type Identified } from '../query/next.js';
+import { hintsFor, MAX_NEXT, withNext, withoutShown, type Identified, type RowShown } from '../query/next.js';
+import { reachReader, type ReachReader } from '../query/ways-in.js';
+import { shapeFields, topField } from '../query/fields.js';
 import type { CompactNode } from '../query/types.js';
+import { byWords, wordsLeft, type WordsFound } from '../query/words.js';
 import { rankMatches } from './entries.js';
 import {
+  answerEach,
+  answersOutput,
+  askedOf,
   bound,
   callOf,
   commonInput,
+  completeOf,
+  completeOutput,
   inService,
   nextOutput,
   pageInput,
+  reachOutput,
   READ_ONLY,
   serviceInput,
+  severalInput,
   withDb,
   type Bounded,
   type ToolContext,
@@ -47,7 +65,7 @@ import {
  * function it is written in (P94), for get_source and who_calls; its `gapId`,
  * `gap:<service>|<file>|<reason>`, is the one `flowatlas accept` takes.
  */
-export const SEARCH_KINDS = ['routes', 'channels', 'tables', 'types', 'gaps', 'fails', 'classes'] as const;
+export const SEARCH_KINDS = ['routes', 'channels', 'messages', 'tables', 'types', 'gaps', 'fails', 'classes', 'fields'] as const;
 export type SearchKind = (typeof SEARCH_KINDS)[number];
 
 /** Node types that are a class in the code: what DI wires and what a page renders. */
@@ -110,7 +128,42 @@ export interface FailHit {
   service?: string;
 }
 
-type Hit = CompactNode | GapHit | TypeHit | FailHit;
+/**
+ * A type of message on a channel (P358), found by its value: who publishes it
+ * and which handlers select it, or why nothing does.
+ */
+export interface MessageHit {
+  /** The type's node: a channel id, for who_emits, who_consumes, dead and impact. */
+  id: string;
+  type: 'message_type';
+  label: string;
+  /** The channel it is a type of. */
+  channel: string;
+  service?: string;
+  /** The first producers and selecting handlers, by id; `sites` says how many there are in all. */
+  producers: string[];
+  handlers: string[];
+  sites: number;
+  /** No code that runs selects it: who receives the channel instead, and how sure that is. */
+  unselected?: string;
+}
+
+/**
+ * A field of a message or a request body (P368), by its name: what it
+ * crosses (a type of message, a channel, or a route), and how many places
+ * read it and how many publishes or requests send it.
+ */
+export interface FieldHit {
+  /** The type of message, channel or route the field crosses: what who_consumes or check_contract takes. */
+  id: string;
+  type: 'field';
+  /** The field. */
+  label: string;
+  read: number;
+  sent: number;
+}
+
+type Hit = CompactNode | GapHit | TypeHit | FailHit | MessageHit | FieldHit;
 
 interface SearchQuery {
   db: GraphDb;
@@ -134,7 +187,8 @@ const cut = <T>(rows: readonly T[], limit: number, offset: number): { rows: T[];
 const nodesOf =
   (types: readonly string[]): Finder =>
   ({ db, text, service, limit, offset, bounded }) => {
-    const pool: GraphNode[] = types.flatMap((type) => db.nodesByType(type)).filter(inService(service));
+    // A type of message is found under `messages`, not as one more channel (P358).
+    const pool: GraphNode[] = types.flatMap((type) => db.nodesByType(type)).filter(inService(service)).filter((node) => !isMessageTypeNode(node));
     const ranked = rankMatches(pool, text);
     return cut(
       ranked.map((match) => projectDetail(match.node, bounded.detail)),
@@ -142,6 +196,119 @@ const nodesOf =
       offset,
     );
   };
+
+/** A hole a client writes in a path: `${orderId}`, `{orderId}`, `:orderId`, `<orderId>`, `[orderId]`. */
+const CLIENT_HOLE = /^(?:\$\{[^}]*\}|\{[^}]*\}|:[^/]+|<[^>]*>|\[[^\]]*\])$/;
+
+/**
+ * A query that is a route's path, as segments with every hole `:param`, and
+ * its verb when one opens it (`POST /orders/:id`); undefined for a query that
+ * holds no `/`. A host and a query string are no part of it.
+ */
+export const pathQueryOf = (text: string): { method?: string; segments: string[] } | undefined => {
+  if (!text.includes('/')) return undefined;
+  const verb = /^([A-Za-z]+)\s+(\S.*)$/.exec(text.trim());
+  const method = verb !== null && isHttpMethod(verb[1] ?? '') ? (verb[1] ?? '').toUpperCase() : undefined;
+  const written = (method === undefined ? text.trim() : (verb?.[2] ?? '')).replace(/^[a-z]+:\/\/[^/]+/i, '').replace(/[?#].*$/, '');
+  // `${a}` may hold a `/` of its own (`${base}/x`): read as one hole whatever it holds.
+  const segments = written
+    .replace(/\$\{[^}]*\}/g, ':param')
+    .split('/')
+    .filter((segment) => segment !== '')
+    .map((segment) => (CLIENT_HOLE.test(segment) ? PARAM_PLACEHOLDER : segment.toLowerCase()));
+  return segments.length === 0 ? undefined : { ...(method === undefined ? {} : { method }), segments };
+};
+
+/** Where `part` sits in `whole` as consecutive segments, a hole matching a hole: the index, or -1. */
+const segmentsAt = (whole: readonly string[], part: readonly string[]): number => {
+  for (let at = whole.length - part.length; at >= 0; at -= 1) {
+    if (part.every((segment, index) => whole[at + index] === segment)) return at;
+  }
+  return -1;
+};
+
+/**
+ * Routes whose path holds the path asked (P377), whatever the client called
+ * its parameters and without the prefix the server adds (a global `/api`):
+ * the path whole first, then one ending with it, then one holding it.
+ */
+const routesByPath = (pool: readonly GraphNode[], text: string): GraphNode[] => {
+  const asked = pathQueryOf(text);
+  if (asked === undefined) return [];
+  const ranked: Array<{ node: GraphNode; rank: number }> = [];
+  for (const node of pool) {
+    if (node.kind !== 'http') continue;
+    const declared = String(node.meta?.['method'] ?? '').toUpperCase();
+    if (asked.method !== undefined && declared !== asked.method && declared !== 'ALL') continue;
+    const segments = normalizePath(String(node.meta?.['path'] ?? '')).split('/').filter((segment) => segment !== '').map((segment) => segment.toLowerCase());
+    const at = segmentsAt(segments, asked.segments);
+    if (at < 0) continue;
+    const rank = segments.length === asked.segments.length ? 0 : at + asked.segments.length === segments.length ? 1 : 2;
+    ranked.push({ node, rank });
+  }
+  return ranked
+    .sort((a, b) => a.rank - b.rank || a.node.label.length - b.node.label.length || (a.node.id < b.node.id ? -1 : 1))
+    .map((row) => row.node);
+};
+
+/**
+ * Ways in by their label or id, and a screen also by the component it shows
+ * (P363): asked for the screen of `FloorPlanComponent`, the route that
+ * registers it is the answer, though its label is the address.
+ */
+const routes: Finder = (input) => {
+  const { db, text, service, limit, offset, bounded } = input;
+  const pool = db.nodesByType('entry').filter(inService(service));
+  const ranked = rankMatches(pool, text).map((match) => match.node);
+  // A path written as a client writes it (P377): any parameter name, and without the prefix the server adds.
+  const byPath = routesByPath(pool, text).filter((node) => !ranked.includes(node));
+  ranked.push(...byPath);
+  const found = new Set(ranked.map((node) => node.id));
+  const wanted = text.toLowerCase();
+  const showing = pool.filter((node) => {
+    if (node.kind !== 'screen' || found.has(node.id)) return false;
+    const shown = node.meta?.[SCREENS_META];
+    return Array.isArray(shown) && shown.some((name) => typeof name === 'string' && name.toLowerCase().includes(wanted));
+  });
+  return cut(
+    [...ranked, ...showing].map((node) => projectDetail(node, bounded.detail)),
+    limit,
+    offset,
+  );
+};
+
+/** How many producers and handlers one message hit names. */
+const MESSAGE_ENDS = 3;
+
+const messages: Finder = ({ db, text, service, limit, offset }) => {
+  const wanted = text.toLowerCase();
+  const rows = db
+    .nodesByType('channel')
+    .filter(isMessageTypeNode)
+    .flatMap((node): MessageHit[] => {
+      const facts = messageTypeFacts(db, node);
+      if (!facts.value.toLowerCase().includes(wanted) && !node.id.toLowerCase().includes(wanted)) return [];
+      const services = new Set([...facts.producers, ...facts.selectors.map((selector) => selector.consumer)].map((each) => each.repo));
+      if (service !== undefined && !services.has(service)) return [];
+      const said = unselectedSaid(facts);
+      return [
+        {
+          id: node.id,
+          type: 'message_type',
+          label: facts.value,
+          channel: facts.channel?.label ?? String(node.meta?.['channel'] ?? ''),
+          ...(node.repo === '' ? {} : { service: node.repo }),
+          producers: facts.producers.slice(0, MESSAGE_ENDS).map((producer) => producer.id),
+          handlers: facts.selectors.filter((selector) => selector.unreached === undefined).slice(0, MESSAGE_ENDS).map((selector) => selector.consumer.id),
+          sites: facts.producers.length + facts.selectors.length,
+          ...(said === undefined ? {} : { unselected: said.said }),
+        },
+      ];
+    })
+    // The value asked for exactly first, then the shortest.
+    .sort((a, b) => Number(b.label.toLowerCase() === wanted) - Number(a.label.toLowerCase() === wanted) || a.label.length - b.label.length || (a.id < b.id ? -1 : 1));
+  return cut(rows, limit, offset);
+};
 
 const types: Finder = ({ db, text, service, limit, offset }) => {
   const wanted = text.toLowerCase();
@@ -264,14 +431,74 @@ const fails: Finder = ({ db, text, service, limit, offset }) => {
   return cut(rows, limit, offset);
 };
 
+
+/**
+ * Fields read and sent, by name (P368): each read written on a handler, a
+ * guard or a middleware, placed on what it is read from, and each field a
+ * publish or a request sends.
+ */
+const fields: Finder = ({ db, text, service, limit, offset }) => {
+  const wanted = text.toLowerCase();
+  const matches = (name: string): boolean => name.toLowerCase().includes(wanted);
+  const hits = new Map<string, FieldHit>();
+  const bump = (on: string, name: string, side: 'read' | 'sent'): void => {
+    const key = `${on}\u0000${name}`;
+    const hit = hits.get(key) ?? { id: on, type: 'field' as const, label: name, read: 0, sent: 0 };
+    hit[side] += 1;
+    hits.set(key, hit);
+  };
+  for (const node of db.allNodes()) {
+    const reads = node.meta?.[FIELDS_READ_META];
+    if (!Array.isArray(reads) || (service !== undefined && node.repo !== service)) continue;
+    const rows = (reads as FieldRead[]).filter((row) => matches(topField(row.field)));
+    if (rows.length === 0) continue;
+    // What the code is handed the value from: a route, or a channel through a consumer.
+    const routes = db.edgesTo(node.id, ['handles', 'guarded_by']).filter((edge) => db.node(edge.from)?.type === 'entry').map((edge) => edge.from);
+    const channels = db
+      .edgesTo(node.id, ['handles'])
+      .filter((edge) => db.node(edge.from)?.type === 'consumer')
+      .flatMap((edge) => db.edgesTo(edge.from, ['consumes']).map((into) => into.from));
+    for (const row of rows) {
+      const name = topField(row.field);
+      for (const route of routes) bump(route, name, 'read');
+      for (const channel of channels) {
+        const typed = (row.when ?? []).map((value) => makeMessageTypeId(channel, value)).filter((id) => db.node(id) !== undefined);
+        for (const on of typed.length === 0 ? [channel] : typed) bump(on, name, 'read');
+      }
+    }
+  }
+  for (const producer of db.nodesByType('producer')) {
+    if (service !== undefined && producer.repo !== service) continue;
+    const edges = db.edgesFrom(producer.id, ['emits']);
+    const typed = edges.filter((edge) => isMessageTypeNode(db.node(edge.to)));
+    for (const edge of typed.length === 0 ? edges : typed) {
+      const value = db.node(edge.to)?.meta?.['messageType'];
+      for (const name of shapeFields(db, edge.params?.[0], typeof value === 'string' ? value : undefined) ?? []) if (matches(name)) bump(edge.to, name, 'sent');
+    }
+  }
+  for (const edge of db.allEdges()) {
+    if (edge.type !== 'http_calls' || (service !== undefined && db.node(edge.from)?.repo !== service)) continue;
+    for (const name of shapeFields(db, edge.params?.[0]) ?? []) if (matches(name)) bump(edge.to, name, 'sent');
+  }
+  const rows = [...hits.values()].sort(
+    (a, b) =>
+      Number(b.label.toLowerCase() === wanted) - Number(a.label.toLowerCase() === wanted) ||
+      b.read + b.sent - (a.read + a.sent) ||
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : a.label < b.label ? -1 : 1),
+  );
+  return cut(rows, limit, offset);
+};
+
 const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
-  ['routes', nodesOf(['entry'])],
+  ['routes', routes],
   ['channels', nodesOf(['channel'])],
+  ['messages', messages],
   ['tables', nodesOf(['table'])],
   ['types', types],
   ['gaps', gaps],
   ['fails', fails],
   ['classes', nodesOf(CLASS_TYPES)],
+  ['fields', fields],
 ]);
 
 /**
@@ -280,6 +507,19 @@ const FINDERS: ReadonlyMap<SearchKind, Finder> = new Map<SearchKind, Finder>([
  */
 const hintsOfHit = (hit: Hit): string[] => {
   // A node's `type` is any string, so the narrowing is said rather than inferred.
+  if (hit.type === 'field') {
+    const found = hit as FieldHit;
+    const node = found.id.startsWith('entry:') ? undefined : found.id;
+    if (node === undefined) return [callOf('check_contract', { edge: found.id, field: found.label })];
+    const type = found.id.includes('#') ? found.id.slice(found.id.lastIndexOf('#') + 1) : undefined;
+    const channel = type === undefined ? found.id : found.id.slice(0, found.id.lastIndexOf('#'));
+    return [callOf('who_consumes', { channel, type, field: found.label }), callOf('check_contract', { channel, type, field: found.label })];
+  }
+  if (hit.type === 'message_type') {
+    const found = hit as MessageHit;
+    const channel = found.id.slice(0, found.id.length - found.label.length - 1);
+    return [callOf('who_consumes', { channel, type: found.label }), callOf('who_emits', { channel, type: found.label })];
+  }
   if (hit.type !== 'gap') return hintsFor(hit as Identified);
   // The gap as a prompt with how to close it, first (P122): what an agent acts on.
   const prompt = (hit as GapHit).gapId === undefined ? [] : [`describe_for_prompt({id: ${JSON.stringify((hit as GapHit).gapId)}})`];
@@ -290,8 +530,8 @@ const hintsOfHit = (hit: Hit): string[] => {
 
 /** What search answers: per kind, how many match in all and one page of them. */
 export const searchOutput = {
-  query: z.string(),
-  counts: z.record(z.string(), z.number()),
+  query: z.string().optional(),
+  counts: z.record(z.string(), z.number()).optional(),
   results: z.record(
     z.string(),
     z.array(
@@ -301,6 +541,7 @@ export const searchOutput = {
         type: z.string(),
         label: z.string().optional(),
         loc: z.string().optional(),
+        endLine: z.number().optional(),
         service: z.string().optional(),
         kind: z.string().optional(),
         meta: z.record(z.string(), z.unknown()).optional(),
@@ -317,26 +558,73 @@ export const searchOutput = {
         sites: z.number().optional(),
         places: z.array(z.string()).optional(),
         more: z.number().optional(),
+        channel: z.string().optional(),
+        producers: z.array(z.string()).optional(),
+        handlers: z.array(z.string()).optional(),
+        unselected: z.string().optional(),
+        read: z.number().optional(),
+        sent: z.number().optional(),
+        ...reachOutput,
       }),
     ),
-  ),
+  ).optional(),
+  // Found by the words of the query (P383), each row a node as a kind's row says it, with the words it holds.
+  best: z.array(z.object({ id: z.string(), matched: z.array(z.string()) }).loose()).optional(),
   truncated: z.string().optional(),
   nextOffset: z.number().optional(),
   note: z.string().optional(),
+  answers: answersOutput,
+  ...completeOutput,
   next: nextOutput,
 };
+
+/**
+ * Which nodes the kinds asked admit to the rows found by words (P383): a
+ * route for `routes`, a channel for `channels`, a type of message for
+ * `messages`, a table, a class; every node when no kind was asked, methods
+ * and functions too, which no kind lists.
+ */
+const admitsOf = (kinds: readonly SearchKind[] | undefined): { admits?: (node: GraphNode) => boolean; withTypes: boolean; any: boolean } => {
+  if (kinds === undefined || kinds.length === 0) return { withTypes: true, any: true };
+  const asked = new Set(kinds);
+  const classes = new Set<string>(CLASS_TYPES);
+  const admits = (node: GraphNode): boolean =>
+    (asked.has('routes') && node.type === 'entry') ||
+    (asked.has('channels') && node.type === 'channel' && !isMessageTypeNode(node)) ||
+    (asked.has('messages') && isMessageTypeNode(node)) ||
+    (asked.has('tables') && node.type === 'table') ||
+    (asked.has('classes') && classes.has(node.type));
+  const any = ['routes', 'channels', 'messages', 'tables', 'classes', 'types'].some((kind) => asked.has(kind as SearchKind));
+  return { admits, withTypes: asked.has('types'), any };
+};
+
+/**
+ * A query written as a sentence or as words, not as one name: it holds a
+ * space and is no route's path. Found by words beside the kinds' rows, since a
+ * name holding the sentence whole is rarely what was meant.
+ */
+const isSentence = (text: string): boolean => /\s/.test(text) && pathQueryOf(text) === undefined;
+
+/** The kinds whose rows are code `dead` judges, so each row says whether it runs (P364). */
+const REACHED_KINDS: ReadonlySet<SearchKind> = new Set(['routes', 'channels', 'messages', 'classes', 'fails']);
 
 export const runSearch = (
   db: GraphDb,
   input: { query: string; kinds?: readonly SearchKind[]; service?: string; limit: number; offset?: number },
   bounded: Bounded,
   accepted: AcceptedRead,
+  reader?: ReachReader,
 ): {
   results: Partial<Record<SearchKind, Hit[]>>;
   counts: Partial<Record<SearchKind, number>>;
   next: string[];
   /** Kinds with rows past this page, and how many each has left. */
   more: Partial<Record<SearchKind, number>>;
+  /**
+   * The names holding the query's words, ranked (P383): found when no kind
+   * matched the query as a name, or when it is a sentence.
+   */
+  best?: WordsFound;
 } => {
   const text = input.query.trim();
   const offset = input.offset ?? 0;
@@ -348,13 +636,21 @@ export const runSearch = (
   for (const kind of kinds) {
     const found = FINDERS.get(kind)!({ db, text, service: input.service, limit: input.limit, offset, bounded, accepted });
     if (found.total === 0) continue;
-    results[kind] = found.rows;
+    results[kind] = reader === undefined || !REACHED_KINDS.has(kind) ? found.rows : found.rows.map((row) => reader.annotate(row));
     counts[kind] = found.total;
     const left = found.total - Math.min(offset, found.total) - found.rows.length;
     if (left > 0) more[kind] = left;
     if (found.rows[0] !== undefined) hints.push(...hintsOfHit(found.rows[0]));
   }
-  return { results, counts, more, next: [...new Set(hints)].slice(0, MAX_NEXT) };
+  const scope = admitsOf(input.kinds);
+  const found = scope.any && (Object.keys(counts).length === 0 || isSentence(text))
+    ? byWords(db, text, { ...scope, service: input.service, limit: input.limit, offset, detail: bounded.detail, reader })
+    : undefined;
+  const best = found === undefined || found.rows.length === 0 ? undefined : found;
+  // A sentence's best rows lead: what it asked for is them more than a name holding it whole.
+  if (best?.first !== undefined) hints.unshift(...hintsFor(best.first));
+  const shown = [...Object.values(results).flat(), ...(best?.rows ?? [])] as RowShown[];
+  return { results, counts, more, ...(best === undefined ? {} : { best }), next: withoutShown([...new Set(hints)], shown).slice(0, MAX_NEXT) };
 };
 
 /** The defaults a hint for the next page leaves out. */
@@ -365,9 +661,10 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     'search',
     {
       title: 'Search everything',
-      description: 'One query over routes, channels, tables, types, gaps, failures and classes.',
+      description: "Any node by name or words (`kinds` narrows), a field read or sent, or a route by a client's path.",
       inputSchema: {
-        query: z.string().min(1),
+        query: z.string().min(1).optional(),
+        queries: severalInput(),
         kinds: z.array(z.enum(SEARCH_KINDS)).optional(),
         limit: z.number().int().min(1).max(100).default(10).describe('rows per kind'),
         service: serviceInput,
@@ -379,51 +676,71 @@ export const registerSearch = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
+        const asked = askedOf(input.query, input.queries);
+        if (asked.length === 0) return { error: 'ask with query or queries' };
         const bounded = bound(input);
         const accepted = readAccepted(ctx.handle.path);
         const limit = Math.min(input.limit, bounded.maxNodes);
-        const { results, counts, more, next } = runSearch(
-          db,
-          {
-            query: input.query,
-            ...(input.kinds === undefined ? {} : { kinds: input.kinds }),
-            ...(input.service === undefined ? {} : { service: input.service }),
-            limit,
-            offset: input.offset,
-          },
-          bounded,
-          accepted,
-        );
-        if (Object.keys(counts).length === 0) return { error: `nothing matches ${JSON.stringify(input.query)}` };
-        // An accepted.json that could not be read marks nothing accepted, and says so (P80).
-        const notes = [
-          ...(bounded.note === undefined ? [] : [bounded.note]),
-          ...(accepted.problem === undefined || counts.gaps === undefined ? [] : [`${describeAcceptedProblem(accepted.problem)}.`]),
-        ];
-        // One offset pages every kind; the next page asks again for the kinds that have more.
-        const cutKinds = Object.keys(more) as SearchKind[];
-        const nextOffset = input.offset + limit;
-        const paging =
-          cutKinds.length === 0
-            ? {}
-            : {
-                truncated: `${cutKinds.map((kind) => `${kind} ${more[kind]!} more`).join(', ')}; next page offset ${nextOffset}`,
-                nextOffset,
-              };
-        const page =
-          cutKinds.length === 0
-            ? []
-            : [
-                callOf(
-                  'search',
-                  { query: input.query, kinds: cutKinds, limit: input.limit, service: input.service, detail: input.detail, maxNodes: input.maxNodes, offset: nextOffset },
-                  SEARCH_DEFAULTS,
-                ),
-              ];
-        return withNext(
-          { query: input.query, counts, results, ...paging, ...(notes.length === 0 ? {} : { note: notes.join(' ') }) },
-          [...page, ...next].slice(0, MAX_NEXT),
-        );
+        // Whether each row runs and where it is reached from (P364), one reader for every query.
+        const reader = reachReader(db, ctx.handle, bounded.detail);
+        const one = (query: string): object => {
+          const { results, counts, more, best, next } = runSearch(
+            db,
+            {
+              query,
+              ...(input.kinds === undefined ? {} : { kinds: input.kinds }),
+              ...(input.service === undefined ? {} : { service: input.service }),
+              limit,
+              offset: input.offset,
+            },
+            bounded,
+            accepted,
+            reader,
+          );
+          if (Object.keys(counts).length === 0 && best === undefined) return { error: `nothing matches ${JSON.stringify(query)}` };
+          // An accepted.json that could not be read marks nothing accepted, and says so (P80).
+          const notes = [
+            ...(bounded.note === undefined ? [] : [bounded.note]),
+            ...(accepted.problem === undefined || counts.gaps === undefined ? [] : [`${describeAcceptedProblem(accepted.problem)}.`]),
+          ];
+          // One offset pages every kind; the next page asks again for the kinds that have more.
+          const cutKinds = Object.keys(more) as SearchKind[];
+          const nextOffset = input.offset + limit;
+          const paging =
+            cutKinds.length === 0
+              ? {}
+              : {
+                  truncated: `${cutKinds.map((kind) => `${kind} ${more[kind]!} more`).join(', ')}; next page offset ${nextOffset}`,
+                  nextOffset,
+                };
+          const page =
+            cutKinds.length === 0
+              ? []
+              : [
+                  callOf(
+                    'search',
+                    { query: query, kinds: cutKinds, limit: input.limit, service: input.service, detail: input.detail, maxNodes: input.maxNodes, offset: nextOffset },
+                    SEARCH_DEFAULTS,
+                  ),
+                ];
+          return withNext(
+            {
+              query,
+              ...(Object.keys(counts).length === 0 ? {} : { counts, results }),
+              ...(best === undefined ? {} : { best: best.rows }),
+              ...paging,
+              ...completeOf([
+                paging.truncated === undefined ? undefined : `page: ${paging.truncated}`,
+                best === undefined ? undefined : wordsLeft(best, best.rows.length, input.offset),
+                ...reader.left(),
+              ]),
+              ...(notes.length === 0 ? {} : { note: notes.join(' ') }),
+            },
+            [...page, ...next].slice(0, MAX_NEXT),
+          );
+        };
+        if (asked.length === 1) return one(asked[0]!);
+        return answerEach('query', asked, one);
       }),
   );
 };

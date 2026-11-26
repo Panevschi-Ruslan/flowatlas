@@ -233,7 +233,34 @@ export const handlerOfFunction = (fn: NamedFunction, ctx: ExtractContext): Funct
 export const repoFunctionOf = (node: TsNode | undefined): NamedFunction | undefined => {
   if (node === undefined) return undefined;
   const origin = originOfValue(node);
-  return origin.kind === 'local' ? namedFunction(origin.declaration) : undefined;
+  if (origin.kind !== 'local') return undefined;
+  return namedFunction(origin.declaration) ?? memberFunctionOf(origin.declaration);
+};
+
+/** How many members naming members are followed before the chain is given up. */
+const MEMBER_DEPTH = 3;
+
+/**
+ * The named function a member of an object written out holds, where the
+ * member names one (P362): `return { boardEvents, stream: boardEvents }` in a
+ * factory, so `handlers.boardEvents` and `handlers.stream` - the members of
+ * the object the factory returns, handed to a router - are the function
+ * `boardEvents` the factory declares. A shorthand member is the name it
+ * repeats; a `key: value` member is what its value names. A member whose
+ * value is written in place is not a named function and is left to the
+ * reader's own handling of one.
+ */
+export const memberFunctionOf = (declaration: TsNode, depth = 0): NamedFunction | undefined => {
+  if (depth >= MEMBER_DEPTH) return undefined;
+  let held: TsNode | undefined;
+  if (Node.isShorthandPropertyAssignment(declaration)) held = declaration.getValueSymbol()?.getDeclarations()[0];
+  else if (Node.isPropertyAssignment(declaration)) {
+    const value = declaration.getInitializer();
+    const origin = value === undefined ? undefined : originOfValue(unwrapValue(value));
+    held = origin?.kind === 'local' ? origin.declaration : undefined;
+  }
+  if (held === undefined || held === declaration) return undefined;
+  return namedFunction(held) ?? memberFunctionOf(held, depth + 1);
 };
 
 /** A function written where a value was expected. */
@@ -517,7 +544,8 @@ export const inlineHandlerOf = (
   label: string,
   ctx: ExtractContext,
 ): InlineHandler | undefined => {
-  if (argument === undefined || (!Node.isArrowFunction(argument) && !Node.isFunctionExpression(argument))) {
+  const objectMethod = argument !== undefined && Node.isMethodDeclaration(argument) && Node.isObjectLiteralExpression(argument.getParent());
+  if (argument === undefined || (!Node.isArrowFunction(argument) && !Node.isFunctionExpression(argument) && !objectMethod)) {
     return undefined;
   }
   const sourceFile = argument.getSourceFile();

@@ -1,0 +1,40 @@
+{
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "infra": {
+        "options": {
+          "config_env": "prod"
+        }
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "infra": {
+        "options": {
+          "region": "eu-west-1"
+        }
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "lambda"
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "lambda"
+    }
+  ],
+  "output": ".flowatlas"
+}

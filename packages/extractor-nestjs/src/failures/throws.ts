@@ -12,8 +12,13 @@ import {
 } from 'ts-morph';
 import { functionNamedBy, memberFunctionCalled } from '../passes/called-function.js';
 import {
+  CODED_ERRORS,
+  type CodedError,
+  DECLARED_ERRORS,
+  ERROR_FACTORIES,
   EXCEPTION_STATUS,
   HTTP_EXCEPTION,
+  type ErrorFactory,
   HTTP_STATUS,
   STATUSLESS_EXCEPTIONS,
   UNKNOWN_ERROR_STATUS,
@@ -648,6 +653,36 @@ const thrownThrough = (call: CallExpression, statement: Node): Omit<Thrown, 'lin
   };
 };
 
+/** The error factory a call is, by its name and by where the name comes from: an import of one of its packages, or nothing at all. */
+const errorFactoryOf = (call: CallExpression): ErrorFactory | undefined => {
+  const callee = bare(call.getExpression());
+  if (!Node.isIdentifier(callee)) return undefined;
+  const factory = ERROR_FACTORIES.find((each) => each.name === callee.getText());
+  if (factory === undefined) return undefined;
+  const declarations = callee.getSymbol()?.getDeclarations() ?? [];
+  if (declarations.length === 0) return factory;
+  for (const declaration of declarations) {
+    if (Node.isImportSpecifier(declaration) && factory.packages.includes(declaration.getImportDeclaration().getModuleSpecifierValue())) return factory;
+    if (declaration.getSourceFile().isDeclarationFile()) return factory;
+  }
+  return undefined;
+};
+
+/** What `throw createError({ statusCode: 404 })` throws: the factory, at the status it writes. */
+const thrownByFactory = (call: CallExpression, factory: ErrorFactory): Omit<Thrown, 'line'> => {
+  const [options] = call.getArguments();
+  let status: number | undefined;
+  if (options !== undefined && Node.isObjectLiteralExpression(options)) {
+    for (const key of factory.statusKeys) {
+      const property = options.getProperty(key);
+      if (property !== undefined && Node.isPropertyAssignment(property)) status ??= statusWritten(property.getInitializer());
+    }
+  } else {
+    status = statusWritten(options);
+  }
+  return { exception: factory.name, ...(status === undefined ? {} : { status }), lineage: [] };
+};
+
 /**
  * What a `throw` throws: `new X(...)` as the class answers it; a helper's
  * answer, `throw f(x)`, `throw await f(x)` or `throw e` with `e` a `const`
@@ -660,15 +695,82 @@ const thrownBy = (expression: Expression | undefined, statement: Node): Omit<Thr
     const callee = expression.getExpression();
     if (!Node.isIdentifier(callee)) return undefined;
     const named = classNamed(callee);
+    const coded = named.declaration === undefined ? CODED_ERRORS.find((each) => each.name === named.name) : undefined;
+    if (coded !== undefined) return thrownByCode(expression.getArguments(), coded);
     return { exception: named.name, ...answerOfClass(named, expression.getArguments()) };
   }
   const call = callBehind(expression);
   if (call === undefined) return undefined;
+  const declared = declaredErrorOf(call);
+  if (declared !== undefined) return declared;
   // `throw Error('x')` builds the language's own error without `new`; it was
   // never read as a helper and is not one.
   const callee = bare(call.getExpression());
   if (Node.isIdentifier(callee) && classNamed(callee).builtIn === true) return undefined;
+  const factory = errorFactoryOf(call);
+  if (factory !== undefined) return thrownByFactory(call, factory);
   return thrownThrough(call, statement);
+};
+
+/** A code written as text, or nothing. */
+const codeWritten = (expression: Node | undefined): string | undefined => {
+  if (expression === undefined) return undefined;
+  const value = bare(expression);
+  return Node.isStringLiteral(value) || Node.isNoSubstitutionTemplateLiteral(value) ? value.getLiteralValue() : undefined;
+};
+
+/** The value one key of an options object written in place holds. */
+const optionOf = (options: Node | undefined, key: string): Node | undefined => {
+  const value = options === undefined ? undefined : bare(options);
+  if (value === undefined || !Node.isObjectLiteralExpression(value)) return undefined;
+  const property = value.getProperty(key);
+  return property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+};
+
+/**
+ * What `new ORPCError('NOT_FOUND')` throws (P58): the class and its code, at
+ * the status written beside it, or the one the framework answers the code
+ * with - assumed where the code is one the framework does not name.
+ */
+const thrownByCode = (args: readonly Node[], coded: CodedError): Omit<Thrown, 'line'> => {
+  const at = args[coded.codeAt];
+  const code = codeWritten(coded.codeKey === undefined ? at : optionOf(at, coded.codeKey));
+  const written =
+    coded.statusAt === undefined || coded.statusKey === undefined ? undefined : statusWritten(optionOf(args[coded.statusAt], coded.statusKey));
+  const known = code === undefined ? undefined : coded.statuses.get(code);
+  const status = written ?? known ?? (code === undefined ? undefined : coded.fallback);
+  return {
+    exception: code === undefined ? coded.name : `${coded.name}(${code})`,
+    ...(status === undefined ? {} : { status, own: status }),
+    ...(written === undefined && known === undefined && code !== undefined ? { assumed: true as const } : {}),
+    lineage: [coded.name, 'Error'],
+  };
+};
+
+/**
+ * What `throw errors.NOT_FOUND(…)` throws (P58), where `errors` is a member of
+ * the first parameter of the function it is written in: a failure the
+ * procedure declared, named as the code writes it, at the status the
+ * framework answers the code with. The status the declaration writes, where
+ * it writes one, is the procedure's to say and is set where the procedure is.
+ */
+const declaredErrorOf = (call: CallExpression): Omit<Thrown, 'line'> | undefined => {
+  const callee = bare(call.getExpression());
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const receiver = bare(callee.getExpression());
+  if (!Node.isIdentifier(receiver) || receiver.getText() !== DECLARED_ERRORS.parameter) return undefined;
+  const declaration = receiver.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isBindingElement(declaration)) return undefined;
+  if (declaration.getFirstAncestor((at) => Node.isParameterDeclaration(at)) === undefined) return undefined;
+  const code = callee.getName();
+  const known = DECLARED_ERRORS.statuses.get(code);
+  return {
+    exception: `${DECLARED_ERRORS.parameter}.${code}`,
+    status: known ?? DECLARED_ERRORS.fallback,
+    own: known ?? DECLARED_ERRORS.fallback,
+    ...(known === undefined ? { assumed: true as const } : {}),
+    lineage: [`${DECLARED_ERRORS.parameter}.${code}`, 'Error'],
+  };
 };
 
 /**
@@ -678,10 +780,10 @@ const thrownBy = (expression: Expression | undefined, statement: Node): Omit<Thr
  * in `leaveOut`: one an interceptor maps an error to, which is read as that
  * (P207).
  */
-export const throwsIn = (body: Node, leaveOut: ReadonlySet<Node> = new Set()): Thrown[] => {
+export const throwsIn = (body: Node, leaveOut: ReadonlySet<Node> = new Set(), parts?: ReadonlySet<Node>): Thrown[] => {
   const found: Thrown[] = [];
   for (const statement of body.getDescendantsOfKind(SyntaxKind.ThrowStatement)) {
-    if (leaveOut.has(statement) || caughtWithin(statement, body)) continue;
+    if (leaveOut.has(statement) || caughtWithin(statement, body) || (parts !== undefined && statement.getAncestors().some((at) => parts.has(at)))) continue;
     const thrown = thrownBy(statement.getExpression(), statement);
     if (thrown !== undefined) found.push({ ...thrown, line: lineOf(statement) });
   }

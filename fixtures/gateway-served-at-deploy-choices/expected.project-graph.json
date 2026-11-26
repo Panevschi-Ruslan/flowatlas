@@ -1,0 +1,1217 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:35:28.372Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/list-products.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/list-products.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "lib/catalog-stack.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "deployedBy": "cdk",
+        "api": "shop-catalog",
+        "function": "shop-list-products",
+        "declaredAs": "CatalogStack/Catalog/Default/products/GET",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-catalog",
+            "chosenDefault": "beta",
+            "chosenHost": "*.execute-api.eu-west-1.amazonaws.com"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:shop-list-products",
+      "type": "entry",
+      "label": "shop-list-products",
+      "repo": "catalog",
+      "file": "lib/catalog-stack.ts",
+      "line": 17,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-list-products",
+        "deployedBy": "cdk",
+        "name": "shop-list-products",
+        "runtime": "nodejs20.x",
+        "declaredAs": "CatalogStack/ListProducts",
+        "constructPath": "CatalogStack/ListProducts",
+        "handler": "src/list-products.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/submit",
+      "type": "entry",
+      "label": "POST /orders/submit",
+      "repo": "orders",
+      "file": "infra/modules/orders-api/main.tf",
+      "line": 47,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/submit",
+        "rawPath": "/submit",
+        "deployedBy": "terraform",
+        "api": "shop-orders",
+        "function": "shop-submit",
+        "declaredAs": "module.orders_api.aws_api_gateway_method.submit",
+        "basePath": "/orders",
+        "domains": [
+          "api.shop.example"
+        ],
+        "stages": [
+          "staging"
+        ],
+        "servedAt": [
+          {
+            "host": "api.shop.example",
+            "base": [],
+            "api": "shop-orders"
+          },
+          {
+            "host": "*.execute-api.eu-west-2.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-orders",
+            "chosenDefault": "staging",
+            "under": "/orders"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/payments",
+      "type": "entry",
+      "label": "POST /payments",
+      "repo": "orders",
+      "file": "infra/main.tf",
+      "line": 77,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/payments",
+        "rawPath": "/payments",
+        "deployedBy": "terraform",
+        "api": "shop-payments",
+        "function": "shop-pay",
+        "declaredAs": "aws_apigatewayv2_route.pay",
+        "stages": [
+          "default"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.us-east-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-payments",
+            "chosenDefault": "default"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-pay",
+      "type": "entry",
+      "label": "shop-pay",
+      "repo": "orders",
+      "file": "infra/main.tf",
+      "line": 51,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-pay",
+        "deployedBy": "terraform",
+        "name": "shop-pay",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.pay",
+        "handler": "pay.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-submit",
+      "type": "entry",
+      "label": "shop-submit",
+      "repo": "orders",
+      "file": "infra/modules/orders-api/main.tf",
+      "line": 29,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-submit",
+        "deployedBy": "terraform",
+        "name": "shop-submit",
+        "runtime": "nodejs20.x",
+        "declaredAs": "module.orders_api.aws_lambda_function.submit",
+        "handler": "submit.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reviews:http:GET:/reviews",
+      "type": "entry",
+      "label": "GET /reviews",
+      "repo": "reviews",
+      "file": "api/template.yaml",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reviews",
+        "rawPath": "/reviews",
+        "deployedBy": "sam",
+        "api": "shop-reviews",
+        "function": "shop-list-reviews",
+        "declaredAs": "ReviewsApi.Resources.ListReviewsFunction.Events.List",
+        "stage": "qa",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-reviews",
+            "chosenDefault": "qa"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reviews:invoke:shop-list-reviews",
+      "type": "entry",
+      "label": "shop-list-reviews",
+      "repo": "reviews",
+      "file": "api/template.yaml",
+      "line": 21,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-list-reviews",
+        "deployedBy": "sam",
+        "name": "shop-list-reviews",
+        "runtime": "nodejs20.x",
+        "declaredAs": "ReviewsApi.Resources.ListReviewsFunction",
+        "logicalId": "ListReviewsFunction",
+        "handler": "list-reviews.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shipping:http:GET:/rates",
+      "type": "entry",
+      "label": "GET /rates",
+      "repo": "shipping",
+      "file": "serverless.yml",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/rates",
+        "rawPath": "rates",
+        "deployedBy": "serverless",
+        "api": "dev-shipping",
+        "function": "shipping-dev-quoteRates",
+        "declaredAs": "functions.quoteRates.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-shipping",
+            "chosenDefault": "dev",
+            "chosenHost": "*.execute-api.eu-central-1.amazonaws.com"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shipping:invoke:shipping-dev-quoteRates",
+      "type": "entry",
+      "label": "shipping-dev-quoteRates",
+      "repo": "shipping",
+      "file": "serverless.yml",
+      "line": 11,
+      "kind": "invoke",
+      "meta": {
+        "key": "shipping-dev-quoteRates",
+        "deployedBy": "serverless",
+        "name": "shipping-dev-quoteRates",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.quoteRates",
+        "stageFrom": "file",
+        "handler": "src/quote-rates.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "orders#src/pay.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/pay.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders#src/submit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/submit.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:reviews",
+      "type": "repo",
+      "label": "reviews",
+      "repo": "reviews",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shipping",
+      "type": "repo",
+      "label": "shipping",
+      "repo": "shipping",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:sls-shipping-dev-ServiceEndpoint",
+              "stack:shipping-dev#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 3,
+            "kind": "api",
+            "value": "dev-shipping",
+            "deployedBy": "serverless"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 6,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "reviews#src/list-reviews.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reviews",
+      "file": "src/list-reviews.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/quote-rates.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shipping",
+      "file": "src/quote-rates.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:12:24",
+      "type": "ui_api_call",
+      "label": "POST /default/payments",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://f6g7h8i9j0.execute-api.us-east-1.amazonaws.com/default/payments",
+        "path": "/default/payments",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{orderId:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId"
+        ],
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "f6g7h8i9j0.execute-api.us-east-1.amazonaws.com",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:17:24",
+      "type": "ui_api_call",
+      "label": "GET /dev/rates",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://k1l2m3n4o5.execute-api.eu-central-1.amazonaws.com/dev/rates",
+        "path": "/dev/rates",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "k1l2m3n4o5.execute-api.eu-central-1.amazonaws.com",
+        "targetService": "shipping"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:22:24",
+      "type": "ui_api_call",
+      "label": "GET /beta/products",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://p6q7r8s9t0.execute-api.eu-west-1.amazonaws.com/beta/products",
+        "path": "/beta/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "p6q7r8s9t0.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:27:24",
+      "type": "ui_api_call",
+      "label": "GET /qa/reviews",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://u1v2w3x4y5.execute-api.ap-south-1.amazonaws.com/qa/reviews",
+        "path": "/qa/reviews",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "u1v2w3x4y5.execute-api.ap-south-1.amazonaws.com",
+        "targetService": "reviews"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:2:24",
+      "type": "ui_api_call",
+      "label": "POST /orders/submit",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://api.shop.example/orders/submit",
+        "path": "/orders/submit",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "any",
+        "bodyFrom": "literal",
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "api.shop.example",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:7:24",
+      "type": "ui_api_call",
+      "label": "POST /staging/submit",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://a1b2c3d4e5.execute-api.eu-west-2.amazonaws.com/staging/submit",
+        "path": "/staging/submit",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "any",
+        "bodyFrom": "literal",
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "a1b2c3d4e5.execute-api.eu-west-2.amazonaws.com",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "web#js/shop.js:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/shop.js:listReviews",
+      "type": "function",
+      "label": "listReviews",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/shop.js:pay",
+      "type": "function",
+      "label": "pay",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/shop.js:quoteRates",
+      "type": "function",
+      "label": "quoteRates",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/shop.js:submit",
+      "type": "function",
+      "label": "submit",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "basket",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/shop.js:submitDirect",
+      "type": "function",
+      "label": "submitDirect",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "basket",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/list-products.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{products:undefined[]}",
+      "file": "src/list-products.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:invoke:shop-list-products",
+      "to": "catalog#src/list-products.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-products.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:http:POST:/orders/submit",
+      "to": "orders#src/submit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{received:unknown}",
+      "file": "src/submit.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/payments",
+      "to": "orders#src/pay.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{received:unknown}",
+      "file": "src/pay.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:invoke:shop-pay",
+      "to": "orders#src/pay.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pay.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:shop-submit",
+      "to": "orders#src/submit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/submit.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:reviews:http:GET:/reviews",
+      "to": "reviews#src/list-reviews.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{reviews:undefined[]}",
+      "file": "src/list-reviews.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:reviews:invoke:shop-list-reviews",
+      "to": "reviews#src/list-reviews.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-reviews.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:shipping:http:GET:/rates",
+      "to": "shipping#src/quote-rates.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{rates:undefined[]}",
+      "file": "src/quote-rates.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shipping:invoke:shipping-dev-quoteRates",
+      "to": "shipping#src/quote-rates.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/quote-rates.ts",
+      "line": 4
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:12:24",
+      "to": "entry:orders:http:POST:/payments",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 12,
+      "params": [
+        "{orderId:any}"
+      ],
+      "meta": {
+        "via": "served-at",
+        "targetService": "orders",
+        "servedApi": "shop-payments"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:17:24",
+      "to": "entry:shipping:http:GET:/rates",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 17,
+      "meta": {
+        "via": "served-at",
+        "targetService": "shipping",
+        "servedApi": "dev-shipping"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:22:24",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 22,
+      "meta": {
+        "via": "served-at",
+        "targetService": "catalog",
+        "servedApi": "shop-catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:27:24",
+      "to": "entry:reviews:http:GET:/reviews",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 27,
+      "meta": {
+        "via": "served-at",
+        "targetService": "reviews",
+        "servedApi": "shop-reviews"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:2:24",
+      "to": "entry:orders:http:POST:/orders/submit",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 2,
+      "params": [
+        "any"
+      ],
+      "meta": {
+        "via": "served-at",
+        "targetService": "orders",
+        "servedApi": "shop-orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:7:24",
+      "to": "entry:orders:http:POST:/orders/submit",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 7,
+      "params": [
+        "any"
+      ],
+      "meta": {
+        "via": "served-at",
+        "targetService": "orders",
+        "servedApi": "shop-orders"
+      }
+    },
+    {
+      "from": "web#js/shop.js:listProducts",
+      "to": "ui_api_call:web#js/shop.js:22:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 22
+    },
+    {
+      "from": "web#js/shop.js:listReviews",
+      "to": "ui_api_call:web#js/shop.js:27:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 27
+    },
+    {
+      "from": "web#js/shop.js:pay",
+      "to": "ui_api_call:web#js/shop.js:12:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 12
+    },
+    {
+      "from": "web#js/shop.js:quoteRates",
+      "to": "ui_api_call:web#js/shop.js:17:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 17
+    },
+    {
+      "from": "web#js/shop.js:submit",
+      "to": "ui_api_call:web#js/shop.js:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 2
+    },
+    {
+      "from": "web#js/shop.js:submitDirect",
+      "to": "ui_api_call:web#js/shop.js:7:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 7
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/list-products.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/list-products.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/pay.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEventV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/pay.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResultV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/pay.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "untyped-value"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/submit.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/submit.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/submit.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "untyped-value"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "src/list-reviews.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "reviews"
+    },
+    {
+      "file": "src/list-reviews.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "reviews"
+    },
+    {
+      "file": "src/quote-rates.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "shipping"
+    },
+    {
+      "file": "src/quote-rates.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "shipping"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://api.shop.example/orders/submit names its API by an id no file holds; it is taken as shop-orders of orders, the API of the project served at api.shop.example with a route for it, and the request as one for /orders/submit on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://a1b2c3d4e5.execute-api.eu-west-2.amazonaws.com/staging/submit names its API by an id no file holds; it is taken as shop-orders of orders, the API of the project served at *.execute-api.eu-west-2.amazonaws.com/* with a route for it, at whatever stage it is run with (staging where none is given), so the stage staging is taken as one of its, and the request as one for /orders/submit on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:7:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 12,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://f6g7h8i9j0.execute-api.us-east-1.amazonaws.com/default/payments names its API by an id no file holds; it is taken as shop-payments of orders, the API of the project served at *.execute-api.us-east-1.amazonaws.com/* with a route for it, at whatever stage it is run with (default where none is given), so the stage default is taken as one of its, and the request as one for /payments on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:12:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 17,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k1l2m3n4o5.execute-api.eu-central-1.amazonaws.com/dev/rates names its API by an id no file holds; it is taken as dev-shipping of shipping, the API of the project served at *.execute-api.*.amazonaws.com/* with a route for it, at whatever stage it is run with (dev where none is given), so the stage dev is taken as one of its, in whatever region it is deployed to (*.execute-api.eu-central-1.amazonaws.com where none is given), and the request as one for /rates on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:17:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 22,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://p6q7r8s9t0.execute-api.eu-west-1.amazonaws.com/beta/products names its API by an id no file holds; it is taken as shop-catalog of catalog, the API of the project served at *.execute-api.*.amazonaws.com/* with a route for it, at whatever stage it is run with (beta where none is given), so the stage beta is taken as one of its, in whatever region it is deployed to (*.execute-api.eu-west-1.amazonaws.com where none is given), and the request as one for /products on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:22:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 27,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://u1v2w3x4y5.execute-api.ap-south-1.amazonaws.com/qa/reviews names its API by an id no file holds; it is taken as shop-reviews of reviews, the API of the project served at *.execute-api.*.amazonaws.com/* with a route for it, at whatever stage it is run with (qa where none is given), so the stage qa is taken as one of its, and the request as one for /reviews on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:27:24"
+    }
+  ]
+}

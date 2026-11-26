@@ -1,0 +1,9 @@
+{
+  "name": "edge",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "hono": "^4.12.16",
+    "redis": "^4.7.0"
+  }
+}

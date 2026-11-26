@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:21:26.613Z",
+  "configHash": "db1d5d07446c",
+  "services": [
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 8,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1870
+    },
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 11,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2329,
+      "packages": {
+        "name": "shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 12,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2069,
+      "packages": {
+        "name": "shop-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "staff-bot",
+      "repo": "./staff-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 28,
+      "types": 6,
+      "unresolved": 2,
+      "durationMs": 2268,
+      "packages": {
+        "name": "staff-bot",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs",
+          "telegraf"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 5,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 4,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 73,
+    "edges": 62,
+    "types": 6,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

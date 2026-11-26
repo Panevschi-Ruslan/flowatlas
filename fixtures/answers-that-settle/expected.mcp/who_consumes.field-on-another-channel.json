@@ -1,0 +1,36 @@
+{
+  "channel": {
+    "id": "channel:venue_events",
+    "type": "channel",
+    "label": "venue_events",
+    "loc": "src/orders/orders.service.ts:12",
+    "service": "rooms-api"
+  },
+  "consumers": [],
+  "total": 0,
+  "type": "ROOM_READY",
+  "field": "roomName",
+  "unselected": "no code compares ROOM_READY: its name is written only where it is sent, at src/rooms/rooms.service.ts:26 in rooms-api and 1 more; 1 consumer chooses other types; 3 consumers take every type and hand it on, and no code past them compares the name",
+  "sureness": "sure",
+  "alsoOn": [
+    {
+      "channel": "channel:staff_feed",
+      "count": 1,
+      "readers": [
+        {
+          "id": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+          "line": 28
+        }
+      ]
+    }
+  ],
+  "complete": false,
+  "left": [
+    "unsure: FeedRelay.onEvent (takes every type): handed to this.sent.push, line 17"
+  ],
+  "next": [
+    "check_contract({channel: \"channel:venue_events\", type: \"ROOM_READY\", field: \"roomName\"})",
+    "who_emits({channel: \"channel:venue_events\", type: \"ROOM_READY\", field: \"roomName\"})",
+    "who_consumes({channel: \"channel:venue_events\"})"
+  ]
+}

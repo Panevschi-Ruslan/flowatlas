@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:01.953Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:27:08.522Z",
   "configHash": "5058ec93d4d4",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./api",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 7,
+      "nodes": 8,
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 634,
+      "durationMs": 1805,
       "packages": {
         "name": "nest-mount-empty-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 468,
+      "durationMs": 1581,
       "packages": {
         "name": "nest-mount-empty-web",
         "runtime": [
@@ -107,7 +107,7 @@
     }
   ],
   "totals": {
-    "nodes": 14,
+    "nodes": 15,
     "edges": 7,
     "types": 0,
     "missed": 2,

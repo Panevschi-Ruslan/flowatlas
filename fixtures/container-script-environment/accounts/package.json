@@ -1,0 +1,8 @@
+{
+  "name": "container-script-environment-accounts",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

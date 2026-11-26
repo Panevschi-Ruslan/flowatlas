@@ -1,0 +1,126 @@
+{
+  "channel": "channel:catalog_events",
+  "producers": [
+    {
+      "id": "producer:catalog-api#src/events/catalog.service.ts:10:11",
+      "type": "producer",
+      "label": "event catalog_events",
+      "loc": "src/events/catalog.service.ts:10",
+      "service": "catalog-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /catalog/:param/price/:param",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "sku",
+        "price"
+      ]
+    },
+    {
+      "id": "producer:catalog-api#src/events/catalog.service.ts:14:11",
+      "type": "producer",
+      "label": "event catalog_events",
+      "loc": "src/events/catalog.service.ts:14",
+      "service": "catalog-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /catalog/:param/stock/:param",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "sku",
+        "left"
+      ]
+    },
+    {
+      "id": "producer:catalog-api#src/events/catalog.service.ts:18:11",
+      "type": "producer",
+      "label": "event catalog_events",
+      "loc": "src/events/catalog.service.ts:18",
+      "service": "catalog-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /catalog/:param/retire/:param",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "sku",
+        "reason"
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "consumer",
+      "label": "CatalogHandlers.onCatalogEvent",
+      "loc": "src/catalog/catalog-handlers.ts:15",
+      "service": "back-office",
+      "kind": "event",
+      "endLine": 18,
+      "reach": "dead",
+      "from": "POST /events/catalog",
+      "throughDead": true,
+      "reads": [
+        "reason",
+        "sku"
+      ]
+    },
+    {
+      "id": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onPriceChanged",
+      "type": "consumer",
+      "label": "CatalogHandlers.onPriceChanged",
+      "loc": "src/catalog/catalog-handlers.ts:9",
+      "service": "back-office",
+      "kind": "event",
+      "endLine": 12,
+      "reach": "dead",
+      "from": "POST /events/catalog",
+      "throughDead": true,
+      "reads": [
+        "price",
+        "sku"
+      ]
+    }
+  ],
+  "missing": [
+    {
+      "type": "STOCK_LOW",
+      "field": "reason",
+      "id": "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "line": 17
+    }
+  ],
+  "unused": [
+    {
+      "type": "PRICE_CHANGED",
+      "field": "type",
+      "sentBy": [
+        "producer:catalog-api#src/events/catalog.service.ts:10:11"
+      ]
+    },
+    {
+      "type": "PRODUCT_RETIRED",
+      "field": "type",
+      "sentBy": [
+        "producer:catalog-api#src/events/catalog.service.ts:18:11"
+      ]
+    },
+    {
+      "type": "STOCK_LOW",
+      "field": "left",
+      "sentBy": [
+        "producer:catalog-api#src/events/catalog.service.ts:14:11"
+      ]
+    },
+    {
+      "type": "STOCK_LOW",
+      "field": "type",
+      "sentBy": [
+        "producer:catalog-api#src/events/catalog.service.ts:14:11"
+      ]
+    }
+  ],
+  "complete": true
+}

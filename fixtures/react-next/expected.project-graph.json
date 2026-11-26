@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:12:30.223Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:29.606Z",
   "services": [
     {
       "name": "shop",
@@ -315,6 +315,54 @@
       }
     },
     {
+      "id": "entry:shop:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "OrdersPage"
+        ]
+      }
+    },
+    {
+      "id": "entry:web:screen:/invoices",
+      "type": "entry",
+      "label": "/invoices",
+      "repo": "web",
+      "file": "src/routes.tsx",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/invoices",
+        "by": "route-table",
+        "screens": [
+          "InvoicesPanel"
+        ]
+      }
+    },
+    {
+      "id": "entry:web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "web",
+      "file": "src/routes.tsx",
+      "line": 12,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "route-table",
+        "screens": [
+          "OrdersPanel"
+        ]
+      }
+    },
+    {
       "id": "repo:shop",
       "type": "repo",
       "label": "shop",
@@ -339,7 +387,17 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
       }
     },
     {
@@ -416,6 +474,15 @@
       "line": 18
     },
     {
+      "id": "shop#app/api/(admin)/invoices/route.ts:withAdmin",
+      "type": "middleware",
+      "label": "withAdmin",
+      "repo": "shop",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18,
+      "kind": "function"
+    },
+    {
       "id": "shop#app/api/jobs/route.ts:POST",
       "type": "function",
       "label": "POST",
@@ -462,7 +529,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -485,7 +553,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 15,
+            "why": "handed to patchOrder"
+          }
+        ]
       }
     },
     {
@@ -499,7 +574,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -518,7 +594,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 11,
+            "why": "handed to saveOrder"
+          }
+        ]
       }
     },
     {
@@ -528,6 +611,15 @@
       "repo": "shop",
       "file": "app/api/reports/route.ts",
       "line": 14
+    },
+    {
+      "id": "shop#app/api/reports/route.ts:withAdmin",
+      "type": "middleware",
+      "label": "withAdmin",
+      "repo": "shop",
+      "file": "app/api/reports/route.ts",
+      "line": 14,
+      "kind": "function"
     },
     {
       "id": "shop#app/orders/page.tsx:OrdersPage",
@@ -725,7 +817,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -824,6 +917,7 @@
         "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env",
@@ -846,6 +940,7 @@
         "responseType": null,
         "bodyType": "type:web#UpdateOrderDto",
         "bodyFrom": "literal",
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env",
@@ -867,6 +962,14 @@
         "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
+            "line": 13,
+            "why": "handed back from a function with no name to find its callers by"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "template-env",
@@ -889,6 +992,7 @@
         "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env"
@@ -1106,6 +1210,20 @@
     },
     {
       "from": "entry:shop:http:GET:/api/invoices",
+      "to": "shop#app/api/(admin)/invoices/route.ts:withAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withAdmin"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/invoices",
       "to": "shop#middleware.ts:middleware.ts",
       "type": "guarded_by",
       "confidence": "static",
@@ -1181,6 +1299,20 @@
     },
     {
       "from": "entry:shop:http:GET:/api/reports",
+      "to": "shop#app/api/reports/route.ts:withAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "app/api/reports/route.ts",
+      "line": 14,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withAdmin"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports",
       "to": "shop#middleware.ts:middleware.ts",
       "type": "guarded_by",
       "confidence": "static",
@@ -1227,6 +1359,20 @@
       "confidence": "static",
       "file": "app/api/(admin)/invoices/route.ts",
       "line": 18
+    },
+    {
+      "from": "entry:shop:http:POST:/api/invoices",
+      "to": "shop#app/api/(admin)/invoices/route.ts:withAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withAdmin"
+      }
     },
     {
       "from": "entry:shop:http:POST:/api/invoices",
@@ -1300,6 +1446,20 @@
     },
     {
       "from": "entry:shop:http:POST:/api/reports",
+      "to": "shop#app/api/reports/route.ts:withAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "app/api/reports/route.ts",
+      "line": 14,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withAdmin"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/reports",
       "to": "shop#middleware.ts:middleware.ts",
       "type": "guarded_by",
       "confidence": "static",
@@ -1356,6 +1516,39 @@
       "line": 18
     },
     {
+      "from": "entry:shop:screen:/orders",
+      "to": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 7,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "entry:web:screen:/invoices",
+      "to": "web#src/components/InvoicesPanel.tsx:InvoicesPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes.tsx",
+      "line": 13,
+      "meta": {
+        "route": "/invoices"
+      }
+    },
+    {
+      "from": "entry:web:screen:/orders",
+      "to": "web#src/components/OrdersPanel.tsx:OrdersPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes.tsx",
+      "line": 12,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
       "from": "shop#app/actions/orders.ts:archiveOrder",
       "to": "shop#lib/orders-store.ts:archive",
       "type": "calls",
@@ -1401,6 +1594,21 @@
       "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
       "file": "app/api/(admin)/invoices/route.ts",
       "line": 18
+    },
+    {
+      "from": "shop#app/api/(admin)/invoices/route.ts:withAdmin",
+      "to": "shop#lib/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "shop#app/api/jobs/route.ts:POST",
@@ -1506,6 +1714,21 @@
       "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
       "file": "app/api/reports/route.ts",
       "line": 14
+    },
+    {
+      "from": "shop#app/api/reports/route.ts:withAdmin",
+      "to": "shop#lib/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "app/api/reports/route.ts",
+      "line": 14,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "shop#app/orders/page.tsx:OrdersPage",
@@ -1875,6 +2098,15 @@
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
       "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/hooks/use-resource.ts",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/hooks/use-resource.ts:14:26"
     }
   ]
 }

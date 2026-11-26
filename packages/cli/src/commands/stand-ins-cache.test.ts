@@ -244,7 +244,9 @@ const fakeWatchers = (): {
       on: (listener) => {
         fake.listeners.push(listener);
       },
-      add: (more) => more.forEach((dir) => fake.roots.add(dir)),
+      add: async (more) => {
+        for (const dir of more) fake.roots.add(dir);
+      },
       unwatch: (gone) => gone.forEach((dir) => fake.roots.delete(dir)),
       close: async () => {
         fake.closed = true;

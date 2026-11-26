@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The orders service, a plain stack whose values are in a YAML file beside it.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  OrderEventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub orders-${Stage}-events
+
+  ShipFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-ship
+      Runtime: nodejs20.x
+      Handler: ship.handler
+      Code: ../src
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          EVENTS_TOPIC_ARN: !Ref OrderEventsTopic
+          # Two values the platform exports in one address: the account, and
+          # the prefix of the queue's name.
+          AUDIT_QUEUE_URL: !Sub
+            - https://sqs.${AWS::Region}.amazonaws.com/${Account}/${Prefix}-orders-audit
+            - Account: !ImportValue shop-account-id
+              Prefix: !ImportValue shop-prefix
+          # The account and the topic's whole name, joined.
+          ALERTS_TOPIC_ARN: !Join
+            - ''
+            - - 'arn:aws:sns:eu-west-1:'
+              - !ImportValue shop-account-id
+              - ':'
+              - !ImportValue shop-alerts-topic-name
+
+  # A rule whose targets are what the platform exports: a function and a
+  # queue, which only the platform says.
+  ShippedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source: [orders]
+        detail-type: [OrderShipped]
+      Targets:
+        - Id: fulfil
+          Arn: !ImportValue shop-fulfil-function-arn
+        - Id: jobs
+          Arn: !ImportValue shop-prod-platform-jobs-queue-arn
+
+  # The platform's jobs queue, subscribed to this service's topic.
+  JobsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref OrderEventsTopic
+      Protocol: sqs
+      Endpoint: !ImportValue shop-prod-platform-jobs-queue-arn

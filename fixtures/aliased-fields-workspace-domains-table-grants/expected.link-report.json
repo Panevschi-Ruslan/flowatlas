@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:01.937Z",
+  "configHash": "23f8db3e2220",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1170,
+      "packages": {
+        "name": "shop-gateway",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 1298,
+      "packages": {
+        "name": "shop-jobs",
+        "runtime": [
+          "bullmq",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1350,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "@aws-sdk/client-dynamodb",
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-kinesis",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 7,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1171
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 2,
+    "resolved": 2,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 0,
+    "noConsumers": [
+      "channel:billing",
+      "channel:eventbridge/stock-events/stock/StockAudited",
+      "channel:eventbridge/stock-events/stock/StockMoved",
+      "channel:kinesis/stock-moves",
+      "channel:reports"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://staging.orders.shop.example.test/v1/orders names its API by an id no file holds; it is taken as shop-orders of gateway, the API of the project served at **.orders.shop.example.test with a route for it, at whatever host the workspace names (default.orders.shop.example.test where none is given), and the request as one for /v1/orders on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:6:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 11,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://catalog.shop.example.test/products names its API by an id no file holds; it is taken as shop-catalog of gateway, the API of the project served at catalog.shop.example.test with a route for it, the domain the workspace production maps it onto, and the request as one for /products on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:11:24"
+    }
+  ],
+  "totals": {
+    "nodes": 37,
+    "edges": 22,
+    "types": 0,
+    "missed": 7,
+    "sites": 7,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 7
+  }
+}

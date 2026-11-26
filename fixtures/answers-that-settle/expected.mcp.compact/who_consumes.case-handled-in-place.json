@@ -1,0 +1,21 @@
+{
+  "settled": "1 consumer of CALL_STAFF, all listed",
+  "channel": {
+    "id": "channel:venue_events",
+    "loc": "src/orders/orders.service.ts:12",
+    "service": "rooms-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "line": 31,
+      "kind": "event",
+      "via": "switch",
+      "reach": "alive",
+      "from": "event venue_events"
+    }
+  ],
+  "total": 1,
+  "type": "CALL_STAFF",
+  "complete": true
+}

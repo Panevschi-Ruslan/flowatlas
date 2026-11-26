@@ -1,0 +1,34 @@
+unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 2 to act on · missed: 1 · notes: 1 · findings: 3
+  1 missed place static reading cannot see, folded into 1 row
+  3 findings: 2 queues read with no redrive, 1 stream nothing writes to
+  queue-redrive-missing (finding): 2 rows
+    A queue a function reads has no redrive policy, so a message that always fails is received again and again until it expires, and is then lost. Give the queue a dead-letter queue.
+      billing/infra/billing.yaml:23  shop-prod-invoices is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give infra/billing.Resources.Invoices a dead-letter queue, with a maxReceiveCount of at least 5.
+      platform/infra/main.tf:32  shop-prod-jobs is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give aws_sqs_queue.jobs a dead-letter queue, with a maxReceiveCount of at least 5.
+  deployment-setting-unread (note): 1 row
+    Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.
+      audit/lib/audit-stack.ts:34  shop-audit/Index/SqsEventSource:shop-audit/Audit: not every setting it is held to is checked: the queue shop-prod-audit is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      platform/infra/main.tf:44  kinesis/shop-prod-clicks is read by a function and nothing in the configured services writes to it
+  subscription-target-unread (info): 1 row
+    It is read, and it is not a function, a workflow, a queue, a topic, a bus or a stream, so nothing is drawn past it. Nothing to fix unless it is one of those written in a form not recognised.
+      platform/infra/main.tf:66  what aws_sns_topic_subscription.alerts delivers to is not read: it delivers by email, which nothing here follows
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 10 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 2 now, +2)
+  no baseline at <root>/fixtures/multi-repo-deploy-values/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  queue-redrive-missing: 0 → 2 (+2)
+  new (2):
+    billing|infra/billing.yaml|channel:sqs/shop-prod-invoices|queue-redrive-missing
+    platform|infra/main.tf|channel:sqs/shop-prod-jobs|queue-redrive-missing

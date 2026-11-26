@@ -1,4 +1,5 @@
 import {
+  isMessageTypeNode,
   blindSpotPlaces,
   causePartsOf,
   CHANNEL_DECLARED_META,
@@ -432,7 +433,10 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
     if (row.reason !== 'unknown-base-url-env') continue;
     const said = UNCLAIMED.exec(row.message ?? '')?.[1]?.replace(/[;,.]$/, '');
     const node = nodeOf(row);
-    const key = text(node?.meta?.['baseUrlEnv']) ?? said;
+    // A request for a procedure keeps its setting under its link (P242, P247).
+    const link = node?.meta?.['link'];
+    const linked = link !== null && typeof link === 'object' ? text((link as Record<string, unknown>)['baseUrlEnv']) : undefined;
+    const key = text(node?.meta?.['baseUrlEnv']) ?? linked ?? said;
     if (key === undefined || said === undefined) continue;
     signals.add('setting', key, tokenOf(key), placeOfRow(row));
     const values = node?.meta?.['baseUrlValues'];
@@ -491,7 +495,7 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
   // The report's lists; a report without them (a hand-built one) by the counts each channel node keeps.
   const listed = (key: 'noConsumers' | 'noProducers', count: 'consumers' | 'producers'): readonly string[] => {
     const ids = report?.channels?.[key];
-    return Array.isArray(ids) ? ids : project.nodes.filter((node) => node.type === 'channel' && node.meta?.[count] === 0).map((node) => node.id);
+    return Array.isArray(ids) ? ids : project.nodes.filter((node) => node.type === 'channel' && !isMessageTypeNode(node) && node.meta?.[count] === 0).map((node) => node.id);
   };
   for (const id of listed('noConsumers', 'consumers')) channelSignal(id, 'consumer');
   for (const id of listed('noProducers', 'producers')) channelSignal(id, 'producer');

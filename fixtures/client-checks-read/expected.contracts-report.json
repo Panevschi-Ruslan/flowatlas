@@ -1,0 +1,138 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-25T12:52:48.166Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+        "to": "entry:shop-api:http:GET:/api/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/items.service.ts:28:12|hits|entry:shop-api:http:GET:/api/items/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#ItemView",
+        "symbol": "shop-api#src/items/items.controller.ts:ItemsController.one"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#Item",
+        "symbol": "shop-web#src/app/items.service.ts:ItemsService.one"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/items.service.ts:32:12",
+        "to": "entry:shop-api:http:GET:/api/items/:param/stats",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/items.service.ts:32:12|hits|entry:shop-api:http:GET:/api/items/:param/stats",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#ItemStats",
+        "symbol": "shop-api#src/items/items.controller.ts:ItemsController.stats"
+      },
+      "receiver": {
+        "service": "shop-web",
+        "typeId": "type:shop-web#ItemStats",
+        "symbol": "shop-web#src/app/items.service.ts:ItemsService.stats"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:35:44",
+        "to": "entry:shop-api:http:GET:/api/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:35:44|hits|entry:shop-api:http:GET:/api/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-app#src/api.ts:loadItem declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:35:44",
+        "to": "entry:shop-api:http:GET:/api/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:35:44|hits|entry:shop-api:http:GET:/api/items/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-app#src/api.ts:loadItem declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:35:85",
+        "to": "entry:shop-api:http:GET:/api/items/:param/stats",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:35:85|hits|entry:shop-api:http:GET:/api/items/:param/stats",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-app#src/api.ts:loadItem declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-app#src/api.ts:35:85",
+        "to": "entry:shop-api:http:GET:/api/items/:param/stats",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-app#src/api.ts:35:85|hits|entry:shop-api:http:GET:/api/items/:param/stats",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-app#src/api.ts:loadItem declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+        "to": "entry:shop-api:http:GET:/api/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/items.service.ts:28:12|hits|entry:shop-api:http:GET:/api/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/items.service.ts:ItemsService.one declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/app/items.service.ts:32:12",
+        "to": "entry:shop-api:http:GET:/api/items/:param/stats",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/app/items.service.ts:32:12|hits|entry:shop-api:http:GET:/api/items/:param/stats",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/app/items.service.ts:ItemsService.stats declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 2,
+    "unchecked": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

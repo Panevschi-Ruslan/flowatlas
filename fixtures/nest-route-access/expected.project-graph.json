@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T04:50:37.421Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:44:34.422Z",
   "services": [
     {
       "name": "catalog",
@@ -80,7 +80,10 @@
       "label": "JwtAuthGuard",
       "repo": "catalog",
       "file": "src/auth/jwt-auth.guard.ts",
-      "line": 7
+      "line": 7,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "catalog#src/products/products.controller.ts:ProductsController",
@@ -105,7 +108,8 @@
         "signature": {
           "params": [],
           "returns": "type:catalog#Product[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -119,7 +123,8 @@
         "signature": {
           "params": [],
           "returns": "type:catalog#Product[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -133,7 +138,8 @@
         "signature": {
           "params": [],
           "returns": "type:catalog#Product[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -152,7 +158,8 @@
             }
           ],
           "returns": "type:catalog#Product[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -251,7 +258,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -944,7 +952,8 @@
         "signature": {
           "params": [],
           "returns": "type:inventory#StockItem[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -958,7 +967,8 @@
         "signature": {
           "params": [],
           "returns": "type:inventory#StockItem[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -993,7 +1003,15 @@
             }
           ],
           "returns": "type:inventory#StockItem"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "inventory#src/stock/stock.service.ts:StockService.save",
+            "line": 18,
+            "why": "handed to this.items.save"
+          }
+        ]
       }
     },
     {
@@ -1023,7 +1041,8 @@
       "file": "src/stock/session.guard.ts",
       "line": 3,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {
@@ -1073,7 +1092,15 @@
             }
           ],
           "returns": "type:inventory#StockItem"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "inventory#src/stock/stock.service.ts:StockService.save",
+            "line": 18,
+            "why": "handed to this.items.save"
+          }
+        ]
       }
     },
     {
@@ -1087,7 +1114,8 @@
         "signature": {
           "params": [],
           "returns": "type:inventory#StockItem[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1165,7 +1193,7 @@
       "label": "AppModule",
       "repo": "ledger",
       "file": "src/app.module.ts",
-      "line": 11,
+      "line": 12,
       "kind": "static",
       "meta": {
         "controllers": [
@@ -1183,7 +1211,10 @@
       "label": "ApiKeyGuard",
       "repo": "ledger",
       "file": "src/auth/api-key.guard.ts",
-      "line": 6
+      "line": 6,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "ledger#src/entries/entries.controller.ts:EntriesController",
@@ -1208,7 +1239,8 @@
         "signature": {
           "params": [],
           "returns": "type:ledger#LedgerEntry[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1227,7 +1259,15 @@
             }
           ],
           "returns": "type:ledger#LedgerEntry"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "ledger#src/entries/entries.service.ts:EntriesService.record",
+            "line": 18,
+            "why": "handed to this.entries.save"
+          }
+        ]
       }
     },
     {
@@ -1297,7 +1337,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1321,7 +1368,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1346,7 +1400,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -2109,7 +2170,7 @@
     },
     {
       "file": "src/app.module.ts",
-      "line": 13,
+      "line": 14,
       "reason": "module-providers-unread",
       "hint": "List the providers, or a name that leads to an array of them in this repository. A guard registered as APP_GUARD among providers that cannot be read is in front of every route, and nothing here can see it.",
       "symbol": "AppModule providers extraProviders()",

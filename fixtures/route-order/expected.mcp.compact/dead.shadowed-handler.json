@@ -1,0 +1,15 @@
+{
+  "id": "shop-api#src/orders/orders.controller.ts:OrdersController.latest",
+  "line": 20,
+  "verdict": "dead",
+  "reason": "handles only GET /orders/latest, which a route registered before it in the same router answers in its place",
+  "evidence": {
+    "callers": 1,
+    "caller": "entry:shop-api:http:GET:/orders/latest"
+  },
+  "from": "GET /orders/latest",
+  "next": [
+    "get_source({symbol: \"shop-api#src/orders/orders.controller.ts:OrdersController.latest\"})",
+    "cant_follow({service: \"shop-api\"})"
+  ]
+}

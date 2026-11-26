@@ -1,0 +1,172 @@
+{
+  "target": {
+    "id": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+    "type": "method",
+    "label": "OrdersService.updateStatus",
+    "loc": "src/orders.service.ts:12",
+    "service": "shop-api",
+    "meta": {
+      "signature": {
+        "params": [
+          {
+            "name": "orderId",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:backoffice-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "loc": "src/app.routes.ts:5",
+      "service": "backoffice-web",
+      "kind": "screen",
+      "meta": {
+        "path": "/board",
+        "by": "angular-routes",
+        "screens": [
+          "StatusBoardComponent"
+        ]
+      },
+      "reach": "outside",
+      "via": "PATCH /orders/status (shop-api)",
+      "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"
+    },
+    {
+      "id": "entry:shop-api:http:PATCH:/orders/status",
+      "type": "entry",
+      "label": "PATCH /orders/status",
+      "loc": "src/orders.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/orders/status",
+        "rawPath": "/orders/status",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+            "file": "src/orders.service.ts",
+            "line": 13,
+            "source": "throw"
+          }
+        ]
+      },
+      "reach": "alive",
+      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "rowsVia": 2
+    },
+    {
+      "id": "entry:shop-api:http:POST:/hooks/chat",
+      "type": "entry",
+      "label": "POST /hooks/chat",
+      "loc": "src/chat-hook.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/hooks/chat",
+        "rawPath": "/hooks/chat",
+        "controller": "ChatHookController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+            "file": "src/orders.service.ts",
+            "line": 13,
+            "source": "throw"
+          }
+        ]
+      },
+      "reach": "outside",
+      "by": "shop-api#src/chat-hook.controller.ts:ChatHookController.receive"
+    },
+    {
+      "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+      "type": "method",
+      "label": "OpsBot.handleStatus",
+      "loc": "src/ops-bot.ts:29",
+      "service": "ops-bot",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "{match:string[]}"
+            }
+          ],
+          "returns": "void"
+        }
+      },
+      "endLine": 31,
+      "reach": "maybe",
+      "from": "behind",
+      "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+      "confirm": {
+        "grep": "handleStatus",
+        "repo": "ops-bot"
+      },
+      "via": "PATCH /orders/status (shop-api)"
+    }
+  ],
+  "total": 4,
+  "byKind": {
+    "bots": {
+      "ops-bot": [
+        "src/ops-bot.ts (maybe)"
+      ]
+    },
+    "screens": {
+      "backoffice-web": [
+        "src/status-board.component.ts"
+      ]
+    },
+    "webhooks": {
+      "shop-api": [
+        "src/chat-hook.controller.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:PATCH:/orders/status"
+  ],
+  "reached": 16,
+  "entriesByService": {
+    "shop-api": 2,
+    "backoffice-web": 1
+  },
+  "maybe": 1,
+  "reachedByService": {
+    "shop-api": 7,
+    "backoffice-web": 6,
+    "ops-bot": 3
+  },
+  "servicesWithoutEntry": [
+    "ops-bot"
+  ],
+  "channels": [],
+  "complete": false,
+  "left": [
+    "gaps: 1 chain stops at an unread call before any way in: the maybe row"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:backoffice-web:screen:/board\"})",
+    "describe_for_prompt({id: \"entry:backoffice-web:screen:/board\"})",
+    "impact({symbol: \"entry:backoffice-web:screen:/board\"})"
+  ]
+}

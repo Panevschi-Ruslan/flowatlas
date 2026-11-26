@@ -1,0 +1,64 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "type": "channel",
+    "label": "order_updates",
+    "loc": "src/orders/orders.service.ts:10",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "type": "consumer",
+      "label": "Bot.handleOrderReady",
+      "loc": "src/bot/bot.ts:14",
+      "service": "bot",
+      "kind": "event",
+      "via": "switch",
+      "endLine": 17,
+      "reach": "dead",
+      "from": "POST /events/relay",
+      "throughDead": true
+    },
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "type": "consumer",
+      "label": "NotifyService.pingCustomer",
+      "loc": "src/notify/notify.service.ts:51",
+      "service": "shop",
+      "kind": "event",
+      "selectedIn": "NotifyService.onModuleInit",
+      "via": "switch",
+      "endLine": 54,
+      "reach": "dead",
+      "from": "POST /orders/:param/ready",
+      "ways": 7,
+      "throughDead": true
+    },
+    {
+      "id": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "consumer",
+      "label": "PickupBoard",
+      "loc": "src/screens/PickupBoard.tsx:14",
+      "service": "web",
+      "kind": "sse",
+      "via": "if",
+      "endLine": 18,
+      "reach": "dead",
+      "from": "POST /orders/:param/cancel (shop)",
+      "ways": 2,
+      "throughDead": true
+    }
+  ],
+  "total": 3,
+  "type": "ORDER_READY",
+  "complete": true,
+  "carriedBy": [
+    "channel:order_updates"
+  ],
+  "next": [
+    "who_emits({channel: \"channel:order_updates\", type: \"ORDER_READY\"})",
+    "impact({symbol: \"consumer:bot#src/bot/bot.ts:Bot.handleOrderReady\"})",
+    "get_source({symbol: \"consumer:bot#src/bot/bot.ts:Bot.handleOrderReady\"})"
+  ]
+}

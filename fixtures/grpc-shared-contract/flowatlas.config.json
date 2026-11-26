@@ -1,0 +1,27 @@
+{
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "express"
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "grpc",
+      "baseUrlEnv": ["PAYMENTS_ADDR"]
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "grpc",
+      "hosts": ["catalog"]
+    },
+    {
+      "name": "cart",
+      "document": { "kind": "protobuf", "path": "./proto/shop.proto", "services": ["shop.CartService"] },
+      "baseUrlEnv": ["CART_ADDR"]
+    }
+  ],
+  "output": ".flowatlas"
+}

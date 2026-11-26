@@ -1,6 +1,6 @@
 {
   "name": "@flowatlas/cli",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "One map of a project that lives in several repositories: read them, join them, ask questions.",
   "license": "MIT",
   "author": {
@@ -94,9 +94,13 @@
     "@flowatlas/extractor-angular": "workspace:*",
     "@flowatlas/extractor-react": "workspace:*",
     "@flowatlas/extractor-nestjs": "workspace:*",
+    "@flowatlas/graphql": "workspace:*",
     "@flowatlas/linker": "workspace:*",
     "@flowatlas/mcp": "workspace:*",
     "@flowatlas/terraform": "workspace:*",
-    "@flowatlas/stepfunctions": "workspace:*"
+    "@flowatlas/stepfunctions": "workspace:*",
+    "@flowatlas/serverless": "workspace:*",
+    "@flowatlas/cdk": "workspace:*",
+    "@flowatlas/sam": "workspace:*"
   }
 }

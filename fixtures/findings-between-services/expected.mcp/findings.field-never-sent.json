@@ -1,0 +1,51 @@
+{
+  "kind": "field-never-sent",
+  "rows": [
+    {
+      "kind": "field-never-sent",
+      "id": "catalog-api#src/products/products.controller.ts:ProductsController.create",
+      "from": "http_out:storefront#src/catalog.client.ts:30:34",
+      "to": "entry:catalog-api:http:POST:/products",
+      "service": "catalog-api",
+      "loc": "src/products/products.controller.ts:30",
+      "message": "`name` of the body of POST /products is read by ProductsController.create and not sent by storefront's request",
+      "precision": "high",
+      "evidence": "every sender on the crossing and every reader of it was read",
+      "fix": "likely renamed: productName is sent, name is read",
+      "rank": 1,
+      "next": "check_contract({from: \"http_out:storefront#src/catalog.client.ts:30:34\", to: \"entry:catalog-api:http:POST:/products\"})"
+    },
+    {
+      "kind": "field-never-sent",
+      "id": "storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent",
+      "to": "channel:catalog_events#PRODUCT_CREATED",
+      "service": "storefront",
+      "loc": "src/catalog-events.service.ts:23",
+      "message": "`productTitle` is read by CatalogEventsService.onCatalogEvent on catalog_events (PRODUCT_CREATED) and sent by none of its publishers; it checks for it first and goes on without it",
+      "precision": "high",
+      "evidence": "every sender on the crossing and every reader of it was read",
+      "fix": "likely renamed: title is sent, productTitle is read",
+      "rank": 2,
+      "next": "check_contract({channel: \"channel:catalog_events#PRODUCT_CREATED\"})"
+    }
+  ],
+  "total": 2,
+  "heldBack": {
+    "call-to-missing-route": {
+      "count": 1,
+      "why": "some routes of legacy-api were not read (route-path-dynamic)"
+    },
+    "type-never-published": {
+      "count": 1,
+      "why": "1 publish(es) on stock_events send a type not read"
+    },
+    "config-not-set": {
+      "count": 2,
+      "why": "no deployment file of storefront was read: its settings may be set where the reading does not look"
+    }
+  },
+  "next": [
+    "check_contract({from: \"http_out:storefront#src/catalog.client.ts:30:34\", to: \"entry:catalog-api:http:POST:/products\"})",
+    "check_contract({channel: \"channel:catalog_events#PRODUCT_CREATED\"})"
+  ]
+}

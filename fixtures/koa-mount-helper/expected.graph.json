@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "koa-mount-helper",
-  "generatedAt": "2026-10-08T07:27:08.206Z",
+  "generatedAt": "2026-11-23T14:37:02.936Z",
   "nodes": [
     {
       "id": "entry:koa-mount-helper:http:GET:/health",
@@ -91,7 +91,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -110,7 +111,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -129,7 +131,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -148,7 +151,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

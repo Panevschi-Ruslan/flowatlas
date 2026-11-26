@@ -1,5 +1,5 @@
 import { DEPLOYED_FORMS, deployedArn } from '@flowatlas/aws';
-import { nameInForms } from '@flowatlas/core';
+import { isGeneratedName, nameInForms } from '@flowatlas/core';
 import type { State } from './definition.js';
 
 /**
@@ -197,7 +197,8 @@ const named =
   (text: string): string | undefined => {
     const trimmed = text.trim();
     const name = nameInForms(trimmed, DEPLOYED_FORMS[kind]) ?? bare?.(trimmed);
-    return name !== undefined && valid.test(name) ? name : undefined;
+    // A name its deployment generates is named by its declaration, and is a name all the same (P57).
+    return name !== undefined && (valid.test(name) || isGeneratedName(name)) ? name : undefined;
   };
 
 const NAME = /^[A-Za-z0-9_\uE000-]+$/;

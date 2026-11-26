@@ -1,0 +1,972 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T12:52:46.307Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "shop-app",
+      "repo": "./shop-app",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop-api:http:GET:/api/items/:param",
+      "type": "entry",
+      "label": "GET /api/items/:param",
+      "repo": "shop-api",
+      "file": "src/items/items.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/items/:param",
+        "rawPath": "/api/items/:id",
+        "globalPrefix": "api",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/items/:param/stats",
+      "type": "entry",
+      "label": "GET /api/items/:param/stats",
+      "repo": "shop-api",
+      "file": "src/items/items.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/items/:param/stats",
+        "rawPath": "/api/items/:id/stats",
+        "globalPrefix": "api",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-app:screen:/items/:param",
+      "type": "entry",
+      "label": "/items/:param",
+      "repo": "shop-app",
+      "file": "src/App.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/items/:param",
+        "by": "route-table",
+        "screens": [
+          "ItemCard"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-web:screen:/items/:param",
+      "type": "entry",
+      "label": "/items/:param",
+      "repo": "shop-web",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "kind": "screen",
+      "meta": {
+        "path": "/items/:param",
+        "by": "angular-routes",
+        "screens": [
+          "ItemPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "globalPrefix": "api",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-app",
+      "type": "repo",
+      "label": "shop-app",
+      "repo": "shop-app",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 5,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "ky": 5,
+            "react": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "rxjs": 1,
+            "@angular/common": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/items/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "shop-api",
+      "file": "src/items/items.controller.ts",
+      "line": 17,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/items/items.controller.ts:ItemsController.one",
+      "type": "method",
+      "label": "ItemsController.one",
+      "repo": "shop-api",
+      "file": "src/items/items.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#ItemView"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/items/items.controller.ts:ItemsController.stats",
+      "type": "method",
+      "label": "ItemsController.stats",
+      "repo": "shop-api",
+      "file": "src/items/items.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-api#ItemStats"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-app#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "shop-app",
+      "file": "src/App.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-app#src/ItemCard.tsx:ItemCard",
+      "type": "ui_component",
+      "label": "ItemCard",
+      "repo": "shop-app",
+      "file": "src/ItemCard.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/items/:param"
+      }
+    },
+    {
+      "id": "shop-app#src/api.ts:loadItem",
+      "type": "function",
+      "label": "loadItem",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "shop-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+      "type": "ui_component",
+      "label": "ItemPageComponent",
+      "repo": "shop-web",
+      "file": "src/app/item-page.component.ts",
+      "line": 10,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-item-page",
+        "route": "/items/:param"
+      }
+    },
+    {
+      "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent.ngOnInit",
+      "type": "method",
+      "label": "ItemPageComponent.ngOnInit",
+      "repo": "shop-web",
+      "file": "src/app/item-page.component.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "shop-web",
+      "file": "src/app/items.service.ts",
+      "line": 23,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/items.service.ts:ItemsService.one",
+      "type": "method",
+      "label": "ItemsService.one",
+      "repo": "shop-web",
+      "file": "src/app/items.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-web#Item"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/items.service.ts:ItemsService.stats",
+      "type": "method",
+      "label": "ItemsService.stats",
+      "repo": "shop-web",
+      "file": "src/app/items.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-web#ItemStats"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/item-page.component.ts:34:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "shop-web",
+      "file": "src/app/item-page.component.ts",
+      "line": 34,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+        "template": "src/app/item-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-app#src/api.ts:35:44",
+      "type": "ui_api_call",
+      "label": "GET /api/items/:param",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_URL}/api/items/:param",
+        "path": "/api/items/:param",
+        "baseUrlEnv": "VITE_SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "headerKeys": [
+          "x-shop",
+          "x-trace"
+        ],
+        "answerRead": [
+          {
+            "field": "promo",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 36,
+            "guarded": true
+          },
+          {
+            "field": "promo.text",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 36,
+            "guarded": true
+          },
+          {
+            "field": "status",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 37,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'draft'",
+                "'live'"
+              ],
+              "line": 37
+            }
+          },
+          {
+            "field": "name",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 39
+          },
+          {
+            "field": "name",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 41
+          },
+          {
+            "field": "price",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 41
+          },
+          {
+            "field": "legacyCode",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 43
+          },
+          {
+            "field": "name",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 43
+          }
+        ],
+        "package": "ky",
+        "client": "ky",
+        "via": "template-env",
+        "credentials": {
+          "at": "src/api.ts:28",
+          "via": "instance"
+        },
+        "headers": [
+          "x-shop",
+          "x-trace"
+        ],
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-app#src/api.ts:35:85",
+      "type": "ui_api_call",
+      "label": "GET /api/items/:param/stats",
+      "repo": "shop-app",
+      "file": "src/api.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_URL}/api/items/:param/stats",
+        "path": "/api/items/:param/stats",
+        "baseUrlEnv": "VITE_SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "headerKeys": [
+          "x-shop",
+          "x-trace"
+        ],
+        "answerRead": [
+          {
+            "field": "views",
+            "in": "shop-app#src/api.ts:loadItem",
+            "line": 41
+          }
+        ],
+        "package": "ky",
+        "client": "ky",
+        "via": "template-env",
+        "credentials": {
+          "at": "src/api.ts:28",
+          "via": "instance"
+        },
+        "headers": [
+          "x-shop",
+          "x-trace"
+        ],
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+      "type": "ui_api_call",
+      "label": "GET /api/items/:param",
+      "repo": "shop-web",
+      "file": "src/app/items.service.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/items/:param",
+        "path": "/api/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#Item",
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "name",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 14,
+            "file": "src/app/item-page.component.ts"
+          },
+          {
+            "field": "price",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 15,
+            "file": "src/app/item-page.component.ts"
+          },
+          {
+            "field": "promo",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 16,
+            "file": "src/app/item-page.component.ts",
+            "guarded": true
+          },
+          {
+            "field": "promo.text",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 17,
+            "file": "src/app/item-page.component.ts",
+            "guarded": true
+          },
+          {
+            "field": "badge.label",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 19,
+            "file": "src/app/item-page.component.ts",
+            "guarded": true
+          },
+          {
+            "field": "legacyCode",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 20,
+            "file": "src/app/item-page.component.ts"
+          },
+          {
+            "field": "status",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 21,
+            "file": "src/app/item-page.component.ts",
+            "switched": {
+              "has": "none",
+              "cases": [
+                "'draft'",
+                "'live'"
+              ],
+              "line": 21
+            }
+          }
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/items.service.ts:32:12",
+      "type": "ui_api_call",
+      "label": "GET /api/items/:param/stats",
+      "repo": "shop-web",
+      "file": "src/app/items.service.ts",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/items/:param/stats",
+        "path": "/api/items/:param/stats",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:shop-web#ItemStats",
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "shares",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 25,
+            "file": "src/app/item-page.component.ts",
+            "guarded": true
+          },
+          {
+            "field": "views",
+            "in": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+            "line": 25,
+            "file": "src/app/item-page.component.ts"
+          }
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop-api:http:GET:/api/items/:param",
+      "to": "shop-api#src/items/items.controller.ts:ItemsController.one",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#ItemView",
+      "file": "src/items/items.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/items/:param/stats",
+      "to": "shop-api#src/items/items.controller.ts:ItemsController.stats",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-api#ItemStats",
+      "file": "src/items/items.controller.ts",
+      "line": 24,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop-app:screen:/items/:param",
+      "to": "shop-app#src/ItemCard.tsx:ItemCard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/items/:param"
+      }
+    },
+    {
+      "from": "entry:shop-web:screen:/items/:param",
+      "to": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "meta": {
+        "route": "/items/:param"
+      }
+    },
+    {
+      "from": "shop-app#src/ItemCard.tsx:ItemCard",
+      "to": "shop-app#src/api.ts:loadItem",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/ItemCard.tsx",
+      "line": 8
+    },
+    {
+      "from": "shop-app#src/api.ts:loadItem",
+      "to": "ui_api_call:shop-app#src/api.ts:35:44",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 35
+    },
+    {
+      "from": "shop-app#src/api.ts:loadItem",
+      "to": "ui_api_call:shop-app#src/api.ts:35:85",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 35
+    },
+    {
+      "from": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+      "to": "shop-web#src/app/items.service.ts:ItemsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/item-page.component.ts",
+      "line": 32
+    },
+    {
+      "from": "shop-web#src/app/item-page.component.ts:ItemPageComponent.ngOnInit",
+      "to": "shop-web#src/app/items.service.ts:ItemsService.one",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-web#Item",
+      "file": "src/app/item-page.component.ts",
+      "line": 35
+    },
+    {
+      "from": "shop-web#src/app/item-page.component.ts:ItemPageComponent.ngOnInit",
+      "to": "shop-web#src/app/items.service.ts:ItemsService.stats",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-web#ItemStats",
+      "file": "src/app/item-page.component.ts",
+      "line": 35
+    },
+    {
+      "from": "shop-web#src/app/items.service.ts:ItemsService",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 25
+    },
+    {
+      "from": "shop-web#src/app/items.service.ts:ItemsService.one",
+      "to": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 28
+    },
+    {
+      "from": "shop-web#src/app/items.service.ts:ItemsService.stats",
+      "to": "ui_api_call:shop-web#src/app/items.service.ts:32:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 32
+    },
+    {
+      "from": "ui_action:shop-web#src/app/item-page.component.ts:34:3",
+      "to": "shop-web#src/app/item-page.component.ts:ItemPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/item-page.component.ts",
+      "line": 34
+    },
+    {
+      "from": "ui_api_call:shop-app#src/api.ts:35:44",
+      "to": "entry:shop-api:http:GET:/api/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 35,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-app#src/api.ts:35:85",
+      "to": "entry:shop-api:http:GET:/api/items/:param/stats",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/api.ts",
+      "line": 35,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+      "to": "entry:shop-api:http:GET:/api/items/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 28,
+      "returns": "type:shop-web#Item",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/items.service.ts:32:12",
+      "to": "entry:shop-api:http:GET:/api/items/:param/stats",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.service.ts",
+      "line": 32,
+      "returns": "type:shop-web#ItemStats",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "types": {
+    "type:shop-api#ItemStats": {
+      "name": "ItemStats",
+      "kind": "object",
+      "declaredIn": "shop-api#src/items/items.controller.ts",
+      "structuralHash": "e1d0034ffa415e58",
+      "fields": [
+        {
+          "name": "views",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "saves",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-api#ItemView": {
+      "name": "ItemView",
+      "kind": "object",
+      "declaredIn": "shop-api#src/items/items.controller.ts",
+      "structuralHash": "baaf77c43a3c2044",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "'draft'|'live'|'sold'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "shop-web#src/app/items.service.ts",
+      "structuralHash": "d49228ad2bb20ff3",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "'draft'|'live'|'sold'",
+          "optional": false
+        },
+        {
+          "name": "promo",
+          "type": "{text:string}",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "badge",
+          "type": "{label:string}",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "legacyCode",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#ItemStats": {
+      "name": "ItemStats",
+      "kind": "object",
+      "declaredIn": "shop-web#src/app/items.service.ts",
+      "structuralHash": "15e95fa672ef593f",
+      "fields": [
+        {
+          "name": "views",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "saves",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "shares",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

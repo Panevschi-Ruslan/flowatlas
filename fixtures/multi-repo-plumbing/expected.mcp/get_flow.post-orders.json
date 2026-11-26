@@ -14,7 +14,8 @@
           "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
           "type": "method",
           "label": "OrdersController.create",
-          "loc": "src/orders/orders.controller.ts:22"
+          "loc": "src/orders/orders.controller.ts:22",
+          "endLine": 26
         },
         "edge": {
           "type": "handles",
@@ -30,7 +31,8 @@
               "id": "orders#src/common/app-logger.ts:AppLogger.log",
               "type": "method",
               "label": "AppLogger.log",
-              "loc": "src/common/app-logger.ts:12"
+              "loc": "src/common/app-logger.ts:12",
+              "endLine": 14
             },
             "edge": {
               "type": "calls",
@@ -47,7 +49,8 @@
                   "id": "orders#src/common/app-logger.ts:AppLogger.format",
                   "type": "method",
                   "label": "AppLogger.format",
-                  "loc": "src/common/app-logger.ts:16"
+                  "loc": "src/common/app-logger.ts:16",
+                  "endLine": 18
                 },
                 "edge": {
                   "type": "calls",
@@ -64,7 +67,8 @@
                       "id": "orders#src/common/app-logger.ts:AppLogger.redact",
                       "type": "method",
                       "label": "AppLogger.redact",
-                      "loc": "src/common/app-logger.ts:24"
+                      "loc": "src/common/app-logger.ts:24",
+                      "endLine": 26
                     },
                     "edge": {
                       "type": "calls",
@@ -80,7 +84,8 @@
                           "id": "orders#src/common/app-logger.ts:AppLogger.mask",
                           "type": "method",
                           "label": "AppLogger.mask",
-                          "loc": "src/common/app-logger.ts:28"
+                          "loc": "src/common/app-logger.ts:28",
+                          "endLine": 30
                         },
                         "edge": {
                           "type": "calls",
@@ -100,7 +105,8 @@
                       "id": "orders#src/common/app-logger.ts:AppLogger.stamp",
                       "type": "method",
                       "label": "AppLogger.stamp",
-                      "loc": "src/common/app-logger.ts:20"
+                      "loc": "src/common/app-logger.ts:20",
+                      "endLine": 22
                     },
                     "edge": {
                       "type": "calls",
@@ -116,7 +122,8 @@
                   "id": "orders#src/common/app-logger.ts:AppLogger.write",
                   "type": "method",
                   "label": "AppLogger.write",
-                  "loc": "src/common/app-logger.ts:32"
+                  "loc": "src/common/app-logger.ts:32",
+                  "endLine": 34
                 },
                 "edge": {
                   "type": "calls",
@@ -132,7 +139,8 @@
                       "id": "orders#src/common/app-logger.ts:AppLogger.serialize",
                       "type": "method",
                       "label": "AppLogger.serialize",
-                      "loc": "src/common/app-logger.ts:36"
+                      "loc": "src/common/app-logger.ts:36",
+                      "endLine": 38
                     },
                     "edge": {
                       "type": "calls",
@@ -153,7 +161,8 @@
               "id": "orders#src/orders/orders.service.ts:OrdersService.create",
               "type": "method",
               "label": "OrdersService.create",
-              "loc": "src/orders/orders.service.ts:28"
+              "loc": "src/orders/orders.service.ts:28",
+              "endLine": 35
             },
             "edge": {
               "type": "calls",
@@ -186,7 +195,8 @@
                   "id": "orders#src/common/metrics.ts:Metrics.count",
                   "type": "method",
                   "label": "Metrics.count",
-                  "loc": "src/common/metrics.ts:12"
+                  "loc": "src/common/metrics.ts:12",
+                  "endLine": 14
                 },
                 "edge": {
                   "type": "calls",
@@ -202,7 +212,8 @@
                       "id": "orders#src/common/metrics.ts:Metrics.record",
                       "type": "method",
                       "label": "Metrics.record",
-                      "loc": "src/common/metrics.ts:16"
+                      "loc": "src/common/metrics.ts:16",
+                      "endLine": 20
                     },
                     "edge": {
                       "type": "calls",
@@ -219,7 +230,8 @@
                           "id": "orders#src/common/metrics.ts:Metrics.keyOf",
                           "type": "method",
                           "label": "Metrics.keyOf",
-                          "loc": "src/common/metrics.ts:22"
+                          "loc": "src/common/metrics.ts:22",
+                          "endLine": 24
                         },
                         "edge": {
                           "type": "calls",
@@ -257,7 +269,8 @@
                   "id": "orders#src/orders/order.repository.ts:OrderRepository.save",
                   "type": "method",
                   "label": "OrderRepository.save",
-                  "loc": "src/orders/order.repository.ts:28"
+                  "loc": "src/orders/order.repository.ts:28",
+                  "endLine": 32
                 },
                 "edge": {
                   "type": "calls",
@@ -334,7 +347,8 @@
                   "id": "orders#src/orders/order.mapper.ts:OrderMapper.toDto",
                   "type": "method",
                   "label": "OrderMapper.toDto",
-                  "loc": "src/orders/order.mapper.ts:9"
+                  "loc": "src/orders/order.mapper.ts:9",
+                  "endLine": 11
                 },
                 "edge": {
                   "type": "calls",
@@ -350,7 +364,8 @@
                       "id": "orders#src/orders/order.mapper.ts:OrderMapper.statusOf",
                       "type": "method",
                       "label": "OrderMapper.statusOf",
-                      "loc": "src/orders/order.mapper.ts:13"
+                      "loc": "src/orders/order.mapper.ts:13",
+                      "endLine": 15
                     },
                     "edge": {
                       "type": "calls",
@@ -369,7 +384,8 @@
                   "id": "orders#src/orders/order.repository.ts:OrderRepository.findOne",
                   "type": "method",
                   "label": "OrderRepository.findOne",
-                  "loc": "src/orders/order.repository.ts:22"
+                  "loc": "src/orders/order.repository.ts:22",
+                  "endLine": 26
                 },
                 "edge": {
                   "type": "calls",
@@ -446,7 +462,8 @@
                   "id": "orders#src/orders/order.events.ts:OrderEvents.created",
                   "type": "method",
                   "label": "OrderEvents.created",
-                  "loc": "src/orders/order.events.ts:22"
+                  "loc": "src/orders/order.events.ts:22",
+                  "endLine": 26
                 },
                 "edge": {
                   "type": "calls",
@@ -525,7 +542,8 @@
                               "label": "InvoicesConsumer.onOrderCreated",
                               "loc": "src/invoices/invoices.consumer.ts:12",
                               "service": "billing",
-                              "kind": "event"
+                              "kind": "event",
+                              "endLine": 15
                             },
                             "edge": {
                               "type": "consumes",
@@ -537,7 +555,8 @@
                                   "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
                                   "type": "method",
                                   "label": "InvoicesConsumer.onOrderCreated",
-                                  "loc": "src/invoices/invoices.consumer.ts:12"
+                                  "loc": "src/invoices/invoices.consumer.ts:12",
+                                  "endLine": 15
                                 },
                                 "edge": {
                                   "type": "handles",
@@ -553,7 +572,8 @@
                                       "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                                       "type": "method",
                                       "label": "InvoicesService.create",
-                                      "loc": "src/invoices/invoices.service.ts:16"
+                                      "loc": "src/invoices/invoices.service.ts:16",
+                                      "endLine": 21
                                     },
                                     "edge": {
                                       "type": "calls",
@@ -585,6 +605,10 @@
   "truncated": "≥4 more nodes past depth 8; raise depth",
   "stoppedBy": [
     "depth"
+  ],
+  "complete": false,
+  "left": [
+    "depth: ≥4 more nodes past depth 8; raise depth"
   ],
   "next": [
     "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",

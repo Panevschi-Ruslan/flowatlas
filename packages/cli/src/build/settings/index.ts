@@ -1,7 +1,9 @@
 import { existsSync } from 'node:fs';
-import type { LoadedConfig, RepoSettings } from '@flowatlas/core';
+import { resolve } from 'node:path';
+import type { LoadedConfig, RepoSettings, SettingNames } from '@flowatlas/core';
 import { isDeclared } from '../declared.js';
 import { readProjectSettings } from './read.js';
+import { settingNamesOf } from './names.js';
 
 export { readProjectSettings } from './read.js';
 
@@ -21,9 +23,30 @@ export const settingsOfProject = (loaded: LoadedConfig): Record<string, RepoSett
     .filter((service) => !isDeclared(service))
     .map((service) => ({ name: service.name, dir: loaded.repoDir(service) }))
     .filter((service) => existsSync(service.dir));
+  const { environment, overlays, chartValues } = config.settingFiles;
+  const at = (path: string): string => resolve(loaded.rootDir, path);
   return readProjectSettings({
     services,
     rootDir: loaded.rootDir,
-    ...(config.settingFiles.environment === undefined ? {} : { environment: config.settingFiles.environment }),
+    ...(environment === undefined ? {} : { environment }),
+    ...(overlays === undefined ? {} : { overlays: overlays.map(at) }),
+    ...(chartValues === undefined ? {} : { chartValues: Object.fromEntries(Object.entries(chartValues).map(([chart, files]) => [at(chart), files.map(at)])) }),
   });
+};
+
+/**
+ * The names every configured repository's deployment files set (P388), for
+ * the database to keep beside the graph; nothing where the configuration
+ * turns reading those files off, so nothing is said of a key set nowhere.
+ */
+export const settingNamesOfProject = (loaded: LoadedConfig): { settingNames?: Record<string, SettingNames> } => {
+  const { config } = loaded;
+  if (config.settingFiles.read === false) return {};
+  const settingNames: Record<string, SettingNames> = {};
+  for (const service of config.services) {
+    if (isDeclared(service)) continue;
+    const dir = loaded.repoDir(service);
+    if (existsSync(dir)) settingNames[service.name] = settingNamesOf(dir);
+  }
+  return { settingNames };
 };

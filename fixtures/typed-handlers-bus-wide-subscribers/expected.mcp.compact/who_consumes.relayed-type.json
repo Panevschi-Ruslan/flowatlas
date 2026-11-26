@@ -1,0 +1,43 @@
+{
+  "settled": "3 consumers of ORDER_READY, all listed",
+  "channel": {
+    "id": "channel:order_updates",
+    "loc": "src/orders/orders.service.ts:10",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "line": 14,
+      "kind": "event",
+      "via": "switch",
+      "reach": "dead",
+      "from": "POST /events/relay",
+      "throughDead": true
+    },
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "line": 51,
+      "kind": "event",
+      "selectedIn": "NotifyService.onModuleInit",
+      "via": "switch",
+      "reach": "dead",
+      "from": "POST /orders/:param/ready",
+      "ways": 7,
+      "throughDead": true
+    },
+    {
+      "id": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "line": 14,
+      "kind": "sse",
+      "via": "if",
+      "reach": "dead",
+      "from": "POST /orders/:param/cancel (shop)",
+      "ways": 2,
+      "throughDead": true
+    }
+  ],
+  "total": 3,
+  "type": "ORDER_READY",
+  "complete": true
+}

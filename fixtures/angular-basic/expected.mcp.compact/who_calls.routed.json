@@ -1,0 +1,35 @@
+{
+  "settled": "1 way in reaches it, all listed",
+  "target": {
+    "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
+    "type": "ui_component",
+    "line": 4,
+    "kind": "standalone",
+    "reach": "alive",
+    "from": "screen /reports"
+  },
+  "callers": [
+    {
+      "id": "entry:angular-basic:screen:/reports",
+      "loc": "src/app/app.routes.ts:26",
+      "reach": "outside",
+      "edge": "handles"
+    },
+    {
+      "id": "ui_action:angular-basic#src/app/checkout.component.ts:28:10",
+      "label": "routerLink=\"/reports\"",
+      "kind": "route",
+      "edge": "triggers",
+      "topOfChain": true,
+      "gapsInFile": 2
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:angular-basic:screen:/reports",
+      "reach": "outside",
+      "hops": 1
+    }
+  ],
+  "complete": true
+}

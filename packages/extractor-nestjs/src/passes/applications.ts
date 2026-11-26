@@ -3,6 +3,7 @@ import {
   applicationFindings,
   applicationMembership,
   readApplicationRoots,
+  routeRegistrationOf,
 } from '../applications.js';
 import { definePass } from './types.js';
 
@@ -33,4 +34,7 @@ export const applicationsPass = definePass('applications', (ctx) => {
   for (const row of applicationFindings(unread)) ctx.report(row);
 
   recordApplications(ctx, applicationMembership(roots, ctx.modules, ctx.classes));
+  // The order each application registers its routes in, for the entry adapter
+  // to judge which of two routes answers first (P385).
+  if (ctx.meta !== undefined && roots.length > 0) ctx.meta['routeRegistration'] = routeRegistrationOf(roots, ctx.modules, ctx.classes);
 });

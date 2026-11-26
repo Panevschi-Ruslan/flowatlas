@@ -1,0 +1,9 @@
+{
+  "name": "admin",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@angular/core": "^19.0.0",
+    "rxjs": "^7.8.0"
+  }
+}

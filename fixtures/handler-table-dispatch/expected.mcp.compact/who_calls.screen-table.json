@@ -1,0 +1,67 @@
+{
+  "settled": "its request lands on PATCH /api/orders/status (shop-api), OrdersController.setStatus; no way in reaches it; 1 component file in shop-web on the way, all listed in components",
+  "target": {
+    "id": "shop-web#src/orders-api.ts:markReady",
+    "type": "function",
+    "line": 10,
+    "reach": "unreached",
+    "from": "none",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:PATCH:/api/orders/status",
+        "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "id": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "ui_component",
+      "line": 17,
+      "kind": "function",
+      "reach": "unreached",
+      "from": "none",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "id": "ui_action:shop-web#src/OrdersToolbar.tsx:27:15",
+          "label": "onClick={refresh}",
+          "kind": "event",
+          "edge": "handles",
+          "topOfChain": true,
+          "gapsInFile": 1
+        },
+        {
+          "id": "ui_action:shop-web#src/OrdersToolbar.tsx:28:15",
+          "label": "onClick={ready}",
+          "kind": "event",
+          "edge": "handles",
+          "topOfChain": true,
+          "gapsInFile": 1
+        },
+        {
+          "id": "ui_action:shop-web#src/OrdersToolbar.tsx:29:15",
+          "label": "onClick={stock}",
+          "kind": "event",
+          "edge": "handles",
+          "topOfChain": true,
+          "gapsInFile": 1
+        }
+      ]
+    }
+  ],
+  "waysIn": [],
+  "waysInNone": "no way in reaches this; the components on the way (components) call it",
+  "components": {
+    "shop-web": [
+      "src/OrdersToolbar.tsx"
+    ]
+  },
+  "complete": true
+}

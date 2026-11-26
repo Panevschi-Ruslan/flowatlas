@@ -1,0 +1,32 @@
+{
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["CATALOG_API_URL"]
+    },
+    { "name": "storefront", "repo": "./storefront", "type": "nestjs" },
+    { "name": "alerts-bot", "repo": "./alerts-bot", "type": "nestjs" }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "event-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["EventBus"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

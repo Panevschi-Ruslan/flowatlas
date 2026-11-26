@@ -1,0 +1,42 @@
+{
+  "services": [
+    { "name": "shop-api", "repo": "./shop-api", "type": "nestjs" },
+    { "name": "packing-worker", "repo": "./packing-worker", "type": "nestjs" },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_SHOP_URL"],
+      "apiTarget": { "VITE_SHOP_URL": "shop-api" }
+    }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "shop-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["ShopBus"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ],
+          "subscribers": [
+            {
+              "receiverType": ["ShopBus"],
+              "method": "subscribe",
+              "channelArg": 0,
+              "handlerArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

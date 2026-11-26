@@ -251,7 +251,7 @@ describe('joining a call to a route', () => {
     expect(report.unresolved[0]?.message).toBe('no service declares PAYMENTS_URL');
   });
 
-  it('refuses to guess when two services claim the same settings key', () => {
+  it('asks each service claiming the same settings key, and refuses to guess where none serves the request', () => {
     const both = parseConfig({
       services: [
         { name: 'gateway', repo: './gateway', type: 'nestjs' },
@@ -260,8 +260,11 @@ describe('joining a call to a route', () => {
       ],
       sharedPackages: [],
     });
-    const { report } = link([callerGraph(), ordersGraph()], both);
+    // The one claimant serving it is the join, a guess (P319).
+    const served = link([callerGraph(), ordersGraph()], both);
+    expect(served.project.edges.filter((item) => item.type === 'http_calls').map((item) => [item.to, item.confidence])).toEqual([['entry:orders:http:GET:/orders/:param', 'heuristic']]);
 
+    const { report } = link([callerGraph({ meta: { path: '/missing' } }), ordersGraph()], both);
     expect(report.httpOut.unknownEnv).toBe(1);
     expect(report.unresolved[0]?.message).toBe('ORDERS_URL is declared on services orders and legacy');
   });
@@ -498,8 +501,15 @@ describe('a graph from an older version of the tool', () => {
   it('is refused rather than half read', () => {
     const stale = { ...graph('orders'), schemaVersion: SCHEMA_VERSION - 1 };
     expect(() => link([stale])).toThrow(
-      `graph.json of orders is schema v${SCHEMA_VERSION - 1}, expected v${SCHEMA_VERSION}`,
+      `graph.json of orders: the graph was built by an older flowatlas (schema ${SCHEMA_VERSION - 1}); this one reads schema ${SCHEMA_VERSION}`,
     );
+  });
+});
+
+describe('a graph from a newer version of the tool (P370)', () => {
+  it('is refused, saying a newer flowatlas reads it rather than to rebuild', () => {
+    const newer = { ...graph('orders'), schemaVersion: SCHEMA_VERSION + 1 };
+    expect(() => link([newer])).toThrow(`built by a newer flowatlas (schema ${SCHEMA_VERSION + 1}); this one reads schema ${SCHEMA_VERSION}`);
   });
 });
 

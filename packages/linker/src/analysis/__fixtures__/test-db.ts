@@ -6,6 +6,7 @@ import {
   type GraphEdge,
   type GraphNode,
   type ProjectGraph,
+  type SettingNames,
   type TypeRegistry,
   type Unresolved,
 } from '@flowatlas/core';
@@ -61,6 +62,10 @@ export interface TestGraph {
   types?: TypeRegistry;
   unresolved?: Unresolved[];
   report?: Partial<LinkReport>;
+  /** The configured services; `orders` alone where not given. */
+  services?: string[];
+  /** The names each service's deployment files set, kept beside the graph (P388). */
+  settingNames?: Record<string, SettingNames>;
 }
 
 const directory = mkdtempSync(join(tmpdir(), 'flowatlas-linker-analysis-'));
@@ -78,13 +83,13 @@ export const writeTestDb = (graph: TestGraph): string => {
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
     builtAt: FIXED,
-    services: [{ name: 'orders', repo: './orders', type: 'nestjs', extractor: null }],
+    services: (graph.services ?? ['orders']).map((name) => ({ name, repo: `./${name}`, type: 'nestjs', extractor: null })),
     nodes: graph.nodes,
     edges: graph.edges,
     types: graph.types ?? {},
     unresolved: graph.unresolved ?? [],
   };
-  writeGraphDb(project, { ...emptyReport(), ...graph.report }, path);
+  writeGraphDb(project, { ...emptyReport(), ...graph.report }, path, graph.settingNames === undefined ? {} : { settingNames: graph.settingNames });
   return path;
 };
 

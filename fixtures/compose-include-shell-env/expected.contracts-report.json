@@ -1,0 +1,165 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T14:34:23.005Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:3:29",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:3:29|http_calls|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app.ts:orders declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:3:29",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:3:29|http_calls|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:4:31",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:4:31|http_calls|entry:billing:http:GET:/invoices",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app.ts:invoices declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:4:31",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:4:31|http_calls|entry:billing:http:GET:/invoices",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "billing#src/app.ts:GET /invoices@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:5:31",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:5:31|http_calls|entry:catalog:http:GET:/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app.ts:products declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:5:31",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:5:31|http_calls|entry:catalog:http:GET:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/app.ts:GET /products@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:6:29",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:6:29|http_calls|entry:stock:http:GET:/levels",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app.ts:levels declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:6:29",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:6:29|http_calls|entry:stock:http:GET:/levels",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/app.ts:GET /levels@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:7:30",
+        "to": "entry:ledger:http:GET:/entries",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:7:30|http_calls|entry:ledger:http:GET:/entries",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app.ts:entries declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:7:30",
+        "to": "entry:ledger:http:GET:/entries",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:7:30|http_calls|entry:ledger:http:GET:/entries",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "ledger#src/app.ts:GET /entries@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:8:26",
+        "to": "entry:audit:http:GET:/log",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:8:26|http_calls|entry:audit:http:GET:/log",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app.ts:log declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#src/app.ts:8:26",
+        "to": "entry:audit:http:GET:/log",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#src/app.ts:8:26|http_calls|entry:audit:http:GET:/log",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "audit#src/app.ts:GET /log@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 12,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

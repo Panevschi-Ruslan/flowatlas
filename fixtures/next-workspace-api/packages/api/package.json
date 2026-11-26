@@ -1,0 +1,11 @@
+{
+  "name": "@shop/api",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@trpc/server": "^11.0.0"
+  }
+}

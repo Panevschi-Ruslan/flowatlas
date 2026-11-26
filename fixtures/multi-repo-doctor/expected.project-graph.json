@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T04:49:59.448Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:40:20.002Z",
   "services": [
     {
       "name": "gateway",
@@ -76,6 +76,16 @@
               "order.created"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 21
+          },
+          {
+            "field": "total",
+            "line": 21
+          }
         ]
       }
     },
@@ -115,7 +125,8 @@
               "order.refunded"
             ]
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1037,7 +1048,19 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          },
+          {
+            "field": "total",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          }
+        ]
       }
     },
     {
@@ -1056,7 +1079,8 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1075,7 +1099,19 @@
             }
           ],
           "returns": "type:orders#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          },
+          {
+            "field": "total",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          }
+        ]
       }
     },
     {
@@ -1521,7 +1557,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1545,7 +1588,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1571,7 +1621,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

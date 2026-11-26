@@ -7,11 +7,14 @@ import {
   type GraphNode,
   type ProjectGraph,
   type RepoGraph,
+  type SettingNames,
   type TypeEntry,
   type Unresolved,
+  whenFree,
 } from '@flowatlas/core';
 import type { LinkReport } from '../report.js';
 import { GRAPH_DB_FORMAT_VERSION, SCHEMA_SQL } from './schema.js';
+import { insertWordsOf, nodeWordsRow, typeWordsRow } from './words.js';
 
 /** A channel or a third party belongs to the project, not to any one service. */
 const serviceOf = (node: GraphNode): string | null =>
@@ -20,6 +23,8 @@ const serviceOf = (node: GraphNode): string | null =>
 export interface WriteOptions {
   /** Version string recorded alongside the graph. */
   flowatlasVersion?: string;
+  /** The names each service's deployment files set (P388), kept beside the graph. */
+  settingNames?: Readonly<Record<string, SettingNames>>;
 }
 
 /** The four statements every writer needs, prepared once per connection. */
@@ -39,6 +44,20 @@ const statementsOf = (db: Database.Database) => ({
 });
 
 type Statements = ReturnType<typeof statementsOf>;
+
+/** The repository a type id names, `type:<repo>#...`. */
+const typeRepoOf = (id: string): string | null => /^type:([^#]+)#/.exec(id)?.[1] ?? null;
+
+/** Each node's and type's words, for the search that takes a sentence (P383). */
+const insertWords = (db: Database.Database, nodes: readonly GraphNode[], types: Readonly<Record<string, TypeEntry>>): void => {
+  const insert = insertWordsOf(db);
+  for (const item of nodes) insert(nodeWordsRow(item, serviceOf(item)));
+  for (const [id, entry] of Object.entries(types)) insert(typeWordsRow(id, entry, typeRepoOf(id)));
+};
+
+/** Whether the database holds the words table: one written before P383 does not, and is left without it. */
+const holdsWords = (db: Database.Database): boolean =>
+  db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'words'").get() !== undefined;
 
 const insertNode = (statements: Statements, item: GraphNode): void => {
   statements.node.run(
@@ -74,7 +93,7 @@ const insertType = (statements: Statements, id: string, entry: TypeEntry): void 
     id,
     entry.name,
     entry.kind,
-    /^type:([^#]+)#/.exec(id)?.[1] ?? null,
+    typeRepoOf(id),
     entry.declaredIn,
     entry.structuralHash,
     JSON.stringify(entry.fields ?? []),
@@ -117,27 +136,6 @@ const renameOver = (from: string, to: string, attempts = 20): void => {
 };
 
 /**
- * Runs a change to a file, waiting briefly while another process holds it.
- * Removing the old database before the rename is such a change too (P199): on
- * Windows it failed at once on a reader's handle, before the rename's own
- * wait was ever reached.
- */
-const whenFree = (change: () => void, attempts = 20): void => {
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      change();
-      return;
-    } catch (cause) {
-      const code = (cause as NodeJS.ErrnoException).code;
-      if (attempt >= attempts || (code !== 'EPERM' && code !== 'EBUSY' && code !== 'EACCES')) {
-        throw cause;
-      }
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
-    }
-  }
-};
-
-/**
  * Writes the graph to a database file.
  *
  * Built into a temporary file and renamed into place, so a reader either sees
@@ -173,17 +171,22 @@ export const writeGraphDb = (
       meta.run('flowatlas_version', options.flowatlasVersion ?? '0.0.0');
       meta.run('services', JSON.stringify(project.services));
       meta.run('link_report', JSON.stringify(report));
+      // The names each service's deployment files set (P388), beside the graph rather than in it.
+      if (options.settingNames !== undefined) meta.run('setting_names', JSON.stringify(options.settingNames));
 
       for (const item of project.nodes) insertNode(statements, item);
       for (const item of project.edges) insertEdge(statements, item);
       for (const [id, entry] of Object.entries(project.types)) insertType(statements, id, entry);
       for (const item of project.unresolved) insertRow(statements, item);
+      insertWords(db, project.nodes, project.types);
     })();
   } finally {
     db.close();
   }
 
   for (const suffix of ['-wal', '-shm']) rmSync(`${temporary}${suffix}`, { force: true });
+  // Removing the old database waits too (P199): on Windows it failed at once on
+  // a reader's handle, before the rename's own wait was ever reached.
   whenFree(() => rmSync(dbPath, { force: true }));
   for (const suffix of ['-wal', '-shm']) whenFree(() => rmSync(`${dbPath}${suffix}`, { force: true }));
   renameOver(temporary, dbPath);
@@ -215,10 +218,13 @@ export const replaceService = (
     db.prepare('DELETE FROM nodes WHERE service = ?').run(service);
     db.prepare('DELETE FROM types WHERE repo = ?').run(service);
     db.prepare('DELETE FROM unresolved WHERE service = ?').run(service);
+    const words = holdsWords(db);
+    if (words) db.prepare('DELETE FROM words WHERE service = ?').run(service);
 
     for (const item of graph.nodes) insertNode(statements, item);
     for (const item of graph.edges) insertEdge(statements, item);
     for (const [id, entry] of Object.entries(graph.types)) insertType(statements, id, entry);
     for (const item of graph.unresolved) insertRow(statements, item, service);
+    if (words) insertWords(db, graph.nodes, graph.types);
   })();
 };

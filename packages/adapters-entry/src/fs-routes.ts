@@ -6,15 +6,18 @@ import {
   normalizePath,
   originOfValue,
   PARAM_PLACEHOLDER,
+  placedFunction,
   reachOf,
   type ApplicationMap,
+  type EntryWrapping,
   type ExtractContext,
   type NamedFunction,
   type Reach,
 } from '@flowatlas/core';
-import type { Node as TsNode, SourceFile } from 'ts-morph';
+import type { ArrowFunction, FunctionExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { builtByFactory, builtExportFunction, handsOverWork, repoFunctionOf, unwrapValue } from './shared.js';
+import { evidenceOf, unwrapChain } from './wrapped-work.js';
 
 /**
  * A router whose address space is the file system, described rather than
@@ -619,9 +622,22 @@ export interface VerbReading {
    * or the call it was built by, with the work handed to it; `call` when it is a
    * factory of this repository that the verb's call ran, whose body holds the
    * handler it returned (R153). The same two words a registration's `handlerVia`
-   * uses, and for the same two facts.
+   * uses, and for the same two facts. `wrapped` when the export is a call of
+   * wrappers handed one function this repository declares, and that function is
+   * the handler, with the wrappers in front of it (P269).
    */
-  via: 'function' | 'call';
+  via: 'function' | 'call' | 'wrapped';
+  /**
+   * A function written in place inside the wrappers of an export that has no
+   * node of its own: `export default withSession(async (req, res) => …)`. The
+   * way in points at it by where it starts, and `fn` is the same function under
+   * the name the walk gives it (P269).
+   */
+  inline?: ArrowFunction | FunctionExpression;
+  /** The wrappers the export was built through, in the order they run, as the chain in front of the handler (P269). */
+  wrapping?: readonly EntryWrapping[];
+  /** Why the wrappers cannot be said to run the handler, where one of them could not be read. */
+  wrapperUnread?: string;
 }
 
 /** The named function a declaration stands for, wherever it was exported from. */
@@ -649,7 +665,7 @@ const ALIAS_DEPTH = 4;
  * built export's function; a chain is followed a few links and then abandoned,
  * which also settles the mutually aliased pair nobody writes on purpose.
  */
-const aliasedFunction = (declaration: TsNode, depth: number): VerbReading | undefined => {
+const aliasedFunction = (declaration: TsNode, ctx: ExtractContext, depth: number): VerbReading | undefined => {
   if (depth >= ALIAS_DEPTH) return undefined;
   if (!Node.isVariableDeclaration(declaration)) return undefined;
   const initializer = declaration.getInitializer();
@@ -659,7 +675,7 @@ const aliasedFunction = (declaration: TsNode, depth: number): VerbReading | unde
   const origin = originOfValue(value);
   // A name that resolves into a package is that package's function, and this
   // repository has no node for it to point at.
-  return origin.kind === 'local' ? verbReading(origin.declaration, depth + 1) : undefined;
+  return origin.kind === 'local' ? verbReading(origin.declaration, ctx, depth + 1) : undefined;
 };
 
 /**
@@ -730,18 +746,100 @@ const callHandedWork = (body: TsNode): boolean =>
  * `builtByFactory` (R137, R153). Handed only values by a package, nothing
  * behind the way in is in this repository, and that is the row.
  */
-export const verbReading = (declaration: TsNode, depth = 0): VerbReading | undefined => {
+export const verbReading = (declaration: TsNode, ctx: ExtractContext, depth = 0): VerbReading | undefined => {
   const written = exportedFunction(declaration);
   // A function declared here: its body is the body, and there is nothing to
   // doubt about whether it was read.
   if (written !== undefined) return { fn: written, bodyRead: true, via: 'function' };
+  const exported = exportedCall(declaration);
+  if (exported !== undefined) return defaultCallReading(exported, ctx);
   const built = builtExportFunction(declaration);
-  if (built === undefined) return aliasedFunction(declaration, depth);
+  if (built === undefined) return aliasedFunction(declaration, ctx, depth);
+  const wrapped = wrappedReading(built.body, ctx);
+  // A function this repository declares, handed to wrappers: that function is
+  // the handler, and the wrappers stand in front of it.
+  if (wrapped !== undefined && wrapped.inline === undefined) return wrapped;
   const factory = builtByFactory(built.body);
   if (factory !== undefined) return { fn: factory, bodyRead: true, via: 'call' };
   // A value a call handed back: what the node points at is the call, so whether
-  // anything was read depends on what the call was handed.
-  return { fn: built, bodyRead: callHandedWork(built.body), via: 'function' };
+  // anything was read depends on what the call was handed. A function written
+  // in place inside wrappers is inside that call, so the export's own node is
+  // still the answer, and the wrappers are drawn in front of it.
+  return {
+    fn: built,
+    bodyRead: callHandedWork(built.body),
+    via: 'function',
+    ...(wrapped === undefined ? {} : chainOf(wrapped)),
+  };
+};
+
+/** The chain a wrapped reading carries, without its handler. */
+const chainOf = (reading: VerbReading): Pick<VerbReading, 'wrapping' | 'wrapperUnread'> => ({
+  ...(reading.wrapping === undefined ? {} : { wrapping: reading.wrapping }),
+  ...(reading.wrapperUnread === undefined ? {} : { wrapperUnread: reading.wrapperUnread }),
+});
+
+/**
+ * The call a module exports as its default, when that is what it exports.
+ *
+ * `export default withTracing(handler)` declares nothing: the export table hands
+ * back the call itself, an expression under `export default`, and every reading
+ * of a declaration declines it. It is how the older Next.js router's files are
+ * written whenever anything stands in front of the handler (P269).
+ */
+export const exportedCall = (declaration: TsNode): TsNode | undefined => {
+  if (!Node.isExpression(declaration)) return undefined;
+  const value = unwrapValue(declaration);
+  if (!Node.isCallExpression(value)) return undefined;
+  let holder = declaration.getParent();
+  while (
+    holder !== undefined &&
+    (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))
+  ) {
+    holder = holder.getParent();
+  }
+  return holder !== undefined && Node.isExportAssignment(holder) ? value : undefined;
+};
+
+/**
+ * What a call of wrappers stands for, when what it wraps is a function: one this
+ * repository declares, read as the handler with the wrappers in front of it, or
+ * one written in place.
+ *
+ * Which calls are wrappers is `unwrapChain`'s answer, the one a deployed
+ * function's handler export gets: a call handed exactly one function, of this
+ * repository or of a package, wherever it sits among the arguments, and a chain
+ * of methods on such a call (R109, R167). A wrapper is code that runs in front
+ * of the handler - it opens a span, reads a header, checks a session - and the
+ * chain says so. Pointing the way in at the wrapper's call instead named a call
+ * whose body hands the request to a parameter, which no walk follows back to
+ * the function it was handed, so a route written that way reached nothing past
+ * its wrapper (P269).
+ */
+const wrappedReading = (call: TsNode, ctx: ExtractContext): VerbReading | undefined => {
+  const chain = unwrapChain(call, ctx);
+  if (chain.inner === undefined || chain.through.length === 0) return undefined;
+  const { why } = evidenceOf(chain.through);
+  const around = { wrapping: chain.wrapping, ...(why === undefined ? {} : { wrapperUnread: why }) };
+  const named = repoFunctionOf(chain.inner);
+  if (named !== undefined) return { fn: named, bodyRead: true, via: 'wrapped', ...around };
+  const inner = unwrapValue(chain.inner);
+  if (!Node.isArrowFunction(inner) && !Node.isFunctionExpression(inner)) return undefined;
+  return { fn: placedFunction(inner), bodyRead: true, via: 'function', inline: inner, ...around };
+};
+
+/**
+ * A default export that is a call: wrappers round a handler, or a factory of
+ * this repository - the readings a verb export built by a call gets, with no
+ * export node of its own to point at, so a function written in place is
+ * pointed at where it is written (P269). A package's call handed nothing this
+ * repository declares has nothing behind it, and its row says it was built.
+ */
+const defaultCallReading = (call: TsNode, ctx: ExtractContext): VerbReading | undefined => {
+  const wrapped = wrappedReading(call, ctx);
+  if (wrapped !== undefined) return wrapped;
+  const factory = builtByFactory(call);
+  return factory === undefined ? undefined : { fn: factory, bodyRead: true, via: 'call' };
 };
 
 /**
@@ -961,6 +1059,14 @@ export interface FsRouteVerb {
   handlerVia: VerbReading['via'] | 'inline' | 'unread';
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead: boolean;
+  /**
+   * What the export was built through in front of the handler, in the order it
+   * runs: each reader puts it after whatever it already stands in front of the
+   * route, a middleware file or a list of them (P269).
+   */
+  wrapping?: readonly EntryWrapping[];
+  /** Why the handler is only probably what runs: a wrapper whose code could not be read. */
+  wrapperUnread?: string;
 }
 
 /**
@@ -1049,19 +1155,26 @@ export const readVerbFile = (
     if (declaration === undefined) continue;
     found += 1;
     const at = reachOf(declaration, sourceFile, name, ctx.repoDir);
-    const reading = verbReading(declaration);
+    const reading = verbReading(declaration, ctx);
     const read = reading?.bodyRead === true;
+    // The handler's own body says which verbs it answers, where it compares the
+    // request's method to them; a factory's body is not the handler's, so it
+    // says nothing about them.
     const compared =
-      options.narrowed?.has(name) === true && reading?.via === 'function' ? methodsCompared(reading.fn.body) : [];
+      options.narrowed?.has(name) === true && reading !== undefined && reading.via !== 'call'
+        ? methodsCompared(reading.fn.body)
+        : [];
     for (const answered of compared.length > 0 ? compared : [method]) {
       options.emit({
         method: answered,
         path: options.path,
         ...(options.rawPath === undefined ? {} : { rawPath: options.rawPath }),
         at,
-        ...(reading === undefined ? {} : { handler: reading.fn }),
-        handlerVia: reading?.via ?? 'unread',
+        ...(reading === undefined ? {} : reading.inline === undefined ? { handler: reading.fn } : { inline: reading.inline }),
+        handlerVia: reading === undefined ? 'unread' : reading.inline === undefined ? reading.via : 'inline',
         bodyRead: read,
+        ...(reading?.wrapping === undefined || reading.wrapping.length === 0 ? {} : { wrapping: reading.wrapping }),
+        ...(reading?.wrapperUnread === undefined ? {} : { wrapperUnread: reading.wrapperUnread }),
       });
     }
     // The entry is still emitted, and the handler with it where there was one:
@@ -1074,7 +1187,7 @@ export const readVerbFile = (
         line: at.reached.line,
         label: `${method} ${options.path}`,
         path: options.path,
-        why: reading === undefined ? 'none' : 'built',
+        why: reading === undefined && exportedCall(declaration) === undefined ? 'none' : 'built',
         adapter: options.adapter,
       });
     }

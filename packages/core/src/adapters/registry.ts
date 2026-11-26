@@ -1,4 +1,5 @@
 import type { FlowatlasConfig } from '../config.js';
+import type { ConventionsOf, ProjectConventions } from '../conventions.js';
 import { AdapterNotFoundError, FlowatlasError } from '../errors.js';
 import type { BrokerAdapter } from './broker.js';
 import type { PackageJson } from './manifest.js';
@@ -122,6 +123,34 @@ export class AdapterRegistry {
     };
   }
 
+  /**
+   * What the frameworks of a repository would have written for the compiler
+   * before it is read (P240), as the adapters that apply state it: asked
+   * before the project is opened, because the aliases and the implicit
+   * imports decide how every import of it resolves.
+   *
+   * Asked of the entry and frontend adapters detection picks, each way of
+   * stating them once: one framework read by two adapters is one statement.
+   */
+  conventions(
+    pkg: PackageJson,
+    repoDir: string,
+    force: AdapterForce = {},
+    config?: FlowatlasConfig,
+  ): ProjectConventions[] {
+    const detected = this.detect(pkg, force, config, repoDir);
+    const asked = new Set<ConventionsOf>();
+    const stated: ProjectConventions[] = [];
+    for (const adapter of [...detected.entry, ...detected.frontend]) {
+      const of = adapter.conventions;
+      if (of === undefined || asked.has(of)) continue;
+      asked.add(of);
+      const found = of(repoDir, pkg);
+      if (found !== undefined) stated.push(found);
+    }
+    return stated;
+  }
+
   #resolve<S extends AdapterSlot>(
     slot: S,
     pkg: PackageJson,
@@ -142,6 +171,17 @@ export class AdapterRegistry {
     });
   }
 }
+
+/**
+ * The adapters a repository is read with, as configuration states them:
+ * with `adapters.auto` (the default) detection picks each slot and `force`
+ * replaces a slot it names; with `auto: false` nothing is detected, and only
+ * the adapters `force` names are used.
+ */
+export const adapterForceOf = (adapters: { readonly auto: boolean; readonly force: AdapterForce }): AdapterForce =>
+  adapters.auto
+    ? adapters.force
+    : (Object.fromEntries(ADAPTER_SLOTS.map((slot) => [slot, adapters.force[slot] ?? []])) as AdapterForce);
 
 /** An empty result, useful as a default and in tests. */
 export const noAdapters: DetectedAdapters = {

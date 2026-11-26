@@ -3,11 +3,14 @@
   "type": "method",
   "service": "storefront",
   "loc": "src/jobs/reminder.job.ts:10",
-  "verdict": "likely-dead",
+  "verdict": "maybe",
   "reason": "nothing calls it and its class is not reached (nothing injects it and nothing reaches its methods; storefront has 1 unresolved injects — verify)",
+  "callers": 0,
   "evidence": {
     "unresolvedInjects": 1
   },
+  "from": "behind",
+  "gap": "gap:storefront|src/jobs/reminder.job.ts|di-type-unresolved",
   "next": [
     "get_source({symbol: \"storefront#src/jobs/reminder.job.ts:ReminderJob.start\"})",
     "cant_follow({service: \"storefront\"})"

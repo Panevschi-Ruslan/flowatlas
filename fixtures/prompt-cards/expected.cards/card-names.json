@@ -1,0 +1,189 @@
+{
+  "cardNamesFormatVersion": 1,
+  "services": [
+    {
+      "name": "mailer",
+      "folder": "mailer"
+    },
+    {
+      "name": "shop-api",
+      "folder": "api"
+    },
+    {
+      "name": "shop-web",
+      "folder": "web"
+    },
+    {
+      "name": "stock-api",
+      "folder": "stock"
+    }
+  ],
+  "names": [
+    {
+      "text": "/api/orders/:param",
+      "kind": "route",
+      "id": "entry:shop-api:http:GET:/api/orders/:param",
+      "service": "shop-api",
+      "verb": "GET"
+    },
+    {
+      "text": "/api/orders/:param/cancel",
+      "kind": "route",
+      "id": "entry:shop-api:http:POST:/api/orders/:param/cancel",
+      "service": "shop-api",
+      "verb": "POST"
+    },
+    {
+      "text": "/api/reports/daily",
+      "kind": "route",
+      "id": "entry:shop-api:http:GET:/api/reports/daily",
+      "service": "shop-api",
+      "verb": "GET"
+    },
+    {
+      "text": "/orders/:param/reserved",
+      "kind": "route",
+      "id": "entry:stock-api:http:GET:/orders/:param/reserved",
+      "service": "stock-api",
+      "verb": "GET"
+    },
+    {
+      "text": "Mails.audit",
+      "kind": "method",
+      "id": "mailer#src/mail/mails.service.ts:Mails.audit",
+      "service": "mailer"
+    },
+    {
+      "text": "Mails.cancelled",
+      "kind": "method",
+      "id": "mailer#src/mail/mails.service.ts:Mails.cancelled",
+      "service": "mailer"
+    },
+    {
+      "text": "Mails.subjectOf",
+      "kind": "method",
+      "id": "mailer#src/mail/mails.service.ts:Mails.subjectOf",
+      "service": "mailer"
+    },
+    {
+      "text": "ORDER_CANCELLED",
+      "kind": "type",
+      "id": "channel:shop:*:orders#ORDER_CANCELLED",
+      "service": null
+    },
+    {
+      "text": "OrderMailDispatcher.dispatch",
+      "kind": "method",
+      "id": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+      "service": "mailer"
+    },
+    {
+      "text": "OrderMailDispatcher.onModuleInit",
+      "kind": "method",
+      "id": "mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit",
+      "service": "mailer"
+    },
+    {
+      "text": "OrdersApiService.cancelOrder",
+      "kind": "client",
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder",
+      "service": "shop-web"
+    },
+    {
+      "text": "OrdersApiService.getOrder",
+      "kind": "client",
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder",
+      "service": "shop-web"
+    },
+    {
+      "text": "OrdersApiService.reservedStock",
+      "kind": "client",
+      "id": "shop-web#src/app/orders-api.service.ts:OrdersApiService.reservedStock",
+      "service": "shop-web"
+    },
+    {
+      "text": "OrdersController.cancel",
+      "kind": "handler",
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "service": "shop-api"
+    },
+    {
+      "text": "OrdersController.findOne",
+      "kind": "handler",
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "service": "shop-api"
+    },
+    {
+      "text": "OrdersController.findOne",
+      "kind": "handler",
+      "id": "stock-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "service": "stock-api"
+    },
+    {
+      "text": "OrdersPageComponent.cancel",
+      "kind": "method",
+      "id": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.cancel",
+      "service": "shop-web"
+    },
+    {
+      "text": "OrdersPageComponent.ngOnInit",
+      "kind": "method",
+      "id": "shop-web#src/app/orders-page.component.ts:OrdersPageComponent.ngOnInit",
+      "service": "shop-web"
+    },
+    {
+      "text": "OrdersService.cancel",
+      "kind": "method",
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "service": "shop-api"
+    },
+    {
+      "text": "OrdersService.findOne",
+      "kind": "method",
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.findOne",
+      "service": "shop-api"
+    },
+    {
+      "text": "ReportsController.daily",
+      "kind": "handler",
+      "id": "shop-api#src/reports/reports.controller.ts:ReportsController.daily",
+      "service": "shop-api"
+    },
+    {
+      "text": "ShopBus.publish",
+      "kind": "method",
+      "id": "mailer#src/bus/shop-bus.service.ts:ShopBus.publish",
+      "service": "mailer"
+    },
+    {
+      "text": "ShopBus.publish",
+      "kind": "method",
+      "id": "shop-api#src/bus/shop-bus.service.ts:ShopBus.publish",
+      "service": "shop-api"
+    },
+    {
+      "text": "ShopBus.subscribe",
+      "kind": "method",
+      "id": "mailer#src/bus/shop-bus.service.ts:ShopBus.subscribe",
+      "service": "mailer"
+    },
+    {
+      "text": "ShopBus.subscribe",
+      "kind": "method",
+      "id": "shop-api#src/bus/shop-bus.service.ts:ShopBus.subscribe",
+      "service": "shop-api"
+    },
+    {
+      "text": "audit",
+      "kind": "channel",
+      "id": "channel:audit",
+      "service": null
+    },
+    {
+      "text": "shop:*:orders",
+      "kind": "channel",
+      "id": "channel:shop:*:orders",
+      "service": null
+    }
+  ]
+}

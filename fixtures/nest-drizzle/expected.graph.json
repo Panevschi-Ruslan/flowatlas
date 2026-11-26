@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-drizzle",
-  "generatedAt": "2026-10-07T14:34:09.288Z",
+  "generatedAt": "2026-11-23T14:41:54.534Z",
   "nodes": [
     {
       "id": "db_query:nest-drizzle#src/orders/orders.service.ts:14:12",
@@ -223,7 +223,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -237,7 +238,8 @@
         "signature": {
           "params": [],
           "returns": "unknown[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -251,7 +253,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -419,7 +422,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

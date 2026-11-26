@@ -1,14 +1,24 @@
 import { statSync } from 'node:fs';
-import { ConfigInvalidError, observedPathFor, ruleSetOf, type McpSettings } from '@flowatlas/core';
+import { ConfigInvalidError, observedPathFor, ruleSetOf, type FlowatlasConfig, type McpSettings } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema, type GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
+import { withInputAliases } from './input-aliases.js';
+import { listedTools } from './listed-schema.js';
+import { plainTextOf } from './plain-text.js';
+import { cappedAnswer, MAX_ANSWER_CHARS } from './capped.js';
+import { compactAnswer, compactOutputSchema, FULL_ANSWER_TOOLS } from './compact.js';
+import { nextWithoutRepeats, SETTLING_TOOLS, settledAnswer } from './settled.js';
+import { offeredOnly, offeredText, type Offer } from './offered.js';
 import type { DbHandle } from './query/db.js';
+import { loggedCall, questionLogSettings, type QuestionLogSettings } from './query/questions.js';
 import { nearWords } from './query/names.js';
 import { loadObservedCounts } from './query/observed.js';
+import { serviceNamed, type ServiceNamed } from './query/service-name.js';
 import { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS, type Need, type ToolFacts, type ToolName } from './tool-needs.js';
 import { changeDocumentsBeside } from './tools/changes.js';
-import { respond } from './tools/common.js';
+import { pluralAsked, respond, verboseInput } from './tools/common.js';
+import { CORE_TOOLS, isCoreTool, withAlwaysLoad } from './upfront.js';
 
 /**
  * The tools a session is offered follow the project (P201).
@@ -29,6 +39,17 @@ export interface ListingSettings {
   tools: 'auto' | 'all';
   include: ReadonlySet<ToolName>;
   exclude: ReadonlySet<ToolName>;
+  /**
+   * Whether the core tools are listed to load upfront (P380): `mcp.alwaysLoad`
+   * in the configuration, off with `flowatlas mcp --no-always-load`.
+   */
+  alwaysLoad: boolean;
+  /**
+   * The core tools marked to load upfront while `alwaysLoad` is on (P392):
+   * every core tool unless `mcp.upfront` or `flowatlas mcp --upfront` names
+   * fewer.
+   */
+  upfront: ReadonlySet<ToolName>;
 }
 
 /** How often a connected server looks for a graph, an observed file or a diff that changed. */
@@ -41,7 +62,7 @@ export const LISTING_POLL_MS = 2000;
  */
 export const listingSettingsOf = (
   settings: McpSettings | undefined,
-  options: { allTools?: boolean; configPath?: string } = {},
+  options: { allTools?: boolean; alwaysLoad?: boolean; upfront?: readonly string[]; configPath?: string } = {},
 ): ListingSettings => {
   const issues: string[] = [];
   const named = (key: 'include' | 'exclude'): Set<ToolName> => {
@@ -57,14 +78,109 @@ export const listingSettingsOf = (
   };
   const include = named('include');
   const exclude = named('exclude');
+  // The command line's list before the configuration's: each name a core tool, each once (P392).
+  const from = options.upfront === undefined ? 'mcp.upfront' : '--upfront';
+  const upfront = new Set<ToolName>();
+  (options.upfront ?? settings?.upfront ?? CORE_TOOLS).forEach((name, index) => {
+    if (!isCoreTool(name)) {
+      const near = nearWords(CORE_TOOLS, name, 1)[0];
+      issues.push(`${from}.${index}: ${JSON.stringify(name)} is not one of the core tools, the ones that can load upfront (${CORE_TOOLS.join(', ')})${near === undefined ? '' : `; did you mean ${near}?`}`);
+    } else if (upfront.has(name as ToolName)) issues.push(`${from}.${index}: ${JSON.stringify(name)} is named twice`);
+    else upfront.add(name as ToolName);
+  });
   if (issues.length > 0) {
     throw new ConfigInvalidError(options.configPath ?? 'flowatlas.config.json', issues, `The tools are: ${TOOL_NAMES.join(', ')}.`);
   }
-  if (options.allTools === true) return { tools: 'all', include: new Set(), exclude: new Set() };
-  return { tools: settings?.tools ?? 'auto', include, exclude };
+  // Off when either says so: the command line cannot turn on what the configuration turned off.
+  const alwaysLoad = options.alwaysLoad !== false && settings?.alwaysLoad !== false;
+  if (options.allTools === true) return { tools: 'all', include: new Set(), exclude: new Set(), alwaysLoad, upfront };
+  return { tools: settings?.tools ?? 'auto', include, exclude, alwaysLoad, upfront };
 };
 
 type Handler = (request: never, extra: never) => unknown;
+
+/**
+ * The tools whose `service` is read against services of their own (P377): a
+ * diff's two sides, where a service the graph no longer holds is still a
+ * service. A folder name is read as the service there too; a name that is
+ * none is the tool's to answer.
+ */
+const SERVICES_OF_THEIR_OWN: ReadonlySet<string> = new Set(['what_changed']);
+
+/**
+ * A tool's configuration with `verbose` among its inputs (P365): every tool
+ * takes it, whether or not its inputs spread `commonInput`, except one whose
+ * answer is never compacted and one that takes no input at all.
+ */
+const withVerbose = <T extends { inputSchema?: Record<string, unknown> }>(name: string, config: T): T => {
+  if (config?.inputSchema === undefined || FULL_ANSWER_TOOLS.has(name) || 'verbose' in config.inputSchema) return config;
+  return { ...config, inputSchema: { ...config.inputSchema, verbose: verboseInput } };
+};
+
+/** A `tools/list` answer whose output schemas a compact answer fits (P365): see `compactOutputSchema`. */
+const listedCompact = (listed: unknown): unknown => {
+  if (listed instanceof Promise) return listed.then(listedCompact);
+  const answer = listed as { tools?: Array<{ name: string; outputSchema?: unknown }> } | undefined;
+  if (answer?.tools === undefined) return listed;
+  return {
+    ...answer,
+    tools: answer.tools.map((tool) =>
+      tool.outputSchema === undefined ? tool : { ...tool, outputSchema: withBoundaryFields(compactOutputSchema(tool.outputSchema), SETTLING_TOOLS.has(tool.name)) },
+    ),
+  };
+};
+
+/**
+ * The fields the boundary may add to any answer (P403), each declared where
+ * the tool's own schema does not: what a cut at the answer's size says
+ * (`complete`, `left`, `next`, `nextOffset`), and `settled` on a tool whose
+ * answer can settle its question.
+ */
+const BOUNDARY_FIELDS: Readonly<Record<string, unknown>> = {
+  complete: { type: 'boolean' },
+  left: { type: 'array', items: { type: 'string' } },
+  next: { type: 'array', items: { type: 'string' } },
+  nextOffset: { type: 'number' },
+};
+
+const withBoundaryFields = (schema: unknown, settles: boolean): unknown => {
+  const root = schema as { properties?: Record<string, unknown> } | undefined;
+  if (root?.properties === undefined) return schema;
+  const added = Object.entries({ ...(settles ? { settled: { type: 'string' } } : {}), ...BOUNDARY_FIELDS }).filter(([name]) => !(name in root.properties!));
+  return added.length === 0 ? schema : { ...root, properties: { ...root.properties, ...Object.fromEntries(added) } };
+};
+
+/** Whether a configuration holds an architecture rule, which `check_rules` needs (read once: the configuration is not read again). */
+export const rulesConfigured = (config: FlowatlasConfig | undefined): boolean => config !== undefined && ruleSetOf(config).rules.length > 0;
+
+/** Why no code is served, when `get_source` is not listed: said after where to read it instead (P360). */
+export const noCodeSaid = (settings: ListingSettings): string =>
+  settings.exclude.has('get_source') ? 'this server is set not to serve code (mcp.exclude)' : 'the code is not served from a database alone';
+
+/**
+ * The tools this server can never list, whatever is built (P360): turned off
+ * by `mcp.exclude`, or needing only what the server was started without - a
+ * configuration (`get_source`), its rules (`check_rules`), the pattern
+ * tester. Decided once, before the first question, so the instructions a
+ * session is given at the start name none of them.
+ */
+export const neverListed = (settings: ListingSettings, started: { sources: boolean; rules: boolean; tester: boolean; changer?: boolean }): Set<ToolName> => {
+  const facts: ToolFacts = {
+    graph: { nodes: new Set(), entryKinds: new Set(), edges: new Set(), types: 0 },
+    observed: false,
+    changes: false,
+    ...started,
+  };
+  const fixed = (need: Need): boolean => NEEDS[need].from === 'server options' || NEEDS[need].from === 'configuration';
+  return new Set(
+    TOOL_NAMES.filter((name) => {
+      if (settings.exclude.has(name)) return true;
+      if (settings.tools === 'all' || settings.include.has(name)) return false;
+      const needs: readonly Need[] = TOOL_NEEDS[name];
+      return needs.every((need) => fixed(need) && !NEEDS[need].holds(facts));
+    }),
+  );
+};
 
 /** A file's timestamp, or -1 when there is none: what the poll compares. */
 const stamped = (path: string): number => {
@@ -86,6 +202,8 @@ export interface ListingOptions {
   settings: ListingSettings;
   /** Whether the server was handed the pattern tester (`test_pattern`). */
   tester: boolean;
+  /** Whether the server was handed the change checker (`check_change`, P387). */
+  changer?: boolean;
   /** How often to look for changes while connected; 0 never looks. */
   pollMs?: number;
 }
@@ -95,23 +213,30 @@ export class ToolListing {
   readonly #handle: DbHandle;
   readonly #settings: ListingSettings;
   readonly #tester: boolean;
+  readonly #changer: boolean;
   /** Read once: the configuration is not read again while the server runs. */
   readonly #rules: boolean;
   readonly #pollMs: number;
+  /** Whether each call is logged (P235), read once as the rules are. */
+  readonly #log: QuestionLogSettings;
   readonly #tools = new Map<ToolName, RegisteredTool>();
   #graph: { generation: number; facts: NonNullable<ToolFacts['graph']> } | undefined;
   #facts: ToolFacts | undefined;
   #refreshing = false;
   #stamp = '';
   #timer: ReturnType<typeof setInterval> | undefined;
+  /** The tools that take `offset`, whose answer cut at its size goes on at the next page (P403). */
+  readonly #paged = new Set<string>();
 
   constructor(server: McpServer, options: ListingOptions) {
     this.#server = server;
     this.#handle = options.handle;
     this.#settings = options.settings;
     this.#tester = options.tester;
-    this.#rules = options.handle.config !== undefined && ruleSetOf(options.handle.config).rules.length > 0;
+    this.#changer = options.changer === true;
+    this.#rules = rulesConfigured(options.handle.config);
     this.#pollMs = options.pollMs ?? LISTING_POLL_MS;
+    this.#log = questionLogSettings(options.handle.config);
     options.handle.onChange(() => this.refresh(true));
   }
 
@@ -127,9 +252,10 @@ export class ToolListing {
     const registerTool = this.#server.registerTool;
     sdk.setRequestHandler = ((schema: unknown, handler: Handler) =>
       setRequestHandler.call(sdk, schema as never, this.#guard(schema, handler) as never)) as typeof sdk.setRequestHandler;
-    this.#server.registerTool = ((name: string, ...rest: unknown[]) => {
+    this.#server.registerTool = ((name: string, config: { inputSchema?: Record<string, unknown> }, ...rest: unknown[]) => {
       if (!isToolName(name)) throw new Error(`tool ${name} has no row in TOOL_NEEDS (tool-needs.ts)`);
-      const tool = (registerTool as (...args: unknown[]) => RegisteredTool).call(this.#server, name, ...rest);
+      if (config?.inputSchema !== undefined && 'offset' in config.inputSchema) this.#paged.add(name);
+      const tool = (registerTool as (...args: unknown[]) => RegisteredTool).call(this.#server, name, this.#upfront(name, withVerbose(name, config)), ...rest);
       this.#tools.set(name, tool);
       return tool;
     }) as McpServer['registerTool'];
@@ -206,6 +332,41 @@ export class ToolListing {
     return [...groups].map(([when, names]) => `${names.join(', ')}: ${when}`).join(' · ');
   }
 
+  /**
+   * What an answer may name now (P360): the tools not listed, and where a
+   * symbol's code is to be read when `get_source` is one of them. Undefined
+   * when every tool is listed.
+   */
+  offer(): Offer | undefined {
+    const hidden = new Set(TOOL_NAMES.filter((name) => this.#tools.get(name)?.enabled === false));
+    if (hidden.size === 0) return undefined;
+    const handle = this.#handle;
+    return {
+      hidden,
+      noCode: noCodeSaid(this.#settings),
+      readAt: (symbol, line) => {
+        const opened = handle.open();
+        const node = 'db' in opened ? opened.db.node(symbol) : undefined;
+        if (node?.file === undefined) return undefined;
+        const at = line ?? node.line;
+        return `${at === undefined ? node.file : `${node.file}:${at}`}${node.repo === '' ? '' : ` in ${node.repo}`}`;
+      },
+    };
+  }
+
+  /** A prompt's text with no call to a tool not listed (P360), the list decided first as before a call. */
+  offeredPrompt(result: GetPromptResult): GetPromptResult {
+    this.refresh(true);
+    const offer = this.offer();
+    if (offer === undefined) return result;
+    return {
+      ...result,
+      messages: result.messages.map((message) =>
+        message.content.type === 'text' ? { ...message, content: { ...message.content, text: offeredText(message.content.text, offer) } } : message,
+      ),
+    };
+  }
+
   /** Why a tool is not listed, as the answer to a call of it; undefined for a listed one. */
   refusal(name: string): { error: string; needs: Need[] } | undefined {
     if (!isToolName(name) || this.#tools.get(name)?.enabled !== false) return undefined;
@@ -220,6 +381,17 @@ export class ToolListing {
     const missing = needs.map((need) => NEEDS[need].missing).join(', and ');
     const appears = needs.map((need) => NEEDS[need].appears).join(' or ');
     return { error: `${name} is not listed for this project: ${missing}; it appears ${appears}`, needs };
+  }
+
+  /**
+   * A core tool's configuration marked to load upfront (P380), unless the
+   * settings turned that off: `tools/list` then carries
+   * `_meta: {"anthropic/alwaysLoad": true}` on exactly the core tools listed,
+   * or the ones `mcp.upfront` names (P392).
+   */
+  #upfront<T extends object>(name: string, config: T): T {
+    if (!this.#settings.alwaysLoad || !isCoreTool(name) || !this.#settings.upfront.has(name as ToolName)) return config;
+    return { ...config, _meta: withAlwaysLoad((config as { _meta?: Record<string, unknown> })._meta) };
   }
 
   #needsOf(name: ToolName): Need[] {
@@ -247,6 +419,7 @@ export class ToolListing {
       rules: this.#rules,
       sources: handle.config !== undefined,
       tester: this.#tester,
+      changer: this.#changer,
     };
   }
 
@@ -256,23 +429,96 @@ export class ToolListing {
     return [stamped(path), stamped(observedPathFor(path)), ...changeDocumentsBeside(path)].join('|');
   }
 
+  /** The service a `service` input names, read against the services the graph records; as said where no graph opens. */
+  #serviceNamed(said: string): ServiceNamed {
+    const opened = this.#handle.open();
+    return 'db' in opened ? serviceNamed(opened.db.services(), said) : { service: said };
+  }
+
   /** The SDK's list and call handlers, with the list decided first and a hidden tool's call answered here. */
   #guard(schema: unknown, handler: Handler): Handler {
     if (schema === ListToolsRequestSchema) {
       return ((request: never, extra: never) => {
         this.refresh(false);
         this.start();
-        return handler(request, extra);
+        // The shared inputs said once (P366), and output schemas that require nothing, for compact answers (P365).
+        return listedTools(listedCompact(handler(request, extra)));
       }) as Handler;
     }
     if (schema === CallToolRequestSchema) {
-      return ((request: { params: { name: string } }, extra: never) => {
+      return ((request: { params: { name: string; arguments?: Record<string, unknown> } }, extra: never) => {
         this.refresh(true);
         this.start();
         const refused = this.refusal(request.params.name);
-        return refused === undefined ? handler(request as never, extra) : respond(refused);
+        if (refused !== undefined) return respond(refused);
+        // `verbose` is the boundary's, not the tool's (P365): the tool answers as it always has, and is never told.
+        // An input under the name an agent reaches for is the tool's own (P382), and several inputs said any way a
+        // guide teaches are the tool's list (P381).
+        const { verbose, ...asked } = pluralAsked(request.params.name, withInputAliases(request.params.name, request.params.arguments ?? {}));
+        const compact = verbose !== true && !FULL_ANSWER_TOOLS.has(request.params.name);
+        // A service said by its repository's folder is the service (P377); one named nowhere answers the services there are.
+        const said = typeof asked['service'] === 'string' ? this.#serviceNamed(asked['service']) : undefined;
+        // A diff's services are its two sides', not the graph's: one gone from the graph is still asked of it.
+        const named = said !== undefined && 'error' in said && SERVICES_OF_THEIR_OWN.has(request.params.name) ? undefined : said;
+        if (named !== undefined && 'service' in named) asked['service'] = named.service;
+        // The service whose callers are kept (P381) is named the same way.
+        const callersIn = typeof asked['callersIn'] === 'string' ? this.#serviceNamed(asked['callersIn']) : undefined;
+        if (callersIn !== undefined && 'service' in callersIn) asked['callersIn'] = callersIn.service;
+        const notNamed = named !== undefined && 'error' in named ? named : callersIn !== undefined && 'error' in callersIn ? callersIn : undefined;
+        const toTool = request.params.arguments === undefined ? request : { ...request, params: { ...request.params, arguments: asked } };
+        const answered = () =>
+          notNamed !== undefined
+            ? respond(notNamed)
+            : this.#offered(handler(toTool as never, extra), compact, request.params.name, request.params.arguments ?? {});
+        if (!this.#log.enabled) return answered();
+        // Logged here, once for every tool, so a tool added later is logged too (P235).
+        const handle = this.#handle;
+        const db = (): GraphDb | undefined => {
+          const opened = handle.open();
+          return 'db' in opened ? opened.db : undefined;
+        };
+        const call = { via: 'mcp' as const, tool: request.params.name, args: request.params.arguments ?? {} };
+        return loggedCall({ settings: this.#log, dbPath: handle.path, db }, call, answered);
       }) as Handler;
     }
     return handler;
+  }
+
+  /**
+   * An answer with no suggestion of a tool not listed (P360), and compact
+   * unless it was asked `verbose` (P365), whichever tool wrote it: the one
+   * place every answer passes, so a tool added later is held to both too.
+   * Held to its size, compact or not, and a compact answer that settles its
+   * question says so with no further call (P403). The text and
+   * `structuredContent` stay one document.
+   */
+  #offered(result: unknown, compact: boolean, tool: string, args: Record<string, unknown>): unknown {
+    if (result instanceof Promise) return result.then((settled: unknown) => this.#offered(settled, compact, tool, args));
+    const offer = this.offer();
+    const answer = result as { content?: Array<{ type: string; text?: string }>; structuredContent?: Record<string, unknown> } | undefined;
+    const first = answer?.content?.[0];
+    if (answer === undefined || first?.type !== 'text' || typeof first.text !== 'string') return result;
+    // A verbose answer within its size, with nothing to keep from it, is handed on as written.
+    if (offer === undefined && !compact && first.text.length <= MAX_ANSWER_CHARS) return result;
+    let document: unknown;
+    try {
+      document = answer.structuredContent ?? JSON.parse(first.text);
+    } catch {
+      if (offer === undefined) return result;
+      return { ...answer, content: [{ ...first, text: offeredText(first.text, offer) }, ...(answer.content ?? []).slice(1)] };
+    }
+    const offered = offer === undefined ? document : offeredOnly(document, offer);
+    // Code and Markdown are handed on as the text they are, with no structured content to escape them into (P382).
+    const plain = compact ? plainTextOf(tool, offered) : undefined;
+    if (plain !== undefined) return { content: [{ type: 'text' as const, text: plain }] };
+    const asked = { tool, args, paged: this.#paged.has(tool) };
+    const kept = compact ? settledAnswer(tool, cappedAnswer(compactAnswer(nextWithoutRepeats(tool, offered), { tool }), asked)) : cappedAnswer(offered, asked);
+    if (kept === document) return result;
+    const text = JSON.stringify(kept);
+    return {
+      ...answer,
+      content: [{ ...first, text }, ...(answer.content ?? []).slice(1)],
+      ...(answer.structuredContent === undefined ? {} : { structuredContent: JSON.parse(text) as Record<string, unknown> }),
+    };
   }
 }

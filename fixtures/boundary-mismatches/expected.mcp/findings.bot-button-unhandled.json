@@ -1,0 +1,36 @@
+{
+  "kind": "bot-button-unhandled",
+  "rows": [
+    {
+      "kind": "bot-button-unhandled",
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.showOrder",
+      "service": "shop-bot",
+      "loc": "src/shop-bot.ts:27",
+      "message": "ShopBot.showOrder builds a button sending \"order:track\", which no handler of callback data matches; the handlers match \"order:confirm\", \"order:tracking\", /^order:cancel:(\\w+)$/, /^order:details:/",
+      "precision": "high",
+      "evidence": "every handler of callback data in the project was read, and none takes every callback",
+      "seenBy": [
+        "bot_command order (shop-bot)"
+      ],
+      "rank": 1,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "get_source({symbol: \"shop-bot#src/shop-bot.ts:ShopBot.showOrder\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "the configuration module in src/app.module.ts validates the settings with a schema, which may give it a default"
+    },
+    "status-never-answered": {
+      "count": 1,
+      "why": "POST /orders/:param/refund throws HttpException, whose status is not read"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"shop-bot#src/shop-bot.ts:ShopBot.showOrder\"})"
+  ]
+}

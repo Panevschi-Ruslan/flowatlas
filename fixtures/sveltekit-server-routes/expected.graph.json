@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "sveltekit-server-routes",
-  "generatedAt": "2026-10-09T10:21:02.110Z",
+  "generatedAt": "2026-11-23T14:49:58.662Z",
   "nodes": [
     {
       "id": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",
@@ -255,7 +255,8 @@
         "signature": {
           "params": [],
           "returns": "{section:'shop'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -274,7 +275,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 6,
+            "why": "handed to json"
+          }
+        ]
       }
     },
     {
@@ -293,7 +301,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -307,7 +316,8 @@
         "signature": {
           "params": [],
           "returns": "{title:'About'}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -321,7 +331,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -340,7 +351,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -359,7 +371,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -378,7 +391,8 @@
             }
           ],
           "returns": "{note:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -397,7 +411,8 @@
             }
           ],
           "returns": "{cancelled:true}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -416,7 +431,8 @@
             }
           ],
           "returns": "{order:type:sveltekit-server-routes#Order}"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],
@@ -642,5 +658,30 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "symbol": ".svelte-kit/tsconfig.json",
+      "message": ".svelte-kit/tsconfig.json is not there (`svelte-kit sync` writes it), so $lib -> src/lib resolve as SvelteKit documents them",
+      "hint": "Nothing to do. Run `svelte-kit sync` before building to read the aliases the framework writes, which win over these.",
+      "adapter": "sveltekit-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "SvelteKit"
+        ],
+        "aliases": {
+          "$lib": [
+            "src/lib"
+          ],
+          "$lib/*": [
+            "src/lib/*"
+          ]
+        }
+      }
+    }
+  ]
 }

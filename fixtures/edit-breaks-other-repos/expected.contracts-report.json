@@ -1,0 +1,140 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T16:09:09.934Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:15:43",
+        "to": "entry:catalog-api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:15:43|http_calls|entry:catalog-api:http:GET:/items",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "string[]",
+        "symbol": "catalog-api#src/items/items.controller.ts:ItemsController.list"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "string[]",
+        "symbol": "storefront#src/catalog.client.ts:CatalogClient.items"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:20:43",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:20:43|http_calls|entry:catalog-api:http:GET:/items/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "string",
+        "symbol": "catalog-api#src/items/items.controller.ts:ItemsController.findOne"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "string",
+        "symbol": "storefront#src/catalog.client.ts:CatalogClient.item"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:25:26",
+        "to": "entry:catalog-api:http:PATCH:/items/:param/archive",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:25:26|http_calls|entry:catalog-api:http:PATCH:/items/:param/archive",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{reason:string}",
+        "symbol": "storefront#src/catalog.client.ts:CatalogClient.archive",
+        "writes": [
+          "reason"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog-api",
+        "typeId": "type:catalog-api#ArchiveBody",
+        "symbol": "catalog-api#src/items/items.controller.ts:ItemsController.archive"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:15:43",
+        "to": "entry:catalog-api:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:15:43|http_calls|entry:catalog-api:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/catalog.client.ts:CatalogClient.items declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:20:43",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:20:43|http_calls|entry:catalog-api:http:GET:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#src/catalog.client.ts:CatalogClient.item declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/catalog.client.ts:25:26",
+        "to": "entry:catalog-api:http:PATCH:/items/:param/archive",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:storefront#src/catalog.client.ts:25:26|http_calls|entry:catalog-api:http:PATCH:/items/:param/archive",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog-api#src/items/items.controller.ts:ItemsController.archive declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog-api#src/items/items.service.ts:27:30",
+        "to": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog-api#src/items/items.service.ts:27:30|emits|consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 1,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

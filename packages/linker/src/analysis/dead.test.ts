@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deadChannels, deadEntries, deadMethods, deadProviders, deadVerdict, unresolvedInjectCount } from './dead.js';
+import { deadChannels, deadEntries, deadJudge, deadMethods, deadProviders, deadVerdict, JUDGED_TYPES, unresolvedInjectCount } from './dead.js';
 import { buildTestDb, edge, node } from './__fixtures__/test-db.js';
 
 const route = (id: string, over = {}) =>
@@ -651,6 +651,36 @@ describe('verdicts', () => {
     expect(methods.map((row) => `${row.id} ${row.verdict}`)).toEqual(['orders#src/s.ts:Svc.unused likely-dead']);
   });
 
+  it('judges many nodes with one judge exactly as one at a time (P364)', () => {
+    const db = buildTestDb({
+      nodes: [
+        route('entry:orders:http:GET:/a'),
+        route('entry:orders:http:GET:/b'),
+        node('orders#src/s.ts:Svc', { type: 'provider', kind: 'injectable', label: 'Svc', file: 'src/s.ts', line: 1 }),
+        node('orders#src/s.ts:Svc.used'),
+        node('orders#src/s.ts:Svc.unused'),
+        node('orders#src/c.ts:Ctl.list'),
+        node('channel:order.created', { type: 'channel', label: 'order.created' }),
+        node('http_out:web#1', { type: 'http_out', repo: 'web' }),
+        node('orders#src/t.ts:table', { type: 'table' }),
+      ],
+      edges: [
+        edge('http_out:web#1', 'entry:orders:http:GET:/a', { type: 'http_calls' }),
+        edge('entry:orders:http:GET:/a', 'orders#src/c.ts:Ctl.list', { type: 'handles' }),
+        edge('orders#src/c.ts:Ctl.list', 'orders#src/s.ts:Svc.used'),
+      ],
+      report: report(['entry:orders:http:GET:/b']),
+    });
+    const ids = ['entry:orders:http:GET:/a', 'entry:orders:http:GET:/b', 'orders#src/s.ts:Svc', 'orders#src/s.ts:Svc.unused', 'channel:order.created', 'orders#src/t.ts:table', 'missing'];
+    const judge = deadJudge(db, db.report());
+    const together = ids.map((id) => judge(id));
+    const alone = ids.map((id) => deadVerdict(db, db.report(), id));
+    db.close();
+    expect(together).toEqual(alone);
+    expect(together.map((answer) => answer?.verdict)).toEqual(['alive', 'dead', 'alive', 'likely-dead', 'dead', 'unknown', undefined]);
+    expect(JUDGED_TYPES).not.toContain('table');
+  });
+
   it('says dead for a method on a class nothing reaches, and likely-dead where injects did not resolve', () => {
     const db = buildTestDb({
       nodes: [
@@ -700,5 +730,114 @@ describe('verdicts', () => {
     expect(controller).toMatchObject({ verdict: 'dead', evidence: { via: 'entry:orders:http:GET:/list' } });
     expect(channel).toMatchObject({ verdict: 'dead', evidence: { missing: 'consumer' } });
     expect(missing).toBeUndefined();
+  });
+});
+
+describe('a screen the router registers (P363)', () => {
+  const nodes = [
+    node('entry:web:screen:/map', { type: 'entry', kind: 'screen', label: '/map' }),
+    node('entry:web:screen:/archive', { type: 'entry', kind: 'screen', label: '/archive' }),
+    node('web#src/map.ts:MapComponent', { type: 'ui_component', label: 'MapComponent' }),
+    node('web#src/archive.ts:ArchiveComponent', { type: 'ui_component', label: 'ArchiveComponent' }),
+    node('web#src/badge.ts:BadgeComponent', { type: 'ui_component', label: 'BadgeComponent' }),
+    node('web#src/linked.ts:LinkedComponent', { type: 'ui_component', label: 'LinkedComponent' }),
+    node('web#src/page.tsx:Page', { type: 'function', label: 'Page' }),
+    node('ui_action:web#src/side.html:3:8', { type: 'ui_action', kind: 'route' }),
+  ];
+  const edges = [
+    edge('entry:web:screen:/map', 'web#src/map.ts:MapComponent', { type: 'handles' }),
+    edge('entry:web:screen:/map', 'web#src/page.tsx:Page', { type: 'handles' }),
+    edge('entry:web:screen:/archive', 'web#src/archive.ts:ArchiveComponent', { type: 'handles' }),
+    edge('ui_action:web#src/side.html:3:8', 'web#src/map.ts:MapComponent', { type: 'triggers' }),
+    edge('ui_action:web#src/side.html:3:8', 'web#src/linked.ts:LinkedComponent', { type: 'triggers' }),
+  ];
+
+  it('answers a routed component alive at its address, saying whether a link to it was read', () => {
+    const db = buildTestDb({ nodes, edges });
+    const map = deadVerdict(db, db.report(), 'web#src/map.ts:MapComponent');
+    const archive = deadVerdict(db, db.report(), 'web#src/archive.ts:ArchiveComponent');
+    const page = deadVerdict(db, db.report(), 'web#src/page.tsx:Page');
+    const linked = deadVerdict(db, db.report(), 'web#src/linked.ts:LinkedComponent');
+    const badge = deadVerdict(db, db.report(), 'web#src/badge.ts:BadgeComponent');
+    const entry = deadVerdict(db, db.report(), 'entry:web:screen:/archive');
+    const listed = deadEntries(db, db.report());
+    db.close();
+    expect(map).toMatchObject({ verdict: 'alive', reason: 'routed at /map; 1 link read lands on it', evidence: { routedAt: ['/map'], links: 1 } });
+    expect(archive).toMatchObject({ verdict: 'alive', reason: 'routed at /archive; no link to it was read', evidence: { via: 'entry:web:screen:/archive', links: 0 } });
+    expect(page).toMatchObject({ verdict: 'alive', evidence: { routedAt: ['/map'] } });
+    expect(linked).toMatchObject({ verdict: 'alive', evidence: { callers: 1 } });
+    // No route, link or template that renders it by its tag (P370): code handing it on as a value still may.
+    expect(badge).toMatchObject({ verdict: 'likely-dead', evidence: {} });
+    expect(entry).toMatchObject({ verdict: 'unknown', reason: 'a screen is opened at its address from outside the graph; no link to it was read' });
+    // A screen is never a route nobody calls.
+    expect(listed).toEqual([]);
+  });
+
+  it('says a component a template renders by its tag is reached through the one that renders it (P370)', () => {
+    const rendered = [
+      ...edges,
+      edge('web#src/map.ts:MapComponent', 'web#src/badge.ts:BadgeComponent', { type: 'calls', meta: { renders: 'app-badge' } }),
+    ];
+    const db = buildTestDb({ nodes, edges: rendered });
+    const badge = deadVerdict(db, db.report(), 'web#src/badge.ts:BadgeComponent');
+    db.close();
+    expect(badge).toMatchObject({ verdict: 'alive', reason: 'a link, a navigation or a parent reaches it' });
+  });
+
+  it('says unreferenced of a component and a method whose name the repository writes nowhere else (P370)', () => {
+    const marked = [
+      ...nodes.filter((item) => item.id !== 'web#src/badge.ts:BadgeComponent'),
+      node('web#src/badge.ts:BadgeComponent', { type: 'ui_component', label: 'BadgeComponent', meta: { unreferenced: true } }),
+      node('web#src/api.ts:ApiService', { type: 'provider', label: 'ApiService' }),
+      node('web#src/api.ts:ApiService.one', { type: 'method', label: 'ApiService.one' }),
+      node('web#src/api.ts:ApiService.legacy', { type: 'method', label: 'ApiService.legacy', meta: { unreferenced: true } }),
+      node('web#src/api.ts:ApiService.spare', { type: 'method', label: 'ApiService.spare' }),
+    ];
+    const used = [...edges, edge('web#src/map.ts:MapComponent', 'web#src/api.ts:ApiService', { type: 'injects' })];
+    const db = buildTestDb({ nodes: marked, edges: used });
+    const badge = deadVerdict(db, db.report(), 'web#src/badge.ts:BadgeComponent');
+    const legacy = deadVerdict(db, db.report(), 'web#src/api.ts:ApiService.legacy');
+    const spare = deadVerdict(db, db.report(), 'web#src/api.ts:ApiService.spare');
+    db.close();
+    expect(badge).toMatchObject({ verdict: 'likely-dead', evidence: { unreferenced: true } });
+    expect(legacy).toMatchObject({ verdict: 'likely-dead', evidence: { classReached: true, unreferenced: true } });
+    expect(legacy?.reason).toContain('written nowhere else');
+    // A name written somewhere: a call through a receiver the reading could not type may be the one.
+    expect(spare).toMatchObject({ verdict: 'likely-dead', evidence: { classReached: true } });
+    expect(spare?.evidence.unreferenced).toBeUndefined();
+  });
+});
+
+describe("a route nothing calls that hands its request to a bot's code (P400)", () => {
+  const bot = (verb: string) =>
+    buildTestDb({
+      nodes: [
+        route(`entry:shop:http:${verb}:/tg/:param`, { repo: 'shop', label: `${verb} /tg/:param`, meta: { method: verb, path: '/tg/:param', controller: 'ChatHookController' } }),
+        node('shop#src/hook.ts:ChatHookController.receive', { repo: 'shop', type: 'method', label: 'ChatHookController.receive', file: 'src/hook.ts' }),
+        node('shop#src/bot.ts:ChatBot.handleUpdate', { repo: 'shop', type: 'method', label: 'ChatBot.handleUpdate', file: 'src/bot.ts' }),
+        node('shop#src/bot.ts:ChatBot.reply', { repo: 'shop', type: 'method', label: 'ChatBot.reply', file: 'src/bot.ts' }),
+        node('entry:shop:bot_command:stock', { repo: 'shop', type: 'entry', kind: 'bot_command', file: 'src/bot.ts', line: 9 }),
+      ],
+      edges: [
+        edge(`entry:shop:http:${verb}:/tg/:param`, 'shop#src/hook.ts:ChatHookController.receive', { type: 'handles' }),
+        edge('shop#src/hook.ts:ChatHookController.receive', 'shop#src/bot.ts:ChatBot.handleUpdate'),
+        edge('entry:shop:bot_command:stock', 'shop#src/bot.ts:ChatBot.reply', { type: 'handles' }),
+      ],
+      report: { routes: { total: 1, called: 0, uncalled: [`entry:shop:http:${verb}:/tg/:param`], duplicated: [] } },
+    });
+
+  it("is the bot's way in, reached from outside: infrastructure, its verdict unknown, as impact counts it a bot", () => {
+    const db = bot('POST');
+    const [row] = deadEntries(db, db.report());
+    db.close();
+    expect(row).toMatchObject({ class: 'infrastructure', role: 'bot', verdict: 'unknown', why: 'hands its request to ChatBot.handleUpdate (src/bot.ts)', evidence: { outside: 'bot' } });
+    expect(row?.reason).toContain("the bot's webhook");
+  });
+
+  it('stays dead where the route only reads: a bot platform posts its updates', () => {
+    const db = bot('GET');
+    const [row] = deadEntries(db, db.report());
+    db.close();
+    expect(row).toMatchObject({ class: 'actionable', verdict: 'dead' });
   });
 });

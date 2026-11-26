@@ -1,0 +1,74 @@
+{
+  "answers": [
+    {
+      "asked": "onTicketEvent",
+      "matches": [
+        {
+          "id": "console#src/screens/TicketScreen.tsx:onTicketEvent",
+          "type": "function",
+          "label": "onTicketEvent",
+          "loc": "src/screens/TicketScreen.tsx:7",
+          "service": "console",
+          "endLine": 10,
+          "reach": "alive",
+          "from": "screen /tickets/:param"
+        },
+        {
+          "id": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+          "type": "consumer",
+          "label": "onTicketEvent",
+          "loc": "src/live/useDeskEvents.ts:16",
+          "service": "console",
+          "kind": "sse",
+          "reach": "alive",
+          "from": "screen /tickets/:param"
+        }
+      ],
+      "total": 2,
+      "complete": true
+    },
+    {
+      "asked": "reopen",
+      "matches": [
+        {
+          "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+          "type": "method",
+          "label": "TicketsService.reopen",
+          "loc": "src/tickets/tickets.service.ts:22",
+          "service": "desk-api",
+          "endLine": 24,
+          "reach": "maybe",
+          "from": "behind",
+          "confirm": {
+            "grep": "reopen",
+            "repo": "desk-api"
+          }
+        },
+        {
+          "id": "channel:desk:*:events#TICKET_REOPENED",
+          "type": "channel",
+          "label": "desk:*:events#TICKET_REOPENED",
+          "loc": "src/tickets/tickets.service.ts:23",
+          "service": "desk-api",
+          "kind": "message_type",
+          "reach": "maybe",
+          "from": "behind",
+          "behind": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+          "confirm": {
+            "grep": "reopen",
+            "repo": "desk-api"
+          }
+        }
+      ],
+      "total": 2,
+      "complete": true
+    }
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"console#src/screens/TicketScreen.tsx:onTicketEvent\"})",
+    "impact({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.reopen\"})",
+    "get_source({symbol: \"console#src/screens/TicketScreen.tsx:onTicketEvent\"})",
+    "get_source({symbol: \"desk-api#src/tickets/tickets.service.ts:TicketsService.reopen\"})"
+  ]
+}

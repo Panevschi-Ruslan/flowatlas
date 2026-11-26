@@ -138,7 +138,21 @@ export interface FlowResult {
   left?: number;
   /** The crossings left unfollowed, nearest first, at most `MAX_CROSSINGS_LEFT`. */
   crossingsLeft?: CrossingLeft[];
+  /**
+   * The requests the walk crossed, in the order it met them, those past the
+   * budget too (P404): what `get_flow` says first, where each lands.
+   */
+  requests?: string[];
+  /**
+   * The steps on the path that could not be followed (P404), each with
+   * whether it lies on a request's way: on the path from the entry to a
+   * request the walk crossed, or a request itself.
+   */
+  unreadSteps?: Array<{ id: string; onRequestWay: boolean }>;
 }
+
+/** The nodes a request is drawn as (P404). */
+const REQUEST_NODES: ReadonlySet<string> = new Set(['http_out', 'ui_api_call']);
 
 /** How many nodes a walk shows when nobody says; `get_flow` sets its own (P92 D4). */
 export const DEFAULT_WALK_NODES = 150;
@@ -263,16 +277,59 @@ const inCallOrder = (a: GraphEdge, b: GraphEdge): number =>
   (a.line ?? Number.MAX_SAFE_INTEGER) - (b.line ?? Number.MAX_SAFE_INTEGER) ||
   (a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
 
-const guardsOf = (db: GraphDb, id: string, detail: DetailLevel): GuardRef[] => {
+/** The service a request came through to reach a node, where the edge says (`meta.through`, P245). */
+const throughOf = (edge: GraphEdge): string | null => (typeof edge.meta?.['through'] === 'string' ? edge.meta['through'] : null);
+
+/** Whether an edge is a fetch the service it came through makes for itself: a router's for a `@requires` (P256). */
+const fetchedForItself = (edge: GraphEdge): boolean => {
+  const graphql = edge.meta?.['graphql'];
+  return graphql !== null && typeof graphql === 'object' && typeof (graphql as Record<string, unknown>)['requiredBy'] === 'string';
+};
+
+/** The strings a meta list holds: a `guarded_by` edge's `for`, an arriving edge's `answers` (P252). */
+const namesIn = (edge: GraphEdge | undefined, key: string): string[] | undefined => {
+  const value = edge?.meta?.[key];
+  return Array.isArray(value) ? value.filter((name): name is string => typeof name === 'string') : undefined;
+};
+
+/**
+ * The checks in front of a node, in the order they run.
+ *
+ * A check one service runs for the requests that come through it - a
+ * router's in front of a subgraph's field (`meta.through` on the
+ * `guarded_by` edge, P245) - is in front of a step only where the request
+ * came through that service; the node a walk starts from shows every check.
+ *
+ * A check for only some of what the node answers (`meta.for` on the edge,
+ * P252: fields with no handler of their own the node answers) is in front of
+ * a step only where the request asks it for one of them (`meta.answers` on
+ * the edge that arrived), and says which.
+ *
+ * A fetch the service in between makes for itself - a router's for a
+ * `@requires`, which is not the client's selection - has none of that
+ * service's checks in front of it (P256): the router checks the operation
+ * it was sent, not the fields it adds to plan it.
+ */
+const guardsOf = (db: GraphDb, id: string, detail: DetailLevel, arrived?: GraphEdge): GuardRef[] => {
   // Where each check was put, as the reader of the framework wrote it on the
   // entry (P76); matched on the node the edge points at.
   const said = new Map((accessOf(db.node(id))?.guards ?? []).map((guard) => [guard.id, guard]));
+  const repo = db.node(id)?.repo;
+  const asked = namesIn(arrived, 'answers') ?? [];
+  /** What a check is for on this step: all it is for where the walk starts here, what the request asks for where it arrived. */
+  const forOf = (edge: GraphEdge): string[] | undefined => {
+    const parts = namesIn(edge, 'for');
+    return parts === undefined || arrived === undefined ? parts : parts.filter((part) => asked.includes(part));
+  };
   return db
     .edgesFrom(id, [GUARD_EDGE])
+    .filter((edge) => arrived === undefined || throughOf(edge) === null || (throughOf(edge) === throughOf(arrived) && !fetchedForItself(arrived)))
+    .filter((edge) => forOf(edge)?.length !== 0)
     .sort((a, b) => orderOf(a) - orderOf(b))
     .map((edge, index) => {
       const node = db.node(edge.to);
       const access = said.get(edge.to);
+      const parts = forOf(edge);
       return {
         id: edge.to,
         label: node?.label ?? edge.to,
@@ -281,6 +338,8 @@ const guardsOf = (db: GraphDb, id: string, detail: DetailLevel): GuardRef[] => {
         ...(detail >= 2 && node?.file !== undefined ? { loc: `${node.file}:${node.line ?? 0}` } : {}),
         ...(access === undefined ? {} : { where: access.where, via: access.via }),
         ...(access?.skippedBy === undefined ? {} : { skippedBy: access.skippedBy }),
+        ...(node === undefined || repo === undefined || node.repo === repo ? {} : { service: node.repo }),
+        ...(parts === undefined ? {} : { for: parts }),
       };
     });
 };
@@ -368,6 +427,9 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
 
   const unresolvedIds = new Set<string>();
   if (db.unresolvedFor(entryId).length > 0) unresolvedIds.add(entryId);
+  // The requests crossed, and every step on the way to one (P404).
+  const requests: string[] = [];
+  const requestWay = new Set<string>();
 
   const ranking = rankingFor(db);
 
@@ -399,7 +461,7 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
       edge: projectEdge(edge, detail),
       children: [],
     };
-    const guards = guardsOf(db, edge.to, detail);
+    const guards = guardsOf(db, edge.to, detail, edge);
     if (guards.length > 0) row.guards = guards;
     const fails = failsOf(target, detail);
     if (fails.length > 0) row.fails = fails;
@@ -489,6 +551,11 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
         // and the entry a path ends at included: a function deployed with no body
         // to read is where its path stops, and the row saying so is why (R168).
         if (target === undefined || db.unresolvedFor(edge.to).length > 0) unresolvedIds.add(edge.to);
+        if (target !== undefined && REQUEST_NODES.has(target.type)) {
+          requests.push(edge.to);
+          requestWay.add(edge.to);
+          for (const step of item.path) requestWay.add(step);
+        }
       }
 
       let row = item.flow === undefined || stopped !== undefined ? undefined : rowOf(edge, target, repeat, placed.get(edge.to));
@@ -555,7 +622,12 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
     }
   }
 
-  const result: FlowResult = { root, unresolvedOnPath: unresolvedIds.size };
+  const result: FlowResult = {
+    root,
+    unresolvedOnPath: unresolvedIds.size,
+    ...(requests.length === 0 ? {} : { requests }),
+    ...(unresolvedIds.size === 0 ? {} : { unreadSteps: [...unresolvedIds].map((id) => ({ id, onRequestWay: requestWay.has(id) })) }),
+  };
   const stoppedBy = BY_WEIGHT.filter((limit) => cut[limit] > 0).sort((a, b) => cut[b] - cut[a]);
   if (stoppedBy.length === 0) return result;
 

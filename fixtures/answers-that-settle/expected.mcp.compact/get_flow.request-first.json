@@ -1,0 +1,166 @@
+{
+  "settled": "the request lands on GET /api/admin/:param/rooms/free-times (rooms-api), RoomsController.freeTimes",
+  "requests": [
+    {
+      "route": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+      "by": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes"
+    }
+  ],
+  "root": {
+    "id": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes",
+    "line": "24-28",
+    "children": [
+      {
+        "id": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots",
+        "line": "30-33",
+        "edge": {
+          "type": "calls",
+          "params": [
+            "string"
+          ],
+          "returns": "string[]"
+        },
+        "children": [
+          {
+            "id": "config_key:chat-bot#ROOMS_API_URL",
+            "loc": "src/rooms/room.service.ts:31",
+            "edge": "reads_config"
+          },
+          {
+            "id": "http_out:chat-bot#src/rooms/room.service.ts:31:43",
+            "label": "GET /api/admin/:param/rooms/free-times",
+            "edge": "calls",
+            "children": [
+              {
+                "id": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+                "loc": "src/rooms/rooms.controller.ts:9",
+                "edge": {
+                  "type": "http_calls",
+                  "returns": "string[]"
+                },
+                "children": [
+                  {
+                    "id": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes",
+                    "line": "9-12",
+                    "edge": {
+                      "type": "handles",
+                      "params": [
+                        "string"
+                      ],
+                      "returns": "string[]"
+                    },
+                    "children": [
+                      {
+                        "id": "rooms-api#src/rooms/rooms.service.ts:RoomsService.freeTimes",
+                        "line": "11-13",
+                        "edge": {
+                          "type": "calls",
+                          "params": [
+                            "string"
+                          ],
+                          "returns": "string[]"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "chat-bot#src/bus/venue-bus.service.ts:VenueBus.publish",
+        "line": "9-12",
+        "edge": {
+          "type": "calls",
+          "params": [
+            "string",
+            "T"
+          ],
+          "returns": "void"
+        }
+      },
+      {
+        "id": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+        "label": "event staff_feed",
+        "kind": "event",
+        "edge": "calls",
+        "children": [
+          {
+            "id": "channel:staff_feed",
+            "loc": "src/rooms/rooms.service.ts:27",
+            "service": "rooms-api",
+            "edge": {
+              "type": "emits",
+              "params": [
+                "{type:string;venueId:string;count:number}"
+              ]
+            },
+            "children": [
+              {
+                "id": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+                "line": "20-23",
+                "kind": "event",
+                "edge": "consumes",
+                "children": [
+                  {
+                    "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+                    "line": "23-25",
+                    "edge": {
+                      "type": "handles",
+                      "params": [
+                        "type:chat-bot#StaffMessage"
+                      ],
+                      "returns": "void"
+                    },
+                    "children": [
+                      {
+                        "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+                        "line": "27-29",
+                        "edge": {
+                          "type": "calls",
+                          "params": [
+                            "type:chat-bot#StaffMessage"
+                          ],
+                          "returns": "void"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "channel:staff_feed#SLOTS_SHOWN",
+            "loc": "src/rooms/room.service.ts:26",
+            "kind": "message_type",
+            "edge": {
+              "type": "emits",
+              "params": [
+                "{type:string;venueId:string;count:number}"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "chat-bot#src/rooms/slot-renderer.service.ts:SlotRenderer.render",
+        "line": "20-23",
+        "edge": {
+          "type": "calls",
+          "params": [
+            "string[]"
+          ],
+          "returns": "string"
+        }
+      }
+    ]
+  },
+  "unresolvedOnPath": 1,
+  "complete": false,
+  "left": [
+    "unread: 1 step on the path could not be followed: event staff_feed (message-type-unselected), off every request's way"
+  ]
+}

@@ -4,11 +4,14 @@ import { forwardNoWorse } from '@flowatlas/core';
 import {
   forwardedFrom,
   isReadable,
-  rootConfigKey,
+  rootConfigAddress,
   settingReader,
   splitAtParameterIn,
 } from './trace.js';
 import { analyzeUrl, composeAddress, surenessOf } from './url.js';
+
+/** The settings key a value is rooted at, the key alone. */
+const rootConfigKey = (node: Parameters<typeof rootConfigAddress>[0]): string | null => rootConfigAddress(node)?.key ?? null;
 
 const splitAtParameter = (node: Parameters<typeof splitAtParameterIn>[0]) =>
   splitAtParameterIn(node, settingReader);
@@ -38,6 +41,23 @@ const fetchCall = (file: SourceFile): CallExpression => {
 const address = (file: SourceFile) => fetchCall(file).getArguments()[0]!;
 
 describe('following a value back to a settings key', () => {
+  // `const { SHIPPING_URL = '' } = process.env` is the read, spelled where the
+  // name is declared rather than at each use (P269).
+  it('reads a name taken out of the environment where it is declared, with its default', () => {
+    const file = parse(`
+      const { SHIPPING_URL = 'http://shipping:8080', OTHER: renamed } = process.env;
+      export const quote = () => fetch(\`\${SHIPPING_URL}/quote\`);
+      export const other = () => renamed;
+    `);
+    expect(rootConfigKey(address(file))).toBe('SHIPPING_URL');
+    expect(rootConfigAddress(address(file))).toEqual({ key: 'SHIPPING_URL', prefix: '/quote', otherwise: 'http://shipping:8080', otherwiseFile: '/a.ts' });
+    const renamed = file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!;
+    expect(rootConfigKey(renamed)).toBe('OTHER');
+    // Taken out of anything else, it is no setting.
+    const plain = parse(`const { url } = { url: '/x' }; export const go = () => fetch(\`\${url}/y\`);`);
+    expect(rootConfigKey(address(plain))).toBeNull();
+  });
+
   it('reads one written where it is used', () => {
     const file = parse(`
       class C {
@@ -176,6 +196,127 @@ describe('splitting an address at the part a caller supplies', () => {
     const file = parse(client);
     const split = splitAtParameter(address(file));
     expect(forwardedFrom(split!.parameter)).toEqual({ calls: [], undecided: false });
+  });
+
+  it('splits an address joined with + as the template it spells, the host kept (P308)', () => {
+    const file = parse(`
+      export function get(path: string) { return fetch('https://shop.example' + path); }
+      export const all = () => get('/products');
+    `);
+    const split = splitAtParameter(address(file));
+    expect(split?.parameter.getName()).toBe('path');
+    expect(split?.before).toBe('https://shop.example');
+    expect(split?.after).toBe('');
+    const [caller] = forwardedFrom(split!.parameter).calls;
+    expect(composeAddress(analyzeUrl(caller!.argument), split)).toMatchObject({ path: '/products', host: 'shop.example' });
+    // Two parameters joined are no address written here: the first is the whole address, as before.
+    const whole = parse(`export function go(base: string, path: string) { return fetch(base + path); }`);
+    expect(splitAtParameter(address(whole))?.parameter.getName()).toBe('base');
+  });
+
+  it('reads the path after a host as unread where a value is written straight after it, never the root (P308)', () => {
+    const joined = parse(`export function go(path: string) { return fetch('https://shop.example' + path); }`);
+    expect(analyzeUrl(address(joined))).toMatchObject({ path: '${…}', host: 'shop.example' });
+    const template = parse(`export function go(path: string) { return fetch(\`https://shop.example\${path}\`); }`);
+    expect(analyzeUrl(address(template))).toMatchObject({ path: '${…}', host: 'shop.example' });
+    // A host built from a value, a path after it, is read as it was.
+    const tenant = parse(`export function go(tenant: string) { return fetch(\`https://\${tenant}.shop.example/orders\`); }`);
+    expect(analyzeUrl(address(tenant))).toMatchObject({ path: '/orders' });
+  });
+
+  it('reads a value straight after the host, a path after it, by what it is followed to: a port stays the host, anything else opens the path (P312)', () => {
+    // Every caller hands a path: the host is the text before it, and each caller's path is read.
+    const paths = parse(`
+      export function go(version: string) { return fetch(\`https://shop.example\${version}/orders\`); }
+      export const one = () => go('/v1');
+    `);
+    expect(analyzeUrl(address(paths))).toMatchObject({ path: '/${…}/orders', host: 'shop.example' });
+    const split = splitAtParameter(address(paths));
+    expect(split).toMatchObject({ before: 'https://shop.example', after: '/orders' });
+    const [caller] = forwardedFrom(split!.parameter).calls;
+    expect(composeAddress(analyzeUrl(caller!.argument), split)).toMatchObject({ path: '/v1/orders', host: 'shop.example' });
+    // Every caller hands a port: part of the host, as before; and a caller's port fills the host, not the path.
+    const ports = parse(`
+      export function go(port: string) { return fetch(\`http://localhost\${port}/orders\`); }
+      export const one = () => go(':3000');
+    `);
+    expect(analyzeUrl(address(ports))).toMatchObject({ path: '/orders', host: 'localhost${…}' });
+    const portSplit = splitAtParameter(address(ports));
+    const [portCaller] = forwardedFrom(portSplit!.parameter).calls;
+    expect(composeAddress(analyzeUrl(portCaller!.argument), portSplit)).toMatchObject({ path: '/orders', host: 'localhost:3000' });
+    // A port's place each caller fills (P318): a number or digits are the port; anything else says nothing.
+    const placed = parse(`
+      declare const settings: { port: number };
+      export function go(port: number | string) { return fetch(\`http://localhost:\${port}/orders\`); }
+      export const one = () => go(3000);
+      export const two = () => go('4000');
+      export const three = () => go(settings.port);
+    `);
+    const placeSplit = splitAtParameter(address(placed));
+    expect(placeSplit).toMatchObject({ before: 'http://localhost:', after: '/orders' });
+    const composed = forwardedFrom(placeSplit!.parameter).calls.map((call) => composeAddress(analyzeUrl(call.argument), placeSplit, call.argument));
+    expect(composed.map(({ host, path }) => ({ host, path }))).toEqual([
+      { host: 'localhost:3000', path: '/orders' },
+      { host: 'localhost:4000', path: '/orders' },
+      { host: null, path: null },
+    ]);
+    // The last says less than the request where it is written, which keeps its own reading.
+    expect(surenessOf(composed[2]!)).toBeLessThan(surenessOf(analyzeUrl(address(placed))));
+    // The opening of the name a caller hands is the host's, not a path's.
+    const tenant = parse(`
+      export function go(tenant: string) { return fetch(\`https://\${tenant}.shop.example/orders\`); }
+      export const one = () => go('acme');
+    `);
+    const tenantSplit = splitAtParameter(address(tenant));
+    const [tenantCaller] = forwardedFrom(tenantSplit!.parameter).calls;
+    expect(composeAddress(analyzeUrl(tenantCaller!.argument), tenantSplit, tenantCaller!.argument)).toMatchObject({ host: 'acme.shop.example', path: '/orders' });
+    // A number is a port; nothing known is no port, joined with + or written as a template.
+    const number = parse(`export function go(port: number) { return fetch(\`http://localhost\${port}/orders\`); }`);
+    expect(analyzeUrl(address(number))).toMatchObject({ path: '/orders', host: 'localhost${…}' });
+    const unknown = parse(`declare const x: string; export function go() { return fetch('https://shop.example' + x + '/orders'); }`);
+    expect(analyzeUrl(address(unknown))).toMatchObject({ path: '/${…}/orders', host: 'shop.example' });
+    // A port's place, after a colon, and the middle of a name, after a dot, are the host's whatever fills them.
+    const colon = parse(`declare const x: string; export function go() { return fetch(\`http://localhost:\${x}/orders\`); }`);
+    expect(analyzeUrl(address(colon))).toMatchObject({ path: '/orders', host: 'localhost:${…}' });
+    const region = parse(`export function go(region: string) { return fetch(\`https://calendar.example.\${region}/api/v1\`); }`);
+    expect(analyzeUrl(address(region))).toMatchObject({ path: '/api/v1', host: 'calendar.example.${…}' });
+    const regionOnly = parse(`export function go(region: string) { return fetch(\`https://calendar.example.\${region}\`); }`);
+    expect(analyzeUrl(address(regionOnly))).toMatchObject({ path: '/', host: 'calendar.example.${…}' });
+    // An unread value after the host ahead of the parameter a caller fills: the host kept, the path unread.
+    const ahead = parse(`declare const x: string; export function go(id: string) { return fetch(\`https://shop.example\${x}/orders/\${id}\`); }`);
+    expect(splitAtParameter(address(ahead))).toMatchObject({ before: 'https://shop.example/${…}/orders/' });
+  });
+
+  it('fills a port place with a number a class keeps, reads a number straight after a host as spelled and says so (P324)', () => {
+    const kept = parse(`
+      class Ports { static stock = 4700; static get catalog() { return 4600; } }
+      export function go(port: number) { return fetch(\`http://localhost:\${port}/orders\`); }
+      export const one = () => go(Ports.stock);
+      export const two = () => go(Ports.catalog);
+    `);
+    const keptSplit = splitAtParameter(address(kept));
+    const composed = forwardedFrom(keptSplit!.parameter).calls.map((call) => composeAddress(analyzeUrl(call.argument), keptSplit, call.argument));
+    expect(composed.map(({ host, path }) => ({ host, path }))).toEqual([
+      { host: 'localhost:4700', path: '/orders' },
+      { host: 'localhost:4600', path: '/orders' },
+    ]);
+    // Written in place, in the port place; one in the path's place stays a hole.
+    const inPlace = parse(`class Ports { static stock = 4700; static page = 20; } export function go() { return fetch(\`http://localhost:\${Ports.stock}/orders/\${Ports.page}\`); }`);
+    expect(analyzeUrl(address(inPlace))).toMatchObject({ host: 'localhost:4700', path: '/orders/:param' });
+    // Glued: handed by a caller, or written in place.
+    const glued = parse(`
+      export function go(port: number) { return fetch(\`http://localhost\${port}/orders\`); }
+      export const one = () => go(4600);
+    `);
+    const gluedSplit = splitAtParameter(address(glued));
+    const [gluedCaller] = forwardedFrom(gluedSplit!.parameter).calls;
+    expect(composeAddress(analyzeUrl(gluedCaller!.argument), gluedSplit, gluedCaller!.argument)).toMatchObject({
+      host: 'localhost4600',
+      path: '/orders',
+      portWithoutColon: { number: '4600', host: 'localhost' },
+    });
+    const gluedInPlace = parse(`const PORT = 4600; export function go() { return fetch(\`http://localhost\${PORT}/orders\`); }`);
+    expect(analyzeUrl(address(gluedInPlace))).toMatchObject({ host: 'localhost4600', path: '/orders', portWithoutColon: { number: '4600', host: 'localhost' } });
   });
 });
 

@@ -1,0 +1,44 @@
+{
+  "kind": "answer-field-never-returned",
+  "rows": [
+    {
+      "kind": "answer-field-never-returned",
+      "id": "ops-web#src/products.ts:productLine",
+      "from": "ui_api_call:ops-web#src/products.ts:10:26",
+      "to": "entry:catalog-api:http:GET:/products/:param",
+      "service": "ops-web",
+      "loc": "src/products.ts:13",
+      "message": "`data.costPrice` of the answer to GET /products/:param is read by productLine and is not on the wire: GET /products/:param answers { data: ProductCard, success } (EnvelopeInterceptor); costPrice left out by ClassSerializerInterceptor (@Exclude) (success, data.id, data.name, data.price)",
+      "precision": "high",
+      "evidence": "the route answers a shape read whole, every interceptor around it was read, and the field is not on the wire",
+      "fix": "ClassSerializerInterceptor (@Exclude) leaves `costPrice` out of the answer: expose it, or stop reading it",
+      "rank": 1,
+      "next": "check_contract({from: \"ui_api_call:ops-web#src/products.ts:10:26\", to: \"entry:catalog-api:http:GET:/products/:param\"})"
+    },
+    {
+      "kind": "answer-field-never-returned",
+      "id": "ops-web#src/products.ts:productLine",
+      "from": "ui_api_call:ops-web#src/products.ts:10:26",
+      "to": "entry:catalog-api:http:GET:/products/:param",
+      "service": "ops-web",
+      "loc": "src/products.ts:13",
+      "message": "`price` of the answer to GET /products/:param is read by productLine and is not on the wire: GET /products/:param answers { data: ProductCard, success } (EnvelopeInterceptor); costPrice left out by ClassSerializerInterceptor (@Exclude) (success, data.id, data.name, data.price)",
+      "precision": "high",
+      "evidence": "the route answers a shape read whole, every interceptor around it was read, and the field is not on the wire",
+      "fix": "the answer is wrapped: read `data.price`, or stop reading it",
+      "rank": 2,
+      "next": "check_contract({from: \"ui_api_call:ops-web#src/products.ts:10:26\", to: \"entry:catalog-api:http:GET:/products/:param\"})"
+    }
+  ],
+  "total": 2,
+  "heldBack": {
+    "answer-field-never-returned": {
+      "count": 1,
+      "why": "the answer to GET /reports/daily is reshaped on the way out in a way not read (TotalsInterceptor: its map(...) answers this.withTotals(report), not an object written out): `data.revenue` may be sent"
+    }
+  },
+  "next": [
+    "check_contract({from: \"ui_api_call:ops-web#src/products.ts:10:26\", to: \"entry:catalog-api:http:GET:/products/:param\"})",
+    "check_contract({from: \"ui_api_call:ops-web#src/products.ts:10:26\", to: \"entry:catalog-api:http:GET:/products/:param\"})"
+  ]
+}

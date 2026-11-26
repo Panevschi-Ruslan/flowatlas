@@ -1,0 +1,7 @@
+services:
+  reports:
+    build: .
+    env_file:
+      - ./reports.env
+    environment:
+      REPORTS_FORMAT: pdf

@@ -1,0 +1,14 @@
+# Paths in a base are written from this folder, as helmfile loads bases.
+bases:
+  - ../bases/environments.yaml
+  - ../bases/payments.yaml.gotmpl
+---
+releases:
+  - name: orders
+    chart: ../charts/orders
+    needs:
+      - shop/payments
+      - cache
+    values:
+      - service:
+          port: {{ .Values.ordersPort }}

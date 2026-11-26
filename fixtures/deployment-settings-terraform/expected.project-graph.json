@@ -1,0 +1,1373 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:20:12.048Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/shop-approvals",
+      "type": "channel",
+      "label": "sqs/shop-approvals",
+      "repo": "orders",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 29,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/shop-billing",
+      "type": "channel",
+      "label": "sqs/shop-billing",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 7,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-inspections",
+      "type": "channel",
+      "label": "sqs/shop-inspections",
+      "repo": "orders",
+      "file": "statemachine/accept-return.asl.json",
+      "line": 6,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/shop-notices",
+      "type": "channel",
+      "label": "sqs/shop-notices",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 19,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-notices-dead",
+      "type": "channel",
+      "label": "sqs/shop-notices-dead",
+      "repo": "orders",
+      "file": "infra/queues.tf",
+      "line": 45,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/shop-packing",
+      "type": "channel",
+      "label": "sqs/shop-packing",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 12,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-packing-dead",
+      "type": "channel",
+      "label": "sqs/shop-packing-dead",
+      "repo": "orders",
+      "file": "infra/queues.tf",
+      "line": 35,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/shop-shipments",
+      "type": "channel",
+      "label": "sqs/shop-shipments",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-shipments-dead",
+      "type": "channel",
+      "label": "sqs/shop-shipments-dead",
+      "repo": "orders",
+      "file": "infra/queues.tf",
+      "line": 3,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.bill_orders",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.bill_orders",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.pack_orders",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 12,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.pack_orders",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.send_notices",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.send_notices",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.ship_orders",
+      "repo": "orders",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.ship_orders",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-bill-order",
+      "type": "entry",
+      "label": "shop-bill-order",
+      "repo": "orders",
+      "file": "infra/functions.tf",
+      "line": 12,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-bill-order",
+        "deployedBy": "terraform",
+        "name": "shop-bill-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.bill_order",
+        "handler": "handlers/bill-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "{orderId:string;total:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-pack-order",
+      "type": "entry",
+      "label": "shop-pack-order",
+      "repo": "orders",
+      "file": "infra/functions.tf",
+      "line": 21,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-pack-order",
+        "deployedBy": "terraform",
+        "name": "shop-pack-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.pack_order",
+        "handler": "handlers/pack-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-reserve-stock",
+      "type": "entry",
+      "label": "shop-reserve-stock",
+      "repo": "orders",
+      "file": "infra/functions.tf",
+      "line": 39,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-reserve-stock",
+        "deployedBy": "terraform",
+        "name": "shop-reserve-stock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.reserve_stock",
+        "handler": "handlers/reserve-stock.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{orderId:string;items:string[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-send-notice",
+      "type": "entry",
+      "label": "shop-send-notice",
+      "repo": "orders",
+      "file": "infra/functions.tf",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-send-notice",
+        "deployedBy": "terraform",
+        "name": "shop-send-notice",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.send_notice",
+        "handler": "handlers/send-notice.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-ship-order",
+      "type": "entry",
+      "label": "shop-ship-order",
+      "repo": "orders",
+      "file": "infra/functions.tf",
+      "line": 3,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-ship-order",
+        "deployedBy": "terraform",
+        "name": "shop-ship-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.ship_order",
+        "handler": "handlers/ship-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "{orderId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:workflow:shop-accept-return",
+      "type": "entry",
+      "label": "workflow shop-accept-return",
+      "repo": "orders",
+      "file": "statemachine/accept-return.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "shop-accept-return",
+        "name": "shop-accept-return",
+        "nameFrom": "deployment",
+        "startAt": "AwaitInspection",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "comment": "Accepts a returned parcel once the warehouse confirms it; the whole execution is bounded at a week.",
+        "reads": {
+          "": "{returnId:unknown}"
+        },
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.accept_return",
+        "definitionFrom": "file",
+        "declaredIn": "infra/workflows.tf:10"
+      }
+    },
+    {
+      "id": "entry:orders:workflow:shop-fulfil-order",
+      "type": "entry",
+      "label": "workflow shop-fulfil-order",
+      "repo": "orders",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "shop-fulfil-order",
+        "name": "shop-fulfil-order",
+        "nameFrom": "deployment",
+        "startAt": "ReserveStock",
+        "states": 4,
+        "queryLanguage": "JSONPath",
+        "comment": "Fulfils an order: reserves the stock, charges the card, waits for a person to approve a large order, and ships it.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.fulfil_order",
+        "definitionFrom": "file",
+        "declaredIn": "infra/workflows.tf:2"
+      }
+    },
+    {
+      "id": "orders#src/handlers/bill-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/handlers/bill-order.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#SQSBatchResponse"
+        }
+      }
+    },
+    {
+      "id": "orders#src/handlers/pack-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/handlers/pack-order.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            },
+            {
+              "name": "context",
+              "type": "type:@types/aws-lambda#Context"
+            }
+          ],
+          "returns": "{batchItemFailures:{itemIdentifier:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/handlers/reserve-stock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/handlers/reserve-stock.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{orderId:string;items:string[]}"
+            }
+          ],
+          "returns": "{reserved:number}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/handlers/send-notice.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/handlers/send-notice.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "orders#src/handlers/ship-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/handlers/ship-order.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "error",
+            "text": "booking failed",
+            "at": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/lib/courier.ts:bookCourier",
+      "type": "function",
+      "label": "bookCourier",
+      "repo": "orders",
+      "file": "src/lib/courier.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "orders#src/lib/courier.ts:chargeOrder",
+      "type": "function",
+      "label": "chargeOrder",
+      "repo": "orders",
+      "file": "src/lib/courier.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{orderId:string;total:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#statemachine/accept-return.asl.json:shop-accept-return/AwaitInspection",
+      "type": "function",
+      "label": "AwaitInspection [Task sqs:sendMessage]",
+      "repo": "orders",
+      "file": "statemachine/accept-return.asl.json",
+      "line": 6,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-accept-return",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "channel",
+          "service": "sqs",
+          "action": "sendMessage",
+          "pattern": "wait-for-task-token",
+          "transport": "queue",
+          "targets": [
+            "shop-inspections"
+          ],
+          "channels": [
+            "sqs/shop-inspections"
+          ]
+        },
+        "parameters": {
+          "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/000000000000/shop-inspections",
+          "MessageBody": {
+            "returnId.$": "$.returnId",
+            "token.$": "$$.Task.Token"
+          }
+        }
+      }
+    },
+    {
+      "id": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval",
+      "type": "function",
+      "label": "AwaitApproval [Task sqs:sendMessage]",
+      "repo": "orders",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 29,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "channel",
+          "service": "sqs",
+          "action": "sendMessage",
+          "pattern": "wait-for-task-token",
+          "transport": "queue",
+          "targets": [
+            "shop-approvals"
+          ],
+          "channels": [
+            "sqs/shop-approvals"
+          ]
+        },
+        "parameters": {
+          "QueueUrl": "https://sqs.eu-west-1.amazonaws.com/000000000000/shop-approvals",
+          "MessageBody": {
+            "orderId.$": "$.orderId",
+            "token.$": "$$.Task.Token"
+          }
+        },
+        "resultPath": "$.approval"
+      }
+    },
+    {
+      "id": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard",
+      "type": "function",
+      "label": "ChargeCard [Task function]",
+      "repo": "orders",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 23,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "name": "shop-bill-order"
+        },
+        "reaches": [
+          "invoke:shop-bill-order"
+        ],
+        "resultPath": "$.charge"
+      }
+    },
+    {
+      "id": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ReserveStock",
+      "type": "function",
+      "label": "ReserveStock [Task lambda:invoke]",
+      "repo": "orders",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "shop-reserve-stock"
+        },
+        "reaches": [
+          "invoke:shop-reserve-stock"
+        ],
+        "parameters": {
+          "FunctionName": "shop-reserve-stock",
+          "Payload.$": "$"
+        },
+        "resultPath": "$.reservation",
+        "retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 6,
+            "BackoffRate": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ShipParcel",
+      "type": "function",
+      "label": "ShipParcel [Task ecs:runTask]",
+      "repo": "orders",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 42,
+      "kind": "state",
+      "meta": {
+        "workflow": "shop-fulfil-order",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "service",
+          "service": "ecs",
+          "action": "runTask",
+          "pattern": "sync"
+        },
+        "parameters": {
+          "Cluster": "shop-shipping",
+          "TaskDefinition": "shop-label-printer"
+        }
+      }
+    },
+    {
+      "id": "producer:orders#infra/queues.tf:aws_sqs_queue.notices",
+      "type": "producer",
+      "label": "message sqs/shop-notices-dead",
+      "repo": "orders",
+      "file": "infra/queues.tf",
+      "line": 45,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "redrive",
+        "declaredAs": "aws_sqs_queue.notices",
+        "deployedBy": "terraform",
+        "maxReceiveCount": 10
+      }
+    },
+    {
+      "id": "producer:orders#infra/queues.tf:aws_sqs_queue.shipments",
+      "type": "producer",
+      "label": "message sqs/shop-shipments-dead",
+      "repo": "orders",
+      "file": "infra/queues.tf",
+      "line": 3,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "redrive",
+        "declaredAs": "aws_sqs_queue.shipments",
+        "deployedBy": "terraform",
+        "maxReceiveCount": 2
+      }
+    },
+    {
+      "id": "producer:orders#infra/queues.tf:aws_sqs_queue_redrive_policy.packing",
+      "type": "producer",
+      "label": "message sqs/shop-packing-dead",
+      "repo": "orders",
+      "file": "infra/queues.tf",
+      "line": 35,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "redrive",
+        "declaredAs": "aws_sqs_queue_redrive_policy.packing",
+        "deployedBy": "terraform",
+        "maxReceiveCount": 5
+      }
+    },
+    {
+      "id": "producer:orders#statemachine/accept-return.asl.json:6:5",
+      "type": "producer",
+      "label": "message sqs/shop-inspections",
+      "repo": "orders",
+      "file": "statemachine/accept-return.asl.json",
+      "line": 6,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
+      "id": "producer:orders#statemachine/fulfil-order.asl.json:29:5",
+      "type": "producer",
+      "label": "message sqs/shop-approvals",
+      "repo": "orders",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 29,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/shop-billing",
+      "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 7,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-notices",
+      "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 19,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-notices",
+      "to": "producer:orders#infra/queues.tf:aws_sqs_queue.notices",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 45,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-packing",
+      "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 12,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-packing",
+      "to": "producer:orders#infra/queues.tf:aws_sqs_queue_redrive_policy.packing",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 35,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-shipments",
+      "to": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-shipments",
+      "to": "producer:orders#infra/queues.tf:aws_sqs_queue.shipments",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 3,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+      "to": "entry:orders:invoke:shop-bill-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 7,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+      "to": "entry:orders:invoke:shop-pack-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 12,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices",
+      "to": "entry:orders:invoke:shop-send-notice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 19,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "to": "entry:orders:invoke:shop-ship-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:orders:invoke:shop-bill-order",
+      "to": "orders#src/handlers/bill-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/bill-order.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:orders:invoke:shop-pack-order",
+      "to": "orders#src/handlers/pack-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/pack-order.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:orders:invoke:shop-reserve-stock",
+      "to": "orders#src/handlers/reserve-stock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/reserve-stock.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:orders:invoke:shop-send-notice",
+      "to": "orders#src/handlers/send-notice.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/send-notice.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:orders:invoke:shop-ship-order",
+      "to": "orders#src/handlers/ship-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/ship-order.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:orders:workflow:shop-accept-return",
+      "to": "orders#statemachine/accept-return.asl.json:shop-accept-return/AwaitInspection",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/accept-return.asl.json",
+      "line": 3
+    },
+    {
+      "from": "entry:orders:workflow:shop-fulfil-order",
+      "to": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ReserveStock",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 3
+    },
+    {
+      "from": "orders#src/handlers/bill-order.ts:handler",
+      "to": "orders#src/lib/courier.ts:chargeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{orderId:string;total:number}"
+      ],
+      "returns": "void",
+      "file": "src/handlers/bill-order.ts",
+      "line": 12,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 10
+        }
+      }
+    },
+    {
+      "from": "orders#src/handlers/ship-order.ts:handler",
+      "to": "orders#src/lib/courier.ts:bookCourier",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "string",
+      "file": "src/handlers/ship-order.ts",
+      "line": 12,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 10
+        }
+      }
+    },
+    {
+      "from": "orders#statemachine/accept-return.asl.json:shop-accept-return/AwaitInspection",
+      "to": "producer:orders#statemachine/accept-return.asl.json:6:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/accept-return.asl.json",
+      "line": 6
+    },
+    {
+      "from": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval",
+      "to": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ShipParcel",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 40,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval",
+      "to": "producer:orders#statemachine/fulfil-order.asl.json:29:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 29
+    },
+    {
+      "from": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard",
+      "to": "entry:orders:invoke:shop-bill-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 23,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:shop-bill-order"
+      }
+    },
+    {
+      "from": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard",
+      "to": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 27,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ReserveStock",
+      "to": "entry:orders:invoke:shop-reserve-stock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:shop-reserve-stock"
+      }
+    },
+    {
+      "from": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ReserveStock",
+      "to": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#infra/queues.tf:aws_sqs_queue.notices",
+      "to": "channel:sqs/shop-notices-dead",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 45,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:orders#infra/queues.tf:aws_sqs_queue.shipments",
+      "to": "channel:sqs/shop-shipments-dead",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 3,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:orders#infra/queues.tf:aws_sqs_queue_redrive_policy.packing",
+      "to": "channel:sqs/shop-packing-dead",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/queues.tf",
+      "line": 35,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:orders#statemachine/accept-return.asl.json:6:5",
+      "to": "channel:sqs/shop-inspections",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/accept-return.asl.json",
+      "line": 6,
+      "meta": {
+        "payload": {
+          "MessageBody": {
+            "returnId.$": "$.returnId",
+            "token.$": "$$.Task.Token"
+          }
+        }
+      }
+    },
+    {
+      "from": "producer:orders#statemachine/fulfil-order.asl.json:29:5",
+      "to": "channel:sqs/shop-approvals",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 29,
+      "meta": {
+        "payload": {
+          "MessageBody": {
+            "orderId.$": "$.orderId",
+            "token.$": "$$.Task.Token"
+          }
+        }
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "b2510a279726c431",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSBatchResponse": {
+      "name": "SQSBatchResponse",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "861a1e541103d2e1",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "reason": "batch-failures-unreported",
+      "message": "aws_lambda_event_source_mapping.ship_orders says shop-ship-order reports the messages of a batch that failed (ReportBatchItemFailures), and its handler never returns batchItemFailures: every batch counts as a success, and a failed message is deleted",
+      "hint": "Return { batchItemFailures } from the handler, or use a batch helper that builds it.",
+      "symbol": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "adapter": "aws-lambda",
+      "meta": {
+        "function": "shop-ship-order"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "infra/mappings.tf",
+      "line": 1,
+      "reason": "queue-visibility-short",
+      "message": "shop-shipments hides a message for 120s, under 6 times the 60s timeout of shop-ship-order (360s): a message can come back while it is still being processed, and be processed twice",
+      "hint": "Raise the visibility timeout of shop-shipments to at least 360s, or lower the function's timeout.",
+      "symbol": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "shop-shipments",
+        "visibilityTimeout": 120,
+        "functionTimeout": 60,
+        "wanted": 360
+      },
+      "service": "orders"
+    },
+    {
+      "file": "infra/mappings.tf",
+      "line": 7,
+      "reason": "batch-failures-ignored",
+      "message": "shop-bill-order returns batchItemFailures (src/handlers/bill-order.ts:17), and aws_lambda_event_source_mapping.bill_orders does not say it reports them (ReportBatchItemFailures): the list is ignored, and a message it lists as failed is deleted with the rest",
+      "hint": "Add ReportBatchItemFailures to the mapping's function response types.",
+      "symbol": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+      "adapter": "aws-lambda",
+      "meta": {
+        "function": "shop-bill-order",
+        "answeredAt": "src/handlers/bill-order.ts:17"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "infra/mappings.tf",
+      "line": 7,
+      "reason": "queue-visibility-short",
+      "message": "shop-billing hides a message for 10s, under the 20s timeout of shop-bill-order itself, which the platform refuses when the mapping is created: a message can come back while it is still being processed, and be processed twice",
+      "hint": "Raise the visibility timeout of shop-billing to at least 120s, or lower the function's timeout.",
+      "symbol": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "shop-billing",
+        "visibilityTimeout": 10,
+        "functionTimeout": 20,
+        "wanted": 120
+      },
+      "service": "orders"
+    },
+    {
+      "file": "infra/mappings.tf",
+      "line": 19,
+      "reason": "deployment-setting-unread",
+      "level": "info",
+      "message": "aws_lambda_event_source_mapping.send_notices: not every setting it is held to is checked: the visibility_timeout_seconds of aws_sqs_queue.notices is not read: var.notice_visibility_seconds has no default and no variable file sets it; whether shop-send-notice returns batchItemFailures is not read: the handler returns what relayBatch returns, which this read does not hold",
+      "hint": "Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.",
+      "symbol": "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices",
+      "adapter": "aws-lambda",
+      "meta": {
+        "unmade": [
+          "the visibility_timeout_seconds of aws_sqs_queue.notices is not read: var.notice_visibility_seconds has no default and no variable file sets it",
+          "whether shop-send-notice returns batchItemFailures is not read: the handler returns what relayBatch returns, which this read does not hold"
+        ]
+      },
+      "service": "orders"
+    },
+    {
+      "file": "infra/queues.tf",
+      "line": 3,
+      "reason": "queue-receives-few",
+      "message": "aws_sqs_queue.shipments hands a message of shop-shipments to its dead-letter queue after 2 receives, under the 5 the platform recommends: a throttled or briefly failing function gets too few retries",
+      "hint": "Set maxReceiveCount to at least 5.",
+      "symbol": "channel:sqs/shop-shipments",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "shop-shipments",
+        "maxReceiveCount": 2
+      },
+      "service": "orders"
+    },
+    {
+      "file": "infra/queues.tf",
+      "line": 18,
+      "reason": "queue-redrive-missing",
+      "message": "shop-billing is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.billing a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/shop-billing",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "shop-billing"
+      },
+      "service": "orders"
+    },
+    {
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 23,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "shop-fulfil-order: ChargeCard invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "orders"
+    },
+    {
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 29,
+      "reason": "workflow-callback-no-heartbeat",
+      "level": "info",
+      "message": "shop-fulfil-order: AwaitApproval waits for a task token with no HeartbeatSeconds, so a worker that died is noticed only when the task times out",
+      "hint": "Give the task a HeartbeatSeconds below its timeout, and have the worker send heartbeats.",
+      "symbol": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval",
+      "adapter": "aws-lambda",
+      "service": "orders"
+    },
+    {
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 29,
+      "reason": "workflow-task-untimed",
+      "message": "shop-fulfil-order: AwaitApproval waits on a task token handed back (.waitForTaskToken) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit",
+      "hint": "Give the task a TimeoutSeconds, or the state machine one.",
+      "symbol": "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval",
+      "adapter": "aws-lambda",
+      "meta": {
+        "waitsOn": "wait-for-task-token"
+      },
+      "service": "orders"
+    }
+  ]
+}

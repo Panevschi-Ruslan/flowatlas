@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:07:33.083Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:24:55.637Z",
   "services": [
     {
       "name": "circulation",
@@ -820,6 +820,15 @@
         "deployedBy": "terraform",
         "api": "members",
         "declaredAs": "aws_apigatewayv2_route.request_checkout",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "members"
+          }
+        ],
         "integration": "bus",
         "sends": "eventbridge/library/library.members/CheckoutRequested",
         "adapter": "aws-lambda"
@@ -1892,6 +1901,19 @@
   },
   "unresolved": [
     {
+      "file": "infra/main.tf",
+      "line": 37,
+      "reason": "queue-redrive-missing",
+      "message": "catalogue-copy-pulls is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.copy_pulls a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/catalogue-copy-pulls",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "catalogue-copy-pulls"
+      },
+      "service": "catalogue"
+    },
+    {
       "file": "workflows/reshelve-returns.asl.json",
       "line": 1,
       "reason": "workflow-named-by-file",
@@ -1900,6 +1922,63 @@
       "hint": "A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.",
       "symbol": "entry:catalogue:workflow:reshelve-returns",
       "service": "catalogue"
+    },
+    {
+      "file": "workflows/reshelve-returns.asl.json",
+      "line": 14,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "reshelve-returns: Reshelve invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve",
+      "meta": {
+        "retries": []
+      },
+      "service": "catalogue"
+    },
+    {
+      "file": "statemachine/checkout.asl.json",
+      "line": 5,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "circulation-checkout: CheckStanding invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "statemachine/checkout.asl.json",
+      "line": 31,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "circulation-checkout: ReserveCopy invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "statemachine/borrower-notices.json",
+      "line": 5,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "members-borrower-notices: SendNotice invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": [
+          "MailServiceUnavailable"
+        ]
+      },
+      "service": "members"
     }
   ]
 }

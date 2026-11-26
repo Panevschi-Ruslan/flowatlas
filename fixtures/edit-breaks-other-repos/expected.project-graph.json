@@ -1,0 +1,1470 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T15:51:07.571Z",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "alerts-bot",
+      "repo": "./alerts-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "alerts-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "alerts-bot",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "StockAlerts"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "alerts-bot#src/stock.alerts.ts:StockAlerts",
+      "type": "provider",
+      "label": "StockAlerts",
+      "repo": "alerts-bot",
+      "file": "src/stock.alerts.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+      "type": "method",
+      "label": "StockAlerts.onStock",
+      "repo": "alerts-bot",
+      "file": "src/stock.alerts.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "type:alerts-bot#StockEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "stock_events"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 15
+          },
+          {
+            "field": "remaining",
+            "line": 16,
+            "when": [
+              "STOCK_LOW"
+            ]
+          },
+          {
+            "field": "sku",
+            "line": 16,
+            "when": [
+              "STOCK_LOW"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "alerts-bot#src/stock.alerts.ts:StockAlerts.page",
+      "type": "method",
+      "label": "StockAlerts.page",
+      "repo": "alerts-bot",
+      "file": "src/stock.alerts.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "remaining",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "low on {}: {} left",
+            "at": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog-api",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController",
+          "TagsController"
+        ],
+        "providers": [
+          "ItemsService",
+          "EventBus"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog-api#src/bus/event-bus.ts:EventBus",
+      "type": "provider",
+      "label": "EventBus",
+      "repo": "catalog-api",
+      "file": "src/bus/event-bus.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/bus/event-bus.ts:EventBus.publish",
+      "type": "method",
+      "label": "EventBus.publish",
+      "repo": "catalog-api",
+      "file": "src/bus/event-bus.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.archive",
+      "type": "method",
+      "label": "ItemsController.archive",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "type:catalog-api#ArchiveBody"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 24
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.findOne",
+      "type": "method",
+      "label": "ItemsController.findOne",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:ItemsController.take",
+      "type": "method",
+      "label": "ItemsController.take",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "count",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "count",
+            "line": 28
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:TagsController",
+      "type": "provider",
+      "label": "TagsController",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 34,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.controller.ts:TagsController.list",
+      "type": "method",
+      "label": "TagsController.list",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.service.ts:ItemsService.archive",
+      "type": "method",
+      "label": "ItemsService.archive",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "archived {id}: {reason}",
+            "at": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.service.ts:ItemsService.findOne",
+      "type": "method",
+      "label": "ItemsService.findOne",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.service.ts:ItemsService.list",
+      "type": "method",
+      "label": "ItemsService.list",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "catalog-api#src/items/items.service.ts:ItemsService.take",
+      "type": "method",
+      "label": "ItemsService.take",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "count",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "channel:stock_events",
+      "type": "channel",
+      "label": "stock_events",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 27,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "event-bus"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:stock_events#STOCK_LOW",
+      "type": "channel",
+      "label": "stock_events#STOCK_LOW",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 27,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:stock_events",
+        "messageType": "STOCK_LOW",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "catalog-api",
+              "loc": "src/items/items.service.ts:27",
+              "text": "type: 'STOCK_LOW'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:storefront#CATALOG_API_URL",
+      "type": "config_key",
+      "label": "CATALOG_API_URL",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 15,
+      "meta": {
+        "key": "CATALOG_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+      "type": "consumer",
+      "label": "StockAlerts.onStock",
+      "repo": "alerts-bot",
+      "file": "src/stock.alerts.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "STOCK_LOW",
+            "consumer": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.page",
+            "via": "guard",
+            "line": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.page",
+      "type": "consumer",
+      "label": "StockAlerts.page",
+      "repo": "alerts-bot",
+      "file": "src/stock.alerts.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "selectedBy": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+        "messageTypes": [
+          "STOCK_LOW"
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:GET:/tags",
+      "type": "entry",
+      "label": "GET /tags",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 36,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/tags",
+        "rawPath": "/tags",
+        "controller": "TagsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:PATCH:/items/:param/archive",
+      "type": "entry",
+      "label": "PATCH /items/:param/archive",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/items/:param/archive",
+        "rawPath": "/items/:id/archive",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog-api:http:POST:/items/:param/take",
+      "type": "entry",
+      "label": "POST /items/:param/take",
+      "repo": "catalog-api",
+      "file": "src/items/items.controller.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items/:param/take",
+        "rawPath": "/items/:id/take",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:storefront:http:DELETE:/shop/items/:param",
+      "type": "entry",
+      "label": "DELETE /shop/items/:param",
+      "repo": "storefront",
+      "file": "src/shop.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/shop/items/:param",
+        "rawPath": "/shop/items/:id",
+        "controller": "ShopController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/shop/items",
+      "type": "entry",
+      "label": "GET /shop/items",
+      "repo": "storefront",
+      "file": "src/shop.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/shop/items",
+        "rawPath": "/shop/items",
+        "controller": "ShopController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/shop/items/:param",
+      "type": "entry",
+      "label": "GET /shop/items/:param",
+      "repo": "storefront",
+      "file": "src/shop.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/shop/items/:param",
+        "rawPath": "/shop/items/:id",
+        "controller": "ShopController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/catalog.client.ts:15:43",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 15,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_API_URL}/items",
+        "path": "/items",
+        "baseUrlEnv": "CATALOG_API_URL",
+        "responseType": "string[]",
+        "bodyType": null,
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/catalog.client.ts:20:43",
+      "type": "http_out",
+      "label": "GET /items/:param",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_API_URL}/items/${…}",
+        "path": "/items/:param",
+        "baseUrlEnv": "CATALOG_API_URL",
+        "responseType": "string",
+        "bodyType": null,
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/catalog.client.ts:25:26",
+      "type": "http_out",
+      "label": "PATCH /items/:param/archive",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 25,
+      "meta": {
+        "method": "PATCH",
+        "url": "${CATALOG_API_URL}/items/${…}/archive",
+        "path": "/items/:param/archive",
+        "baseUrlEnv": "CATALOG_API_URL",
+        "responseType": null,
+        "bodyType": "{reason:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "reason"
+        ],
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "id": "producer:catalog-api#src/items/items.service.ts:27:30",
+      "type": "producer",
+      "label": "event stock_events",
+      "repo": "catalog-api",
+      "file": "src/items/items.service.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "STOCK_LOW"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:alerts-bot",
+      "type": "repo",
+      "label": "alerts-bot",
+      "repo": "alerts-bot",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog-api",
+      "type": "repo",
+      "label": "catalog-api",
+      "repo": "catalog-api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 3,
+            "@nestjs/config": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "storefront#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "storefront",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "storefront#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "storefront",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "storefront#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "storefront",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ShopController"
+        ],
+        "providers": [
+          "CatalogClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "storefront#src/catalog.client.ts:CatalogClient",
+      "type": "provider",
+      "label": "CatalogClient",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/catalog.client.ts:CatalogClient.archive",
+      "type": "method",
+      "label": "CatalogClient.archive",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/catalog.client.ts:CatalogClient.item",
+      "type": "method",
+      "label": "CatalogClient.item",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/catalog.client.ts:CatalogClient.items",
+      "type": "method",
+      "label": "CatalogClient.items",
+      "repo": "storefront",
+      "file": "src/catalog.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/shop.controller.ts:ShopController",
+      "type": "provider",
+      "label": "ShopController",
+      "repo": "storefront",
+      "file": "src/shop.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/shop.controller.ts:ShopController.item",
+      "type": "method",
+      "label": "ShopController.item",
+      "repo": "storefront",
+      "file": "src/shop.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "storefront#src/shop.controller.ts:ShopController.items",
+      "type": "method",
+      "label": "ShopController.items",
+      "repo": "storefront",
+      "file": "src/shop.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "storefront#src/shop.controller.ts:ShopController.remove",
+      "type": "method",
+      "label": "ShopController.remove",
+      "repo": "storefront",
+      "file": "src/shop.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 20
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+      "to": "alerts-bot#src/stock.alerts.ts:StockAlerts.page",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/stock.alerts.ts",
+      "line": 16
+    },
+    {
+      "from": "catalog-api#src/items/items.controller.ts:ItemsController",
+      "to": "catalog-api#src/items/items.service.ts:ItemsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items/items.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "catalog-api#src/items/items.controller.ts:ItemsController.archive",
+      "to": "catalog-api#src/items/items.service.ts:ItemsService.archive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/items/items.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "catalog-api#src/items/items.controller.ts:ItemsController.findOne",
+      "to": "catalog-api#src/items/items.service.ts:ItemsService.findOne",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/items/items.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "catalog-api#src/items/items.controller.ts:ItemsController.list",
+      "to": "catalog-api#src/items/items.service.ts:ItemsService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/items/items.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog-api#src/items/items.controller.ts:ItemsController.take",
+      "to": "catalog-api#src/items/items.service.ts:ItemsService.take",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/items/items.controller.ts",
+      "line": 29
+    },
+    {
+      "from": "catalog-api#src/items/items.service.ts:ItemsService",
+      "to": "catalog-api#src/bus/event-bus.ts:EventBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 8
+    },
+    {
+      "from": "catalog-api#src/items/items.service.ts:ItemsService.take",
+      "to": "catalog-api#src/bus/event-bus.ts:EventBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/items/items.service.ts",
+      "line": 27
+    },
+    {
+      "from": "catalog-api#src/items/items.service.ts:ItemsService.take",
+      "to": "producer:catalog-api#src/items/items.service.ts:27:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 27
+    },
+    {
+      "from": "channel:stock_events",
+      "to": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/stock.alerts.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:stock_events#STOCK_LOW",
+      "to": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.page",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/stock.alerts.ts",
+      "line": 15,
+      "meta": {
+        "selectedBy": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+        "via": "guard"
+      }
+    },
+    {
+      "from": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+      "to": "alerts-bot#src/stock.alerts.ts:StockAlerts.onStock",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:alerts-bot#StockEvent"
+      ],
+      "returns": "void",
+      "file": "src/stock.alerts.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:alerts-bot#src/stock.alerts.ts:StockAlerts.page",
+      "to": "alerts-bot#src/stock.alerts.ts:StockAlerts.page",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/stock.alerts.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/items/items.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/items/:param",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/items/items.controller.ts",
+      "line": 17,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:GET:/tags",
+      "to": "catalog-api#src/items/items.controller.ts:TagsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/items/items.controller.ts",
+      "line": 36
+    },
+    {
+      "from": "entry:catalog-api:http:PATCH:/items/:param/archive",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.archive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:catalog-api#ArchiveBody"
+      ],
+      "returns": "void",
+      "file": "src/items/items.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{id:string}",
+        "body": "type:catalog-api#ArchiveBody"
+      }
+    },
+    {
+      "from": "entry:catalog-api:http:POST:/items/:param/take",
+      "to": "catalog-api#src/items/items.controller.ts:ItemsController.take",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/items/items.controller.ts",
+      "line": 27,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{count:number}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:DELETE:/shop/items/:param",
+      "to": "storefront#src/shop.controller.ts:ShopController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/shop.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{reason:string}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/shop/items",
+      "to": "storefront#src/shop.controller.ts:ShopController.items",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/shop.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:storefront:http:GET:/shop/items/:param",
+      "to": "storefront#src/shop.controller.ts:ShopController.item",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/shop.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/catalog.client.ts:15:43",
+      "to": "entry:catalog-api:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 15,
+      "returns": "string[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/catalog.client.ts:20:43",
+      "to": "entry:catalog-api:http:GET:/items/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 20,
+      "returns": "string",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/catalog.client.ts:25:26",
+      "to": "entry:catalog-api:http:PATCH:/items/:param/archive",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 25,
+      "params": [
+        "{reason:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog-api"
+      }
+    },
+    {
+      "from": "producer:catalog-api#src/items/items.service.ts:27:30",
+      "to": "channel:stock_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;sku:string;remaining:number}"
+      ],
+      "file": "src/items/items.service.ts",
+      "line": 27
+    },
+    {
+      "from": "producer:catalog-api#src/items/items.service.ts:27:30",
+      "to": "channel:stock_events#STOCK_LOW",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/items/items.service.ts",
+      "line": 27,
+      "params": [
+        "{type:string;sku:string;remaining:number}"
+      ]
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient",
+      "to": "storefront#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 10
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient",
+      "to": "storefront#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 11
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient.archive",
+      "to": "config_key:storefront#CATALOG_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 25
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient.archive",
+      "to": "http_out:storefront#src/catalog.client.ts:25:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 25
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient.item",
+      "to": "config_key:storefront#CATALOG_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 20
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient.item",
+      "to": "http_out:storefront#src/catalog.client.ts:20:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 20
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient.items",
+      "to": "config_key:storefront#CATALOG_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 15
+    },
+    {
+      "from": "storefront#src/catalog.client.ts:CatalogClient.items",
+      "to": "http_out:storefront#src/catalog.client.ts:15:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.client.ts",
+      "line": 15
+    },
+    {
+      "from": "storefront#src/shop.controller.ts:ShopController",
+      "to": "storefront#src/catalog.client.ts:CatalogClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/shop.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "storefront#src/shop.controller.ts:ShopController.item",
+      "to": "storefront#src/catalog.client.ts:CatalogClient.item",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/shop.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#src/shop.controller.ts:ShopController.items",
+      "to": "storefront#src/catalog.client.ts:CatalogClient.items",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/shop.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "storefront#src/shop.controller.ts:ShopController.remove",
+      "to": "storefront#src/catalog.client.ts:CatalogClient.archive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/shop.controller.ts",
+      "line": 21
+    }
+  ],
+  "types": {
+    "type:alerts-bot#StockEvent": {
+      "name": "StockEvent",
+      "kind": "object",
+      "declaredIn": "alerts-bot#src/stock.alerts.ts",
+      "structuralHash": "2c3fb228401595de",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "remaining",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:catalog-api#ArchiveBody": {
+      "name": "ArchiveBody",
+      "kind": "object",
+      "declaredIn": "catalog-api#src/items/items.controller.ts",
+      "structuralHash": "23952defb7b751d8",
+      "fields": [
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": []
+}

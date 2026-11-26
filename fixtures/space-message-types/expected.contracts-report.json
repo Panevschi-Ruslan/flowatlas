@@ -1,0 +1,2295 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T16:11:55.060Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;docId:string}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "docId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+            "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;docId:string}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'DOC_PUBLISHED'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+            "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;docId:string}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'DOC_PUBLISHED'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+            "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;docId:string}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'DOC_PUBLISHED'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+            "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;docId:string}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'DOC_PUBLISHED'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+            "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;docId:string}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'DOC_PUBLISHED'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#CommentAdded",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "commentId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `commentId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#CommentAdded",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "docId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "memberId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `memberId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#ExportFinished",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "jobId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `jobId: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#ExportFinished",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "url",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `url: string`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;usedBytes:number}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "usedBytes",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender docs-api sends `usedBytes: number`; receiver notify-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+            "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;usedBytes:number}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'QUOTA_WARNING'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+            "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;usedBytes:number}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'QUOTA_WARNING'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+            "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;usedBytes:number}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'QUOTA_WARNING'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+            "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;usedBytes:number}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'QUOTA_WARNING'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+            "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "{type:string;usedBytes:number}",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#SpaceEvent",
+            "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+          },
+          "typeId": "type:notify-worker#SpaceEvent",
+          "field": "type",
+          "expected": "'QUOTA_WARNING'",
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#SpaceEvent",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "commentId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `commentId: string`; receiver notify-worker declares no such field; on CommentAdded, one of the 5 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#SpaceEvent",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "docId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api; on CommentAdded, one of the 5 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "optionality_mismatch",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#SpaceEvent",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "docId",
+          "expected": "string",
+          "actual": "string",
+          "rule": null,
+          "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api; on DocPublished, one of the 5 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#SpaceEvent",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "jobId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `jobId: string`; receiver notify-worker declares no such field; on ExportFinished, one of the 5 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#SpaceEvent",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "memberId",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `memberId: string`; receiver notify-worker declares no such field; on MemberJoined, one of the 5 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#SpaceEvent",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "url",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender docs-api sends `url: string`; receiver notify-worker declares no such field; on ExportFinished, one of the 5 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+            "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+            "type": "emits"
+          },
+          "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+          "direction": "payload",
+          "sender": {
+            "service": "docs-api",
+            "typeId": "type:docs-api#SpaceEvent",
+            "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+          },
+          "receiver": {
+            "service": "notify-worker",
+            "typeId": "type:notify-worker#Envelope",
+            "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+          },
+          "typeId": "type:notify-worker#Envelope",
+          "field": "usedBytes",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender docs-api sends `usedBytes: number`; receiver notify-worker declares no such field; on QuotaWarning, one of the 5 shapes this may answer with",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "docId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'DOC_PUBLISHED'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'DOC_PUBLISHED'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'DOC_PUBLISHED'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'DOC_PUBLISHED'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;docId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'DOC_PUBLISHED'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'DOC_PUBLISHED'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "commentId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `commentId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#CommentAdded",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "docId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:'MEMBER_JOINED';memberId:string}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.join"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "memberId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `memberId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "jobId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `jobId: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#ExportFinished",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "url",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `url: string`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "usedBytes",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender docs-api sends `usedBytes: number`; receiver notify-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'QUOTA_WARNING'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'QUOTA_WARNING'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'QUOTA_WARNING'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'QUOTA_WARNING'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "{type:string;usedBytes:number}",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#SpaceEvent",
+        "symbol": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route"
+      },
+      "typeId": "type:notify-worker#SpaceEvent",
+      "field": "type",
+      "expected": "'QUOTA_WARNING'",
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `type` as `string`; receiver notify-worker declares it `'QUOTA_WARNING'`",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "commentId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `commentId: string`; receiver notify-worker declares no such field; on CommentAdded, one of the 5 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "docId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api; on CommentAdded, one of the 5 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "optionality_mismatch",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "docId",
+      "expected": "string",
+      "actual": "string",
+      "rule": null,
+      "message": "`docId` is optional for receiver notify-worker and always sent by sender docs-api; on DocPublished, one of the 5 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "jobId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `jobId: string`; receiver notify-worker declares no such field; on ExportFinished, one of the 5 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "memberId",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `memberId: string`; receiver notify-worker declares no such field; on MemberJoined, one of the 5 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "url",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender docs-api sends `url: string`; receiver notify-worker declares no such field; on ExportFinished, one of the 5 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "direction": "payload",
+      "sender": {
+        "service": "docs-api",
+        "typeId": "type:docs-api#SpaceEvent",
+        "symbol": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay"
+      },
+      "receiver": {
+        "service": "notify-worker",
+        "typeId": "type:notify-worker#Envelope",
+        "symbol": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage"
+      },
+      "typeId": "type:notify-worker#Envelope",
+      "field": "usedBytes",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender docs-api sends `usedBytes: number`; receiver notify-worker declares no such field; on QuotaWarning, one of the 5 shapes this may answer with",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+        "to": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:16:5|emits|consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+        "to": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:22:5|emits|consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+        "to": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:27:5|emits|consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+        "to": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:32:5|emits|consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "to": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:37:5|emits|consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+        "to": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+        "type": "emits"
+      },
+      "edgeKey": "producer:docs-api#src/spaces/spaces.service.ts:46:5|emits|consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    }
+  ],
+  "summary": {
+    "edges": 36,
+    "shared": 0,
+    "identical": 5,
+    "hash_differs": 31,
+    "unchecked": 6,
+    "errors": 10,
+    "warnings": 0,
+    "infos": 14,
+    "ignored": 0
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "pages", "repo": "./pages", "type": "browser" },
+    { "name": "catalog", "repo": "./catalog", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

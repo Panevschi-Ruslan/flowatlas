@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-knex",
-  "generatedAt": "2026-10-16T15:11:46.967Z",
+  "generatedAt": "2026-11-23T14:43:34.085Z",
   "nodes": [
     {
       "id": "db_query:nest-knex#src/users/users.service.ts:13:12",
@@ -278,7 +278,8 @@
         "signature": {
           "params": [],
           "returns": "unknown[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -292,7 +293,8 @@
         "signature": {
           "params": [],
           "returns": "unknown[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -306,7 +308,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -525,7 +528,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

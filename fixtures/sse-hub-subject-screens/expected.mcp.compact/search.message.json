@@ -1,0 +1,33 @@
+{
+  "query": "CARD_MOVED",
+  "counts": {
+    "messages": 1
+  },
+  "results": {
+    "messages": [
+      {
+        "id": "channel:board:*:events#CARD_MOVED",
+        "type": "message_type",
+        "channel": "board:*:events",
+        "service": "boards-api",
+        "producers": [
+          "producer:boards-api#src/boards/boards.service.ts:15:11"
+        ],
+        "handlers": [
+          "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+          "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+          "consumer:web#src/screens/BoardScreen.tsx:BoardScreen"
+        ],
+        "sites": 4,
+        "reach": "dead",
+        "from": "POST /boards/:param/cards/:param/move",
+        "throughDead": true
+      }
+    ]
+  },
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})",
+    "who_emits({channel: \"channel:board:*:events\", type: \"CARD_MOVED\"})"
+  ]
+}

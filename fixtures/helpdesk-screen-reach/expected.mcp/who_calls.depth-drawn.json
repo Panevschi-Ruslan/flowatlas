@@ -1,0 +1,56 @@
+{
+  "target": {
+    "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign",
+    "type": "method",
+    "label": "TicketsService.assign",
+    "loc": "src/tickets/tickets.service.ts:14",
+    "service": "desk-api",
+    "reach": "dead",
+    "from": "POST /desks/:param/tickets/:param/assign",
+    "throughDead": true
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "desk-api#src/tickets/tickets.controller.ts:TicketsController.assign",
+        "type": "method",
+        "label": "TicketsController.assign",
+        "loc": "src/tickets/tickets.controller.ts:8",
+        "endLine": 11,
+        "reach": "dead",
+        "from": "POST /desks/:param/tickets/:param/assign",
+        "throughDead": true
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string",
+          "string",
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": []
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:desk-api:http:POST:/desks/:param/tickets/:param/assign",
+      "type": "entry",
+      "label": "POST /desks/:param/tickets/:param/assign",
+      "loc": "src/tickets/tickets.controller.ts:8",
+      "service": "desk-api",
+      "kind": "http",
+      "reach": "dead",
+      "hops": 2,
+      "by": "desk-api#src/tickets/tickets.controller.ts:TicketsController.assign"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/assign\"})",
+    "describe_for_prompt({id: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/assign\"})",
+    "impact({symbol: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/assign\"})"
+  ]
+}

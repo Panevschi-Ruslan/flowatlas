@@ -1,0 +1,13 @@
+{
+  "services": [
+    { "name": "shop-api", "repo": "./shop-backend", "type": "nestjs" },
+    {
+      "name": "shop-admin",
+      "repo": "./shop-frontend",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "shop-api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

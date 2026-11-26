@@ -1,0 +1,131 @@
+# Notices for a members' club: every way the framework's variables and
+# resources are written, and the ones that are not read.
+service: notices
+frameworkVersion: '3'
+useDotenv: true
+
+plugins:
+  - serverless-esbuild
+  - serverless-step-functions
+  - serverless-lift
+
+params:
+  default:
+    retentionDays: 7
+  prod:
+    digestRate: rate(1 day)
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${file(./config/${sls:stage}.yml):region, 'eu-west-1'}
+  environment:
+    NOTICES_QUEUE_URL: !Ref NoticesQueue
+
+custom:
+  prefix: ${self:service}-${sls:stage}
+  archiveBucket: ${env:ARCHIVE_BUCKET, '${self:custom.prefix}-archive'}
+
+functions:
+  send-notice:
+    handler: src/notices/send-notice.handler
+    events:
+      - sqs:
+          arn: !GetAtt NoticesQueue.Arn
+          filterPatterns:
+            - body:
+                kind: [reminder]
+    destinations:
+      onFailure: !GetAtt FailedNoticesQueue.Arn
+
+  digest:
+    handler: src/notices/digest.handler
+    events:
+      - schedule: ${param:digestRate}
+
+  archive-notice:
+    handler: src/notices/archive-notice.handler
+    events:
+      - s3:
+          bucket: ${self:custom.archiveBucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .json
+
+  welcome:
+    handler: src/notices/welcome.handler
+    events:
+      - cognitoUserPool:
+          pool: club-members
+          trigger: PostConfirmation
+
+  # Named from a parameter in the account, and reading a queue another stack exports.
+  audit:
+    name: ${ssm:/club/audit-function-name}
+    handler: src/notices/audit.handler
+    events:
+      - sqs: !ImportValue shared-audit-queue-arn
+
+  # Behind a load balancer, which is not read.
+  door:
+    handler: src/notices/door.handler
+    events:
+      - alb:
+          listenerArn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:listener/app/club/door/front
+          priority: 1
+          conditions:
+            path: /door
+
+  report:
+    handler: report.handler
+    runtime: python3.12
+
+  renderer:
+    image:
+      name: renderer
+
+stepFunctions:
+  stateMachines:
+    remind:
+      events:
+        - schedule: rate(1 hour)
+      definition:
+        StartAt: Send
+        States:
+          Send:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: !GetAtt send-notice.Arn
+              Payload.$: $
+            End: true
+
+constructs:
+  jobs:
+    type: queue
+    worker:
+      handler: src/notices/job.handler
+
+resources:
+  Resources:
+    # No QueueName: CloudFormation names it when the stack is created.
+    NoticesQueue:
+      Type: AWS::SQS::Queue
+
+    FailedNoticesQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.prefix}-failed
+
+    LapsedRule:
+      Type: AWS::Events::Rule
+      Properties:
+        EventPattern:
+          source:
+            - club.accounts
+          detail-type:
+            - MemberLapsed
+        Targets:
+          - Arn: !GetAtt DigestLambdaFunction.Arn
+            Id: digest

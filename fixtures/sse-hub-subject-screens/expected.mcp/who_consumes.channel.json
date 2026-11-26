@@ -1,0 +1,189 @@
+{
+  "channel": {
+    "id": "channel:board:*:events",
+    "type": "channel",
+    "label": "board:*:events",
+    "loc": "src/boards/boards.service.ts:15",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit",
+      "type": "consumer",
+      "label": "AlertsBadgeComponent.ngOnInit",
+      "loc": "src/app/boards/alerts-badge.component.ts:13",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 15,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/boards/archive-panel.component.ts:ArchivePanelComponent.ngOnInit",
+      "type": "consumer",
+      "label": "ArchivePanelComponent.ngOnInit",
+      "loc": "src/app/boards/archive-panel.component.ts:17",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 19,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.ngOnInit",
+      "type": "consumer",
+      "label": "BoardPageComponent.ngOnInit",
+      "loc": "src/app/boards/board-page.component.ts:16",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 24,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.ngOnInit",
+      "type": "consumer",
+      "label": "CardTimelineComponent.ngOnInit",
+      "loc": "src/app/boards/card-timeline.component.ts:15",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 21,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.ngOnInit",
+      "type": "consumer",
+      "label": "CrewPanelComponent.ngOnInit",
+      "loc": "src/app/boards/crew-panel.component.ts:18",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 20,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/live/board-stream.service.ts:BoardStreamService.openStream",
+      "type": "consumer",
+      "label": "BoardStreamService.openStream",
+      "loc": "src/app/live/board-stream.service.ts:35",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 38,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/live/legacy-board-feed.service.ts:LegacyBoardFeed.open",
+      "type": "consumer",
+      "label": "LegacyBoardFeed.open",
+      "loc": "src/app/live/legacy-board-feed.service.ts:18",
+      "service": "admin",
+      "kind": "sse",
+      "reach": "dead",
+      "from": "none"
+    },
+    {
+      "id": "consumer:admin#src/app/live/live-stream.ts:LiveStream.open",
+      "type": "consumer",
+      "label": "LiveStream.open",
+      "loc": "src/app/live/live-stream.ts:28",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 31,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/live/rename-watcher.ts:RenameWatcher.watch",
+      "type": "consumer",
+      "label": "RenameWatcher.watch",
+      "loc": "src/app/live/rename-watcher.ts:8",
+      "service": "admin",
+      "kind": "sse",
+      "endLine": 10,
+      "reach": "dead",
+      "from": "none"
+    },
+    {
+      "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/events",
+      "type": "consumer",
+      "label": "GET /api/boards/:param/events",
+      "loc": "src/worker.ts:15",
+      "service": "boards-api",
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/events",
+      "ways": 2
+    },
+    {
+      "id": "consumer:boards-api#src/stream/stream-handlers.ts:boardEvents@GET /api/boards/:param/stream",
+      "type": "consumer",
+      "label": "GET /api/boards/:param/stream",
+      "loc": "src/worker.ts:16",
+      "service": "boards-api",
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/events",
+      "ways": 2
+    },
+    {
+      "id": "consumer:boards-api#src/stream/stream-handlers.ts:crewStream",
+      "type": "consumer",
+      "label": "crewStream",
+      "loc": "src/worker.ts:17",
+      "service": "boards-api",
+      "kind": "sse",
+      "reach": "alive",
+      "from": "GET /api/boards/:param/crew/stream"
+    },
+    {
+      "id": "consumer:web#src/live/board-feed.ts:BoardFeed.connect",
+      "type": "consumer",
+      "label": "BoardFeed.connect",
+      "loc": "src/live/board-feed.ts:23",
+      "service": "web",
+      "kind": "sse",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "type": "consumer",
+      "label": "BoardScreen",
+      "loc": "src/screens/BoardScreen.tsx:13",
+      "service": "web",
+      "kind": "sse",
+      "endLine": 15,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards/:param/archive (boards-api)",
+      "ways": 3
+    }
+  ],
+  "total": 14,
+  "types": [
+    "BOARD_RENAMED",
+    "CARD_ADDED",
+    "CARD_ARCHIVED",
+    "CARD_COMMENTED",
+    "CARD_IMPORTED",
+    "CARD_MOVED",
+    "CARD_PINNED",
+    "CREW_ASSIGNED"
+  ],
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:board:*:events\", type: \"BOARD_RENAMED\"})",
+    "who_emits({channel: \"channel:board:*:events\"})",
+    "impact({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit\"})",
+    "get_source({symbol: \"consumer:admin#src/app/boards/alerts-badge.component.ts:AlertsBadgeComponent.ngOnInit\"})"
+  ]
+}

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-redis-pubsub",
-  "generatedAt": "2026-10-17T03:50:34.981Z",
+  "generatedAt": "2026-11-25T21:17:32.675Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
@@ -198,7 +198,14 @@
         "kind": "message",
         "adapter": "redis-pubsub",
         "decorator": "subscribe",
-        "entryId": "entry:nest-redis-pubsub:event:cache.raw"
+        "entryId": "entry:nest-redis-pubsub:event:cache.raw",
+        "subscriptions": [
+          {
+            "line": 31,
+            "column": 28,
+            "through": "this.raw.subscribe"
+          }
+        ]
       }
     },
     {
@@ -424,7 +431,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 40
+          }
+        ]
       }
     },
     {
@@ -457,7 +470,12 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -488,7 +506,15 @@
             }
           ],
           "returns": "{published:number}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidate",
+            "line": 19,
+            "why": "handed to JSON.stringify"
+          }
+        ]
       }
     },
     {
@@ -586,7 +612,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

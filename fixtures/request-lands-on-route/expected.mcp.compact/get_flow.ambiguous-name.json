@@ -1,0 +1,20 @@
+{
+  "candidates": [
+    {
+      "id": "shop-admin#src/app/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "line": 10,
+      "kind": "injectable"
+    },
+    {
+      "id": "shop-api#src/catalog/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "line": 9,
+      "kind": "injectable"
+    }
+  ],
+  "next": [
+    "get_flow({entry: \"shop-admin#src/app/catalog.service.ts:CatalogService\"})",
+    "get_flow({entry: \"shop-api#src/catalog/catalog.service.ts:CatalogService\"})"
+  ]
+}

@@ -1,0 +1,625 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:19.325Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:archive-mail",
+      "type": "channel",
+      "label": "archive-mail",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 38,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:audit",
+      "type": "channel",
+      "label": "audit",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 34,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:eventbridge/stock-events/stock/StockMoved",
+      "type": "channel",
+      "label": "eventbridge/stock-events/stock/StockMoved",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 7,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:mail",
+      "type": "channel",
+      "label": "mail",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 38,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:outbox",
+      "type": "channel",
+      "label": "outbox",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 13,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "entry:stock:invoke:stock-move",
+      "type": "entry",
+      "label": "stock-move",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "stock-move",
+        "deployedBy": "cdk",
+        "name": "stock-move",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/Move",
+        "constructPath": "StockStack/Move",
+        "handler": "src/move.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "a value not known from the files",
+            "unread": "the context value stage, which no file sets: the deployment gives it when the app is synthesized (-c stage=...) or leaves it out"
+          }
+        },
+        "grants": [
+          {
+            "kind": "queue",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "topic",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bus",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "stream",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "table",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bucket",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "function",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "workflow",
+            "unread": "the role arn:aws:iam::111122223333:role/stock-mover is imported by its ARN, and the policies the account attaches to it are not in the app",
+            "by": "MoverRole"
+          },
+          {
+            "kind": "bus",
+            "unread": "the bus's policy takes the grant only with a statement id, and the one it is handed is the context value moverSid, which no file sets: the deployment gives it when the app is synthesized (-c moverSid=...) or leaves it out: given, the grant is written into the policy; left out, it is dropped",
+            "by": "grantPutEventsTo"
+          }
+        ],
+        "reads": {
+          "": "{sku:string;quantity:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:Loader",
+      "type": "provider",
+      "label": "Loader",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 20,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/workers.ts:Loader.flush",
+      "type": "method",
+      "label": "Loader.flush",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:Mailer",
+      "type": "provider",
+      "label": "Mailer",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 5,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/workers.ts:Mailer.send",
+      "type": "method",
+      "label": "Mailer.send",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:audit",
+      "type": "function",
+      "label": "audit",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "entry",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:deliver",
+      "type": "function",
+      "label": "deliver",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "target",
+              "type": "any"
+            },
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:deliverArchived",
+      "type": "function",
+      "label": "deliverArchived",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:deliverLive",
+      "type": "function",
+      "label": "deliverLive",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:jobs#src/workers.ts:13:12",
+      "type": "producer",
+      "label": "job outbox",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 13,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "send"
+      }
+    },
+    {
+      "id": "producer:jobs#src/workers.ts:28:12",
+      "type": "producer",
+      "label": "job ?",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 28,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "unresolved",
+        "method": "add",
+        "jobName": "flush"
+      }
+    },
+    {
+      "id": "producer:jobs#src/workers.ts:34:9",
+      "type": "producer",
+      "label": "job audit",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 34,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "entry"
+      }
+    },
+    {
+      "id": "producer:jobs#src/workers.ts:38:46",
+      "type": "producer",
+      "label": "job mail, archive-mail",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 38,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "deliver",
+        "heldIn": {
+          "Queues.mail": [
+            "mail"
+          ],
+          "Archive.mail": [
+            "archive-mail"
+          ]
+        }
+      }
+    },
+    {
+      "id": "producer:stock#src/move.ts:7:9",
+      "type": "producer",
+      "label": "event eventbridge/stock-events/stock/StockMoved",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "stock#src/move.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/move.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:stock:invoke:stock-move",
+      "to": "stock#src/move.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/move.ts",
+      "line": 6
+    },
+    {
+      "from": "jobs#src/workers.ts:Loader.flush",
+      "to": "producer:jobs#src/workers.ts:28:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/workers.ts",
+      "line": 28
+    },
+    {
+      "from": "jobs#src/workers.ts:Mailer.send",
+      "to": "producer:jobs#src/workers.ts:13:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/workers.ts",
+      "line": 13
+    },
+    {
+      "from": "jobs#src/workers.ts:audit",
+      "to": "producer:jobs#src/workers.ts:34:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/workers.ts",
+      "line": 34
+    },
+    {
+      "from": "jobs#src/workers.ts:deliver",
+      "to": "producer:jobs#src/workers.ts:38:46",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/workers.ts",
+      "line": 38
+    },
+    {
+      "from": "jobs#src/workers.ts:deliverArchived",
+      "to": "jobs#src/workers.ts:deliver",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/workers.ts",
+      "line": 45
+    },
+    {
+      "from": "jobs#src/workers.ts:deliverLive",
+      "to": "jobs#src/workers.ts:deliver",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "string"
+      ],
+      "returns": "any",
+      "file": "src/workers.ts",
+      "line": 41
+    },
+    {
+      "from": "producer:jobs#src/workers.ts:13:12",
+      "to": "channel:outbox",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/workers.ts",
+      "line": 13
+    },
+    {
+      "from": "producer:jobs#src/workers.ts:34:9",
+      "to": "channel:audit",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{entry:string}"
+      ],
+      "file": "src/workers.ts",
+      "line": 34
+    },
+    {
+      "from": "producer:jobs#src/workers.ts:38:46",
+      "to": "channel:archive-mail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/workers.ts",
+      "line": 38
+    },
+    {
+      "from": "producer:jobs#src/workers.ts:38:46",
+      "to": "channel:mail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/workers.ts",
+      "line": 38
+    },
+    {
+      "from": "producer:stock#src/move.ts:7:9",
+      "to": "channel:eventbridge/stock-events/stock/StockMoved",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "file": "src/move.ts",
+      "line": 7
+    },
+    {
+      "from": "stock#src/move.ts:handler",
+      "to": "producer:stock#src/move.ts:7:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/move.ts",
+      "line": 7
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/workers.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/workers.ts",
+      "line": 27,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "file": "src/workers.ts",
+      "line": 28,
+      "reason": "channel-const-unresolved",
+      "message": "Loader.flush -> this.queue",
+      "hint": "The channel name cannot be read here. Annotate Loader.flush with the channel it uses.",
+      "symbol": "producer:jobs#src/workers.ts:28:12",
+      "service": "jobs"
+    }
+  ]
+}

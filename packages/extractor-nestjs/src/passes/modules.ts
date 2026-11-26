@@ -1,12 +1,45 @@
 import type { ClassDeclaration, Expression, MethodDeclaration, ObjectLiteralExpression } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ModuleInfo, ModuleKind, ProviderRegistration } from '../modules-index.js';
-import { getDecorator, lineOf } from '@flowatlas/core';
+import { calledFunction, getDecorator, importOf, lineOf, whyNoClass } from '@flowatlas/core';
 import { NEST_COMMON } from '../index-classes.js';
-import { isDynamicModuleExpression, resolveClassExpression } from '../util/resolve-class.js';
+import { isDynamicModuleExpression, resolveClassExpression, unwrapClassExpression } from '../util/resolve-class.js';
 import { tokenOf, tokensProvidedBy } from './module-tokens.js';
 import { definePass } from './types.js';
+
+/**
+ * The module class an import names, where the package it is imported from
+ * is not installed (P264): the name the import states, of the package its
+ * specifier names. `undefined` for anything else the checker could not
+ * place - a computed import, a name of this repository.
+ */
+const statedModule = (expr: Node): { typeName: string; package: string } | undefined => {
+  const target = unwrapClassExpression(expr);
+  if (!Node.isIdentifier(target) && !Node.isPropertyAccessExpression(target)) return undefined;
+  const cause = whyNoClass(target);
+  if (cause.cause !== 'module-not-installed' || cause.package === undefined) return undefined;
+  let root: Node = target;
+  while (Node.isPropertyAccessExpression(root)) root = root.getExpression();
+  const imported = importOf(root);
+  if (imported === undefined) return undefined;
+  return { typeName: Node.isPropertyAccessExpression(target) ? target.getName() : (imported.exported ?? target.getText()), package: cause.package };
+};
+
+/**
+ * The class a module import calls a configuring method of, where the method
+ * is not one `unwrapClassExpression` already looks through (P264):
+ * `X.registerQueue(...)` configures `X` as `X.forRoot(...)` does. `undefined`
+ * for anything else.
+ */
+const configuringReceiver = (expr: Node): Node | undefined => {
+  const call = Node.isParenthesizedExpression(expr) ? expr.getExpression() : expr;
+  if (!Node.isCallExpression(call) || isDynamicModuleExpression(call)) return undefined;
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const receiver = callee.getExpression();
+  return Node.isIdentifier(receiver) || Node.isPropertyAccessExpression(receiver) ? receiver : undefined;
+};
 
 const arrayProperty = (
   literal: ObjectLiteralExpression | undefined,
@@ -51,6 +84,146 @@ const declaredValue = (identifier: Node): Node | undefined => {
 /** How many names deep an array is followed before it is called unread. */
 const FOLLOW_LIMIT = 4;
 
+/** A value the files settle where it is written: a literal, a `const` of one, and the operators a condition is made of. */
+type Literal = { readonly value: string | number | boolean | null | undefined };
+
+/**
+ * What a condition is, where literals decide it (P261): `true`, a `const`
+ * this repository declares with a literal, `!`, `===` / `!==`, `&&` and `||`
+ * over such values. Anything read when the application runs -
+ * `process.env.X`, a call - decides nothing, and is `undefined`.
+ */
+const literalOf = (node: Node, depth = 0): Literal | undefined => {
+  if (depth > FOLLOW_LIMIT * 4) return undefined;
+  const expr = unwrapValue(node);
+  if (Node.isTrueLiteral(expr)) return { value: true };
+  if (Node.isFalseLiteral(expr)) return { value: false };
+  if (Node.isNullLiteral(expr)) return { value: null };
+  if (Node.isStringLiteral(expr) || Node.isNoSubstitutionTemplateLiteral(expr)) return { value: expr.getLiteralValue() };
+  if (Node.isNumericLiteral(expr)) return { value: expr.getLiteralValue() };
+  if (Node.isIdentifier(expr)) {
+    if (expr.getText() === 'undefined') return { value: undefined };
+    const declared = declaredValue(expr);
+    return declared === undefined ? undefined : literalOf(declared, depth + 1);
+  }
+  if (Node.isPrefixUnaryExpression(expr) && expr.getOperatorToken() === SyntaxKind.ExclamationToken) {
+    const operand = literalOf(expr.getOperand(), depth + 1);
+    return operand === undefined ? undefined : { value: !operand.value };
+  }
+  if (Node.isBinaryExpression(expr)) {
+    const operator = expr.getOperatorToken().getKind();
+    const left = literalOf(expr.getLeft(), depth + 1);
+    if (operator === SyntaxKind.AmpersandAmpersandToken && left !== undefined && !left.value) return left;
+    if (operator === SyntaxKind.BarBarToken && left !== undefined && Boolean(left.value)) return left;
+    const right = literalOf(expr.getRight(), depth + 1);
+    if (left === undefined || right === undefined) return undefined;
+    switch (operator) {
+      case SyntaxKind.AmpersandAmpersandToken:
+      case SyntaxKind.BarBarToken:
+        return right;
+      case SyntaxKind.EqualsEqualsEqualsToken:
+        return { value: left.value === right.value };
+      case SyntaxKind.ExclamationEqualsEqualsToken:
+        return { value: left.value !== right.value };
+      default:
+        return undefined;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * The expression a function of this repository answers with, where it is
+ * one: its only `return`, or its body. The function a name declares or
+ * holds, or one reached through an object (P353): `Providers.all()`, a
+ * static method, or `registry.make()`, an object's method or a function it
+ * holds.
+ */
+const answerOf = (callee: Node): Node | undefined => {
+  const fn = calledFunction(callee);
+  if (fn === undefined || fn.getSourceFile().isInNodeModules() || fn.getSourceFile().isDeclarationFile()) return undefined;
+  if (!(Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isMethodDeclaration(fn))) return undefined;
+  const body = fn.getBody();
+  if (body === undefined) return undefined;
+  if (!Node.isBlock(body)) return body;
+  const answers: Node[] = [];
+  body.forEachDescendant((node, traversal) => {
+    if (Node.isFunctionLikeDeclaration(node) || Node.isClassDeclaration(node) || Node.isArrowFunction(node)) {
+      traversal.skip();
+      return;
+    }
+    if (Node.isReturnStatement(node)) {
+      const answer = node.getExpression();
+      if (answer !== undefined) answers.push(answer);
+    }
+  });
+  const [only] = answers;
+  return answers.length === 1 ? only : undefined;
+};
+
+/** One entry of `imports:`: where it is written, and the expression that names its module once followed. */
+interface ImportedModule {
+  readonly written: Expression;
+  readonly expr: Expression;
+}
+
+/**
+ * The modules a list of imports names (P261), each followed to the module it
+ * is: a branch a literal condition chooses (`isProduction ? A : B` with
+ * `const isProduction = true`), a `const` bound to one, the answer of a
+ * function of this repository (`databaseModule()` returning
+ * `DatabaseModule.forRoot(...)`), and the elements spread in from an array so
+ * chosen. What is not settled is handed back as written, and said where it is
+ * read.
+ */
+const importedModules = (elements: readonly Expression[]): ImportedModule[] => {
+  /** The module one entry names: through a decided condition, a `const`, the answer of a function of this repository. */
+  const moduleOf = (at: Node, depth: number): Expression => {
+    const expr = unwrapValue(at);
+    const kept = at as Expression;
+    if (depth >= FOLLOW_LIMIT * 2) return kept;
+    if (Node.isConditionalExpression(expr)) {
+      const decided = literalOf(expr.getCondition());
+      return decided === undefined ? kept : moduleOf(decided.value ? expr.getWhenTrue() : expr.getWhenFalse(), depth + 1);
+    }
+    if (Node.isIdentifier(expr)) {
+      const declared = declaredValue(expr);
+      return declared === undefined || Node.isClassExpression(unwrapValue(declared)) ? kept : moduleOf(declared, depth + 1);
+    }
+    if (Node.isCallExpression(expr) && !isDynamicModuleExpression(expr)) {
+      const callee = expr.getExpression();
+      const answer = Node.isIdentifier(callee) && callee.getText() !== 'forwardRef' ? answerOf(callee) : undefined;
+      return answer === undefined ? kept : moduleOf(answer, depth + 1);
+    }
+    return kept;
+  };
+  /** The entries a spread puts in: an array's, through a decided condition and a `const`; `undefined` where it is not settled. */
+  const listOf = (at: Node, depth: number): Expression[] | undefined => {
+    const expr = unwrapValue(at);
+    if (depth >= FOLLOW_LIMIT * 2) return undefined;
+    if (Node.isArrayLiteralExpression(expr)) return expr.getElements();
+    if (Node.isConditionalExpression(expr)) {
+      const decided = literalOf(expr.getCondition());
+      return decided === undefined ? undefined : listOf(decided.value ? expr.getWhenTrue() : expr.getWhenFalse(), depth + 1);
+    }
+    const declared = Node.isIdentifier(expr) ? declaredValue(expr) : undefined;
+    return declared === undefined ? undefined : listOf(declared, depth + 1);
+  };
+  const out: ImportedModule[] = [];
+  const read = (element: Expression, depth: number): void => {
+    if (Node.isOmittedExpression(element)) return;
+    if (!Node.isSpreadElement(element)) {
+      out.push({ written: element, expr: moduleOf(element, depth) });
+      return;
+    }
+    const items = listOf(element.getExpression(), depth + 1);
+    if (items === undefined) out.push({ written: element, expr: element });
+    else for (const item of items) read(item, depth + 1);
+  };
+  for (const element of elements) read(element, 0);
+  return out;
+};
+
 /**
  * The elements of a list as written, through every spread and name it is
  * assembled from.
@@ -80,6 +253,14 @@ const listElements = (expr: Node, depth = 0): { items: Expression[]; unread: Nod
   }
   const declared = depth < FOLLOW_LIMIT ? declaredValue(value) : undefined;
   if (declared !== undefined) return listElements(declared, depth + 1);
+  // `providers: [...moreProviders()]`: the list a function of this repository answers with (P349).
+  if (depth < FOLLOW_LIMIT && Node.isCallExpression(value) && !isDynamicModuleExpression(value)) {
+    const callee = value.getExpression();
+    const answer = Node.isIdentifier(callee) || Node.isPropertyAccessExpression(callee) ? answerOf(callee) : undefined;
+    const answered = answer === undefined ? undefined : listElements(answer, depth + 1);
+    // A part of what it answers not read is said at the call, where the list names it.
+    if (answered !== undefined) return answered.unread.length === 0 ? answered : { items: answered.items, unread: [value] };
+  }
   return { items: [], unread: [value] };
 };
 
@@ -195,6 +376,12 @@ const readProvider = (
           line,
         };
       }
+      // `useValue: new Reader(api)`: an instance of a class of this repository, whose methods a call on it runs (P349).
+      const made = shape === 'useValue' ? unwrapValue(initializer) : undefined;
+      if (made !== undefined && Node.isNewExpression(made)) {
+        const target = resolveClassExpression(made.getExpression());
+        if (target.kind === 'local') return { token, kind: shape, declaration: target.declaration, file, line };
+      }
       return { token, kind: shape, file, line };
     }
     return { token, kind: 'useValue', file, line };
@@ -266,18 +453,38 @@ export const modulesPass = definePass('modules', (ctx) => {
 
     const imports: ModuleInfo['imports'] = [];
     const providedByImports: ProviderRegistration[] = [];
-    for (const expr of arrayProperty(options, 'imports')) {
-      const dynamic = isDynamicModuleExpression(expr);
-      const ref = resolveClassExpression(expr);
+    for (const { written, expr } of importedModules(arrayProperty(options, 'imports'))) {
+      // A module configured by a static method of any name - `BullModule.registerQueue(...)` - is that module (P264).
+      const receiver = configuringReceiver(expr);
+      const dynamic = isDynamicModuleExpression(expr) || receiver !== undefined;
+      let ref = resolveClassExpression(receiver ?? expr);
+      let stated: { typeName: string; package: string } | undefined;
       if (ref.kind === 'unknown') {
+        const symbol = `${indexed.name} imports ${written === expr && receiver === undefined ? ref.text : written.getText().replace(/\s+/g, ' ').slice(0, 80)}`;
+        stated = statedModule(receiver ?? expr);
+        if (stated === undefined) {
+          ctx.report({
+            file: ctx.fileOf(written),
+            line: lineOf(written),
+            reason: 'module-import-dynamic',
+            hint: 'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
+            symbol,
+          });
+          continue;
+        }
+        // A module of a package that is not installed is no computed import:
+        // it is the class its import names, of the package it names (P264),
+        // read as an installed package's is, and said, since its class is not
+        // there to read.
         ctx.report({
-          file: ctx.fileOf(expr),
-          line: lineOf(expr),
-          reason: 'module-import-dynamic',
-          hint: 'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
-          symbol: `${indexed.name} imports ${ref.text}`,
+          file: ctx.fileOf(written),
+          line: lineOf(written),
+          reason: 'module-import-not-installed',
+          hint: `${stated.typeName} is a module of ${stated.package}, which is not installed; it is read by its import alone. Install the dependencies where the map is built.`,
+          symbol,
+          meta: { package: stated.package, module: stated.typeName },
         });
-        continue;
+        ref = { kind: 'external', ...stated };
       }
       if (ref.kind === 'external') {
         // `ClientsModule.register([{ name: 'KAFKA_CLIENT' }])` provides that
@@ -289,7 +496,7 @@ export const modulesPass = definePass('modules', (ctx) => {
           package: ref.package,
           role: 'module',
         });
-        imports.push({ id: node.id, kind: 'external', name: ref.typeName });
+        imports.push({ id: node.id, kind: 'external', name: ref.typeName, ...(stated === undefined ? {} : { stated: true as const }) });
         continue;
       }
       const target = ctx.classes.get(ref.declaration);
@@ -372,7 +579,8 @@ export const modulesPass = definePass('modules', (ctx) => {
         from: info.id,
         to: imported.id,
         type: 'imports',
-        confidence: 'static',
+        // What the author wrote rather than what a compiler checked (P264).
+        confidence: imported.stated === true ? 'heuristic' : 'static',
         file: info.file,
         line: info.line,
         ...(kind === 'static' ? {} : { meta: { moduleKind: kind } }),

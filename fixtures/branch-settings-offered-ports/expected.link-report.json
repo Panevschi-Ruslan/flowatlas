@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:16:04.120Z",
+  "configHash": "3b477cbe50be",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1247,
+      "packages": {
+        "name": "branch-settings-offered-ports-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1214,
+      "packages": {
+        "name": "branch-settings-offered-ports-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1258,
+      "packages": {
+        "name": "branch-settings-offered-ports-legacy",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1210,
+      "packages": {
+        "name": "branch-settings-offered-ports-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1259,
+      "packages": {
+        "name": "branch-settings-offered-ports-shop",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 7,
+    "linked": 4,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 2,
+    "ambiguous": 1,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 4,
+    "uncalled": [
+      "entry:legacy:http:GET:/health",
+      "entry:orders:http:GET:/health"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "reason": "ambiguous-route-target",
+      "message": "the request's base is one of ORDERS_URL (orders) and LEGACY_URL (legacy), chosen by a condition nobody settles, and orders and legacy each serve GET /health",
+      "hint": "Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.",
+      "symbol": "http_out:jobs#src/calls.ts:14:35"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "reason": "target-route-not-found",
+      "message": "target service orders has no route GET /nowhere",
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:jobs#src/calls.ts:17:36"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "reason": "target-route-not-found",
+      "message": "target service api has no route GET /stray",
+      "hint": "Route renamed? Check api's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:jobs#src/calls.ts:26:28"
+    }
+  ],
+  "totals": {
+    "nodes": 37,
+    "edges": 24,
+    "types": 2,
+    "missed": 5,
+    "sites": 5,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 5
+  }
+}

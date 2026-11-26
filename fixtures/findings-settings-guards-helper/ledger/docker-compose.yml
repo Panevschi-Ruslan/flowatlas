@@ -1,0 +1,9 @@
+services:
+  ledger:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PAYMENT_PROVIDER: card-gateway
+      LEDGER_ZONE: eu-west
+      CACHE_PASSWORD: change-me

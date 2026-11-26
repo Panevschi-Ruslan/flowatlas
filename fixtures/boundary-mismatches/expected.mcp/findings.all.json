@@ -1,0 +1,226 @@
+{
+  "counts": {
+    "sse-event-unhandled": 1,
+    "bot-button-unhandled": 1,
+    "bot-button-data-too-long": 1,
+    "config-name-mismatch": 1,
+    "status-never-answered": 1,
+    "cors-credentials": 1,
+    "cors-header-not-allowed": 1,
+    "cors-method-not-allowed": 1,
+    "contract-break": 1,
+    "config-not-set": 1,
+    "bot-handler-untriggered": 1,
+    "config-never-read": 1
+  },
+  "top": {
+    "sse-event-unhandled": [
+      {
+        "kind": "sse-event-unhandled",
+        "id": "consumer:web#src/app/live.service.ts:LiveService.onReady",
+        "to": "entry:orders-api:http:GET:/orders/events",
+        "service": "web",
+        "loc": "src/app/live.service.ts:12",
+        "message": "GET /orders/events sends frames as the event \"order-ready\", which LiveService.onReady never listens for: it listens for \"message\", and onmessage hears only frames named no event",
+        "precision": "high",
+        "evidence": "every frame the route writes was read with its name, and every listener of the stream with the name it listens for",
+        "fix": "listen with addEventListener(\"order-ready\", …), or send the frames with no event name",
+        "rank": 1,
+        "next": "get_source({symbol: \"consumer:web#src/app/live.service.ts:LiveService.onReady\"})"
+      }
+    ],
+    "bot-button-unhandled": [
+      {
+        "kind": "bot-button-unhandled",
+        "id": "shop-bot#src/shop-bot.ts:ShopBot.showOrder",
+        "service": "shop-bot",
+        "loc": "src/shop-bot.ts:27",
+        "message": "ShopBot.showOrder builds a button sending \"order:track\", which no handler of callback data matches; the handlers match \"order:confirm\", \"order:tracking\", /^order:cancel:(\\w+)$/, /^order:details:/",
+        "precision": "high",
+        "evidence": "every handler of callback data in the project was read, and none takes every callback",
+        "seenBy": [
+          "bot_command order (shop-bot)"
+        ],
+        "rank": 1,
+        "reach": {
+          "waysIn": 1
+        },
+        "next": "get_source({symbol: \"shop-bot#src/shop-bot.ts:ShopBot.showOrder\"})"
+      }
+    ],
+    "bot-button-data-too-long": [
+      {
+        "kind": "bot-button-data-too-long",
+        "id": "shop-bot#src/shop-bot.ts:ShopBot.showOrder",
+        "service": "shop-bot",
+        "loc": "src/shop-bot.ts:29",
+        "message": "ShopBot.showOrder builds a button whose callback data \"order:details:with-the-full-delivery-address-and-the-courier-notes\" is 66 bytes, over the 64 the bot platform takes: the message carrying it is refused",
+        "precision": "high",
+        "evidence": "the bot platform's API takes callback_data of 1-64 bytes; the data is written out",
+        "fix": "send a short key (an id, a code) and look the rest up when it comes back",
+        "seenBy": [
+          "bot_command order (shop-bot)"
+        ],
+        "rank": 1,
+        "reach": {
+          "waysIn": 1
+        },
+        "next": "get_source({symbol: \"shop-bot#src/shop-bot.ts:ShopBot.showOrder\"})"
+      }
+    ],
+    "config-name-mismatch": [
+      {
+        "kind": "config-name-mismatch",
+        "id": "config_key:orders-api#PAYMENT_API_KEY",
+        "service": "orders-api",
+        "loc": "src/orders/orders.service.ts:17",
+        "message": "PAYMENT_API_KEY is read with no default by OrdersService.list and set nowhere, while PAYMENTS_API_KEY is set in .env.example and read nowhere",
+        "precision": "high",
+        "evidence": "one name is read and set nowhere, the other set and read nowhere, a letter or two apart",
+        "fix": "one name spelled two ways: read PAYMENTS_API_KEY, or set PAYMENT_API_KEY",
+        "seenBy": [
+          "GET /orders (orders-api)"
+        ],
+        "rank": 1,
+        "reach": {
+          "waysIn": 1
+        },
+        "next": "get_source({symbol: \"config_key:orders-api#PAYMENT_API_KEY\"})"
+      }
+    ],
+    "status-never-answered": [
+      {
+        "kind": "status-never-answered",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+        "to": "entry:orders-api:http:POST:/orders/:param/cancel",
+        "service": "web",
+        "loc": "src/app/order-panel.component.ts:43",
+        "message": "OrderPanelComponent.cancel branches on 410 from POST /orders/:param/cancel, which never answers 410: it answers 404, 409",
+        "precision": "high",
+        "evidence": "every failure of the route was read with its status and nothing behind it left unread; statuses a proxy or the framework may answer (400, 401, 403, 408, 413, 429, 5xx) are not judged",
+        "fix": "branch on what the route answers (404, 409), or make it answer 410",
+        "rank": 1,
+        "next": "get_flow({entry: \"entry:orders-api:http:POST:/orders/:param/cancel\"})"
+      }
+    ],
+    "cors-credentials": [
+      {
+        "kind": "cors-credentials",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:13:12",
+        "to": "entry:orders-api:http:GET:/orders",
+        "service": "web",
+        "loc": "src/app/orders-api.service.ts:13",
+        "message": "OrdersApiService.list (GET /orders) sends credentials to orders-api, whose CORS answers any origin with *: the browser blocks the answer",
+        "precision": "high",
+        "evidence": "the service enables CORS at src/main.ts:9, for a browser on another origin, and the setting was read",
+        "fix": "allow the front end's origin by name (origin: [...], or true to echo it) with credentials: true",
+        "rank": 1,
+        "next": "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:13:12\"})"
+      }
+    ],
+    "cors-header-not-allowed": [
+      {
+        "kind": "cors-header-not-allowed",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+        "to": "entry:orders-api:http:POST:/orders/:param/cancel",
+        "service": "web",
+        "loc": "src/app/orders-api.service.ts:23",
+        "message": "OrdersApiService.cancel (POST /orders/:param/cancel) sets x-request-id, which orders-api's CORS does not allow (it allows authorization, content-type): the browser's preflight fails",
+        "precision": "high",
+        "evidence": "the service enables CORS at src/main.ts:9, for a browser on another origin, and the setting was read",
+        "fix": "add x-request-id to allowedHeaders, or leave allowedHeaders out to allow what the browser asks for",
+        "rank": 1,
+        "next": "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:23:12\"})"
+      }
+    ],
+    "cors-method-not-allowed": [
+      {
+        "kind": "cors-method-not-allowed",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:45:12",
+        "to": "entry:orders-api:http:DELETE:/orders/:param",
+        "service": "web",
+        "loc": "src/app/orders-api.service.ts:45",
+        "message": "OrdersApiService.remove (DELETE /orders/:param) uses DELETE, which orders-api's CORS does not allow (it allows GET, PATCH, POST): the browser's preflight fails",
+        "precision": "high",
+        "evidence": "the service enables CORS at src/main.ts:9, for a browser on another origin, and the setting was read",
+        "fix": "add DELETE to methods",
+        "rank": 1,
+        "next": "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:45:12\"})"
+      }
+    ],
+    "contract-break": [
+      {
+        "kind": "contract-break",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "service": "web",
+        "loc": "src/app/orders-api.service.ts:18",
+        "message": "sender web sends `giftNote: string`; receiver orders-api declares no such field; the receiver does not declare it, and its validation pipe forbids what it does not whitelist, so a request sending it is refused with 400",
+        "severity": "error",
+        "precision": "high",
+        "rank": 1,
+        "reach": {
+          "callers": 0
+        },
+        "next": "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:18:12\", to: \"entry:orders-api:http:POST:/orders\"})"
+      }
+    ],
+    "config-not-set": [
+      {
+        "kind": "config-not-set",
+        "id": "config_key:orders-api#REDIS_URL",
+        "service": "orders-api",
+        "loc": "src/orders/orders.service.ts:23",
+        "message": "REDIS_URL is read with no default by OrdersService.create, and none of orders-api's deployment files sets it (.env.example, docker-compose.yml)",
+        "precision": "medium",
+        "evidence": "every deployment file of the service was read for the names it sets; a value given outside the files (a secret store, a console, the shell) is what would make this wrong",
+        "fix": "set REDIS_URL where orders-api is deployed, or give the read a default",
+        "seenBy": [
+          "POST /orders (orders-api)"
+        ],
+        "rank": 1,
+        "reach": {
+          "waysIn": 1
+        },
+        "next": "get_source({symbol: \"config_key:orders-api#REDIS_URL\"})"
+      }
+    ],
+    "bot-handler-untriggered": [
+      {
+        "kind": "bot-handler-untriggered",
+        "id": "entry:shop-bot:bot_callback:order:tracking",
+        "service": "shop-bot",
+        "loc": "src/shop-bot.ts:16",
+        "message": "ShopBot.track handles callback data \"order:tracking\", which no button the project builds sends; the buttons send \"order:cancel:${…}\", \"order:confirm\", \"order:details:with-the-full-delivery-address-and-the-courier-notes\", \"order:track\"",
+        "precision": "medium",
+        "evidence": "every button the project builds was read with its callback data; a button built outside the project is what would make this wrong",
+        "rank": 1,
+        "next": "get_flow({entry: \"entry:shop-bot:bot_callback:order:tracking\"})"
+      }
+    ],
+    "config-never-read": [
+      {
+        "kind": "config-never-read",
+        "id": "config_key:orders-api#LEGACY_EXPORT_DIR",
+        "service": "orders-api",
+        "loc": ".env.example",
+        "message": "LEGACY_EXPORT_DIR is set in .env.example and no code of orders-api reads it",
+        "precision": "low",
+        "evidence": "every read of a setting in the service names its key; a library reading it by itself is what would make this wrong",
+        "fix": "drop LEGACY_EXPORT_DIR, or read it",
+        "rank": 1,
+        "next": "search({query: \"LEGACY_EXPORT_DIR\"})"
+      }
+    ]
+  },
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "the configuration module in src/app.module.ts validates the settings with a schema, which may give it a default"
+    },
+    "status-never-answered": {
+      "count": 1,
+      "why": "POST /orders/:param/refund throws HttpException, whose status is not read"
+    }
+  }
+}

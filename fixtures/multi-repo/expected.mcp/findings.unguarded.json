@@ -8,6 +8,7 @@
       "service": "orders",
       "loc": "src/orders/orders.controller.ts:31",
       "message": "POST /orders has no guard in front of it and reaches orders.",
+      "precision": "low",
       "rank": 1,
       "reach": {
         "writes": 1,
@@ -22,10 +23,12 @@
       "service": "orders",
       "loc": "src/orders/orders.controller.ts:25",
       "message": "GET /orders/:param has no guard in front of it and reaches orders.",
+      "precision": "low",
       "rank": 2,
       "reach": {
         "writes": 0,
-        "reads": 1
+        "reads": 1,
+        "services": 2
       },
       "next": "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
     }
@@ -33,6 +36,16 @@
   "total": 4,
   "truncated": "2 more; next page offset 2",
   "nextOffset": 2,
+  "heldBack": {
+    "call-to-missing-route": {
+      "count": 1,
+      "why": "the service it is sent to is not named"
+    },
+    "config-not-set": {
+      "count": 3,
+      "why": "no deployment file of billing was read: its settings may be set where the reading does not look"
+    }
+  },
   "next": [
     "findings({kind: \"unguarded\", maxNodes: 2, offset: 2})",
     "get_flow({entry: \"entry:orders:http:POST:/orders\"})",

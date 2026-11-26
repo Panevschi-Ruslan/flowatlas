@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:52.041Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:11.868Z",
   "configHash": "33d6136e10ea",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 659,
+      "durationMs": 1055,
       "packages": {
         "name": "loans-api",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 477,
+      "durationMs": 816,
       "packages": {
         "name": "@acme/money",
         "runtime": [],

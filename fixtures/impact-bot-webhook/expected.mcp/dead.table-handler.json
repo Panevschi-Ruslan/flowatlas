@@ -1,0 +1,13 @@
+{
+  "id": "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+  "type": "method",
+  "service": "courier-bot",
+  "loc": "src/courier-bot.ts:35",
+  "verdict": "alive",
+  "reason": "called",
+  "evidence": {
+    "callers": 1,
+    "caller": "entry:courier-bot:bot_callback:/^delivered:(\\w+)$/"
+  },
+  "from": "bot_callback /^delivered:(\\w+)$/"
+}

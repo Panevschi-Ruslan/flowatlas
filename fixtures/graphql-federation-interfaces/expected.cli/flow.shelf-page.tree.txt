@@ -1,0 +1,23 @@
+%  ShelfPage                                   web/src/ShelfPage.tsx:21
+  ^  query Shelf /graphql                      web/src/ShelfPage.tsx:22
+    => media @  Query.media                    media/src/index.ts:12
+      -> Query.media@12                        media/src/index.ts:12
+        -> allMedia                            media/src/catalog.ts:10
+    => reviews @  Media.__resolveReference     reviews/src/index.ts:33
+      -> Media.__resolveReference@33           reviews/src/index.ts:33
+    => reviews @  Media.reviews                reviews/src/index.ts:34
+      -> Media.reviews@34                      reviews/src/index.ts:34
+        -> reviewsOf                           reviews/src/reviews.ts:8
+    => reviews @  Media.rating                 reviews/src/index.ts:35
+      -> Media.rating@35                       reviews/src/index.ts:35
+        -> ratingOf                            reviews/src/reviews.ts:10
+          (again) reviewsOf
+    => media @  Movie.director                 media/src/index.ts:19
+      -> Movie.director@19                     media/src/index.ts:19
+        -> directorOf                          media/src/catalog.ts:15
+    => gateway @  POST /graphql                gateway/src/index.ts:18
+      => media @  POST /                       media/src/index.ts:23
+      => reviews @  POST /graphql              reviews/src/index.ts:39
+      => accounts @  POST /graphql ~heuristic  accounts/src/app.module.ts:9
+      => inventory @  POST /                   inventory/src/index.ts:22
+unresolved on this path: 1

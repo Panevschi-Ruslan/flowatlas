@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:13.838Z",
+  "configHash": "9150015034c1",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1367,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog-web",
+      "repo": "./catalog-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 25,
+      "edges": 18,
+      "types": 1,
+      "unresolved": 3,
+      "durationMs": 1059,
+      "packages": {
+        "name": "catalog-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 1,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 32,
+    "edges": 24,
+    "types": 1,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

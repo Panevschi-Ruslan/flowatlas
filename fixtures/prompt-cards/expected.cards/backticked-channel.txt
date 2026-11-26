@@ -1,0 +1,7 @@
+prompt: who reads `audit`?
+---
+flowatlas, from the graph of every repository (built just now): each answer below is what the call above it returns, complete unless it says otherwise. Call a tool only for what this does not say.
+who_emits({channel: "channel:audit"}):
+{"settled":"1 producer, all listed","channel":{"id":"channel:audit","loc":"src/orders/orders.service.ts:29","service":"shop-api"},"producers":[{"id":"producer:shop-api#src/orders/orders.service.ts:29:5","label":"event audit","kind":"event","reach":"alive","from":"POST /api/orders/:param/cancel"}],"total":1,"complete":true}
+who_consumes({channel: "channel:audit"}):
+{"settled":"1 consumer, all listed","channel":{"id":"channel:audit","loc":"src/orders/orders.service.ts:29","service":"shop-api"},"consumers":[{"id":"consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.onModuleInit","line":28,"kind":"event","reach":"alive","from":"event audit"}],"total":1,"complete":true}

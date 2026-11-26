@@ -15,7 +15,7 @@ export const SARIF_LEVELS = ['error', 'warning', 'note'] as const;
 export type SarifLevel = (typeof SARIF_LEVELS)[number];
 
 /** The commands that write a log, each its own category (D1). */
-export const SARIF_COMMANDS = ['contracts', 'dead', 'cycles', 'rules', 'doctor', 'diff', 'check', 'spec-diff', 'spec-against'] as const;
+export const SARIF_COMMANDS = ['contracts', 'dead', 'cycles', 'rules', 'doctor', 'diff', 'check', 'spec-diff', 'spec-against', 'findings'] as const;
 export type SarifCommand = (typeof SARIF_COMMANDS)[number];
 
 /** How a result compares with what was there before (SARIF §3.27.24). */
@@ -165,6 +165,8 @@ export interface SarifFinding {
   related?: SarifStep[];
   /** A chain, in order: a rule violation's path, a cycle's hops. */
   flow?: SarifStep[];
+  /** Several chains, each its own code flow: an API change's way in to each consumer it breaks (P390). */
+  flows?: SarifStep[][];
   /** The line-free key a baseline already keys on, with the kind it belongs to (D2). */
   key: { kind: string; value: string };
   baselineState?: BaselineState;

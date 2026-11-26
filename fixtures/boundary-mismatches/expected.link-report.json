@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:25:34.310Z",
+  "configHash": "a7e2e60a5919",
+  "services": [
+    {
+      "name": "accounts-api",
+      "repo": "./accounts-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1106,
+      "packages": {
+        "name": "accounts-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders-api",
+      "repo": "./orders-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 39,
+      "edges": 33,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 1143,
+      "packages": {
+        "name": "orders-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "class-validator",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-bot",
+      "repo": "./shop-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1097,
+      "packages": {
+        "name": "shop-bot",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "telegraf"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 46,
+      "edges": 41,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 989,
+      "packages": {
+        "name": "web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 10,
+    "resolved": 10,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 10,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 107,
+    "edges": 98,
+    "types": 2,
+    "missed": 2,
+    "sites": 8,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

@@ -1,0 +1,6 @@
+{% extends 'base.yaml.j2' %}
+{% import 'macros/function.j2' as functions %}
+{% block description %}The orders of a shop, {{ super() }}{% endblock %}
+{% block resources %}
+{{ functions.function('Ship', 'shop-prod-ship', sceptre_user_data.handler, sceptre_user_data.queues) }}
+{% endblock %}

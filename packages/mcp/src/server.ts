@@ -1,10 +1,11 @@
+import { agentQuestionsLine, TEXT_IS_A_GREP } from '@flowatlas/core';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerPrompts } from './prompts.js';
 import { DbHandle, type DbHandleOptions } from './query/db.js';
-import { registerResources, type ReasonHint } from './resources.js';
+import { registerResources, type OverviewWriter, type ReasonHint } from './resources.js';
 import { registerCantFollow } from './tools/cant-follow.js';
-import { registerChanges } from './tools/changes.js';
+import { registerChanges, type ChangeChecker } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
 import type { ContractChecker, MissingCandidates, PatternTester, ToolContext, TrafficChecker } from './tools/common.js';
 import { registerContract } from './tools/contract.js';
@@ -23,43 +24,70 @@ import { registerSpec } from './tools/spec.js';
 import { registerStart } from './tools/start.js';
 import { registerTypeUsage } from './tools/type-usage.js';
 import { registerTypes } from './tools/types.js';
-import { listingSettingsOf, ToolListing } from './tool-listing.js';
+import { listingSettingsOf, neverListed, noCodeSaid, rulesConfigured, ToolListing } from './tool-listing.js';
+import { offeredText } from './offered.js';
+import type { ToolName } from './tool-needs.js';
 
 export const SERVER_NAME = 'flowatlas';
 
 /**
- * What a session is told before its first question.
+ * What a session is told before its first question, and again on every turn
+ * after it (P366): a client re-sends the instructions with every request,
+ * while a tool's description and input reach the model only once the tool is
+ * loaded. So this says what no single tool can - which call answers each
+ * question, what every answer's rows and `complete` mean, which tools are
+ * listed when, and the inputs every tool shares - and what one tool's answer
+ * needs is said on that tool. At most `INSTRUCTIONS_MAX` characters in every
+ * variant a server can be started in.
  *
- * The chains are spelled out because they are the point: every row carries an
- * `id` the next tool takes as it is, and every answer ends with `next`, the
- * calls that take the ids it just returned.
+ * The core tools load upfront too (P380), so their descriptions are re-sent
+ * on every turn beside these lines: what one of them says (a channel's `type`
+ * and `field`, what `search` finds) is said there, not again here.
+ *
+ * A question is one call (P382): each line names the call that answers a
+ * question, with the name as the question has it, never a chain that starts
+ * by looking the id up. The lines every answer needs come first: a client
+ * before Claude Code v2.1.296 kept only the first 2,048 characters.
  */
-export const INSTRUCTIONS = [
-  'A map of every repository in this project, already joined. Ask it what reaches what instead of reading files.',
-  'Begin with start_here: counts per service, the most common gaps, and entry ids to start from.',
-  'Every row carries an `id` that the next tool accepts as it is, and every answer ends with `next`, the calls that take those ids. The chains:',
-  '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',
-  '- channel: who_emits / who_consumes({channel: id}) -> get_flow({entry: id}) on a handler.',
-  '- symbol: find_symbol -> who_calls / impact({symbol: id}) -> get_flow on an entry it names.',
-  '- shape: get_type({type: id}) -> type_usage({type: id}): every way in, crossing, channel and call that takes or returns it, and the types holding it; check_contract for whether two services still agree; get_spec({service}) writes the routes of a service as OpenAPI 3.1 or its channels as AsyncAPI 3.0 (`kind`), and `path` ("GET /orders/{id}", a channel address) answers one operation with the schemas it uses.',
-  '- search({query}) finds a route, channel, table, type, class or gap by name; what_changed reads the last flowatlas diff.',
-  "- why a flow stops: cant_follow groups every step the reading could not follow by cause and package -> get_source on a place it names; a wrapper of the project's own -> test_pattern on a draft rule for it.",
-  '- findings - a likely N+1, a route with no guard, a contract break, a channel with one end, a broken architecture rule (check_rules lists those) - are not gaps: findings() counts each kind with its top rows, ranked by reach; findings({kind}) lists one, each row with the call that shows it.',
-  "- dead({id}) says whether a node is dead: `dead`, `likely-dead` (a call read in part could reach it: `couldHit`), `unknown` (`outside` the project, or a call `oneOff` a segment) or `alive`; dead({service}) lists them, verdict first.",
-  '- run time: hot_paths -> slow_steps({entry: id}) -> trace_for({entry: id}), one slow and one failing request as trees of node ids -> get_source on a slow step.',
-  '- failures at run time: undeclared_failures lists ways in that answered a status no failure in their code declares, 5xx first -> trace_for({entry}) for a failing request; get_flow `failures` and `fails[].seen` set the statuses seen beside the declared ones.',
-  '- never seen: never_seen({since}) lists what the code runs and traffic never touched, `strong` beside a busy neighbour, `weak` otherwise -> dead({id}), which reads traffic as evidence (`seen`, `neverSeen`); cant_follow({cause: "seen-not-in-code"}) lists what traffic reached and no reader drew, with the call that looks for each; a best guess traffic went through says `confirmedBy: "traffic"`.',
-  'get_flow, describe_for_prompt and impact carry `docs` when a Markdown page describes the node (flowatlas docs): `file`, `line` and `state`; `changed` or `gone` is a page to update with the change. start_here says `staleDocs`.',
-  'Rows real traffic went through carry `observed: n`, with `p95` (ms) and `errorRate` where timed (`seenAmbiguous: n` where requests fit it and other places too, so were counted on none); gaps someone accepted with flowatlas accept carry `accepted: true`.',
-  'describe_for_prompt({id}) writes any of these as Markdown to hand on; `scope` class, file or service writes the whole of one. Every list tool takes the same optional `service` filter, a service name, to keep only its rows.',
-  'Every answer is bounded; get_source is the only one that returns code, and says `truncated` with the `fromLine` to read on from when a declaration is longer than one answer.',
-  '`maxNodes` is the most rows an answer holds. A list that was cut says `total` and `nextOffset`: ask the same call again with `offset: nextOffset` for the next page, and `next` writes that call first.',
-  'get_flow writes each node once: met again it is `{id, ref: true, seenAt}`, seenAt the row its subtree is under. It stops at `maxNodes` (60) or about `maxChars` (12000) characters, says which in `stoppedBy`, and lists the crossings it did not follow in `crossingsLeft`: ask get_flow on one.',
-  'who_calls says `stoppedBy` and the `frontier` ids when depth cut it, and `topOfChain` with `gapsInFile` on a node nothing calls: dead, or called from behind a gap (dead({id}) says which it is likely to be). On a class it answers for its methods. A route said aloud (`GET /orders/123`) resolves to the most specific route, naming the others under `alsoAnswers`. A failed call is `isError` and names the nearest under `suggestions`.',
-  'Prompts before-rename, pr-review and trace-route write out the calls those reviews take, ids resolved; resources flowatlas://reasons (why a step was not followed) and flowatlas://services/{name} read without asking. what_changed({verdict: true}) says safe, unsafe or unknown, and why.',
-  'Only the tools this project can answer are listed: the run-time ones after flowatlas observe, check_rules with rules configured, what_changed after flowatlas diff, the channel and type tools once the graph holds one. start_here says what is not listed in `hidden`; the list changes as the project does.',
-  '`detail` is 0 for ids only, 1 (the default) adds file:line, service and kind, 2 adds what the reader knows about each row; 3 is answered at 2.',
-].join('\n');
+const INSTRUCTION_LINES: readonly string[] = [
+  // P396: a constant's value is a grep, so a plain-text question costs no graph call before the grep.
+  // P398: narrowly - who sends, handles or calls something (a message type, a route) is the graph's, never a grep.
+  `How every repository here connects, joined: ask it, not a search. ${TEXT_IS_A_GREP} Each question is one call:`,
+  // The same questions the files `flowatlas agents install` writes list (P227), each with its call (P382).
+  agentQuestionsLine(),
+  'A symbol is an id, a `Class.method` or a route said aloud ("GET /orders/:id"); `service` picks among same-named ones. Before changing a route, handler, body type or message payload: impact first.',
+  'Rows of code carry `reach` (alive; maybe: behind an unread call, `gap`, `behind`; unreached; dead; outside: called from outside) and `from`, the nearest way in: no need to check; keep maybe rows for what breaks. `settled` or `complete: true` is the whole answer: stop; else `left` says what was cut. Several at once: who_calls and impact `symbols`, dead `ids`, find_symbol and search `queries`, get_type `types`.',
+  "A row's `id` goes into the next tool as is; `next` names the calls.",
+  'More: search({query}) any node by name or words; list_entries the ways in; find_symbol a symbol; get_source({symbol: id}) a step\'s code; get_type({type: id}) -> type_usage; get_spec({service}); findings() what looks broken; test_pattern a draft rule; start_here a project you do not know.',
+  'Run time: hot_paths -> slow_steps or trace_for({entry: id}); undeclared_failures; never_seen.',
+  "Shared inputs: `detail` 0 ids only, 1 (the default) adds file:line, service and kind, 2 a list row's plain facts, one node's all; `service` names where the thing is (a list: the one it keeps); `maxNodes` caps rows (150 unless said); a cut list says `nextOffset`: pass it as `offset`.",
+  'Answers are compact; `verbose: true` gives every field.',
+  'Only the tools this project can answer are listed: run-time ones after flowatlas observe, check_rules with rules, what_changed after flowatlas diff, channel and type tools once the graph holds one; start_here names the rest in `hidden`. In Claude Code a tool not loaded yet loads by ToolSearch: every one you need in one call.',
+];
+
+/** The most characters the instructions may run to (P366): they are re-sent on every turn of a session. */
+export const INSTRUCTIONS_MAX = 2500;
+
+/** The line that says when each tool appears: naming one there is the point, so it is said whatever is listed. */
+const LISTING_LINE = INSTRUCTION_LINES.find((line) => line.startsWith('Only the tools this project can answer')) as string;
+
+/** Said instead of the chains' last step when the server serves no code (P360). */
+const NO_CODE_LINE = 'This server serves no code: read a step at the file and line its row gives (`loc`, or its `id` and `line`), in its repository.';
+
+export const INSTRUCTIONS = INSTRUCTION_LINES.join('\n');
+
+/**
+ * The instructions for a server that can never list `never` (P360): each
+ * chain without the step a session could not take, so the first thing it
+ * reads names no tool it will not find, and where code is to be read when
+ * no code is served.
+ */
+export const instructionsFor = (never: ReadonlySet<ToolName>, noCode: string): string => {
+  if (never.size === 0) return INSTRUCTIONS;
+  const offer = { hidden: never, noCode };
+  const lines = INSTRUCTION_LINES.map((line) => (line === LISTING_LINE ? line : offeredText(line, offer))).filter((line) => line !== '');
+  return [...lines, ...(never.has('get_source') ? [NO_CODE_LINE] : [])].join('\n');
+};
 
 export interface ServerOptions extends DbHandleOptions {
   /** Field-level contract rules, when the contracts package is installed. */
@@ -72,6 +100,8 @@ export interface ServerOptions extends DbHandleOptions {
   reasonCatalog?: readonly ReasonHint[];
   /** The pattern tester, when the readers are there to run it (P121). */
   patternTester?: PatternTester;
+  /** Draws the project's overview for `flowatlas://overview`, from the command line, which owns it (P228). */
+  overview?: OverviewWriter;
   /** The directories that look like each repository probably missing, when the command line can look (P122). */
   missingCandidates?: MissingCandidates;
   /** A route's traffic shapes against its code, when the contracts package is installed (P113). */
@@ -82,9 +112,32 @@ export interface ServerOptions extends DbHandleOptions {
    * configuration's `mcp` block says (`flowatlas mcp --all-tools`, P201).
    */
   allTools?: boolean;
+  /**
+   * `false` lists no tool to load upfront (`flowatlas mcp --no-always-load`,
+   * P380); otherwise the core tools are, unless the configuration's
+   * `mcp.alwaysLoad` is `false`.
+   */
+  alwaysLoad?: boolean;
+  /**
+   * The core tools to mark upfront, in place of all of them (`flowatlas mcp
+   * --upfront`, P392); before the configuration's `mcp.upfront`.
+   */
+  upfront?: readonly string[];
   /** How often, in ms, a connected server looks for a graph, observed file or diff that changed; 0 never. */
   toolsPollMs?: number;
+  /**
+   * Starts a background build, from the command line, which this package
+   * cannot run (P230): called when an answer finds its files changed and the
+   * configuration says `mcp.rebuild: on-change`, at most once every
+   * `REBUILD_EVERY_MS`.
+   */
+  rebuild?: () => void;
+  /** Compares the working tree with the built graph, from the command line, which builds (P387): `check_change`. */
+  changeChecker?: ChangeChecker;
 }
+
+/** The shortest time between two background builds the server starts: `build --background` coalesces the rest. */
+export const REBUILD_EVERY_MS = 10_000;
 
 /**
  * The server, with every tool registered and those the project can answer
@@ -99,15 +152,36 @@ export interface ServerOptions extends DbHandleOptions {
  */
 export const createFlowatlasServer = (options: ServerOptions = {}): McpServer => {
   const handle = new DbHandle(options);
+  const rebuild = options.rebuild;
+  if (rebuild !== undefined && handle.config?.mcp?.rebuild === 'on-change') {
+    let last = 0;
+    handle.onStale = () => {
+      const now = Date.now();
+      if (now - last >= REBUILD_EVERY_MS) {
+        last = now;
+        rebuild();
+      }
+      return true;
+    };
+  }
   const settings = listingSettingsOf(handle.config?.mcp, {
     ...(options.allTools === undefined ? {} : { allTools: options.allTools }),
+    ...(options.alwaysLoad === undefined ? {} : { alwaysLoad: options.alwaysLoad }),
+    ...(options.upfront === undefined ? {} : { upfront: options.upfront }),
     ...(handle.configPath === undefined ? {} : { configPath: handle.configPath }),
+  });
+
+  const never = neverListed(settings, {
+    sources: handle.config !== undefined,
+    rules: rulesConfigured(handle.config),
+    tester: options.patternTester !== undefined,
+    changer: options.changeChecker !== undefined,
   });
 
   const server = new McpServer(
     { name: SERVER_NAME, version: options.version ?? '0.0.0' },
     {
-      instructions: INSTRUCTIONS,
+      instructions: instructionsFor(never, noCodeSaid(settings)),
       // The list follows the project, so a client is told when it changes.
       capabilities: { tools: { listChanged: true } },
     },
@@ -116,6 +190,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     handle,
     settings,
     tester: options.patternTester !== undefined,
+    changer: options.changeChecker !== undefined,
     ...(options.toolsPollMs === undefined ? {} : { pollMs: options.toolsPollMs }),
   });
   const context: ToolContext = {
@@ -125,11 +200,12 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
     ...(options.patternTester === undefined ? {} : { patternTester: options.patternTester }),
     ...(options.missingCandidates === undefined ? {} : { missingCandidates: options.missingCandidates }),
     ...(options.trafficChecker === undefined ? {} : { trafficChecker: options.trafficChecker }),
+    ...(options.changeChecker === undefined ? {} : { changeChecker: options.changeChecker }),
   };
 
   listing.capture(() => registerTools(server, context));
   registerPrompts(server, context);
-  registerResources(server, context, options.reasonCatalog);
+  registerResources(server, context, options.reasonCatalog, options.overview);
 
   // A closed connection lets go of the database (P199). On Windows a file held
   // open can be neither removed nor replaced, so a server that kept it after

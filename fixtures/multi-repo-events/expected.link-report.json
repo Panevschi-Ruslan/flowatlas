@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:36.101Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:24:30.550Z",
   "configHash": "e6bf14a6f63d",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 3,
       "unresolved": 2,
-      "durationMs": 541,
+      "durationMs": 1584,
       "packages": {
         "name": "lending-library-loans",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 6,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 512,
+      "durationMs": 1371,
       "packages": {
         "name": "lending-library-notifications",
         "runtime": [],
@@ -50,7 +50,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 347
+      "durationMs": 1024
     },
     {
       "name": "routing",
@@ -61,7 +61,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 337
+      "durationMs": 1020
     }
   ],
   "httpOut": {
@@ -120,7 +120,7 @@
     "missed": 0,
     "sites": 0,
     "notes": 0,
-    "findings": 1,
+    "findings": 2,
     "unresolved": 0
   }
 }

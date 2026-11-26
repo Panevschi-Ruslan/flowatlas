@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T15:58:48.507Z",
+  "configHash": "9968b986e1bb",
+  "services": [
+    {
+      "name": "edge",
+      "repo": "./edge",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 8,
+      "types": 2,
+      "unresolved": 3,
+      "durationMs": 1168,
+      "packages": {
+        "name": "edge",
+        "runtime": [
+          "hono",
+          "redis"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 21,
+      "edges": 19,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 814,
+      "packages": {
+        "name": "portal",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 38,
+      "edges": 31,
+      "types": 0,
+      "unresolved": 7,
+      "durationMs": 1341,
+      "packages": {
+        "name": "shipping",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "redis",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 4,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": [],
+    "unselectedTypes": [
+      "channel:workspace:*:events#COURIER_ASSIGNED"
+    ]
+  },
+  "routes": {
+    "total": 8,
+    "called": 4,
+    "uncalled": [
+      "entry:shipping:http:GET:/workspaces/:param/audit",
+      "entry:shipping:http:POST:/workspaces/:param/parcels/:param/courier",
+      "entry:shipping:http:POST:/workspaces/:param/parcels/:param/packed",
+      "entry:shipping:http:POST:/workspaces/:param/parcels/:param/queue/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "edge",
+      "file": "src/worker.ts",
+      "line": 25,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: no worker configuration of this repository binds ROOMS under durable_objects, and the namespace's type names no class.",
+      "hint": "Declare ROOMS under durable_objects.bindings in the worker's wrangler file with its class_name, or type the namespace as DurableObjectNamespace<Class>.",
+      "symbol": "GET /rooms/:param/stream"
+    },
+    {
+      "service": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 30,
+      "reason": "target-route-not-found",
+      "message": "target service shipping has no route GET /notices/stream",
+      "hint": "Route renamed? Check shipping's controllers, or annotate the method with /** @flowatlas-calls GET /notices/stream */.",
+      "symbol": "ui_api_call:portal#src/live/ticker.ts:30:18"
+    },
+    {
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types; 1 consumer takes every type and hands it on; 2 places may still choose it: src/live/useWorkspaceEvents.ts:16 (its handler is not code this reads), and 1 more",
+      "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "service": "shipping",
+      "meta": {
+        "type": "channel:workspace:*:events#COURIER_ASSIGNED",
+        "channel": "channel:workspace:*:events",
+        "messageType": "COURIER_ASSIGNED",
+        "sureness": "unsure"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 71,
+    "edges": 69,
+    "types": 3,
+    "missed": 12,
+    "sites": 14,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 12
+  }
+}

@@ -1,4 +1,14 @@
 {
+  "requests": [
+    {
+      "route": "entry:billing:http:POST:/invoices",
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    },
+    {
+      "route": "entry:orders:http:GET:/orders/:param",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
@@ -14,7 +24,8 @@
           "id": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
           "type": "method",
           "label": "OrdersController.invoice",
-          "loc": "src/orders/orders.controller.ts:40"
+          "loc": "src/orders/orders.controller.ts:40",
+          "endLine": 43
         },
         "edge": {
           "type": "handles",
@@ -30,7 +41,8 @@
               "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
               "type": "method",
               "label": "BillingClient.requestInvoice",
-              "loc": "src/clients/billing.client.ts:31"
+              "loc": "src/clients/billing.client.ts:31",
+              "endLine": 37
             },
             "edge": {
               "type": "calls",
@@ -46,7 +58,8 @@
                   "id": "gateway#src/clients/service-registry.ts:ServiceRegistry.invoicesUrl",
                   "type": "method",
                   "label": "ServiceRegistry.invoicesUrl",
-                  "loc": "src/clients/service-registry.ts:19"
+                  "loc": "src/clients/service-registry.ts:19",
+                  "endLine": 21
                 },
                 "edge": {
                   "type": "calls",
@@ -86,6 +99,10 @@
       "type": "http_calls",
       "service": "billing"
     }
+  ],
+  "complete": false,
+  "left": [
+    "maxNodes: 7 more nodes past maxNodes 5; raise maxNodes or ask get_flow on a child id"
   ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/invoice\"})",

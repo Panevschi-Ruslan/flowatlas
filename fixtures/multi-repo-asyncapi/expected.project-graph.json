@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:05.207Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:39:01.829Z",
   "services": [
     {
       "name": "orders",
@@ -275,7 +275,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "invoiceId",
+            "line": 18
+          }
+        ]
       }
     },
     {
@@ -357,7 +363,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

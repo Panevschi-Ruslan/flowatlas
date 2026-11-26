@@ -64,7 +64,7 @@ const connect = async (path: string): Promise<Client> => {
 };
 
 const call = async (on: Client, name: string, args: Record<string, unknown>): Promise<any> => {
-  const response = (await on.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+  const response = (await on.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 
@@ -79,6 +79,8 @@ beforeAll(async () => {
   db.close();
   const index: DocsIndex = {
     docsFormatVersion: DOCS_FORMAT_VERSION,
+    mentions: [],
+    deadMentions: [],
     files: ['docs/carts.md'],
     blocks: [
       { file: 'docs/carts.md', line: 3, kind: 'flow', id: 'POST /carts', node: ROUTE, view: 'steps', state: 'ok', fingerprint },

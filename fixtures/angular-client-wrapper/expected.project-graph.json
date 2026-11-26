@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T16:20:16.578Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:11:38.132Z",
   "services": [
     {
       "name": "angular-client-wrapper",
@@ -484,7 +484,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-translations-tab"
+        "selector": "app-translations-tab",
+        "unreferenced": true
       }
     },
     {
@@ -808,10 +809,12 @@
           "locale",
           "name"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
-        "choice": "categories"
+        "choice": "categories",
+        "sendsJson": true
       }
     },
     {
@@ -834,10 +837,12 @@
           "locale",
           "name"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
-        "choice": "parcels"
+        "choice": "parcels",
+        "sendsJson": true
       }
     },
     {
@@ -860,10 +865,12 @@
           "locale",
           "name"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
-        "choice": "stickers"
+        "choice": "stickers",
+        "sendsJson": true
       }
     },
     {
@@ -881,6 +888,14 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Parcel[]",
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.get",
+            "line": 29,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.get"
@@ -901,6 +916,14 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Parcel",
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.get",
+            "line": 29,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
@@ -923,9 +946,18 @@
         "responseType": "type:angular-client-wrapper#Parcel",
         "bodyType": "type:angular-client-wrapper#UpdateParcelDto",
         "bodyFrom": "type",
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
+            "line": 45,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
-        "through": "BaseService.post"
+        "through": "BaseService.post",
+        "sendsJson": true
       }
     },
     {
@@ -945,6 +977,14 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.delete",
+            "line": 52,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.delete"
@@ -967,9 +1007,18 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
+            "line": 45,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
-        "through": "BaseService.post"
+        "through": "BaseService.post",
+        "sendsJson": true
       }
     },
     {
@@ -991,11 +1040,20 @@
         "bodyKeys": [
           "order"
         ],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
+            "line": 45,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
         "through": "BaseService.post",
-        "choice": "categories,asc"
+        "choice": "categories,asc",
+        "sendsJson": true
       }
     },
     {
@@ -1017,11 +1075,20 @@
         "bodyKeys": [
           "order"
         ],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
+            "line": 45,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
         "through": "BaseService.post",
-        "choice": "parcels,asc"
+        "choice": "parcels,asc",
+        "sendsJson": true
       }
     },
     {
@@ -1043,11 +1110,20 @@
         "bodyKeys": [
           "order"
         ],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.post",
+            "line": 45,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
         "through": "BaseService.post",
-        "choice": "stickers,asc"
+        "choice": "stickers,asc",
+        "sendsJson": true
       }
     },
     {
@@ -1065,6 +1141,14 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Parcel[]",
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.getWithParams",
+            "line": 39,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.getWithParams"
@@ -1085,6 +1169,14 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Review[]",
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/review.service.ts:ReviewService.list",
+            "line": 20,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -1106,6 +1198,14 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "angular-client-wrapper#src/app/admin/base.service.ts:BaseService.delete",
+            "line": 52,
+            "why": "handed back from a function handed to requestWithTenant"
+          }
+        ],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "BaseService.delete"
@@ -1126,6 +1226,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal[]",
         "bodyType": null,
+        "queryUnread": true,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.get"
@@ -1146,6 +1248,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": null,
+        "queryUnread": true,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.get"
@@ -1167,9 +1271,12 @@
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": "type:angular-client-wrapper#ClaimDealDto",
         "bodyFrom": "type",
+        "queryUnread": true,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
-        "through": "ApiClient.post"
+        "through": "ApiClient.post",
+        "sendsJson": true
       }
     },
     {
@@ -1187,6 +1294,8 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "void",
         "bodyType": null,
+        "queryUnread": true,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.delete"

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:50:20.136Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:43:25.630Z",
   "services": [
     {
       "name": "nest-kafka",
@@ -494,7 +494,13 @@
             }
           ],
           "returns": "type:nest-kafka#Order"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 65
+          }
+        ]
       }
     },
     {
@@ -513,7 +519,13 @@
             }
           ],
           "returns": "any"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 72
+          }
+        ]
       }
     },
     {
@@ -532,7 +544,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -555,7 +568,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -574,7 +588,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 42
+          }
+        ]
       }
     },
     {
@@ -593,7 +613,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -612,7 +638,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "paidAt",
+            "line": 27
+          }
+        ]
       }
     },
     {
@@ -631,7 +663,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 34
+          }
+        ]
       }
     },
     {
@@ -1237,7 +1275,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 19
+          }
+        ]
       }
     }
   ],

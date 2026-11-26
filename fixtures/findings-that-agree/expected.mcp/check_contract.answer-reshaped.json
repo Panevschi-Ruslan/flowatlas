@@ -1,0 +1,42 @@
+{
+  "entry": "entry:catalog-api:http:GET:/reports/daily",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:catalog-api#DailyReport",
+    "wire": "{ data: DailyReport, success } (EnvelopeInterceptor); reshaped by TotalsInterceptor in a way not read (its map(...) answers this.withTotals(report), not an object written out)",
+    "reads": [
+      {
+        "field": "data.date",
+        "id": "ops-web#src/reports.ts:reportLine",
+        "line": 9
+      },
+      {
+        "field": "data.revenue",
+        "id": "ops-web#src/reports.ts:reportLine",
+        "line": 9
+      }
+    ],
+    "missing": [
+      {
+        "field": "data.revenue",
+        "id": "ops-web#src/reports.ts:reportLine",
+        "line": 9,
+        "unsure": "TotalsInterceptor: its map(...) answers this.withTotals(report), not an object written out"
+      }
+    ],
+    "unused": [
+      {
+        "field": "data.orders"
+      }
+    ]
+  },
+  "callers": 1,
+  "complete": false,
+  "left": [
+    "unsure: the answer is reshaped on the way out in a way not read (TotalsInterceptor: its map(...) answers this.withTotals(report), not an object written out), so a field said missing may be sent"
+  ],
+  "next": [
+    "check_contract({from: \"ui_api_call:ops-web#src/reports.ts:7:26\", to: \"entry:catalog-api:http:GET:/reports/daily\"})"
+  ]
+}

@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stock-config
+data:
+  port: "4100"
+  host: stock.example.test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stock
+spec:
+  template:
+    metadata:
+      labels:
+        app: stock
+    spec:
+      containers:
+        - name: stock
+          image: registry.example.test/stock:1.0
+          args: ["--listen=:$(STOCK_PORT)"]
+          env:
+            - name: PORT
+              value: $(STOCK_PORT)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stock
+spec:
+  selector:
+    app: stock
+  ports:
+    - port: 8080
+      targetPort: 4100
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edge
+spec:
+  rules:
+    - host: $(STOCK_HOST)
+      http:
+        paths:
+          - path: /stock
+            pathType: Prefix
+            backend:
+              service:
+                name: stock
+                port:
+                  number: 8080

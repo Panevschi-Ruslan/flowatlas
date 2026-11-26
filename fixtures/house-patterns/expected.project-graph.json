@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T10:22:09.864Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T12:50:35.469Z",
   "services": [
     {
       "name": "catalog",
@@ -68,7 +68,21 @@
             }
           ],
           "returns": "type:catalog#Book"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "isbn",
+            "in": "catalog#src/books/books.service.ts:BooksService.add",
+            "line": 20
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "catalog#src/books/books.service.ts:BooksService.add",
+            "line": 21,
+            "why": "spread into another value"
+          }
+        ]
       }
     },
     {
@@ -82,7 +96,8 @@
         "signature": {
           "params": [],
           "returns": "type:catalog#Book[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -101,7 +116,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -454,7 +470,24 @@
             }
           ],
           "returns": "{reserved:number}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "isbn",
+            "in": "stock#src/stock/stock.service.ts:StockService.reserve",
+            "line": 29
+          },
+          {
+            "field": "copies",
+            "in": "stock#src/stock/stock.service.ts:StockService.reserve",
+            "line": 30
+          },
+          {
+            "field": "isbn",
+            "in": "stock#src/stock/stock.service.ts:StockService.reserve",
+            "line": 31
+          }
+        ]
       }
     },
     {
@@ -480,6 +513,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -518,7 +555,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "isbn",
+            "line": 25
+          }
+        ]
       }
     },
     {

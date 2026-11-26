@@ -1,0 +1,1705 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:37.009Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "billing#src/invoices.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "billing",
+      "file": "src/invoices.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /@7",
+      "type": "function",
+      "label": "GET /@7",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /products/:id@19",
+      "type": "function",
+      "label": "GET /products/:id@19",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /products@15",
+      "type": "function",
+      "label": "GET /products@15",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:POST /@11",
+      "type": "function",
+      "label": "POST /@11",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:POST /orders@23",
+      "type": "function",
+      "label": "POST /orders@23",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 4,
+      "kind": "function"
+    },
+    {
+      "id": "channel:emails",
+      "type": "channel",
+      "label": "emails",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 8,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 2,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:invoices",
+      "type": "channel",
+      "label": "invoices",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 25,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:reports",
+      "type": "channel",
+      "label": "reports",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 34,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 2,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices",
+      "type": "entry",
+      "label": "GET /invoices",
+      "repo": "billing",
+      "file": "infra/main.tf",
+      "line": 59,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/invoices",
+        "rawPath": "/invoices",
+        "deployedBy": "terraform",
+        "api": "shop-billing",
+        "function": "shop-invoices",
+        "declaredAs": "aws_apigatewayv2_route.invoices",
+        "stages": [
+          "live",
+          "sandbox"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-billing",
+            "chosenDefault": "live",
+            "chosenIn": "the workspace production"
+          },
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-billing",
+            "chosenDefault": "sandbox"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:billing:invoke:shop-invoices",
+      "type": "entry",
+      "label": "shop-invoices",
+      "repo": "billing",
+      "file": "infra/main.tf",
+      "line": 33,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-invoices",
+        "deployedBy": "terraform",
+        "name": "shop-invoices",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.invoices",
+        "handler": "invoices.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/",
+      "type": "entry",
+      "label": "GET /",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/",
+        "rawPath": "/",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products/:param",
+      "type": "entry",
+      "label": "GET /products/:param",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/:param",
+        "rawPath": "/products/:id",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "rawPath": "/",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "external_api:shop.example.test",
+      "type": "external_api",
+      "label": "shop.example.test",
+      "repo": "jobs",
+      "meta": {
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:12:10",
+      "type": "http_out",
+      "label": "GET /products",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:16:9",
+      "type": "http_out",
+      "label": "POST /orders",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 16,
+      "meta": {
+        "method": "POST",
+        "url": "https://shop.example.test/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "unknown",
+        "bodyFrom": "value",
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.ts:21:9",
+      "type": "http_out",
+      "label": "DELETE ${…}",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 21,
+      "meta": {
+        "method": "DELETE",
+        "url": "https://shop.example.test${…}",
+        "path": "${…}",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "jobs#src/mailer.ts:Invoicer",
+      "type": "provider",
+      "label": "Invoicer",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 21,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/mailer.ts:Invoicer.issue",
+      "type": "method",
+      "label": "Invoicer.issue",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/mailer.ts:Mailer",
+      "type": "provider",
+      "label": "Mailer",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/mailer.ts:Mailer.enqueue",
+      "type": "method",
+      "label": "Mailer.enqueue",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/mailer.ts:Mailer.reset",
+      "type": "method",
+      "label": "Mailer.reset",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/mailer.ts:Mailer.welcome",
+      "type": "method",
+      "label": "Mailer.welcome",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/mailer.ts:Reporter",
+      "type": "provider",
+      "label": "Reporter",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 30,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/mailer.ts:Reporter.daily",
+      "type": "method",
+      "label": "Reporter.daily",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/mailer.ts:Reporter.weekly",
+      "type": "method",
+      "label": "Reporter.weekly",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:reorder",
+      "type": "function",
+      "label": "reorder",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:shopDelete",
+      "type": "function",
+      "label": "shopDelete",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.ts:syncProducts",
+      "type": "function",
+      "label": "syncProducts",
+      "repo": "jobs",
+      "file": "src/sync.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "producer:jobs#src/mailer.ts:12:11",
+      "type": "producer",
+      "label": "job emails",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 12,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "password-reset",
+        "through": [
+          "Mailer.enqueue"
+        ]
+      }
+    },
+    {
+      "id": "producer:jobs#src/mailer.ts:25:11",
+      "type": "producer",
+      "label": "job invoices",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 25,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "issue"
+      }
+    },
+    {
+      "id": "producer:jobs#src/mailer.ts:34:11",
+      "type": "producer",
+      "label": "job reports",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 34,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "daily"
+      }
+    },
+    {
+      "id": "producer:jobs#src/mailer.ts:38:11",
+      "type": "producer",
+      "label": "job reports",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 38,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "weekly"
+      }
+    },
+    {
+      "id": "producer:jobs#src/mailer.ts:8:11",
+      "type": "producer",
+      "label": "job emails",
+      "repo": "jobs",
+      "file": "src/mailer.ts",
+      "line": 8,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "welcome",
+        "through": [
+          "Mailer.enqueue"
+        ]
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 8,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/api.js:11:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "shop.example.test",
+        "through": "getJson",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/api.js:15:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /products/:param",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/products/:param",
+        "path": "/products/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "shop.example.test",
+        "through": "getJson",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/api.js:19:10@7:10",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://shop.example.test/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "any",
+        "bodyFrom": "literal",
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "shop.example.test",
+        "through": "postJson",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/api.js:24:10",
+      "type": "ui_api_call",
+      "label": "POST ${…}",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://shop.example.test${…}",
+        "path": "${…}",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "shop.example.test"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/billing.js:3:10",
+      "type": "ui_api_call",
+      "label": "GET /live/invoices",
+      "repo": "web",
+      "file": "js/billing.js",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com/live/invoices",
+        "path": "/live/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/billing.js:7:10",
+      "type": "ui_api_call",
+      "label": "GET /sandbox/invoices",
+      "repo": "web",
+      "file": "js/billing.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com/sandbox/invoices",
+        "path": "/sandbox/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "web#js/api.js:getJson",
+      "type": "function",
+      "label": "getJson",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/api.js:loadProduct",
+      "type": "function",
+      "label": "loadProduct",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/api.js:loadProducts",
+      "type": "function",
+      "label": "loadProducts",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/api.js:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/api.js:postJson",
+      "type": "function",
+      "label": "postJson",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "any"
+            },
+            {
+              "name": "body",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/api.js:postRaw",
+      "type": "function",
+      "label": "postRaw",
+      "repo": "web",
+      "file": "js/api.js",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "any"
+            },
+            {
+              "name": "body",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/billing.js:liveInvoices",
+      "type": "function",
+      "label": "liveInvoices",
+      "repo": "web",
+      "file": "js/billing.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/billing.js:sandboxInvoices",
+      "type": "function",
+      "label": "sandboxInvoices",
+      "repo": "web",
+      "file": "js/billing.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:billing:http:GET:/invoices",
+      "to": "billing#src/invoices.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/invoices.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:billing:invoke:shop-invoices",
+      "to": "billing#src/invoices.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/invoices.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalog:http:GET:/",
+      "to": "catalog#src/index.ts:GET /@7",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{name:string}",
+      "file": "src/index.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/index.ts:GET /products@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 15,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products/:param",
+      "to": "catalog#src/index.ts:GET /products/:id@19",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:any}",
+      "file": "src/index.ts",
+      "line": 19,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products/:param",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/",
+      "to": "catalog#src/index.ts:POST /@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/orders",
+      "to": "catalog#src/index.ts:POST /orders@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 23,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/orders",
+      "to": "catalog#src/index.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 4,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:12:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 12
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:16:9",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 16
+    },
+    {
+      "from": "http_out:jobs#src/sync.ts:21:9",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 21
+    },
+    {
+      "from": "jobs#src/mailer.ts:Invoicer.issue",
+      "to": "producer:jobs#src/mailer.ts:25:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mailer.ts",
+      "line": 25
+    },
+    {
+      "from": "jobs#src/mailer.ts:Mailer.reset",
+      "to": "jobs#src/mailer.ts:Mailer.enqueue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/mailer.ts",
+      "line": 12
+    },
+    {
+      "from": "jobs#src/mailer.ts:Mailer.reset",
+      "to": "producer:jobs#src/mailer.ts:12:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mailer.ts",
+      "line": 12
+    },
+    {
+      "from": "jobs#src/mailer.ts:Mailer.welcome",
+      "to": "jobs#src/mailer.ts:Mailer.enqueue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/mailer.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/mailer.ts:Mailer.welcome",
+      "to": "producer:jobs#src/mailer.ts:8:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mailer.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/mailer.ts:Reporter.daily",
+      "to": "producer:jobs#src/mailer.ts:34:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mailer.ts",
+      "line": 34
+    },
+    {
+      "from": "jobs#src/mailer.ts:Reporter.weekly",
+      "to": "producer:jobs#src/mailer.ts:38:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mailer.ts",
+      "line": 38
+    },
+    {
+      "from": "jobs#src/sync.ts:reorder",
+      "to": "http_out:jobs#src/sync.ts:16:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 16
+    },
+    {
+      "from": "jobs#src/sync.ts:shopDelete",
+      "to": "http_out:jobs#src/sync.ts:21:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 21
+    },
+    {
+      "from": "jobs#src/sync.ts:syncProducts",
+      "to": "http_out:jobs#src/sync.ts:12:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.ts",
+      "line": 12
+    },
+    {
+      "from": "producer:jobs#src/mailer.ts:12:11",
+      "to": "channel:emails",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/mailer.ts",
+      "line": 12
+    },
+    {
+      "from": "producer:jobs#src/mailer.ts:25:11",
+      "to": "channel:invoices",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{id:string}"
+      ],
+      "file": "src/mailer.ts",
+      "line": 25
+    },
+    {
+      "from": "producer:jobs#src/mailer.ts:34:11",
+      "to": "channel:reports",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "object"
+      ],
+      "file": "src/mailer.ts",
+      "line": 34
+    },
+    {
+      "from": "producer:jobs#src/mailer.ts:38:11",
+      "to": "channel:reports",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "object"
+      ],
+      "file": "src/mailer.ts",
+      "line": 38
+    },
+    {
+      "from": "producer:jobs#src/mailer.ts:8:11",
+      "to": "channel:emails",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string}"
+      ],
+      "file": "src/mailer.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:web#js/api.js:11:10@3:10",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/api.js",
+      "line": 11,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/api.js:11:10@3:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:web#js/api.js:15:10@3:10",
+      "to": "entry:catalog:http:GET:/products/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/api.js",
+      "line": 15,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/api.js:15:10@3:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 15
+    },
+    {
+      "from": "ui_api_call:web#js/api.js:19:10@7:10",
+      "to": "entry:catalog:http:POST:/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/api.js",
+      "line": 19,
+      "params": [
+        "any"
+      ],
+      "meta": {
+        "via": "unique-route",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/api.js:19:10@7:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 19
+    },
+    {
+      "from": "ui_api_call:web#js/api.js:24:10",
+      "to": "external_api:shop.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 24
+    },
+    {
+      "from": "ui_api_call:web#js/billing.js:3:10",
+      "to": "entry:billing:http:GET:/invoices",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/billing.js",
+      "line": 3,
+      "meta": {
+        "via": "served-at",
+        "targetService": "billing",
+        "servedApi": "shop-billing"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/billing.js:7:10",
+      "to": "entry:billing:http:GET:/invoices",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/billing.js",
+      "line": 7,
+      "meta": {
+        "via": "served-at",
+        "targetService": "billing",
+        "servedApi": "shop-billing"
+      }
+    },
+    {
+      "from": "web#js/api.js:loadProduct",
+      "to": "ui_api_call:web#js/api.js:15:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 15
+    },
+    {
+      "from": "web#js/api.js:loadProduct",
+      "to": "web#js/api.js:getJson",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/api.js",
+      "line": 15
+    },
+    {
+      "from": "web#js/api.js:loadProducts",
+      "to": "ui_api_call:web#js/api.js:11:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 11
+    },
+    {
+      "from": "web#js/api.js:loadProducts",
+      "to": "web#js/api.js:getJson",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/api.js",
+      "line": 11
+    },
+    {
+      "from": "web#js/api.js:placeOrder",
+      "to": "ui_api_call:web#js/api.js:19:10@7:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 19
+    },
+    {
+      "from": "web#js/api.js:placeOrder",
+      "to": "web#js/api.js:postJson",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/api.js",
+      "line": 19
+    },
+    {
+      "from": "web#js/api.js:postRaw",
+      "to": "ui_api_call:web#js/api.js:24:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/api.js",
+      "line": 24
+    },
+    {
+      "from": "web#js/billing.js:liveInvoices",
+      "to": "ui_api_call:web#js/billing.js:3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/billing.js",
+      "line": 3
+    },
+    {
+      "from": "web#js/billing.js:sandboxInvoices",
+      "to": "ui_api_call:web#js/billing.js:7:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/billing.js",
+      "line": 7
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/invoices.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEventV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "billing"
+    },
+    {
+      "file": "src/invoices.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResultV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "billing"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 8,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 7,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /@7 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 7,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 8,
+                "symbol": "GET /@7 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 12,
+                "symbol": "POST /@11 -> res.status(204).end"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 12,
+                "symbol": "POST /@11 -> res.status"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/sync.ts",
+      "line": 21,
+      "reason": "dynamic-http-url",
+      "message": "The path after shop.example.test is a value nothing here reads, and no caller hands it one that is read.",
+      "hint": "Call the function with the path written out, or annotate the call with the service and route it reaches.",
+      "symbol": "fetch('https://shop.example.test' + path, { method: 'DELETE' })",
+      "service": "jobs"
+    },
+    {
+      "file": "js/api.js",
+      "line": 24,
+      "reason": "api-path-dynamic",
+      "message": "The path after shop.example.test is a value nothing here reads, and no caller hands it one that is read.",
+      "hint": "Call the function with the path written out, or annotate it with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch('https://shop.example.test' + path, { method: 'POST', body })",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "js/billing.js",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com/live/invoices names its API by an id no file holds; it is taken as shop-billing of billing, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (live in the workspace production), so the stage live is taken as one of its, and the request as one for /invoices on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/billing.js:3:10"
+    },
+    {
+      "service": "web",
+      "file": "js/billing.js",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com/sandbox/invoices names its API by an id no file holds; it is taken as shop-billing of billing, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (sandbox where none is given), so the stage sandbox is taken as one of its, and the request as one for /invoices on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/billing.js:7:10"
+    }
+  ]
+}

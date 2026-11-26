@@ -110,7 +110,7 @@ const checker: ContractChecker = () => [
 let client: Client;
 
 const call = async (name: string, args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+  const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 
@@ -240,7 +240,7 @@ describe('a walk that comes back on itself', () => {
 
 describe('an answer that is an error', () => {
   it('says isError, with nothing to check against a schema', async () => {
-    const reply = (await client.callTool({ name: 'what_changed', arguments: {} })) as { isError?: boolean; structuredContent?: unknown };
+    const reply = (await client.callTool({ name: 'what_changed', arguments: { verbose: true } })) as { isError?: boolean; structuredContent?: unknown };
     expect(reply.isError).toBe(true);
     expect(reply.structuredContent).toBeUndefined();
   });
@@ -265,10 +265,13 @@ describe('impact with two things to say (P132, P94)', () => {
     const other = new Client({ name: 'test', version: '0' });
     await other.connect(clientSide);
     try {
-      const reply = (await other.callTool({ name: 'impact', arguments: { symbol: target, detail: 3 } })) as { content: Array<{ text: string }> };
+      const reply = (await other.callTool({ name: 'impact', arguments: { verbose: true, symbol: target, detail: 3 } })) as { content: Array<{ text: string }> };
       const answer = JSON.parse(reply.content[0]!.text);
-      expect(answer.truncated).toBe('reachability stopped at the walk limit of 4000 nodes; entries past it are not listed');
-      expect(answer.note).toBe('detail clamped to 2; use get_source');
+      // Every caller nothing calls is a maybe row (P367), a page of them: the walk's cut is said beside the page's.
+      expect(answer.truncated).toMatch(/; reachability stopped at the walk limit of 4000 nodes; entries past it are not listed$/);
+      expect(answer.left).toContain('walk: stopped at 4000 nodes; ways in past it not listed');
+      // A server on a database alone serves no code, so the note does not send the agent to read it there (P360).
+      expect(answer.note).toBe('detail clamped to 2');
     } finally {
       await other.close();
     }

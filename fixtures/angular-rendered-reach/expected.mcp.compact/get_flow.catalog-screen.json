@@ -1,0 +1,30 @@
+{
+  "root": {
+    "id": "entry:catalog-web:screen:/catalog",
+    "loc": "src/app/app.routes.ts:8",
+    "children": [
+      {
+        "id": "catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+        "type": "ui_component",
+        "line": "4-11",
+        "kind": "standalone",
+        "edge": "handles",
+        "children": [
+          {
+            "id": "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+            "type": "ui_component",
+            "line": "12-27",
+            "kind": "standalone",
+            "edge": "calls"
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "complete": true,
+  "next": [
+    "impact({symbol: \"entry:catalog-web:screen:/catalog\"})",
+    "get_source({symbol: \"catalog-web#src/app/catalog-page.component.ts:CatalogPageComponent\"})"
+  ]
+}

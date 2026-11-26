@@ -1,0 +1,25 @@
+{
+  "declaredBy": "desk-api#src/kits/kits.controller.ts:KitsController",
+  "entries": [
+    {
+      "id": "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped",
+      "label": "GET /api/admin/:tenantId/kits/auto-stopped",
+      "loc": "src/kits/kits.controller.ts:6",
+      "reach": "dead",
+      "callers": 0
+    },
+    {
+      "id": "entry:desk-api:http:POST:/api/admin/:param/kits/:param/restart",
+      "label": "POST /api/admin/:tenantId/kits/:kitId/restart",
+      "loc": "src/kits/kits.controller.ts:11",
+      "reach": "dead",
+      "callers": 0
+    }
+  ],
+  "total": 2,
+  "complete": true,
+  "next": [
+    "dead({id: \"desk-api#src/kits/kits.controller.ts:KitsController\"})",
+    "get_flow({entry: \"entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped\"})"
+  ]
+}

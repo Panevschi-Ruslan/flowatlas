@@ -1,0 +1,111 @@
+{
+  "settled": "6 ways in break, all listed; more beyond a channel, counted in throughChannels; 1 component file in web on the way, all listed in components",
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "line": 25,
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "line": 28,
+      "reach": "dead",
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "line": 17,
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "line": 15,
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)",
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "line": 30,
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)",
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "line": 40,
+      "reach": "alive",
+      "via": "GET /orders/:param (orders)",
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "line": 25,
+      "reach": "alive",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "rowsVia": 5
+    }
+  ],
+  "total": 6,
+  "byKind": {
+    "consumers": {
+      "billing": [
+        "src/invoices/invoices.consumer.ts"
+      ]
+    },
+    "routes": {
+      "billing": [
+        "src/invoices/invoices.controller.ts"
+      ],
+      "gateway": [
+        "src/orders/orders.controller.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:orders:http:GET:/orders/:param"
+  ],
+  "components": {
+    "web": [
+      "src/app/checkout.component.ts"
+    ]
+  },
+  "reached": 38,
+  "entriesByService": {
+    "orders": 1,
+    "billing": 3,
+    "gateway": 2
+  },
+  "unreached": 5,
+  "throughChannels": [
+    {
+      "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "channels": [
+        "order.created"
+      ],
+      "ways": 1,
+      "sample": [
+        {
+          "id": "entry:orders:http:POST:/orders",
+          "by": "orders#src/orders/orders.controller.ts:OrdersController.create"
+        }
+      ]
+    }
+  ],
+  "reachedByService": {
+    "orders": 7,
+    "billing": 10,
+    "gateway": 8,
+    "web": 13
+  },
+  "servicesWithoutEntry": [
+    "web"
+  ],
+  "channels": [
+    "channel:order.created"
+  ],
+  "complete": true
+}

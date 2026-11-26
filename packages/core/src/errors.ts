@@ -1,3 +1,4 @@
+import { schemaMismatchSaid } from './schema/version.js';
 import type { GraphEdge } from './model/edges.js';
 
 /**
@@ -72,11 +73,9 @@ export class SchemaVersionMismatchError extends FlowatlasError {
   readonly expected: number;
 
   constructor(found: unknown, expected: number) {
-    super(
-      'schema-version-mismatch',
-      `Graph schema version ${String(found)} does not match the expected ${expected}.`,
-      'Rebuild the graph with `flowatlas extract` (or `flowatlas build`).',
-    );
+    // Older and newer said apart (P370): a newer graph needs a newer flowatlas, not a rebuild.
+    const said = schemaMismatchSaid(found, expected);
+    super('schema-version-mismatch', `${said.message[0]?.toUpperCase() ?? ''}${said.message.slice(1)}.`, said.hint);
     this.found = found;
     this.expected = expected;
   }

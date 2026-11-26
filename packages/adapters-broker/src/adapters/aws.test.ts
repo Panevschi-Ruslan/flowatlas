@@ -647,6 +647,92 @@ new KinesisClient({}).send(new PutRecordCommand({ StreamARN: 'arn:aws:kinesis:eu
   });
 });
 
+/**
+ * A table store of version 2 with nothing installed (P299): its client a
+ * field the constructor gives a construction, the input put together with
+ * `Object.assign`, the table a static field of the class extending it.
+ */
+describe('a table store of version 2 with nothing installed (P299)', () => {
+  /** The first resolution the description reads at the one call to `method`, and how its receiver is known. */
+  const resolutionAt = (file: SourceFile, method: string): { evidence: ReceiverEvidence; resolution: unknown } | undefined => {
+    const call = file
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .find((each) => each.getExpression().getText().endsWith(`.${method}`)) as CallExpression;
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    for (const spec of awsBrokerAdapters) {
+      for (const pattern of spec.producerPatterns as CallPattern[]) {
+        if (!methodMatches(callee.getName(), pattern.method)) continue;
+        const evidence = receiverEvidence(callee.getExpression(), pattern);
+        if (evidence === undefined) continue;
+        const [element] = readAddress(call, pattern.address ?? [], pattern.payload, {}, parseConfig({}), call.getText());
+        return { evidence, resolution: element?.resolution };
+      }
+    }
+    return undefined;
+  };
+
+  it('knows a client by the construction its constructor gives a field declared with no type', () => {
+    const file = project(
+      false,
+      `import AWS from 'aws-sdk';
+export class Store {
+  private client;
+  constructor() { this.client = new AWS.DynamoDB(); }
+  save() { return this.client.putItem({ TableName: 'ledger', Item: {} }).promise(); }
+}`,
+    );
+    expect(readCall(file, 'putItem')).toMatchObject({ adapter: 'aws-dynamodb', evidence: 'stated', names: [changesChannel('table', 'ledger')] });
+  });
+
+  it('does not know a client a field is given in two places', () => {
+    const file = project(
+      false,
+      `import AWS from 'aws-sdk';
+export class Store {
+  private client;
+  constructor() { this.client = new AWS.DynamoDB(); }
+  reset(other: unknown) { this.client = other; }
+  save() { return this.client.putItem({ TableName: 'ledger', Item: {} }).promise(); }
+}`,
+    );
+    expect(readCall(file, 'putItem')).toBeUndefined();
+  });
+
+  it('reads a table a static field holds from the environment, given where it is declared or once after', () => {
+    const file = project(
+      false,
+      `import AWS from 'aws-sdk';
+const client = new AWS.DynamoDB();
+class Entries {
+  private static readonly table = process.env.ENTRY_TABLE;
+  save() { return client.putItem({ TableName: Entries.table, Item: {} }).promise(); }
+}
+class Audit {
+  static table: string;
+  save() { return client.deleteItem({ TableName: Audit.table, Key: {} }).promise(); }
+}
+Audit.table = process.env.AUDIT_TABLE as string;`,
+    );
+    expect(resolutionAt(file, 'putItem')?.resolution).toMatchObject({ unresolved: 'channel-from-environment', variable: 'ENTRY_TABLE' });
+    expect(resolutionAt(file, 'deleteItem')?.resolution).toMatchObject({ unresolved: 'channel-from-environment', variable: 'AUDIT_TABLE' });
+  });
+
+  it('does not read a static field given two values', () => {
+    const file = project(
+      false,
+      `import AWS from 'aws-sdk';
+const client = new AWS.DynamoDB();
+class Audit {
+  static table = process.env.AUDIT_TABLE;
+  save() { return client.putItem({ TableName: Audit.table, Item: {} }).promise(); }
+}
+Audit.table = 'other';`,
+    );
+    expect(resolutionAt(file, 'putItem')?.resolution).not.toMatchObject({ unresolved: 'channel-from-environment' });
+  });
+});
+
 describe('detection', () => {
   const root = mkdtempSync(join(tmpdir(), 'flowatlas-aws-'));
   afterAll(() => rmSync(root, { recursive: true, force: true }));

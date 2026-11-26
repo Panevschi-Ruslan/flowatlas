@@ -73,6 +73,8 @@ export const KIND_PREFIX: Partial<Record<EntryKind, string>> = {
   scene_step: '🤖',
   event: '⚡',
   cron: '⏱',
+  task: '⏱',
+  screen: '▢',
 };
 
 export const ASCII_KIND_PREFIX: Partial<Record<EntryKind, string>> = {
@@ -82,6 +84,8 @@ export const ASCII_KIND_PREFIX: Partial<Record<EntryKind, string>> = {
   scene_step: '&',
   event: '~',
   cron: '+',
+  task: '+',
+  screen: '%',
 };
 
 /** Nodes the walk invents rather than reads: a repeat, a gap, a heading. */

@@ -1,0 +1,428 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T14:49:26.668Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:12:11",
+        "to": "consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:12:11|emits|consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "planner",
+        "typeId": "string",
+        "symbol": "planner#src/boards/boards.service.ts:BoardsService.addCard"
+      },
+      "receiver": {
+        "service": "digest-worker",
+        "typeId": "Request",
+        "symbol": "digest-worker#src/team-feed.ts:TeamFeed.fetch"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "type_mismatch",
+          "edge": {
+            "from": "producer:planner#src/boards/boards.service.ts:12:11",
+            "to": "consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+            "type": "emits"
+          },
+          "edgeKey": "producer:planner#src/boards/boards.service.ts:12:11|emits|consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+          "direction": "payload",
+          "sender": {
+            "service": "planner",
+            "typeId": "string",
+            "symbol": "planner#src/boards/boards.service.ts:BoardsService.addCard"
+          },
+          "receiver": {
+            "service": "digest-worker",
+            "typeId": "Request",
+            "symbol": "digest-worker#src/team-feed.ts:TeamFeed.fetch"
+          },
+          "typeId": "Request",
+          "field": "",
+          "expected": "Request",
+          "actual": "string",
+          "rule": null,
+          "message": "sender planner sends `string` where receiver digest-worker expects `Request`",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "type_mismatch",
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:12:11",
+        "to": "consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:12:11|emits|consumer:digest-worker#src/team-feed.ts:TeamFeed.fetch",
+      "direction": "payload",
+      "sender": {
+        "service": "planner",
+        "typeId": "string",
+        "symbol": "planner#src/boards/boards.service.ts:BoardsService.addCard"
+      },
+      "receiver": {
+        "service": "digest-worker",
+        "typeId": "Request",
+        "symbol": "digest-worker#src/team-feed.ts:TeamFeed.fetch"
+      },
+      "typeId": "Request",
+      "field": "",
+      "expected": "Request",
+      "actual": "string",
+      "rule": null,
+      "message": "sender planner sends `string` where receiver digest-worker expects `Request`",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:gateway#src/index.ts:24:9",
+        "to": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+        "type": "emits"
+      },
+      "edgeKey": "producer:gateway#src/index.ts:24:9|emits|consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:gateway#src/index.ts:24:9",
+        "to": "consumer:gateway#src/index.ts:GET /boards/:boardId/presence@21",
+        "type": "emits"
+      },
+      "edgeKey": "producer:gateway#src/index.ts:24:9|emits|consumer:gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "gateway#src/index.ts:GET /boards/:boardId/presence@21 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:gateway#src/index.ts:30:9",
+        "to": "consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+        "type": "emits"
+      },
+      "edgeKey": "producer:gateway#src/index.ts:30:9|emits|consumer:board-web#src/screens/BoardScreen.tsx:handlePresence",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/index.ts:POST /boards/:boardId/presence/leave@28 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:gateway#src/index.ts:30:9",
+        "to": "consumer:gateway#src/index.ts:GET /boards/:boardId/presence@21",
+        "type": "emits"
+      },
+      "edgeKey": "producer:gateway#src/index.ts:30:9|emits|consumer:gateway#src/index.ts:GET /boards/:boardId/presence@21",
+      "direction": "payload",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/index.ts:POST /boards/:boardId/presence/leave@28 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:11:11",
+        "to": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:11:11|emits|consumer:board-web#src/screens/BoardScreen.tsx:handleActivity",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:board-web#src/screens/BoardScreen.tsx:handleActivity declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:11:11",
+        "to": "consumer:gateway#src/index.ts:GET /boards/:boardId/activity@14",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:11:11|emits|consumer:gateway#src/index.ts:GET /boards/:boardId/activity@14",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "gateway#src/index.ts:GET /boards/:boardId/activity@14 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:12:11",
+        "to": "consumer:board-web#src/live/digest.ts:onTeamCard",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:12:11|emits|consumer:board-web#src/live/digest.ts:onTeamCard",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:board-web#src/live/digest.ts:onTeamCard declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:12:11",
+        "to": "consumer:digest-worker#src/worker.ts:default.fetch@GET /teams/:param/feed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:12:11|emits|consumer:digest-worker#src/worker.ts:default.fetch@GET /teams/:param/feed",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "digest-worker#src/worker.ts:default.fetch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:16:11",
+        "to": "consumer:board-web#src/live/streams.ts:onAlert",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:16:11|emits|consumer:board-web#src/live/streams.ts:onAlert",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:board-web#src/live/streams.ts:onAlert declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:16:11",
+        "to": "consumer:gateway#src/index.ts:GET /alerts/stream@35",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:16:11|emits|consumer:gateway#src/index.ts:GET /alerts/stream@35",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "gateway#src/index.ts:GET /alerts/stream@35 declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:20:11",
+        "to": "consumer:board-web#src/live/digest.ts:onDigest",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:20:11|emits|consumer:board-web#src/live/digest.ts:onDigest",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:board-web#src/live/digest.ts:onDigest declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:20:11",
+        "to": "consumer:digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:20:11|emits|consumer:digest-worker#src/digest-feed.ts:DigestFeed.fetch",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "digest-worker#src/digest-feed.ts:DigestFeed.fetch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:planner#src/boards/boards.service.ts:20:11",
+        "to": "consumer:digest-worker#src/worker.ts:default.fetch@GET /digest/stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:planner#src/boards/boards.service.ts:20:11|emits|consumer:digest-worker#src/worker.ts:default.fetch@GET /digest/stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "digest-worker#src/worker.ts:default.fetch declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/digest.ts:12:18",
+        "to": "entry:digest-worker:http:GET:/digest/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/digest.ts:12:18|hits|entry:digest-worker:http:GET:/digest/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "board-web#src/live/digest.ts:watchDigest declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/digest.ts:12:18",
+        "to": "entry:digest-worker:http:GET:/digest/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/digest.ts:12:18|hits|entry:digest-worker:http:GET:/digest/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "digest-worker#src/worker.ts:default.fetch declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/digest.ts:18:18",
+        "to": "entry:digest-worker:http:GET:/teams/:param/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/digest.ts:18:18|hits|entry:digest-worker:http:GET:/teams/:param/feed",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "board-web#src/live/digest.ts:watchTeam declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/digest.ts:18:18",
+        "to": "entry:digest-worker:http:GET:/teams/:param/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/digest.ts:18:18|hits|entry:digest-worker:http:GET:/teams/:param/feed",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "digest-worker#src/worker.ts:default.fetch declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/streams.ts:20:18",
+        "to": "entry:gateway:http:GET:/alerts/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/streams.ts:20:18|hits|entry:gateway:http:GET:/alerts/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "board-web#src/live/streams.ts:watchAlerts declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/streams.ts:20:18",
+        "to": "entry:gateway:http:GET:/alerts/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/streams.ts:20:18|hits|entry:gateway:http:GET:/alerts/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/index.ts:GET /alerts/stream@35 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/streams.ts:27:18",
+        "to": "entry:gateway:http:GET:/boards/:param/archive",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/streams.ts:27:18|hits|entry:gateway:http:GET:/boards/:param/archive",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "board-web#src/live/streams.ts:watchArchive declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/streams.ts:27:18",
+        "to": "entry:gateway:http:GET:/boards/:param/archive",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/streams.ts:27:18|hits|entry:gateway:http:GET:/boards/:param/archive",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/index.ts:GET /boards/:boardId/archive@38 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/streams.ts:34:18",
+        "to": "entry:gateway:http:GET:/ledger/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/streams.ts:34:18|hits|entry:gateway:http:GET:/ledger/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "board-web#src/live/streams.ts:watchLedger declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/live/streams.ts:34:18",
+        "to": "entry:gateway:http:GET:/ledger/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/live/streams.ts:34:18|hits|entry:gateway:http:GET:/ledger/stream",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/index.ts:GET /ledger/stream@41 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22",
+        "to": "entry:gateway:http:GET:/boards/:param/activity",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22|hits|entry:gateway:http:GET:/boards/:param/activity",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "board-web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22",
+        "to": "entry:gateway:http:GET:/boards/:param/activity",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/screens/BoardScreen.tsx:22:22|hits|entry:gateway:http:GET:/boards/:param/activity",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/index.ts:GET /boards/:boardId/activity@14 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22",
+        "to": "entry:gateway:http:GET:/boards/:param/presence",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22|hits|entry:gateway:http:GET:/boards/:param/presence",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "board-web#src/screens/BoardScreen.tsx:BoardScreen declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22",
+        "to": "entry:gateway:http:GET:/boards/:param/presence",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:board-web#src/screens/BoardScreen.tsx:24:22|hits|entry:gateway:http:GET:/boards/:param/presence",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/index.ts:GET /boards/:boardId/presence@21 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 1,
+    "unchecked": 27,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

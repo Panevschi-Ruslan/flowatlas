@@ -148,13 +148,12 @@ describe('asking what reaches a symbol', () => {
 
   it('lists the ways in without the chain between, when asked', () => {
     const io = capture();
-    runImpact(
-      'OrdersService.create',
-      { db: dbPath, service: 'gateway', format: 'json', entriesOnly: true },
-      io,
-    );
-    const payload = parsed(io.stdout) as { root: { children: unknown[] }; entries: string[] };
-    expect(payload.root.children).toHaveLength(payload.entries.length);
+    runImpact('OrdersService.create', { db: dbPath, service: 'gateway', format: 'tree', entriesOnly: true }, io);
+    // The ways in hang off the target; the code between is not drawn (P370), only named on each row as the code
+    // that handles it (P374).
+    expect(io.stdout).toContain('POST /orders');
+    expect(io.stdout.split('Reachable from')[0]).not.toContain('OrdersController.create');
+    expect(io.stdout).toContain('by OrdersController.create');
   });
 
   it('stops rather than guessing which service was meant', () => {
@@ -169,18 +168,20 @@ describe('asking what reaches a symbol', () => {
     // nothing at all (R03).
     const io = capture();
     runImpact('table:billing#Invoice', { db: dbPath, format: 'json' }, io);
-    const payload = parsed(io.stdout) as { reached: number; entries: string[] };
+    const payload = parsed(io.stdout) as { reached: number; entries: string[]; throughChannels?: Array<{ ways: number }> };
     expect(payload.reached).toBeGreaterThan(0);
-    expect(payload.entries.length).toBeGreaterThan(0);
+    // Only billing's consumer writes it, so the ways in lie beyond the channel it takes, counted apart (P372).
+    expect(payload.entries).toEqual([]);
+    expect(payload.throughChannels?.[0]?.ways).toBeGreaterThan(0);
   });
 
   it('names what publishes to the channel a handler is on', () => {
     const io = capture();
     runImpact('consumer:billing#src/invoices/invoices.consumer.ts:9', { db: dbPath, format: 'json' }, io);
-    const payload = parsed(io.stdout) as { root: unknown; services: string[] };
+    const payload = parsed(io.stdout) as { reachedByService: Record<string, number> };
     // The publisher is in `orders`, one hop past the channel, which is where the
     // walk used to stop.
-    expect(payload.services).toContain('orders');
+    expect(Object.keys(payload.reachedByService)).toContain('orders');
   });
 
   it('says a service is in the blast radius even with no way in above it', () => {
@@ -204,13 +205,12 @@ describe('asking what reaches a symbol', () => {
     const io = capture();
     runImpact('OrdersService.create', { db: dbPath, service: 'orders', format: 'json' }, io);
     const payload = parsed(io.stdout) as {
-      services: string[];
-      servicesWithoutEntry: string[];
-      entries: string[];
+      reachedByService: Record<string, number>;
+      servicesWithoutEntry?: string[];
     };
-    expect(payload.services).toEqual(expect.arrayContaining(['gateway', 'orders']));
-    // Everything reached here does have a way in, so the honest answer is none.
-    expect(payload.servicesWithoutEntry).toEqual([]);
+    expect(Object.keys(payload.reachedByService)).toEqual(expect.arrayContaining(['gateway']));
+    // Everything reached here does have a way in, in the service asked about or not, so the honest answer is none.
+    expect(payload.servicesWithoutEntry ?? []).toEqual([]);
   });
 });
 

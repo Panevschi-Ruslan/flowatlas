@@ -1,0 +1,3 @@
+orders:
+  service:
+    port: 8080

@@ -1,0 +1,11 @@
+{
+  "name": "gateway",
+  "private": true,
+  "scripts": {
+    "start": "fastify start -l info dist/app.js"
+  },
+  "dependencies": {
+    "fastify": "^5.2.0",
+    "fastify-cli": "^7.3.0"
+  }
+}

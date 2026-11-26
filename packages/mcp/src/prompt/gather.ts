@@ -1,4 +1,5 @@
 import {
+  NOTES_META,
   accessOf,
   comparisonSays,
   failuresOf,
@@ -23,6 +24,7 @@ import {
   type FailureComparison,
   type PromptFailure,
   type PromptFailuresSeen,
+  type PromptCounted,
   type PromptGap,
   type PromptLog,
   type PromptMarks,
@@ -31,6 +33,7 @@ import {
   type PromptCrossing,
   type PromptStep,
   type PromptSubject,
+  isMessageTypeNode,
 } from '@flowatlas/core';
 import {
   missingByGap,
@@ -122,6 +125,12 @@ const logsFor = (node: GraphNode | undefined): PromptLog[] => {
           },
         ],
   );
+};
+
+/** What tagged comments above a declaration say (P234), as the reader kept them. */
+const notesOf = (node: GraphNode): string[] => {
+  const notes = node.meta?.[NOTES_META];
+  return Array.isArray(notes) ? notes.filter((note): note is string => typeof note === 'string') : [];
 };
 
 /** When a scheduled way in fires, and in which zone (P71). */
@@ -326,6 +335,7 @@ export const gatherPromptSubject = (
   const fails = node.type === 'entry' ? failuresOf(node).map(failureOf) : [];
   const access = accessFor(node);
   const schedule = node.type === 'entry' ? scheduleFor(node) : undefined;
+  const notes = notesOf(node);
   const own = node.type === 'entry' ? counts?.entries[node.id] : undefined;
   const hits = own?.hits ?? 0;
   const compared = counts === undefined ? undefined : failuresSeen(counts, node);
@@ -337,6 +347,7 @@ export const gatherPromptSubject = (
     ...(compact.service === undefined ? {} : { service: compact.service }),
     ...(compact.loc === undefined ? {} : { loc: compact.loc }),
     ...(schedule === undefined ? {} : { schedule }),
+    ...(notes.length === 0 ? {} : { notes }),
     ...(hits > 0 ? { hits, ...promptFigures(own) } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),
@@ -596,6 +607,8 @@ export interface ServiceInput {
   out: readonly ServiceCrossing[];
   into: readonly ServiceCrossing[];
   findings: readonly PromptGap[];
+  /** Rows counted rather than listed (contract breaks at warning), each with the call that lists them (P400). */
+  counted?: readonly PromptCounted[];
   rows?: readonly AnchoredUnresolvedRow[];
 }
 
@@ -638,7 +651,7 @@ export const gatherServiceSubject = (
       .map((id) => db.node(id))
       .filter((found): found is GraphNode => found !== undefined)
       .map((found) => placeStep(projectDetail(found, 1), 1));
-  const channels = db.nodesByType('channel');
+  const channels = db.nodesByType('channel').filter((channel) => !isMessageTypeNode(channel));
   const publishes = channelSteps(
     channels.filter((channel) => db.edgesTo(channel.id, ['emits']).some((edge) => db.node(edge.from)?.repo === service)).map((channel) => channel.id),
   );
@@ -673,6 +686,7 @@ export const gatherServiceSubject = (
       publishes,
       consumes,
       findings: [...findingKinds].map(([kind, list]) => ({ kind, count: list.length, top: list.slice(0, OVERVIEW_FIRST) })),
+      ...(input.counted === undefined || input.counted.length === 0 ? {} : { counted: [...input.counted] }),
       gaps,
     },
     gaps: [],
@@ -688,6 +702,8 @@ export interface ScopeContext {
   counts?: ObservedCounts;
   crossings?: (from: string, to: string) => ReadonlyArray<{ from: string; to: string; type: string }>;
   findings?: (service: string) => readonly PromptGap[];
+  /** The findings of a service counted rather than listed, with the call that lists them (P400). */
+  counted?: (service: string) => readonly PromptCounted[];
   /** The rows nobody accepted, which the service scope counts its gaps from (P143). */
   rows?: () => readonly AnchoredUnresolvedRow[];
 }
@@ -739,6 +755,7 @@ export const serviceInputOf = (
     out: others.flatMap((other) => between(service, other).map((hop) => ({ ...hop, service: other }))),
     into: others.flatMap((other) => between(other, service).map((hop) => ({ ...hop, service: other }))),
     findings: context.findings?.(service) ?? [],
+    ...(context.counted === undefined ? {} : { counted: context.counted(service) }),
     ...(context.rows === undefined ? {} : { rows: context.rows() }),
   };
 };

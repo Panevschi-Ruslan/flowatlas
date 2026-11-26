@@ -16,7 +16,27 @@
  */
 
 import { PLATFORM_FETCH } from '@flowatlas/core';
+import type { Node as TsNode } from 'ts-morph';
+import type { Rewrite } from './util/request-rewrite.js';
 import type { ApiUrl } from './util/url.js';
+
+/**
+ * What an instance runs before each request that the request's own address
+ * decides (P285): a rewrite, which may carry a test of the address, or one
+ * that could not be read.
+ */
+export interface InstanceRuns {
+  readonly rewrite?: Rewrite;
+  readonly rewriteUnread?: { readonly at: TsNode; readonly why: string };
+  /**
+   * Where a class of the project's own puts a base of its own in front of the
+   * address it hands the instance (`http.get(this.baseUrl + path)`), the base
+   * the instance itself is made with (P293): the rewrite is then put to the
+   * address the instance sees, the class's base and the call's path together,
+   * and goes in front of both.
+   */
+  readonly beneath?: { readonly base: ApiUrl | undefined };
+}
 
 /** A type whose values make requests, and the package that declares it. */
 export interface ClientType {
@@ -36,9 +56,21 @@ export interface ClientType {
 export interface CallShape {
   /** The verb this spelling always means, or null when the call says. */
   readonly method: string | null;
+  /**
+   * The argument the call writes its verb in as text, where it writes it
+   * there rather than in its options (P284): `xhr.open('POST', url)`.
+   */
+  readonly methodAt?: number;
   readonly urlAt: number;
   /** The argument holding the body, when the spelling has one. */
   readonly bodyAt?: number;
+  /**
+   * The method of the same receiver the body is handed to after this call,
+   * when the call writes none of its own (P294): `xhr.send(body)` after
+   * `xhr.open('POST', url)`. Its first argument is the body, looked through
+   * `JSON.stringify` as `fetch`'s is.
+   */
+  readonly sentBy?: string;
   /**
    * The call's own options object, and where it sits.
    *
@@ -57,6 +89,65 @@ export interface CallShape {
    * it says one (R114, R128).
    */
   readonly optionsAt?: number;
+  /**
+   * The options the body is written under, when the body sits inside the
+   * options rather than beside them: `ky.post(url, { json })`, an axios
+   * instance called as `api(url, { data })`. The first one written is the body,
+   * looked through `JSON.stringify` as `fetch`'s is.
+   */
+  readonly bodyKeys?: readonly string[];
+  /**
+   * The options the query is written under, the first one written winning
+   * (P256): axios's `params`, ky's `searchParams`, ofetch's `query`. Read so a
+   * request to a route that assembles its input from the query - a procedure's
+   * REST route - can be compared key by key.
+   */
+  readonly queryKeys?: readonly string[];
+  /**
+   * The option the address is written under, when the call is handed one
+   * options object holding it rather than an address (P244):
+   * `api({ url: '/orders', method: 'post', data })`, `axios.request({ url })`.
+   * The options are then the object at `optionsAt`, and `urlAt` is not read.
+   */
+  readonly urlKey?: string;
+  /**
+   * The options the verb may be written under, the first one written winning,
+   * where it is not the platform's `method` (P311): jQuery's settings take
+   * `method` or the older `type`.
+   */
+  readonly verbKeys?: readonly string[];
+  /**
+   * The shape of the same call handed one settings object in place of an
+   * address (P311): `$.ajax({ url, type, data })` beside `$.ajax(url, {
+   * type })`. Chosen where the first argument is an object written in place.
+   */
+  readonly settings?: CallShape;
+  /**
+   * The method called on the call's own result that hands the body (P311):
+   * superagent's `request.post(url).send(order)`, through any other calls of
+   * the chain (`.set(...)`, `.query(...)`).
+   */
+  readonly chainedBody?: string;
+  /**
+   * The method called on the call's own result that hands the query (P317):
+   * superagent's `request.get(url).query({ page })`, along the chain as
+   * {@link chainedBody} is.
+   */
+  readonly chainedQuery?: string;
+  /**
+   * The verbs under which what the shape reads as the body is sent as the
+   * query instead (P317): jQuery writes `data` into the address of a `GET`
+   * or a `HEAD` - `$.get(url, data)`, `$.ajax({ type: 'GET', data })` - and
+   * superagent what `.send` hands one (P323), beside its `.query`.
+   */
+  readonly queryVerbs?: readonly string[];
+  /**
+   * The shape of the same call handed the address alone (P317), where the
+   * verb is otherwise an argument of its own: superagent's `request(url)`
+   * beside `request('POST', url)`. Chosen where the call has one argument,
+   * or a function after it.
+   */
+  readonly alone?: CallShape;
 }
 
 /**
@@ -101,13 +192,20 @@ export interface RequestClient {
   /**
    * The address the client puts in front of every path written through it.
    *
-   * Absent for the two installed clients, and not because they have no such
-   * thing: `axios.create({ baseURL })` is exactly this, and where it is set is a
-   * question about one call in one file rather than about a class this repository
-   * declares. A client of a project's own keeps its base in a field, and that
-   * field is read where the class is (R114).
+   * Absent on the rows for installed clients, and not because they have no such
+   * thing: `axios.create({ baseURL })` is exactly this, and it belongs to one
+   * instance made in one file rather than to the client, so it is read where
+   * the instance is made and set on the row for that instance's requests
+   * ({@link CLIENT_FACTORIES}, P239). A client of a project's own keeps its base
+   * in a field, and that field is read where the class is (R114).
    */
   readonly base?: ApiUrl;
+  /**
+   * What the instance a client of the project's own writes through runs before
+   * each request, where it depends on the request's address or was not read
+   * (P285): applied at each call of the class, to the address that call writes.
+   */
+  readonly runs?: InstanceRuns;
   /** Verb methods on a value of one of these types: `api.post(url, body)`. */
   readonly receiver?: {
     readonly types: readonly ClientType[];
@@ -177,18 +275,315 @@ export const VERB_CALLS: Readonly<Record<string, CallShape>> = {
  * two in anything larger than a sample, because it is where the base address
  * and the headers are set.
  */
+/**
+ * axios handed one config object holding the address (P244): `axios({ url,
+ * method, data })`, an instance called the same way, and `request(config)` on
+ * either. The verb is `method` (axios sends `GET` where none is written), the
+ * body `data`, and a `baseURL` written beside the address is the call's own.
+ */
+const AXIOS_CONFIG_CALL: CallShape = { method: null, urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'], queryKeys: ['params'] };
+
+/** The verbs axios names as methods, each with its query under `params` in the options (P256). */
+const AXIOS_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
+  Object.entries(VERB_CALLS).map(([verb, shape]) => [verb, { ...shape, queryKeys: ['params'] }]),
+);
+
 export const AXIOS: RequestClient = {
   name: 'axios',
   package: 'axios',
   packages: ['axios'],
   receiver: {
     types: ['AxiosInstance', 'AxiosStatic'].map((typeName) => ({ package: 'axios', typeName })),
-    verbs: VERB_CALLS,
+    verbs: { ...AXIOS_VERBS, request: AXIOS_CONFIG_CALL },
   },
 };
 
+/**
+ * Nuxt's clients (P233): `$fetch` and `ofetch` take an address and options as
+ * the platform's `fetch` does, with the body under `body`, and `useFetch` /
+ * `useLazyFetch` the same in a component's setup. Nuxt makes `$fetch` and the
+ * composables global, so no import is asked for.
+ */
+export const OFETCH: RequestClient = {
+  name: 'ofetch',
+  package: null,
+  packages: ['ofetch', 'nuxt'],
+  callee: { names: ['$fetch', 'ofetch', 'useFetch', 'useLazyFetch'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, queryKeys: ['query', 'params'] },
+};
+
+/**
+ * The verbs `ky` names as methods, each with its body inside the options
+ * (P239): `ky.post(url, { json: order })`. The address is the first argument
+ * on the module and on an instance alike, and ky has no `options` verb.
+ */
+const KY_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
+  ['get', 'post', 'put', 'patch', 'delete', 'head'].map((verb) => [
+    verb,
+    { method: verb.toUpperCase(), urlAt: 0, optionsAt: 1, queryKeys: ['searchParams'], ...(['get', 'delete', 'head'].includes(verb) ? {} : { bodyKeys: ['json', 'body'] }) },
+  ]),
+);
+
+/**
+ * The small client written over the platform's `fetch` (P239): `ky(url, { method,
+ * json })` called by its own name, and `ky.post(url, { json })` with the verb in
+ * the name. An instance made by `ky.create` or `ky.extend` is the same client
+ * holding a `prefixUrl`, read where it is made ({@link CLIENT_FACTORIES}).
+ */
+export const KY: RequestClient = {
+  name: 'ky',
+  package: 'ky',
+  packages: ['ky'],
+  callee: { names: ['ky'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['json', 'body'], queryKeys: ['searchParams'] },
+  receiver: {
+    types: ['KyInstance'].map((typeName) => ({ package: 'ky', typeName })),
+    verbs: KY_VERBS,
+  },
+};
+
+/**
+ * The browser's older client (P284): `xhr.open('POST', url)` on a value of
+ * the platform's `XMLHttpRequest`, the verb and the address written in the
+ * one call, the body handed to `send` afterwards (P294).
+ */
+export const XHR: RequestClient = {
+  name: 'xhr',
+  package: null,
+  receiver: {
+    types: [{ package: null, typeName: 'XMLHttpRequest' }],
+    verbs: { open: { method: null, methodAt: 0, urlAt: 1, sentBy: 'send' } },
+  },
+};
+
+/**
+ * jQuery's requests (P311), on the module and never on a selection:
+ * `$.ajax(url, settings)` or `$.ajax(settings)` with the verb under `method` or
+ * `type` (`GET` where neither is written) and the body under `data`;
+ * `$.get(url, data)` and `$.getJSON(url, data)`, whose data is the query;
+ * `$.post(url, data)`, whose data is the body - and `data` is the query of
+ * any `GET` or `HEAD`, `$.ajax({ type: 'GET', data })` included, as jQuery
+ * writes it into the address (P317); a function in its place is the callback. Each is handed one settings
+ * object as `$.ajax` is, its verb fixed by its name. Zepto writes the same.
+ * Verbs are matched in lower case, as the request pass reads them.
+ */
+const JQUERY_READS = ['GET', 'HEAD'];
+
+const JQUERY_SETTINGS: CallShape = { method: null, verbKeys: ['method', 'type'], urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'], queryVerbs: JQUERY_READS };
+
+const JQUERY_VERBS: Readonly<Record<string, CallShape>> = {
+  ajax: { method: null, verbKeys: ['method', 'type'], urlAt: 0, optionsAt: 1, bodyKeys: ['data'], queryVerbs: JQUERY_READS, settings: JQUERY_SETTINGS },
+  get: { method: 'GET', urlAt: 0, bodyAt: 1, queryVerbs: JQUERY_READS, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
+  getjson: { method: 'GET', urlAt: 0, bodyAt: 1, queryVerbs: JQUERY_READS, settings: { ...JQUERY_SETTINGS, method: 'GET' } },
+  post: { method: 'POST', urlAt: 0, bodyAt: 1, settings: { ...JQUERY_SETTINGS, method: 'POST' } },
+};
+
+export const JQUERY: RequestClient = {
+  name: 'jquery',
+  package: 'jquery',
+  packages: ['jquery', 'zepto'],
+};
+
+/**
+ * superagent (P311): the verb in the name, `request.get(url)`, `request.del(url)`,
+ * and the body handed to `.send(body)` on what the call answers, further along
+ * the chain; the query handed to `.query(params)` the same way (P317). What a
+ * `GET` or a `HEAD` is handed by `.send` is written into its query string, as
+ * jQuery's data is (P323).
+ */
+const SUPERAGENT_READS = ['GET', 'HEAD'];
+
+const SUPERAGENT_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
+  [['get', 'GET'], ['head', 'HEAD'], ['options', 'OPTIONS'], ['delete', 'DELETE'], ['del', 'DELETE'], ['post', 'POST'], ['put', 'PUT'], ['patch', 'PATCH']].map(([verb, method]) => [
+    verb,
+    { method, urlAt: 0, chainedQuery: 'query', chainedBody: 'send', queryVerbs: SUPERAGENT_READS } as CallShape,
+  ]),
+);
+
+/**
+ * superagent called as a function (P317): `request('POST', url)`, the verb
+ * written as text before the address, or `request(url)`, a `GET`.
+ */
+const SUPERAGENT_CALLED: CallShape = {
+  method: null,
+  methodAt: 0,
+  urlAt: 1,
+  chainedBody: 'send',
+  chainedQuery: 'query',
+  queryVerbs: SUPERAGENT_READS,
+  alone: { method: 'GET', urlAt: 0, chainedQuery: 'query', chainedBody: 'send', queryVerbs: SUPERAGENT_READS },
+};
+
+export const SUPERAGENT: RequestClient = {
+  name: 'superagent',
+  package: 'superagent',
+  packages: ['superagent'],
+};
+
+/**
+ * A ponyfill of the platform's client that leaves a global of its own name
+ * rather than `fetch` (P311): `unfetch(url, init)`, read as `fetch` is. A
+ * polyfill that installs `fetch` itself needs nothing: `fetch` is the
+ * platform's wherever nothing in the repository declares it.
+ */
+export const UNFETCH: RequestClient = {
+  name: 'unfetch',
+  package: 'unfetch',
+  packages: ['unfetch', 'isomorphic-unfetch'],
+  callee: { names: [], method: null, urlAt: PLATFORM_FETCH.urlAt, optionsAt: PLATFORM_FETCH.optionsAt, bodyAt: PLATFORM_FETCH.optionsAt },
+};
+
 /** Every client this extractor reads without being told anything. */
-export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS];
+export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, KY, XHR];
+
+/**
+ * How an instance of an installed client is made, and where its base is written.
+ *
+ * The other half of R114. A client class a project wrote keeps its base in a
+ * field; a client somebody installed keeps it in the options its instance is
+ * made with, `axios.create({ baseURL })`, and that instance is how nearly every
+ * front end larger than a sample writes its requests. Until P239 the instance was
+ * read by its type and its base was not read at all, so the address recorded was
+ * the path the call site writes and the request joined only by its route.
+ *
+ * A row per client, read by one reader (`util/client-instance.ts`):
+ *
+ * - `modules`: the packages whose import the factory is called on. The instance
+ *   is told apart by how it was made, the import naming its package, so it is
+ *   read in a clone with nothing installed, where its type is unknown.
+ * - `globals`: names the framework provides without an import (Nuxt's `$fetch`).
+ * - `pageGlobals`: the names the client's browser build leaves on `window`, which
+ *   is the client where a page of the repository loads that build by a script
+ *   tag, or the script declares it for its linter (P310).
+ * - `methods`: the calls that make an instance, on the module or on an instance,
+ *   which then inherits the base it does not write.
+ * - `baseKey`: the option the base is written under.
+ * - `called`: the shape of the instance called as a function, when it can be.
+ * - `verbs`: the verbs named as methods on an instance, beside the module's own.
+ * - `defaults`: where an instance keeps the options it was made with, when
+ *   assigning there afterwards (`api.defaults.baseURL = …`) sets the base.
+ * - `configCalled`: the instance called with one options object holding the
+ *   address, `api({ url, method })` (P244).
+ * - `rewrites`: the functions the client runs before every request, which may
+ *   rewrite its address (P244).
+ */
+export interface ClientFactory {
+  readonly client: RequestClient;
+  readonly modules: readonly string[];
+  readonly globals?: readonly string[];
+  readonly pageGlobals?: readonly string[];
+  readonly methods: readonly string[];
+  readonly baseKey: string;
+  readonly called?: CallShape;
+  readonly configCalled?: CallShape;
+  readonly verbs: Readonly<Record<string, CallShape>>;
+  readonly defaults?: string;
+  readonly rewrites?: RequestRewrites;
+}
+
+/**
+ * A function a client runs before every request, and how it is handed the
+ * request (P244).
+ *
+ * The base is not always written where the instance is made. axios lets a
+ * repository register a request interceptor on the instance afterwards,
+ * `api.interceptors.request.use((config) => { config.baseURL = … })`; ofetch
+ * takes an `onRequest` hook among the options, handed `{ request, options }`;
+ * ky takes `hooks.beforeRequest`, handed the `Request` itself, which can only
+ * be replaced. Each runs for every request through the instance, so what it
+ * does to the address is the instance's as surely as the option it was made
+ * with, read the same way (`util/request-rewrite.ts`):
+ *
+ * - `registeredAt`: the member chain a function is registered through, called
+ *   on an instance or on the module.
+ * - `optionAt`: the key path of the options an instance is made with that holds
+ *   the function, or a list of them.
+ * - `handed`: what the function's first parameter is - the request's own
+ *   options (`options`), a context holding them under `options` and the
+ *   address under `request` (`context`), or the request itself, which a new
+ *   one replaces (`request`).
+ * - `addressKey`: where the address is in what the function is handed.
+ * - `inherited`: whether an instance made from an instance keeps its parent's
+ *   functions beside its own (`merged`) or loses them to its own (`replaced`).
+ */
+export interface RequestRewrites {
+  readonly registeredAt?: readonly string[];
+  readonly optionAt?: readonly string[];
+  readonly handed: 'options' | 'context' | 'request';
+  readonly addressKey: string;
+  readonly inherited: 'merged' | 'replaced' | 'none';
+}
+
+/**
+ * The instance made by each installed client, and where its base is.
+ *
+ * axios's instance is also callable, `api(url, { method, data })`, and so is
+ * the module; handed one config object in place of an address, the address is
+ * its `url` (P244). An axios instance made from another keeps none of its
+ * interceptors, the module's included: each has its own. ofetch's instance is
+ * called as the module is, and `.raw` answers with the whole response the
+ * same way; one made from another replaces its hooks with its own where it
+ * writes any. ky's instances made by `extend` add their hooks to their parent's.
+ */
+export const CLIENT_FACTORIES: readonly ClientFactory[] = [
+  {
+    client: AXIOS,
+    modules: ['axios'],
+    pageGlobals: ['axios'],
+    methods: ['create'],
+    baseKey: 'baseURL',
+    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['data'], queryKeys: ['params'] },
+    configCalled: AXIOS_CONFIG_CALL,
+    verbs: { ...AXIOS_VERBS, request: AXIOS_CONFIG_CALL },
+    defaults: 'defaults',
+    rewrites: { registeredAt: ['interceptors', 'request', 'use'], handed: 'options', addressKey: 'url', inherited: 'none' },
+  },
+  {
+    client: OFETCH,
+    modules: ['ofetch'],
+    globals: ['$fetch'],
+    methods: ['create'],
+    baseKey: 'baseURL',
+    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, queryKeys: ['query', 'params'] },
+    verbs: { raw: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, queryKeys: ['query', 'params'] } },
+    rewrites: { optionAt: ['onRequest'], handed: 'context', addressKey: 'request', inherited: 'replaced' },
+  },
+  {
+    client: KY,
+    modules: ['ky'],
+    pageGlobals: ['ky'],
+    methods: ['create', 'extend'],
+    baseKey: 'prefixUrl',
+    called: KY.callee,
+    verbs: KY_VERBS,
+    rewrites: { optionAt: ['hooks', 'beforeRequest'], handed: 'request', addressKey: 'url', inherited: 'merged' },
+  },
+  // The module alone makes requests; nothing makes an instance of it (P311).
+  {
+    client: JQUERY,
+    modules: ['jquery', 'zepto'],
+    pageGlobals: ['$', 'jQuery', 'Zepto'],
+    methods: [],
+    baseKey: 'url',
+    verbs: JQUERY_VERBS,
+  },
+  {
+    client: SUPERAGENT,
+    modules: ['superagent'],
+    pageGlobals: ['superagent'],
+    methods: [],
+    baseKey: 'url',
+    called: SUPERAGENT_CALLED,
+    verbs: SUPERAGENT_VERBS,
+  },
+  {
+    client: UNFETCH,
+    modules: ['unfetch', 'isomorphic-unfetch'],
+    pageGlobals: ['unfetch'],
+    methods: [],
+    baseKey: 'url',
+    called: UNFETCH.callee,
+    verbs: {},
+  },
+];
 
 /**
  * A client class the repository being read wrote itself.
@@ -217,10 +612,12 @@ export const localClient = (
   typeName: string,
   verbs: readonly string[],
   base?: ApiUrl,
+  runs?: InstanceRuns,
 ): RequestClient => ({
   name: typeName,
   package: null,
   ...(base === undefined ? {} : { base }),
+  ...(runs === undefined ? {} : { runs }),
   receiver: {
     types: [{ package: null, typeName }],
     verbs: Object.fromEntries(

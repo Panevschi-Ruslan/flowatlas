@@ -1,0 +1,39 @@
+{
+  "settled": "1 producer of STEP_READY, all listed",
+  "channel": {
+    "id": "channel:tenant:*:events",
+    "loc": "src/steps/steps.controller.ts:58",
+    "service": "desk-api"
+  },
+  "producers": [
+    {
+      "id": "producer:desk-api#src/steps/steps.service.ts:20:5",
+      "label": "event tenant:*:events",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /api/:param/orders/:param/steps/:param/ready",
+      "throughDead": true
+    }
+  ],
+  "total": 1,
+  "type": "STEP_READY",
+  "alsoOn": [
+    {
+      "channel": "channel:session:*:closed",
+      "count": 1
+    },
+    {
+      "channel": "channel:session:*:paid",
+      "count": 1
+    },
+    {
+      "channel": "channel:session:*:split",
+      "count": 1
+    },
+    {
+      "channel": "channel:status_feed",
+      "count": 1
+    }
+  ],
+  "complete": true
+}

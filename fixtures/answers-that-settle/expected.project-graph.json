@@ -1,0 +1,3646 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T21:11:13.093Z",
+  "services": [
+    {
+      "name": "rooms-api",
+      "repo": "./rooms-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "notify-worker",
+      "repo": "./notify-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "chat-bot",
+      "repo": "./chat-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:staff_feed",
+      "type": "channel",
+      "label": "staff_feed",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 27,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "venue-bus"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:staff_feed#ROOM_READY",
+      "type": "channel",
+      "label": "staff_feed#ROOM_READY",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 27,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:staff_feed",
+        "messageType": "ROOM_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "rooms-api",
+              "loc": "src/rooms/rooms.service.ts:26",
+              "text": "type: VenueEvent.RoomReady"
+            },
+            {
+              "service": "rooms-api",
+              "loc": "src/rooms/rooms.service.ts:27",
+              "text": "type: VenueEvent.RoomReady"
+            }
+          ],
+          "sentCount": 2,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:staff_feed#SLOTS_SHOWN",
+      "type": "channel",
+      "label": "staff_feed#SLOTS_SHOWN",
+      "repo": "chat-bot",
+      "file": "src/rooms/room.service.ts",
+      "line": 26,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:staff_feed",
+        "messageType": "SLOTS_SHOWN",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "chat-bot",
+              "loc": "src/rooms/room.service.ts:26",
+              "text": "type: 'SLOTS_SHOWN'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:venue_events",
+      "type": "channel",
+      "label": "venue_events",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 12,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "venue-bus"
+        ],
+        "producers": 6,
+        "consumers": 4
+      }
+    },
+    {
+      "id": "channel:venue_events#CALL_STAFF",
+      "type": "channel",
+      "label": "venue_events#CALL_STAFF",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 21,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:venue_events",
+        "messageType": "CALL_STAFF",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "rooms-api",
+              "loc": "src/rooms/rooms.service.ts:21",
+              "text": "type: VenueEvent.CallStaff"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/push/push.service.ts:23",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "CALL_STAFF is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:venue_events#ORDER_PAID",
+      "type": "channel",
+      "label": "venue_events#ORDER_PAID",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:venue_events",
+        "messageType": "ORDER_PAID",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "rooms-api",
+              "loc": "src/orders/orders.service.ts:17",
+              "text": "type: VenueEvent.OrderPaid"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/orders/order-watch.service.ts:23",
+              "text": "evt.type.startsWith('ORDER_')",
+              "why": "a prefix test that may take ORDER_PAID"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:venue_events#ORDER_READY",
+      "type": "channel",
+      "label": "venue_events#ORDER_READY",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 12,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:venue_events",
+        "messageType": "ORDER_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "rooms-api",
+              "loc": "src/orders/orders.service.ts:12",
+              "text": "type: VenueEvent.OrderReady"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/push/push.service.ts:23",
+              "text": "private static readonly RELEVANT: ReadonlySet<string> = new Set(['CALL_STAFF', '",
+              "why": "ORDER_READY is written here; the graph read no choice of it"
+            },
+            {
+              "service": "notify-worker",
+              "loc": "src/orders/order-watch.service.ts:23",
+              "text": "evt.type.startsWith('ORDER_')",
+              "why": "a prefix test that may take ORDER_READY"
+            }
+          ],
+          "openCount": 2
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:venue_events#ROOM_READY",
+      "type": "channel",
+      "label": "venue_events#ROOM_READY",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:venue_events",
+        "messageType": "ROOM_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "rooms-api",
+              "loc": "src/rooms/rooms.service.ts:26",
+              "text": "type: VenueEvent.RoomReady"
+            },
+            {
+              "service": "rooms-api",
+              "loc": "src/rooms/rooms.service.ts:27",
+              "text": "type: VenueEvent.RoomReady"
+            }
+          ],
+          "sentCount": 2,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:venue_events#ROW_CLAIMED",
+      "type": "channel",
+      "label": "venue_events#ROW_CLAIMED",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:venue_events",
+        "messageType": "ROW_CLAIMED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "rooms-api",
+              "loc": "src/rooms/rooms.service.ts:17",
+              "text": "type: VenueEvent.RowClaimed"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:venue_events#TABLE_FREED",
+      "type": "channel",
+      "label": "venue_events#TABLE_FREED",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:venue_events",
+        "messageType": "TABLE_FREED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "rooms-api",
+              "loc": "src/orders/orders.service.ts:22",
+              "text": "type: VenueEvent.TableFreed"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/feed/room-board.service.ts:9",
+              "text": "evt.type === 'TABLE_FREED'",
+              "why": "TABLE_FREED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "chat-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "chat-bot",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "chat-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "chat-bot",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "chat-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "chat-bot",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "VenueBus",
+          "RoomService",
+          "SlotRenderer",
+          "StaffBot"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "chat-bot#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "provider",
+      "label": "VenueBus",
+      "repo": "chat-bot",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "chat-bot#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "method",
+      "label": "VenueBus.publish",
+      "repo": "chat-bot",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "chat-bot#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "method",
+      "label": "VenueBus.subscribe",
+      "repo": "chat-bot",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "chat-bot#src/rooms/room.service.ts:RoomService",
+      "type": "provider",
+      "label": "RoomService",
+      "repo": "chat-bot",
+      "file": "src/rooms/room.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots",
+      "type": "method",
+      "label": "RoomService.fetchSlots",
+      "repo": "chat-bot",
+      "file": "src/rooms/room.service.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes",
+      "type": "method",
+      "label": "RoomService.getFreeTimes",
+      "repo": "chat-bot",
+      "file": "src/rooms/room.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "chat-bot#src/rooms/slot-renderer.service.ts:SlotRenderer",
+      "type": "provider",
+      "label": "SlotRenderer",
+      "repo": "chat-bot",
+      "file": "src/rooms/slot-renderer.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "chat-bot#src/rooms/slot-renderer.service.ts:SlotRenderer.render",
+      "type": "method",
+      "label": "SlotRenderer.render",
+      "repo": "chat-bot",
+      "file": "src/rooms/slot-renderer.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "slots",
+              "type": "string[]"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "chat-bot#src/rooms/slot-renderer.service.ts:SlotRenderer.use",
+      "type": "method",
+      "label": "SlotRenderer.use",
+      "repo": "chat-bot",
+      "file": "src/rooms/slot-renderer.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "format",
+              "type": "type:chat-bot#SlotFormat"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot",
+      "type": "provider",
+      "label": "StaffBot",
+      "repo": "chat-bot",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+      "type": "method",
+      "label": "StaffBot.handleRoomReady",
+      "repo": "chat-bot",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "type:chat-bot#StaffMessage"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "type": "method",
+      "label": "StaffBot.onEvent",
+      "repo": "chat-bot",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "type:chat-bot#StaffMessage"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 24
+          },
+          {
+            "field": "roomId",
+            "in": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+            "line": 28,
+            "when": [
+              "ROOM_READY"
+            ]
+          },
+          {
+            "field": "roomName",
+            "in": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+            "line": 28,
+            "when": [
+              "ROOM_READY"
+            ],
+            "guarded": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onModuleInit",
+      "type": "method",
+      "label": "StaffBot.onModuleInit",
+      "repo": "chat-bot",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "config_key:chat-bot#ROOMS_API_URL",
+      "type": "config_key",
+      "label": "ROOMS_API_URL",
+      "repo": "chat-bot",
+      "file": "src/rooms/room.service.ts",
+      "line": 31,
+      "meta": {
+        "key": "ROOMS_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+      "type": "consumer",
+      "label": "StaffBot.handleRoomReady",
+      "repo": "chat-bot",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "selectedBy": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "messageTypes": [
+          "ROOM_READY"
+        ]
+      }
+    },
+    {
+      "id": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "type": "consumer",
+      "label": "StaffBot.onEvent",
+      "repo": "chat-bot",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:chat-bot:event:staff_feed",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ROOM_READY",
+            "consumer": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+            "via": "if",
+            "line": 24
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "type": "consumer",
+      "label": "AuditTrail.record",
+      "repo": "notify-worker",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:venue_events"
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "type": "consumer",
+      "label": "FeedRelay.onEvent",
+      "repo": "notify-worker",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:venue_events"
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "type": "consumer",
+      "label": "OrderWatch.onEvent",
+      "repo": "notify-worker",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:venue_events"
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumer",
+      "label": "PushService.dispatch",
+      "repo": "notify-worker",
+      "file": "src/push/push.service.ts",
+      "line": 31,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:venue_events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "CALL_STAFF",
+            "consumer": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+            "via": "switch",
+            "line": 43
+          },
+          {
+            "type": "ORDER_READY",
+            "consumer": "consumer:notify-worker#src/push/push.service.ts:PushService.sendReady",
+            "via": "switch",
+            "line": 50
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/push/push.service.ts:PushService.sendReady",
+      "type": "consumer",
+      "label": "PushService.sendReady",
+      "repo": "notify-worker",
+      "file": "src/push/push.service.ts",
+      "line": 61,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "selectedBy": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "messageTypes": [
+          "ORDER_READY"
+        ]
+      }
+    },
+    {
+      "id": "entry:chat-bot:event:staff_feed",
+      "type": "entry",
+      "label": "event staff_feed",
+      "repo": "chat-bot",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "pattern": "staff_feed",
+        "adapter": "venue-bus"
+      }
+    },
+    {
+      "id": "entry:notify-worker:event:venue_events",
+      "type": "entry",
+      "label": "event venue_events",
+      "repo": "notify-worker",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "pattern": "venue_events",
+        "adapter": "venue-bus"
+      }
+    },
+    {
+      "id": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+      "type": "entry",
+      "label": "GET /api/admin/:param/rooms/free-times",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/admin/:param/rooms/free-times",
+        "rawPath": "/api/admin/:venueId/rooms/free-times",
+        "controller": "RoomsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/call",
+      "type": "entry",
+      "label": "POST /api/admin/:param/rooms/:param/call",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/admin/:param/rooms/:param/call",
+        "rawPath": "/api/admin/:venueId/rooms/:roomId/call",
+        "controller": "RoomsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/claim",
+      "type": "entry",
+      "label": "POST /api/admin/:param/rooms/:param/claim",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/admin/:param/rooms/:param/claim",
+        "rawPath": "/api/admin/:venueId/rooms/:roomId/claim",
+        "controller": "RoomsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/ready",
+      "type": "entry",
+      "label": "POST /api/admin/:param/rooms/:param/ready",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/admin/:param/rooms/:param/ready",
+        "rawPath": "/api/admin/:venueId/rooms/:roomId/ready",
+        "controller": "RoomsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:rooms-api:http:POST:/api/venues/:param/orders/:param/paid",
+      "type": "entry",
+      "label": "POST /api/venues/:param/orders/:param/paid",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/venues/:param/orders/:param/paid",
+        "rawPath": "/api/venues/:venueId/orders/:orderId/paid",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:rooms-api:http:POST:/api/venues/:param/orders/:param/ready/:param",
+      "type": "entry",
+      "label": "POST /api/venues/:param/orders/:param/ready/:param",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/venues/:param/orders/:param/ready/:param",
+        "rawPath": "/api/venues/:venueId/orders/:orderId/ready/:roomId",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:rooms-api:http:POST:/api/venues/:param/orders/tables/:param/free",
+      "type": "entry",
+      "label": "POST /api/venues/:param/orders/tables/:param/free",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/venues/:param/orders/tables/:param/free",
+        "rawPath": "/api/venues/:venueId/orders/tables/:roomId/free",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:chat-bot#src/rooms/room.service.ts:31:43",
+      "type": "http_out",
+      "label": "GET /api/admin/:param/rooms/free-times",
+      "repo": "chat-bot",
+      "file": "src/rooms/room.service.ts",
+      "line": 31,
+      "meta": {
+        "method": "GET",
+        "url": "${ROOMS_API_URL}/api/admin/${…}/rooms/free-times",
+        "path": "/api/admin/:param/rooms/free-times",
+        "baseUrlEnv": "ROOMS_API_URL",
+        "responseType": "string[]",
+        "bodyType": null,
+        "targetService": "rooms-api"
+      }
+    },
+    {
+      "id": "notify-worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "notify-worker",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "VenueBus",
+          "PushService",
+          "PushSender",
+          "FeedRelay",
+          "FeedGateway",
+          "RoomBoard",
+          "AuditTrail",
+          "OrderWatch"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "notify-worker#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "provider",
+      "label": "VenueBus",
+      "repo": "notify-worker",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "method",
+      "label": "VenueBus.publish",
+      "repo": "notify-worker",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "method",
+      "label": "VenueBus.subscribe",
+      "repo": "notify-worker",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail",
+      "type": "provider",
+      "label": "AuditTrail",
+      "repo": "notify-worker",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.onModuleInit",
+      "type": "method",
+      "label": "AuditTrail.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "type": "method",
+      "label": "AuditTrail.record",
+      "repo": "notify-worker",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "type:notify-worker#VenueMessage"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "venueId",
+            "line": 23
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay",
+      "type": "provider",
+      "label": "FeedRelay",
+      "repo": "notify-worker",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "type": "method",
+      "label": "FeedRelay.onEvent",
+      "repo": "notify-worker",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "roomId",
+            "in": "notify-worker#src/feed/room-board.service.ts:RoomBoard.apply",
+            "line": 9,
+            "when": [
+              "TABLE_FREED"
+            ]
+          },
+          {
+            "field": "type",
+            "in": "notify-worker#src/feed/room-board.service.ts:RoomBoard.apply",
+            "line": 9
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "notify-worker#src/feed/feed.gateway.ts:FeedGateway.fanOut",
+            "line": 17,
+            "why": "handed to this.sent.push"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onModuleInit",
+      "type": "method",
+      "label": "FeedRelay.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/feed.gateway.ts:FeedGateway",
+      "type": "provider",
+      "label": "FeedGateway",
+      "repo": "notify-worker",
+      "file": "src/feed/feed.gateway.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/feed.gateway.ts:FeedGateway.fanOut",
+      "type": "method",
+      "label": "FeedGateway.fanOut",
+      "repo": "notify-worker",
+      "file": "src/feed/feed.gateway.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/feed.gateway.ts:FeedGateway.push",
+      "type": "method",
+      "label": "FeedGateway.push",
+      "repo": "notify-worker",
+      "file": "src/feed/feed.gateway.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/room-board.service.ts:RoomBoard",
+      "type": "provider",
+      "label": "RoomBoard",
+      "repo": "notify-worker",
+      "file": "src/feed/room-board.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/feed/room-board.service.ts:RoomBoard.apply",
+      "type": "method",
+      "label": "RoomBoard.apply",
+      "repo": "notify-worker",
+      "file": "src/feed/room-board.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "{type:string;roomId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/orders/order-watch.service.ts:OrderWatch",
+      "type": "provider",
+      "label": "OrderWatch",
+      "repo": "notify-worker",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "type": "method",
+      "label": "OrderWatch.onEvent",
+      "repo": "notify-worker",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 23
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onModuleInit",
+      "type": "method",
+      "label": "OrderWatch.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push-sender.service.ts:PushSender",
+      "type": "provider",
+      "label": "PushSender",
+      "repo": "notify-worker",
+      "file": "src/push/push-sender.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push-sender.service.ts:PushSender.send",
+      "type": "method",
+      "label": "PushSender.send",
+      "repo": "notify-worker",
+      "file": "src/push/push-sender.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "line",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push-sender.service.ts:PushSender.warm",
+      "type": "method",
+      "label": "PushSender.warm",
+      "repo": "notify-worker",
+      "file": "src/push/push-sender.service.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push.service.ts:PushService",
+      "type": "provider",
+      "label": "PushService",
+      "repo": "notify-worker",
+      "file": "src/push/push.service.ts",
+      "line": 21,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "method",
+      "label": "PushService.dispatch",
+      "repo": "notify-worker",
+      "file": "src/push/push.service.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "raw",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 42,
+            "switched": {
+              "has": "none",
+              "cases": [
+                "'CALL_STAFF'",
+                "'ORDER_READY'"
+              ],
+              "line": 42
+            }
+          },
+          {
+            "field": "roomId",
+            "line": 44,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "roomId",
+            "line": 45,
+            "when": [
+              "CALL_STAFF"
+            ],
+            "guarded": true,
+            "whenAbsent": "returns"
+          },
+          {
+            "field": "note",
+            "line": 47,
+            "when": [
+              "CALL_STAFF"
+            ]
+          },
+          {
+            "field": "roomId",
+            "in": "notify-worker#src/push/push.service.ts:PushService.sendReady",
+            "line": 62,
+            "when": [
+              "ORDER_READY"
+            ],
+            "guarded": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push.service.ts:PushService.findRoom",
+      "type": "method",
+      "label": "PushService.findRoom",
+      "repo": "notify-worker",
+      "file": "src/push/push.service.ts",
+      "line": 57,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:notify-worker#Room"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push.service.ts:PushService.onModuleInit",
+      "type": "method",
+      "label": "PushService.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/push/push.service.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/push/push.service.ts:PushService.sendReady",
+      "type": "method",
+      "label": "PushService.sendReady",
+      "repo": "notify-worker",
+      "file": "src/push/push.service.ts",
+      "line": 61,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "evt",
+              "type": "{roomId?:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+      "type": "producer",
+      "label": "event staff_feed",
+      "repo": "chat-bot",
+      "file": "src/rooms/room.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "SLOTS_SHOWN"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+      "type": "producer",
+      "label": "event venue_events",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+      "type": "producer",
+      "label": "event venue_events",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_PAID"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+      "type": "producer",
+      "label": "event venue_events",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "TABLE_FREED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+      "type": "producer",
+      "label": "event venue_events",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ROW_CLAIMED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+      "type": "producer",
+      "label": "event venue_events",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "CALL_STAFF"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+      "type": "producer",
+      "label": "event venue_events",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ROOM_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+      "type": "producer",
+      "label": "event staff_feed",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "venue-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ROOM_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:chat-bot",
+      "type": "repo",
+      "label": "chat-bot",
+      "repo": "chat-bot",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:notify-worker",
+      "type": "repo",
+      "label": "notify-worker",
+      "repo": "notify-worker",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:rooms-api",
+      "type": "repo",
+      "label": "rooms-api",
+      "repo": "rooms-api",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "rooms-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "rooms-api",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "RoomsController",
+          "OrdersController"
+        ],
+        "providers": [
+          "VenueBus",
+          "RoomsService",
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "rooms-api#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "provider",
+      "label": "VenueBus",
+      "repo": "rooms-api",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "method",
+      "label": "VenueBus.publish",
+      "repo": "rooms-api",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "method",
+      "label": "VenueBus.subscribe",
+      "repo": "rooms-api",
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.controller.ts:OrdersController.free",
+      "type": "method",
+      "label": "OrdersController.free",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.controller.ts:OrdersController.paid",
+      "type": "method",
+      "label": "OrdersController.paid",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.controller.ts:OrdersController.ready",
+      "type": "method",
+      "label": "OrdersController.ready",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable",
+      "type": "method",
+      "label": "OrdersService.freeTable",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid",
+      "type": "method",
+      "label": "OrdersService.markPaid",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady",
+      "type": "method",
+      "label": "OrdersService.markReady",
+      "repo": "rooms-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.controller.ts:RoomsController",
+      "type": "provider",
+      "label": "RoomsController",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.call",
+      "type": "method",
+      "label": "RoomsController.call",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{note:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "note",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.claim",
+      "type": "method",
+      "label": "RoomsController.claim",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes",
+      "type": "method",
+      "label": "RoomsController.freeTimes",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.ready",
+      "type": "method",
+      "label": "RoomsController.ready",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{roomName:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "roomName",
+            "line": 26
+          }
+        ]
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.service.ts:RoomsService",
+      "type": "provider",
+      "label": "RoomsService",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff",
+      "type": "method",
+      "label": "RoomsService.callStaff",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            },
+            {
+              "name": "note",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow",
+      "type": "method",
+      "label": "RoomsService.claimRow",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.service.ts:RoomsService.freeTimes",
+      "type": "method",
+      "label": "RoomsService.freeTimes",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady",
+      "type": "method",
+      "label": "RoomsService.roomReady",
+      "repo": "rooms-api",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "venueId",
+              "type": "string"
+            },
+            {
+              "name": "roomId",
+              "type": "string"
+            },
+            {
+              "name": "roomName",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:staff_feed",
+      "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 20
+    },
+    {
+      "from": "channel:staff_feed#ROOM_READY",
+      "to": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 24,
+      "meta": {
+        "selectedBy": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:venue_events",
+      "to": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 19
+    },
+    {
+      "from": "channel:venue_events",
+      "to": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:venue_events",
+      "to": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 19
+    },
+    {
+      "from": "channel:venue_events",
+      "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 31
+    },
+    {
+      "from": "channel:venue_events#CALL_STAFF",
+      "to": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 43,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:venue_events#ORDER_READY",
+      "to": "consumer:notify-worker#src/push/push.service.ts:PushService.sendReady",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 50,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService",
+      "to": "chat-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 18
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService",
+      "to": "chat-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 19
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService",
+      "to": "chat-bot#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 21
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService",
+      "to": "chat-bot#src/rooms/slot-renderer.service.ts:SlotRenderer",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 20
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots",
+      "to": "config_key:chat-bot#ROOMS_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 31
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots",
+      "to": "http_out:chat-bot#src/rooms/room.service.ts:31:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 31
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes",
+      "to": "chat-bot#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/rooms/room.service.ts",
+      "line": 26
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes",
+      "to": "chat-bot#src/rooms/room.service.ts:RoomService.fetchSlots",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/rooms/room.service.ts",
+      "line": 25
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes",
+      "to": "chat-bot#src/rooms/slot-renderer.service.ts:SlotRenderer.render",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string",
+      "file": "src/rooms/room.service.ts",
+      "line": 27
+    },
+    {
+      "from": "chat-bot#src/rooms/room.service.ts:RoomService.getFreeTimes",
+      "to": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 26
+    },
+    {
+      "from": "chat-bot#src/staff/staff-bot.service.ts:StaffBot",
+      "to": "chat-bot#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 17
+    },
+    {
+      "from": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "to": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:chat-bot#StaffMessage"
+      ],
+      "returns": "void",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 24
+    },
+    {
+      "from": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onModuleInit",
+      "to": "chat-bot#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 20
+    },
+    {
+      "from": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onModuleInit",
+      "to": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:chat-bot#StaffMessage"
+      ],
+      "returns": "void",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 20
+    },
+    {
+      "from": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+      "to": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:chat-bot#StaffMessage"
+      ],
+      "returns": "void",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 27
+    },
+    {
+      "from": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "to": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:chat-bot#StaffMessage"
+      ],
+      "returns": "void",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 20
+    },
+    {
+      "from": "consumer:notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "to": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage"
+      ],
+      "returns": "void",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 19
+    },
+    {
+      "from": "consumer:notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "to": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts"
+      ],
+      "returns": "void",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "to": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts"
+      ],
+      "returns": "void",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 19
+    },
+    {
+      "from": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 31
+    },
+    {
+      "from": "consumer:notify-worker#src/push/push.service.ts:PushService.sendReady",
+      "to": "notify-worker#src/push/push.service.ts:PushService.sendReady",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{roomId?:string}"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 61
+    },
+    {
+      "from": "entry:chat-bot:event:staff_feed",
+      "to": "chat-bot#src/staff/staff-bot.service.ts:StaffBot.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:chat-bot#StaffMessage"
+      ],
+      "returns": "void",
+      "file": "src/staff/staff-bot.service.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:notify-worker:event:venue_events",
+      "to": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage"
+      ],
+      "returns": "void",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:notify-worker:event:venue_events",
+      "to": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts"
+      ],
+      "returns": "void",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:notify-worker:event:venue_events",
+      "to": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts"
+      ],
+      "returns": "void",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:notify-worker:event:venue_events",
+      "to": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 31
+    },
+    {
+      "from": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+      "to": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{venueId:string}"
+      }
+    },
+    {
+      "from": "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/call",
+      "to": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.call",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{note:string}"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{venueId:string;roomId:string}",
+        "body": "{note:string}"
+      }
+    },
+    {
+      "from": "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/claim",
+      "to": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.claim",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{venueId:string;roomId:string}"
+      }
+    },
+    {
+      "from": "entry:rooms-api:http:POST:/api/admin/:param/rooms/:param/ready",
+      "to": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.ready",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{roomName:string}"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 24,
+      "meta": {
+        "params": "{venueId:string;roomId:string}",
+        "body": "{roomName:string}"
+      }
+    },
+    {
+      "from": "entry:rooms-api:http:POST:/api/venues/:param/orders/:param/paid",
+      "to": "rooms-api#src/orders/orders.controller.ts:OrdersController.paid",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{venueId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "entry:rooms-api:http:POST:/api/venues/:param/orders/:param/ready/:param",
+      "to": "rooms-api#src/orders/orders.controller.ts:OrdersController.ready",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{venueId:string;orderId:string;roomId:string}"
+      }
+    },
+    {
+      "from": "entry:rooms-api:http:POST:/api/venues/:param/orders/tables/:param/free",
+      "to": "rooms-api#src/orders/orders.controller.ts:OrdersController.free",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{venueId:string;roomId:string}"
+      }
+    },
+    {
+      "from": "http_out:chat-bot#src/rooms/room.service.ts:31:43",
+      "to": "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 31,
+      "returns": "string[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "rooms-api"
+      }
+    },
+    {
+      "from": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 16
+    },
+    {
+      "from": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.onModuleInit",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 19
+    },
+    {
+      "from": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.onModuleInit",
+      "to": "notify-worker#src/feed/audit-trail.service.ts:AuditTrail.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage"
+      ],
+      "returns": "void",
+      "file": "src/feed/audit-trail.service.ts",
+      "line": 19
+    },
+    {
+      "from": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 16
+    },
+    {
+      "from": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay",
+      "to": "notify-worker#src/feed/feed.gateway.ts:FeedGateway",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 17
+    },
+    {
+      "from": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "to": "notify-worker#src/feed/feed.gateway.ts:FeedGateway.push",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 25
+    },
+    {
+      "from": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onModuleInit",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 21
+    },
+    {
+      "from": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onModuleInit",
+      "to": "notify-worker#src/feed/feed-relay.service.ts:FeedRelay.onEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts"
+      ],
+      "returns": "void",
+      "file": "src/feed/feed-relay.service.ts",
+      "line": 21
+    },
+    {
+      "from": "notify-worker#src/feed/feed.gateway.ts:FeedGateway",
+      "to": "notify-worker#src/feed/room-board.service.ts:RoomBoard",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/feed/feed.gateway.ts",
+      "line": 10
+    },
+    {
+      "from": "notify-worker#src/feed/feed.gateway.ts:FeedGateway.fanOut",
+      "to": "notify-worker#src/feed/room-board.service.ts:RoomBoard.apply",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{type:string;roomId:string}"
+      ],
+      "returns": "void",
+      "file": "src/feed/feed.gateway.ts",
+      "line": 18
+    },
+    {
+      "from": "notify-worker#src/feed/feed.gateway.ts:FeedGateway.push",
+      "to": "notify-worker#src/feed/feed.gateway.ts:FeedGateway.fanOut",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/feed/feed.gateway.ts",
+      "line": 13
+    },
+    {
+      "from": "notify-worker#src/orders/order-watch.service.ts:OrderWatch",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 16
+    },
+    {
+      "from": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onModuleInit",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 19
+    },
+    {
+      "from": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onModuleInit",
+      "to": "notify-worker#src/orders/order-watch.service.ts:OrderWatch.onEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts"
+      ],
+      "returns": "void",
+      "file": "src/orders/order-watch.service.ts",
+      "line": 19
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 26
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService",
+      "to": "notify-worker#src/push/push-sender.service.ts:PushSender",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/push/push.service.ts",
+      "line": 27
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "notify-worker#src/push/push-sender.service.ts:PushSender.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 54
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "notify-worker#src/push/push-sender.service.ts:PushSender.warm",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 40
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "notify-worker#src/push/push.service.ts:PushService.findRoom",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:notify-worker#Room",
+      "file": "src/push/push.service.ts",
+      "line": 45
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "to": "notify-worker#src/push/push.service.ts:PushService.sendReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{roomId?:string}"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 51
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService.onModuleInit",
+      "to": "notify-worker#src/bus/venue-bus.service.ts:VenueBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 31
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService.onModuleInit",
+      "to": "notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 34
+    },
+    {
+      "from": "notify-worker#src/push/push.service.ts:PushService.sendReady",
+      "to": "notify-worker#src/push/push-sender.service.ts:PushSender.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/push/push.service.ts",
+      "line": 62
+    },
+    {
+      "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+      "to": "channel:staff_feed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;venueId:string;count:number}"
+      ],
+      "file": "src/rooms/room.service.ts",
+      "line": 26
+    },
+    {
+      "from": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+      "to": "channel:staff_feed#SLOTS_SHOWN",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/rooms/room.service.ts",
+      "line": 26,
+      "params": [
+        "{type:string;venueId:string;count:number}"
+      ]
+    },
+    {
+      "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+      "to": "channel:venue_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "from": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+      "to": "channel:venue_events#ORDER_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 12,
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string;roomId:string}"
+      ]
+    },
+    {
+      "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+      "to": "channel:venue_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+      "to": "channel:venue_events#ORDER_PAID",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+      "to": "channel:venue_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+      "to": "channel:venue_events#TABLE_FREED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}"
+      ]
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+      "to": "channel:venue_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}"
+      ],
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+      "to": "channel:venue_events#ROW_CLAIMED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17,
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string}"
+      ]
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+      "to": "channel:venue_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}"
+      ],
+      "file": "src/rooms/rooms.service.ts",
+      "line": 21
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+      "to": "channel:venue_events#CALL_STAFF",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 21,
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;note:string}"
+      ]
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+      "to": "channel:venue_events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}"
+      ],
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+      "to": "channel:venue_events#ROOM_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26,
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}"
+      ]
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+      "to": "channel:staff_feed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}"
+      ],
+      "file": "src/rooms/rooms.service.ts",
+      "line": 27
+    },
+    {
+      "from": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+      "to": "channel:staff_feed#ROOM_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 27,
+      "params": [
+        "{type:type:rooms-api#VenueEvent;venueId:string;roomId:string;roomName:string}"
+      ]
+    },
+    {
+      "from": "rooms-api#src/orders/orders.controller.ts:OrdersController",
+      "to": "rooms-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "rooms-api#src/orders/orders.controller.ts:OrdersController.free",
+      "to": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "rooms-api#src/orders/orders.controller.ts:OrdersController.paid",
+      "to": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "rooms-api#src/orders/orders.controller.ts:OrdersController.ready",
+      "to": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "rooms-api#src/orders/orders.service.ts:OrdersService",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable",
+      "to": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "rooms-api#src/orders/orders.service.ts:OrdersService.freeTable",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid",
+      "to": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "rooms-api#src/orders/orders.service.ts:OrdersService.markPaid",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady",
+      "to": "producer:rooms-api#src/orders/orders.service.ts:12:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "from": "rooms-api#src/orders/orders.service.ts:OrdersService.markReady",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 12
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.controller.ts:RoomsController",
+      "to": "rooms-api#src/rooms/rooms.service.ts:RoomsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.call",
+      "to": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.claim",
+      "to": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.freeTimes",
+      "to": "rooms-api#src/rooms/rooms.service.ts:RoomsService.freeTimes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.controller.ts:RoomsController.ready",
+      "to": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 9
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff",
+      "to": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 21
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService.callStaff",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 21
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow",
+      "to": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService.claimRow",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady",
+      "to": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady",
+      "to": "producer:rooms-api#src/rooms/rooms.service.ts:27:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 27
+    },
+    {
+      "from": "rooms-api#src/rooms/rooms.service.ts:RoomsService.roomReady",
+      "to": "rooms-api#src/bus/venue-bus.service.ts:VenueBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26
+    }
+  ],
+  "types": {
+    "type:chat-bot#SlotFormat": {
+      "name": "SlotFormat",
+      "kind": "object",
+      "declaredIn": "chat-bot#src/rooms/slot-renderer.service.ts",
+      "structuralHash": "1204184ec4755515",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:chat-bot#StaffMessage": {
+      "name": "StaffMessage",
+      "kind": "object",
+      "declaredIn": "chat-bot#src/staff/staff-bot.service.ts",
+      "structuralHash": "aed43669bf8efbb3",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "roomId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "roomName",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:notify-worker#Room": {
+      "name": "Room",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/push/push.service.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:notify-worker#VenueMessage": {
+      "name": "VenueMessage",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/feed/audit-trail.service.ts",
+      "structuralHash": "ba62f7e8789953f7",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "venueId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:notify-worker#VenueMessage@src/feed/feed-relay.service.ts": {
+      "name": "VenueMessage",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/feed/feed-relay.service.ts",
+      "structuralHash": "ba62f7e8789953f7",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "venueId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:notify-worker#VenueMessage@src/orders/order-watch.service.ts": {
+      "name": "VenueMessage",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/orders/order-watch.service.ts",
+      "structuralHash": "ba62f7e8789953f7",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "venueId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:rooms-api#VenueEvent": {
+      "name": "VenueEvent",
+      "kind": "enum",
+      "declaredIn": "rooms-api#src/events/venue-event.ts",
+      "structuralHash": "6092d58eb8c5a532",
+      "members": [
+        "ROW_CLAIMED",
+        "CALL_STAFF",
+        "ORDER_READY",
+        "ORDER_PAID",
+        "TABLE_FREED",
+        "ROOM_READY"
+      ],
+      "meta": {
+        "declKind": "enum",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "chat-bot"
+    },
+    {
+      "file": "src/rooms/room.service.ts",
+      "line": 26,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects SLOTS_SHOWN on staff_feed: 1 consumer chooses other types (StaffBot.onEvent)",
+      "symbol": "producer:chat-bot#src/rooms/room.service.ts:26:5",
+      "service": "chat-bot",
+      "meta": {
+        "type": "channel:staff_feed#SLOTS_SHOWN",
+        "channel": "channel:staff_feed",
+        "messageType": "SLOTS_SHOWN",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/rooms/slot-renderer.service.ts",
+      "line": 22,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "SlotRenderer.render -> chosen.format",
+      "meta": {
+        "cause": "interface-type"
+      },
+      "service": "chat-bot"
+    },
+    {
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "notify-worker"
+    },
+    {
+      "file": "src/bus/venue-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "rooms-api"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ORDER_PAID on venue_events: 1 consumer chooses other types; 3 consumers take every type and hand it on; 1 place may still choose it: src/orders/order-watch.service.ts:23 (a prefix test that may take ORDER_PAID: evt.type.startsWith('ORDER_'))",
+      "symbol": "producer:rooms-api#src/orders/orders.service.ts:17:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#ORDER_PAID",
+        "channel": "channel:venue_events",
+        "messageType": "ORDER_PAID",
+        "sureness": "unsure"
+      }
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects TABLE_FREED on venue_events: 1 consumer chooses other types; 3 consumers take every type and hand it on; 1 place may still choose it: src/feed/room-board.service.ts:9 (TABLE_FREED is written here; the graph read no choice of it: evt.type === 'TABLE_FREED')",
+      "symbol": "producer:rooms-api#src/orders/orders.service.ts:22:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#TABLE_FREED",
+        "channel": "channel:venue_events",
+        "messageType": "TABLE_FREED",
+        "sureness": "unsure"
+      }
+    },
+    {
+      "file": "src/rooms/rooms.service.ts",
+      "line": 17,
+      "reason": "message-type-unselected",
+      "message": "no code compares ROW_CLAIMED: its name is written only where it is sent, at src/rooms/rooms.service.ts:17 in rooms-api; 1 consumer chooses other types; 3 consumers take every type and hand it on, and no code past them compares the name",
+      "symbol": "producer:rooms-api#src/rooms/rooms.service.ts:17:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#ROW_CLAIMED",
+        "channel": "channel:venue_events",
+        "messageType": "ROW_CLAIMED",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/rooms/rooms.service.ts",
+      "line": 26,
+      "reason": "message-type-unselected",
+      "message": "no code compares ROOM_READY: its name is written only where it is sent, at src/rooms/rooms.service.ts:26 in rooms-api and 1 more; 1 consumer chooses other types; 3 consumers take every type and hand it on, and no code past them compares the name",
+      "symbol": "producer:rooms-api#src/rooms/rooms.service.ts:26:5",
+      "service": "rooms-api",
+      "meta": {
+        "type": "channel:venue_events#ROOM_READY",
+        "channel": "channel:venue_events",
+        "messageType": "ROOM_READY",
+        "sureness": "sure"
+      }
+    }
+  ]
+}

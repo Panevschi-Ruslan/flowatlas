@@ -1,0 +1,124 @@
+{
+  "settled": "the request lands on POST /products (stock-api), ProductsController.create",
+  "requests": [
+    {
+      "route": "entry:stock-api:http:POST:/products",
+      "by": "stock-api#src/products/products.controller.ts:ProductsController.create"
+    }
+  ],
+  "root": {
+    "id": "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+    "line": "20-22",
+    "meta": {
+      "signature": {
+        "returns": "void"
+      }
+    },
+    "children": [
+      {
+        "id": "store-web#src/app/products.client.ts:ProductsClient.create",
+        "line": "23-48",
+        "meta": {
+          "signature": {
+            "params": [
+              {
+                "name": "product",
+                "type": "{…22 fields}"
+              }
+            ],
+            "returns": "string"
+          }
+        },
+        "edge": "calls",
+        "children": [
+          {
+            "id": "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "label": "POST /products",
+            "kind": "http",
+            "meta": {
+              "url": "${apiUrl}/products",
+              "baseUrlEnv": "apiUrl",
+              "responseType": "string",
+              "bodyType": "{…22 fields}",
+              "bodyFrom": "literal",
+              "bodyKeys": [
+                "name",
+                "price",
+                "sku"
+              ],
+              "via": "template-env",
+              "targetService": "stock-api"
+            },
+            "edge": "calls",
+            "children": [
+              {
+                "id": "entry:stock-api:http:POST:/products",
+                "loc": "src/products/products.controller.ts:23",
+                "edge": {
+                  "type": "hits",
+                  "params": [
+                    "{…22 fields}"
+                  ],
+                  "returns": "string"
+                },
+                "children": [
+                  {
+                    "id": "stock-api#src/products/products.controller.ts:ProductsController.create",
+                    "line": "23-52",
+                    "meta": {
+                      "signature": {
+                        "params": [
+                          {
+                            "name": "body",
+                            "type": "{…22 fields}"
+                          }
+                        ],
+                        "returns": "string"
+                      },
+                      "fieldsRead": [
+                        {
+                          "field": "name",
+                          "line": 51
+                        },
+                        {
+                          "field": "sku",
+                          "line": 51
+                        }
+                      ]
+                    },
+                    "edge": "handles",
+                    "children": [
+                      {
+                        "id": "stock-api#src/products/products.service.ts:ProductsService.create",
+                        "line": "16-19",
+                        "meta": {
+                          "signature": {
+                            "params": [
+                              {
+                                "name": "sku",
+                                "type": "string"
+                              },
+                              {
+                                "name": "name",
+                                "type": "string"
+                              }
+                            ],
+                            "returns": "string"
+                          }
+                        },
+                        "edge": "calls"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "complete": true,
+  "note": "a long type written inline is said by its field count: verbose: true gives it whole"
+}

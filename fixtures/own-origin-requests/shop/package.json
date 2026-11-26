@@ -1,0 +1,8 @@
+{
+  "name": "own-origin-requests-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "nuxt": "^3.13.0"
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T06:05:42.035Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:16:55.850Z",
   "services": [
     {
       "name": "storefront",
@@ -67,7 +67,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -103,7 +104,8 @@
       "line": 9,
       "meta": {
         "key": "CATALOG_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -127,7 +129,8 @@
       "line": 33,
       "meta": {
         "key": "LEDGER_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -518,7 +521,8 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -565,7 +569,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -584,7 +594,8 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -605,7 +616,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -626,7 +644,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -647,7 +672,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -670,7 +702,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -757,7 +796,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -776,7 +816,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1384,6 +1425,23 @@
         "variable": "ORDERS_FEED_URL",
         "value": "http://localhost:3001",
         "from": "wrangler.toml"
+      }
+    },
+    {
+      "service": "payments",
+      "file": "docker-compose.yml",
+      "line": 15,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "docker-compose.yml publishes port 4000 of payments-api (payments) as 4000, but payments's code listens on 3000 (src/main.ts:7)",
+      "hint": "Map the published port to the port the server listens on (4000:<that port>), or check that the container's environment gives the server 4000. A request to localhost:4000 is still joined to payments by the file.",
+      "symbol": "payments-api:4000:4000",
+      "meta": {
+        "published": 4000,
+        "container": 4000,
+        "listens": [
+          3000
+        ]
       }
     },
     {

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T06:05:58.475Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:18:00.549Z",
   "services": [
     {
       "name": "api",
@@ -91,7 +91,21 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "email",
+            "line": 9
+          },
+          {
+            "field": "id",
+            "line": 9
+          },
+          {
+            "field": "id",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -103,7 +117,8 @@
       "line": 6,
       "meta": {
         "key": "E2E_API_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -173,7 +188,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     }
   ],

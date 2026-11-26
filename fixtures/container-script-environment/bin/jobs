@@ -1,0 +1,3 @@
+#!/bin/sh
+# Starts the jobs server from its source.
+exec tsx jobs/src/app.ts

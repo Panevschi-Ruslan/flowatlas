@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T06:03:45.980Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:23.417Z",
   "services": [
     {
       "name": "app",
@@ -252,7 +252,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -275,7 +281,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 13
+          }
+        ]
       }
     },
     {
@@ -298,7 +310,17 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 17
+          },
+          {
+            "field": "title",
+            "line": 17
+          }
+        ]
       }
     },
     {
@@ -426,7 +448,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server/app.ts",
+            "line": 20
+          }
+        ]
       }
     },
     {

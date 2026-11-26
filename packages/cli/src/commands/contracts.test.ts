@@ -14,6 +14,7 @@ import { contractsHook } from './mcp.js';
 import { CliError, EXIT } from '../exit.js';
 import type { QueryIo } from '../query/answer.js';
 import { writeTestDb } from '../analysis/__fixtures__/test-db.js';
+import { renderContractsText } from '../render/contracts.js';
 
 /**
  * What the tool ought to say about `fixtures/multi-repo-contracts`, read off
@@ -337,6 +338,18 @@ const io = (): QueryIo & { text: () => string } => {
   let out = '';
   return { out: (text) => (out += text), err: () => undefined, tty: false, text: () => out };
 };
+
+describe('a finding with no typed boundary beside it (P241)', () => {
+  it('prints the findings of GraphQL selections, not that there is no boundary', () => {
+    const graph = JSON.parse(readFileSync(join(ROOT, 'fixtures', 'graphql-federation', 'expected.project-graph.json'), 'utf8')) as ProjectGraph;
+    const report = checkContracts(graph);
+    expect(report.summary.edges).toBe(0);
+    const text = renderContractsText(report);
+    expect(text).not.toContain('no boundary between services');
+    expect(text).toContain('Order.discount');
+    expect(text).toContain('@inaccessible');
+  });
+});
 
 describe('the command', () => {
   it('says the same thing reading the database as reading the graph', () => {

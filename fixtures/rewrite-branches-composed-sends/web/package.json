@@ -1,0 +1,14 @@
+{
+  "name": "rewrite-branches-composed-sends-web",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@urql/core": "^5.0.0",
+    "axios": "^1.7.0",
+    "fp-ts": "^2.16.0",
+    "graphql": "^16.9.0",
+    "graphql-request": "^6.1.0",
+    "graphql-tag": "^2.12.0",
+    "react": "^19.0.0"
+  }
+}

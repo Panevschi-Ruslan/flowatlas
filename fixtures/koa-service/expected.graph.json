@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "koa-service",
-  "generatedAt": "2026-10-08T09:12:40.126Z",
+  "generatedAt": "2026-11-23T14:37:07.499Z",
   "nodes": [
     {
       "id": "db_query:koa-service#src/orders/orders.repository.ts:12:12",
@@ -166,7 +166,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -246,7 +247,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -265,7 +267,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total",
+            "line": 33
+          }
+        ]
       }
     },
     {
@@ -302,7 +310,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -321,7 +330,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -352,7 +362,14 @@
           "entry": [
             "koa-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 22
+          }
+        ]
       }
     },
     {

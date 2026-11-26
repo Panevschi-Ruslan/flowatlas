@@ -1,0 +1,49 @@
+{
+  "query": "QUOTA_WARNING",
+  "counts": {
+    "messages": 1,
+    "gaps": 1
+  },
+  "results": {
+    "messages": [
+      {
+        "id": "channel:space:*:events#QUOTA_WARNING",
+        "type": "message_type",
+        "label": "QUOTA_WARNING",
+        "channel": "space:*:events",
+        "service": "docs-api",
+        "producers": [
+          "producer:docs-api#src/spaces/spaces.service.ts:37:5"
+        ],
+        "handlers": [],
+        "sites": 2,
+        "unselected": "no code that runs compares QUOTA_WARNING: its name is written only where it is sent, at src/spaces/spaces.service.ts:37 in docs-api; only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types; 1 consumer takes every type and hands it on, and no code past it compares the name",
+        "reach": "dead",
+        "from": "POST /spaces/:param/quota"
+      }
+    ],
+    "gaps": [
+      {
+        "id": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+        "gapId": "gap:docs-api|src/spaces/spaces.service.ts|message-type-unselected",
+        "type": "gap",
+        "reason": "message-type-unselected",
+        "kind": "finding",
+        "service": "docs-api",
+        "loc": "src/spaces/spaces.service.ts:37",
+        "message": "no code that runs compares QUOTA_WARNING: its name is written only where it is sent, at src/spaces/spaces.service.ts:37 in docs-api; only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types; 1 consumer takes every type and hands it on, and no code past it compares the name",
+        "sites": 1,
+        "places": [
+          "src/spaces/spaces.service.ts:37"
+        ]
+      }
+    ]
+  },
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",
+    "who_emits({channel: \"channel:space:*:events\", type: \"QUOTA_WARNING\"})",
+    "describe_for_prompt({id: \"gap:docs-api|src/spaces/spaces.service.ts|message-type-unselected\"})",
+    "get_source({symbol: \"producer:docs-api#src/spaces/spaces.service.ts:37:5\"})"
+  ]
+}

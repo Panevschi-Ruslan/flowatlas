@@ -29,7 +29,7 @@ const connect = async (dbPath: string): Promise<(name: string, args?: Record<str
   await client.connect(clientSide);
   clients.push(client);
   return async (name, args = {}) => {
-    const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+    const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
     return JSON.parse(response.content[0]!.text);
   };
 };
@@ -246,7 +246,8 @@ describe('traffic as evidence elsewhere', () => {
       verdict: 'likely-dead',
       evidence: { neverSeen: { confidence: 'strong' } },
     });
-    expect((await none('dead', { id: 'entry:gateway:http:POST:/orders/:param/cancel' })).verdict).toBe('unknown');
+    // Without traffic, a request one segment off could reach it: maybe, as its reach says (P396).
+    expect((await none('dead', { id: 'entry:gateway:http:POST:/orders/:param/cancel' })).verdict).toBe('maybe');
     const blind = await call('cant_follow', { cause: 'seen-not-in-code' });
     expect(blind.causes[0]).toMatchObject({ cause: 'seen-not-in-code', packages: [] });
     expect(blind.causes[0].seen[0]).toMatchObject({ service: 'billing', kind: 'db', next: ['search({query: "invoices"})'] });

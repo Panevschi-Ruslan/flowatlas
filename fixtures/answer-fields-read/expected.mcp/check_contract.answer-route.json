@@ -1,0 +1,72 @@
+{
+  "entry": "entry:shop-api:http:GET:/api/orders",
+  "reads": [],
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "answer": {
+    "type": "type:shop-api#OrderSummary[]",
+    "reads": [
+      {
+        "field": "status",
+        "id": "shop-app#src/OrdersList.tsx:OrderRow",
+        "line": 6,
+        "call": "ui_api_call:shop-app#src/api.ts:19:58"
+      },
+      {
+        "field": "id",
+        "id": "shop-app#src/OrdersList.tsx:OrdersList",
+        "line": 12,
+        "call": "ui_api_call:shop-app#src/api.ts:19:58"
+      },
+      {
+        "field": "status",
+        "id": "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent",
+        "line": 8,
+        "file": "src/app/order-badge.component.ts",
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:25:12"
+      },
+      {
+        "field": "id",
+        "id": "shop-web#src/app/orders.component.ts:OrdersComponent",
+        "line": 12,
+        "file": "src/app/orders.component.ts",
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:25:12"
+      },
+      {
+        "field": "discount",
+        "id": "shop-web#src/app/orders.component.ts:OrdersComponent",
+        "line": 13,
+        "file": "src/app/orders.component.ts",
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:25:12"
+      },
+      {
+        "field": "total",
+        "id": "shop-web#src/app/orders.component.ts:OrdersComponent",
+        "line": 13,
+        "file": "src/app/orders.component.ts",
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:25:12"
+      }
+    ],
+    "missing": [
+      {
+        "field": "discount",
+        "id": "shop-web#src/app/orders.component.ts:OrdersComponent",
+        "line": 13,
+        "file": "src/app/orders.component.ts"
+      }
+    ],
+    "unused": [
+      {
+        "field": "internalNote"
+      },
+      {
+        "field": "placedAt"
+      }
+    ]
+  },
+  "callers": 2,
+  "complete": true,
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-app#src/api.ts:19:58\", to: \"entry:shop-api:http:GET:/api/orders\"})",
+    "check_contract({from: \"ui_api_call:shop-web#src/app/orders.service.ts:25:12\", to: \"entry:shop-api:http:GET:/api/orders\"})"
+  ]
+}

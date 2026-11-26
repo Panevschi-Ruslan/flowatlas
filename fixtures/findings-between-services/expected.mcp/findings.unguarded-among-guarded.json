@@ -1,0 +1,40 @@
+{
+  "kind": "unguarded-among-guarded",
+  "rows": [
+    {
+      "kind": "unguarded-among-guarded",
+      "id": "entry:catalog-api:http:DELETE:/products/:param",
+      "method": "catalog-api#src/products/products.controller.ts:ProductsController.remove",
+      "service": "catalog-api",
+      "loc": "src/products/products.controller.ts:39",
+      "message": "DELETE /products/:param has no guard in front of it and reaches products, while the 2 other writes of ProductsController have StaffGuard in front.",
+      "precision": "high",
+      "evidence": "every other write of its router is guarded and the routes of src/products/products.controller.ts were read whole; no public marker is on it",
+      "rank": 1,
+      "reach": {
+        "guardedSiblings": 3,
+        "writes": 1,
+        "reads": 0
+      },
+      "next": "get_flow({entry: \"entry:catalog-api:http:DELETE:/products/:param\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "call-to-missing-route": {
+      "count": 1,
+      "why": "some routes of legacy-api were not read (route-path-dynamic)"
+    },
+    "type-never-published": {
+      "count": 1,
+      "why": "1 publish(es) on stock_events send a type not read"
+    },
+    "config-not-set": {
+      "count": 2,
+      "why": "no deployment file of storefront was read: its settings may be set where the reading does not look"
+    }
+  },
+  "next": [
+    "get_flow({entry: \"entry:catalog-api:http:DELETE:/products/:param\"})"
+  ]
+}

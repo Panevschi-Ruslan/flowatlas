@@ -1,0 +1,17 @@
+{
+  "total": {
+    "rows": 0,
+    "sites": 0,
+    "causes": 0
+  },
+  "causes": [],
+  "packages": [],
+  "apart": {
+    "notes": 1,
+    "findings": 9
+  },
+  "note": "deployment-setting-unread is a note on how something was read, not a step the reader missed: 1 rows",
+  "next": [
+    "search({query: \"deployment-setting-unread\", kinds: [\"gaps\"]})"
+  ]
+}

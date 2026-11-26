@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:21.582Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:42.933Z",
   "configHash": "a5e946016b04",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 522,
+      "durationMs": 988,
       "packages": {
         "name": "corner-shop-returns",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 50,
       "types": 5,
       "unresolved": 4,
-      "durationMs": 536,
+      "durationMs": 1021,
       "packages": {
         "name": "corner-shop",
         "runtime": [

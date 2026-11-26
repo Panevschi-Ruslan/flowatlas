@@ -1,0 +1,12 @@
+{
+  "name": "shop",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "export NODE_ENV=production && bun src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  }
+}

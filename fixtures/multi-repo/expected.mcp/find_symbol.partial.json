@@ -5,12 +5,21 @@
       "type": "method",
       "label": "OrdersClient.fetchOne",
       "loc": "src/clients/orders.client.ts:32",
-      "service": "gateway"
+      "service": "gateway",
+      "endLine": 34,
+      "reach": "alive",
+      "from": "GET /orders/:param",
+      "requests": [
+        {
+          "route": "entry:orders:http:GET:/orders/:param",
+          "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+        }
+      ]
     }
   ],
   "total": 1,
+  "complete": true,
   "next": [
-    "who_calls({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
     "impact({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
     "get_source({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})"
   ]

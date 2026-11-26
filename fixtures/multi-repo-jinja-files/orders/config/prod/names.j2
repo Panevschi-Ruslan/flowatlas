@@ -1,0 +1,5 @@
+{#- The names every stack of the group gives its resources. -#}
+{% set separator = '-' %}
+{% macro queue(name, stage=stack_group_config.stage) -%}
+{{ stack_group_config.project_code }}{{ separator }}{{ stage }}{{ separator }}{{ name }}
+{%- endmacro %}

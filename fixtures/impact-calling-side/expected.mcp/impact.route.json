@@ -1,0 +1,75 @@
+{
+  "target": {
+    "id": "entry:shop-api:http:PATCH:/orders/status",
+    "type": "entry",
+    "label": "PATCH /orders/status",
+    "loc": "src/orders.controller.ts:9",
+    "service": "shop-api",
+    "kind": "http",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:backoffice-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "loc": "src/app.routes.ts:5",
+      "service": "backoffice-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "PATCH /orders/status (shop-api)",
+      "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"
+    },
+    {
+      "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+      "type": "method",
+      "label": "OpsBot.handleStatus",
+      "loc": "src/ops-bot.ts:29",
+      "service": "ops-bot",
+      "endLine": 31,
+      "reach": "maybe",
+      "from": "behind",
+      "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+      "confirm": {
+        "grep": "handleStatus",
+        "repo": "ops-bot"
+      },
+      "via": "PATCH /orders/status (shop-api)"
+    }
+  ],
+  "total": 2,
+  "byKind": {
+    "bots": {
+      "ops-bot": [
+        "src/ops-bot.ts (maybe)"
+      ]
+    },
+    "screens": {
+      "backoffice-web": [
+        "src/status-board.component.ts"
+      ]
+    }
+  },
+  "reached": 9,
+  "entriesByService": {
+    "backoffice-web": 1
+  },
+  "maybe": 1,
+  "reachedByService": {
+    "backoffice-web": 6,
+    "ops-bot": 3
+  },
+  "servicesWithoutEntry": [
+    "ops-bot"
+  ],
+  "channels": [],
+  "complete": false,
+  "left": [
+    "gaps: 1 chain stops at an unread call before any way in: the maybe row"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:backoffice-web:screen:/board\"})",
+    "describe_for_prompt({id: \"entry:backoffice-web:screen:/board\"})",
+    "impact({symbol: \"entry:backoffice-web:screen:/board\"})"
+  ]
+}

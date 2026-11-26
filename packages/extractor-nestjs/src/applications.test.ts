@@ -4,6 +4,7 @@ import {
   applicationFindings,
   applicationMembership,
   readApplicationRoots,
+  routeRegistrationOf,
 } from './applications.js';
 import { buildClassIndex } from './index-classes.js';
 import { ModuleIndex, type ModuleInfo } from './modules-index.js';
@@ -231,5 +232,66 @@ describe('which application mounts what', () => {
     );
     expect(map.of[find('HealthController').id]).toBeUndefined();
     expect(map.names).toEqual(['ApiModule']);
+  });
+});
+
+describe('how an application orders its routes (P385)', () => {
+  const orderOf = (main: string) =>
+    read({ 'src/app.module.ts': `export class AppModule {}`, 'src/main.ts': `import { AppModule } from './app.module';\n${main}` }).roots[0]?.routeOrder;
+
+  it('leaves the default, the Express adapter in declaration order, unsaid', () => {
+    expect(orderOf(`await NestFactory.create(AppModule);`)).toBeUndefined();
+    expect(orderOf(`await NestFactory.create(AppModule, { cors: true });`)).toBeUndefined();
+    expect(orderOf(`await NestFactory.create(AppModule, new ExpressAdapter(server));`)).toBeUndefined();
+  });
+
+  it('reads Fastify by its adapter or its application type as ranking by specificity', () => {
+    expect(orderOf(`await NestFactory.create(AppModule, new FastifyAdapter());`)).toBe('specificity');
+    expect(orderOf(`const adapter = new FastifyAdapter();\nawait NestFactory.create(AppModule, adapter);`)).toBe('specificity');
+    expect(orderOf(`await NestFactory.create<NestFastifyApplication>(AppModule, adapter);`)).toBe('specificity');
+  });
+
+  it('reads routeResolutionStrategy in the options', () => {
+    expect(orderOf(`await NestFactory.create(AppModule, { routeResolutionStrategy: 'specificity' });`)).toBe('specificity');
+    expect(orderOf(`await NestFactory.create(AppModule, new ExpressAdapter(), { routeResolutionStrategy: 'specificity' });`)).toBe('specificity');
+    expect(orderOf(`await NestFactory.create(AppModule, { routeResolutionStrategy: 'declaration' });`)).toBeUndefined();
+  });
+
+  it('says unread where the adapter or the options cannot be read', () => {
+    expect(orderOf(`await NestFactory.create(AppModule, makeAdapter());`)).toBe('unread');
+    expect(orderOf(`await NestFactory.create(AppModule, { ...options });`)).toBe('unread');
+    expect(orderOf(`await NestFactory.create(AppModule, { routeResolutionStrategy: strategy });`)).toBe('unread');
+  });
+});
+
+describe('the order controllers register their routes in (P385)', () => {
+  const FILES = {
+    'src/app.module.ts': `@Module({}) export class AppModule {}`,
+    'src/orders.module.ts': `@Module({}) export class OrdersModule {}`,
+    'src/billing.module.ts': `@Module({}) export class BillingModule {}`,
+    'src/shared.module.ts': `@Module({}) export class SharedModule {}`,
+    'src/root.controller.ts': `@Controller() export class RootController {}`,
+    'src/orders.controller.ts': `@Controller('orders') export class OrdersController {}`,
+    'src/exports.controller.ts': `@Controller('orders') export class ExportsController {}`,
+    'src/billing.controller.ts': `@Controller('billing') export class BillingController {}`,
+    'src/shared.controller.ts': `@Controller('shared') export class SharedController {}`,
+  };
+
+  it('takes the root, then each import depth first in the order written, each module once', () => {
+    const project = repoOf(FILES);
+    const { classes, modules, find } = indexOf(project, {
+      AppModule: { imports: ['OrdersModule', 'BillingModule'], controllers: ['RootController'] },
+      OrdersModule: { imports: ['SharedModule'], controllers: ['OrdersController', 'ExportsController'] },
+      BillingModule: { imports: ['SharedModule'], controllers: ['BillingController'] },
+      SharedModule: { controllers: ['SharedController'] },
+    });
+    const registration = routeRegistrationOf(
+      [{ name: 'AppModule', module: find('AppModule').declaration, file: 'src/main.ts', line: 1 }],
+      modules,
+      classes,
+    );
+    expect(registration.roots[0]?.controllers).toEqual(
+      ['RootController', 'OrdersController', 'ExportsController', 'SharedController', 'BillingController'].map((name) => find(name).id),
+    );
   });
 });

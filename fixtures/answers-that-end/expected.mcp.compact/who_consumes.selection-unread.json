@@ -1,0 +1,20 @@
+{
+  "channel": {
+    "id": "channel:packing_events",
+    "loc": "src/orders/orders.service.ts:20",
+    "service": "shop-api"
+  },
+  "consumers": [],
+  "total": 0,
+  "type": "ORDER_DELAYED",
+  "unselected": "no code that runs selects ORDER_DELAYED on packing_events: 2 consumers choose other types; 1 consumer takes every type and hands it on; 1 place may still choose it: src/packing/audit-feed.service.ts:24 (this.kept.has(event.type) tests the type against a set the code does not write out.)",
+  "sureness": "unsure",
+  "complete": false,
+  "left": [
+    "unsure: 1 place may still choose ORDER_DELAYED, the first src/packing/audit-feed.service.ts:27"
+  ],
+  "next": [
+    "who_emits({channel: \"channel:packing_events\", type: \"ORDER_DELAYED\"})",
+    "who_consumes({channel: \"channel:packing_events\"})"
+  ]
+}

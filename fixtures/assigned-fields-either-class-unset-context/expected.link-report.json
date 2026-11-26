@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:19.325Z",
+  "configHash": "c0e8235f16ef",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 1165,
+      "packages": {
+        "name": "shop-jobs",
+        "runtime": [
+          "bullmq",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1259,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 0,
+    "noConsumers": [
+      "channel:archive-mail",
+      "channel:audit",
+      "channel:eventbridge/stock-events/stock/StockMoved",
+      "channel:mail",
+      "channel:outbox"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 22,
+    "edges": 13,
+    "types": 0,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

@@ -1,4 +1,9 @@
-import type { Instance, Value } from '../eval/values.js';
+import { executeApiServedAt } from '@flowatlas/aws';
+import { matchServedAt, SERVED_AT_META, type ServedAt } from '@flowatlas/core';
+import { evaluate, withNames, type Scope } from '../eval/evaluate.js';
+import { object, str, type Instance, type ModuleInstance, type Value } from '../eval/values.js';
+import { attributeOf, type Expression } from '../hcl/ast.js';
+import { expressionsIn } from '../hcl/walk.js';
 import { argument, textOf, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
@@ -80,48 +85,342 @@ const prefixOf = (value: Value | undefined): string | undefined => {
 
 const sorted = (values: Iterable<string>): string[] => [...new Set(values)].sort();
 
-/** The stages an API is deployed to, as the files name them. */
+/**
+ * The stages an API is deployed to, as the files name them: a stage the
+ * workspace names by each name it takes, in the default workspace and in each
+ * workspace a map it is looked up in is written for (P308).
+ */
 const stagesOf = (api: Instance, reading: ResourceReading): string[] =>
   sorted(
     STAGES.flatMap((stage) =>
       reading
         .ofType('managed', stage.type)
         .filter((instance) => referenced(argument(instance, stage.api)) === api)
-        .flatMap((instance) => textOf(argument(instance, stage.name)) ?? []),
+        .flatMap((instance) => textOf(argument(instance, stage.name)) ?? workspaceNames(instance, stage.name).map((each) => each.name)),
     ),
   );
+
+/**
+ * Whether an argument is left to whoever applies the configuration (P294): a
+ * root module's `var.<name>`, which `-var` sets, or `terraform.workspace`,
+ * which the workspace selected sets.
+ */
+const chosenOnApply = (instance: Instance, name: string): boolean => {
+  const written = attributeOf(instance.block.body, name);
+  return written !== undefined && chosenIn(written.expression, instance.module, 0);
+};
+
+/** How many locals and module inputs a value is followed through to the root. */
+const MOST_HOPS = 16;
+
+/** `terraform.workspace`. */
+const isWorkspace = (expression: Expression): boolean =>
+  expression.type === 'traversal' &&
+  expression.source.type === 'variable' &&
+  expression.source.name === 'terraform' &&
+  expression.steps[0]?.kind === 'attr' &&
+  expression.steps[0].name === 'workspace';
+
+/** `var.<name>` or `local.<name>`, by the kind and the name. */
+const namedValue = (expression: Expression): { kind: 'var' | 'local'; name: string } | undefined => {
+  if (expression.type !== 'traversal' || expression.source.type !== 'variable') return undefined;
+  const kind = expression.source.name;
+  const [step] = expression.steps;
+  return (kind === 'var' || kind === 'local') && step?.kind === 'attr' ? { kind, name: step.name } : undefined;
+};
+
+/**
+ * Whether an expression of a module reads a value whoever applies the
+ * configuration sets (P294, P298): `terraform.workspace`, a root module's
+ * `var.<name>` (unless `workspaceOnly`), or a local or a child module's input
+ * written over either - `local.stage = terraform.workspace`, `stage =
+ * var.stage` in the call of the module the stage is created in - anywhere in
+ * it, the key of an index step too (P304).
+ */
+const chosenIn = (expression: Expression, module: ModuleInstance, depth: number, workspaceOnly = false): boolean => {
+  if (depth > MOST_HOPS) return false;
+  for (const each of expressionsIn(expression)) {
+    if (isWorkspace(each)) return true;
+    const named = namedValue(each);
+    if (named === undefined) continue;
+    if (named.kind === 'var' && module.root === undefined) {
+      if (workspaceOnly) continue;
+      return true;
+    }
+    const written = module.written(named.kind, named.name);
+    if (written !== undefined && chosenIn(written.expression, written.scope.module, depth + 1, workspaceOnly)) return true;
+  }
+  return false;
+};
+
+/** Terraform's workspace where none is selected. */
+const DEFAULT_WORKSPACE = 'default';
+
+/**
+ * The workspaces a value is written for (P304): the keys of each map it
+ * looks up by the workspace - `lookup(var.stages, terraform.workspace)`,
+ * `local.env[terraform.workspace].stage` - here or in a local or an input it
+ * reads.
+ */
+const workspacesKeyed = (expression: Expression, scope: Scope, depth: number, out: Set<string>): void => {
+  if (depth > MOST_HOPS) return;
+  const { module } = scope;
+  const keysOf = (map: Expression): void => {
+    const value = evaluate(map, scope);
+    if (value.kind === 'object') for (const key of value.entries.keys()) out.add(key);
+  };
+  for (const each of expressionsIn(expression)) {
+    if (each.type === 'call' && each.name === 'lookup' && each.args[0] !== undefined && each.args[1] !== undefined && chosenIn(each.args[1], module, 0, true)) {
+      keysOf(each.args[0]);
+    }
+    if (each.type === 'traversal') {
+      each.steps.forEach((step, index) => {
+        if (index > 0 && step.kind === 'index' && chosenIn(step.key, module, 0, true)) keysOf({ ...each, steps: each.steps.slice(0, index) });
+      });
+    }
+    const named = namedValue(each);
+    const written = named === undefined ? undefined : module.written(named.kind, named.name);
+    if (written !== undefined) workspacesKeyed(written.expression, written.scope, depth + 1, out);
+  }
+};
+
+/**
+ * What a value is in one workspace (P304): the expression evaluated with
+ * `terraform.workspace` that workspace, and each local and input it reads
+ * that the workspace decides evaluated the same way.
+ */
+const inWorkspace = (expression: Expression, scope: Scope, workspace: string, depth: number): Value => {
+  const { module } = scope;
+  const locals = new Map<string, Value>();
+  const inputs = new Map<string, Value>();
+  for (const each of expressionsIn(expression)) {
+    const named = namedValue(each);
+    if (named === undefined) continue;
+    const into = named.kind === 'local' ? locals : inputs;
+    if (into.has(named.name)) continue;
+    const written = module.written(named.kind, named.name);
+    const decided = written !== undefined && depth < MOST_HOPS && chosenIn(written.expression, written.scope.module, 0, true);
+    into.set(
+      named.name,
+      decided ? inWorkspace(written.expression, written.scope, workspace, depth + 1) : named.kind === 'local' ? module.local(named.name) : module.variable(named.name),
+    );
+  }
+  const names = new Map<string, Value>([['terraform', object(new Map([['workspace', str(workspace)]]))]]);
+  if (locals.size > 0) names.set('local', object(locals));
+  if (inputs.size > 0) names.set('var', object(inputs));
+  return evaluate(expression, withNames(scope, names));
+};
+
+/** A name an argument the workspace decides takes, and the workspace it takes it in. */
+interface WorkspaceName {
+  readonly name: string;
+  readonly workspace: string;
+}
+
+/**
+ * The names an argument the workspace decides takes (P304): what it is in
+ * the default workspace, and in each workspace a map it is looked up in is
+ * written for, each with the workspace it is taken in - the default
+ * workspace's where two take the same name (P308). None where the workspace
+ * does not decide it.
+ */
+const workspaceNames = (instance: Instance, name: string): WorkspaceName[] => {
+  const written = attributeOf(instance.block.body, name);
+  if (written === undefined || !chosenIn(written.expression, instance.module, 0, true)) return [];
+  const scope = instance.module.scopeOf(instance);
+  const workspaces = new Set<string>();
+  workspacesKeyed(written.expression, scope, 0, workspaces);
+  const byName = new Map<string, string>();
+  for (const workspace of [DEFAULT_WORKSPACE, ...sorted(workspaces)]) {
+    const taken = textOf(inWorkspace(written.expression, scope, workspace, 0));
+    if (taken !== undefined && !byName.has(taken)) byName.set(taken, workspace);
+  }
+  return [...byName].map(([each, workspace]) => ({ name: each, workspace })).sort((a, b) => a.name.localeCompare(b.name));
+};
+
+/**
+ * The stages a mapping maps its domain onto (P316): the name written, or
+ * the stage resource a reference names, or - where the workspace names it,
+ * in the mapping or in the stage it references - each name it takes, in the
+ * default workspace and in each workspace a map it is looked up in is
+ * written for, as a stage resource's are read (P304, P308).
+ */
+const mappedStages = (instance: Instance, name: string): string[] => {
+  const written = nameAt(argument(instance, name));
+  if (written !== undefined) return [written];
+  const [from, by] = namedThrough(instance, name);
+  return workspaceNames(from, by).map((each) => each.name);
+};
+
+/**
+ * The block and the argument a mapping's stage or domain is named by (P316,
+ * P322): the stage or domain resource it references - by its id, or by the
+ * very argument, `aws_apigatewayv2_domain_name.api.domain_name`, which
+ * evaluates to nothing where the workspace names it - else the mapping's own.
+ */
+const namedThrough = (instance: Instance, name: string): readonly [Instance, string] => {
+  let target = referenced(argument(instance, name));
+  if (target === undefined) {
+    const written = attributeOf(instance.block.body, name)?.expression;
+    if (written?.type === 'traversal' && written.source.type === 'variable' && NAMED_BY.has(written.source.name) && written.steps[0]?.kind === 'attr') {
+      const block = evaluate({ ...written, steps: written.steps.slice(0, 1) }, instance.module.scopeOf(instance));
+      if (block.kind === 'instance') target = block.instance;
+    }
+  }
+  const namedBy = target === undefined ? undefined : NAMED_BY.get(target.type);
+  return target !== undefined && namedBy !== undefined ? [target, namedBy] : [instance, name];
+};
+
+/** A custom domain a mapping maps its API onto, as a caller's host is matched against it. */
+interface MappedDomain {
+  /** The domain, or with `chosenHost` the pattern every workspace's is: `**.api.example.com`. */
+  readonly host: string;
+  /** The domain where no workspace is selected, where `host` is a pattern. */
+  readonly chosenHost?: string;
+  /** The workspace that maps it, where it is not the default one (P308). */
+  readonly chosenIn?: string;
+}
+
+/**
+ * A workspace no map is written for: what a value is in it says whether the
+ * workspace's own name is written into it (P322). Lower case and a DNS
+ * label, as a domain carries it.
+ */
+const ANY_WORKSPACE = 'flowatlas0any0workspace';
+
+/**
+ * The domains a mapping maps its API onto (P322): the name written, or the
+ * domain resource a reference names; where the workspace names it - in the
+ * mapping or in the domain it references - each name it takes in the default
+ * workspace and in each workspace a map it is looked up in is written for,
+ * another workspace's saying so, and where the workspace's own name is
+ * written into it (`"${terraform.workspace}.api.example.com"`) the pattern
+ * every workspace's is, each place one label or several (P328), with the default workspace's beside it. A name a
+ * lookup falls back to is any other workspace's.
+ */
+const mappedDomains = (instance: Instance, name: string): MappedDomain[] => {
+  const [from, by] = namedThrough(instance, name);
+  const named = workspaceNames(from, by);
+  if (named.length === 0) {
+    const written = nameAt(argument(instance, name));
+    return written === undefined ? [] : [{ host: written }];
+  }
+  const out: MappedDomain[] = named.map((each) => ({ host: each.name, ...(each.workspace === DEFAULT_WORKSPACE ? {} : { chosenIn: `the workspace ${each.workspace}` }) }));
+  const written = attributeOf(from.block.body, by);
+  const elsewhere = written === undefined ? undefined : textOf(inWorkspace(written.expression, from.module.scopeOf(from), ANY_WORKSPACE, 0));
+  if (elsewhere === undefined) return out;
+  if (!elsewhere.toLowerCase().includes(ANY_WORKSPACE)) {
+    return out.some((each) => each.host === elsewhere) ? out : [...out, { host: elsewhere, chosenIn: 'any other workspace' }];
+  }
+  // Terraform takes as a workspace's name any text URL path escaping leaves as
+  // it is (`ValidWorkspaceName`): dots included, so `eu.prod` is a workspace,
+  // and the domain it names is two labels where its name is written. Each
+  // place is one label or several, `**` (P328).
+  const pattern = elsewhere.toLowerCase().split(ANY_WORKSPACE).join('**');
+  const byDefault = named.find((each) => each.workspace === DEFAULT_WORKSPACE)?.name;
+  const open: MappedDomain = { host: pattern, ...(byDefault === undefined ? {} : { chosenHost: byDefault }) };
+  // A workspace's domain the pattern does not cover - a map's own name for it - is said beside it.
+  return [open, ...out.filter((each) => matchServedAt(each.host, '', { host: pattern, base: [], api: '' }) === undefined)];
+};
+
+/** The region the AWS provider a block is created with is configured for, where the files settle it (P294). */
+const regionOf = (instance: Instance): string | undefined => {
+  const named = attributeOf(instance.block.body, 'provider')?.source.trim();
+  const provider = instance.module.provider(named !== undefined && /^aws(\.[\w-]+)?$/.test(named) ? named : 'aws');
+  return textOf(provider?.get('region'));
+};
+
+/**
+ * Where API Gateway serves an API itself (P294), for a route written out
+ * with its id: at the gateway host of its provider's region, any region where
+ * that is not read, once per stage it is deployed to - a stage `apply` may
+ * set open, with the one it sets where nothing does - at the root for an HTTP
+ * API's `$default` stage, the one a quick-create API (`target`) makes, and at
+ * a stage chosen elsewhere where none is read. None where its own endpoint is
+ * turned off.
+ */
+const servedOf = (api: Instance, reading: ResourceReading): ServedAt[] => {
+  const disabled = argument(api, 'disable_execute_api_endpoint');
+  if (disabled?.kind === 'bool' && disabled.value) return [];
+  const stages: { name?: string; chosen?: boolean; chosenIn?: string }[] = STAGES.flatMap((stage) =>
+    reading
+      .ofType('managed', stage.type)
+      .filter((instance) => referenced(argument(instance, stage.api)) === api && argument(instance, stage.name) !== undefined)
+      .flatMap((instance) => {
+        const name = textOf(argument(instance, stage.name));
+        // A stage the workspace names is open, with the name it takes in the
+        // default workspace and in each workspace a map is written for (P304),
+        // a name another workspace takes said to be that workspace's (P308).
+        const named = name === undefined ? workspaceNames(instance, stage.name) : [];
+        if (named.length > 0) {
+          return named.map((each) => ({ name: each.name, chosen: true, ...(each.workspace === DEFAULT_WORKSPACE ? {} : { chosenIn: `the workspace ${each.workspace}` }) }));
+        }
+        const chosen = name === undefined || chosenOnApply(instance, stage.name);
+        return [{ ...(name === undefined ? {} : { name }), ...(chosen ? { chosen } : {}) }];
+      }),
+  );
+  if (api.type === 'aws_apigatewayv2_api' && argument(api, 'target') !== undefined) stages.push({});
+  if (stages.length === 0) stages.push({ chosen: true });
+  const region = regionOf(api);
+  const label = textOf(argument(api, 'name')) ?? api.address;
+  const all = stages.map((stage) => executeApiServedAt(region, label, stage));
+  return [...new Map(all.map((served) => [JSON.stringify(served), served])).values()];
+};
 
 /**
  * Every address an API is reached at: one per base path it is mapped at, or -
  * where nothing maps it - the API's own, with the stages it is deployed to.
  */
 export const addressesOf = (api: Instance, reading: ResourceReading): ApiAddress[] => {
-  const byPrefix = new Map<string, { prefix: string | undefined; domains: string[]; stages: string[] }>();
+  const byPrefix = new Map<string, { prefix: string | undefined; domains: MappedDomain[]; stages: string[] }>();
   for (const mapping of MAPPINGS) {
     for (const instance of reading.ofType('managed', mapping.type)) {
       if (referenced(argument(instance, mapping.api)) !== api) continue;
       const prefix = prefixOf(argument(instance, mapping.basePath));
       const key = prefix ?? '\0';
       const found = byPrefix.get(key) ?? { prefix, domains: [], stages: [] };
-      const domain = nameAt(argument(instance, mapping.domain));
-      const stage = nameAt(argument(instance, mapping.stage));
-      if (domain !== undefined) found.domains.push(domain);
-      if (stage !== undefined) found.stages.push(stage);
+      found.domains.push(...mappedDomains(instance, mapping.domain));
+      found.stages.push(...mappedStages(instance, mapping.stage));
       byPrefix.set(key, found);
     }
   }
   if (byPrefix.size === 0) {
     const stages = stagesOf(api, reading);
-    return [{ prefix: '', meta: stages.length === 0 ? {} : { stages } }];
+    const served = servedOf(api, reading);
+    return [{ prefix: '', meta: { ...(stages.length === 0 ? {} : { stages }), ...(served.length === 0 ? {} : { [SERVED_AT_META]: served }) } }];
   }
-  return [...byPrefix.values()].map(({ prefix, domains, stages }) => ({
-    prefix,
-    meta: {
-      basePath: prefix ?? null,
-      ...(domains.length === 0 ? {} : { domains: sorted(domains) }),
-      ...(stages.length === 0 ? {} : { stages: sorted(stages) }),
-    },
-  }));
+  // Where a mapped API is served (P298): at each domain it is mapped onto, the
+  // base path already in front of its routes; and at the API's own address,
+  // which still answers unless it is turned off, without the base path -
+  // recorded on the routes of one base path only, the routes of the others
+  // being the same API's.
+  const label = textOf(argument(api, 'name')) ?? api.address;
+  const own = servedOf(api, reading);
+  const addresses = [...byPrefix.values()].sort((a, b) => (a.prefix ?? '￿').localeCompare(b.prefix ?? '￿'));
+  return addresses.map(({ prefix, domains: mapped, stages }, index) => {
+    const domains = [...new Map(mapped.map((each) => [each.host, each])).values()].sort((a, b) => a.host.localeCompare(b.host));
+    const served: ServedAt[] = [
+      ...domains.map(
+        (domain): ServedAt => ({
+          host: domain.host,
+          base: [],
+          api: label,
+          ...(domain.chosenHost === undefined ? {} : { chosenHost: domain.chosenHost, hostChosenBy: 'the workspace' }),
+          ...(domain.chosenIn === undefined ? {} : { chosenIn: domain.chosenIn }),
+        }),
+      ),
+      ...(index === 0 && prefix !== undefined ? own.map((each): ServedAt => (prefix === '' ? each : { ...each, under: prefix })) : []),
+    ];
+    return {
+      prefix,
+      meta: {
+        basePath: prefix ?? null,
+        ...(domains.length === 0 ? {} : { domains: sorted(domains.map((each) => each.host)) }),
+        ...(stages.length === 0 ? {} : { stages: sorted(stages) }),
+        ...(served.length === 0 || prefix === undefined ? {} : { [SERVED_AT_META]: served }),
+      },
+    };
+  });
 };
 
 /**

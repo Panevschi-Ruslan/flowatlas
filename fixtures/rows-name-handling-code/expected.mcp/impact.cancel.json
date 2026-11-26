@@ -1,0 +1,77 @@
+{
+  "target": {
+    "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+    "type": "method",
+    "label": "OrdersService.cancel",
+    "loc": "src/orders/orders.service.ts:17",
+    "service": "shop-api",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "type": "entry",
+      "label": "PATCH /api/orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:21",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "rowsVia": 1
+    },
+    {
+      "id": "entry:shop-api:http:POST:/bot/staff/webhook",
+      "type": "entry",
+      "label": "POST /bot/staff/webhook",
+      "loc": "src/worker.ts:16",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "outside",
+      "by": "shop-api#src/bot/staff-bot.service.ts:StaffBot.handleCallbackQuery"
+    },
+    {
+      "id": "entry:shop-web:screen:/orders/:param",
+      "type": "entry",
+      "label": "/orders/:param",
+      "loc": "src/app/app.routes.ts:8",
+      "service": "shop-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "PATCH /api/orders/:param/cancel (shop-api)",
+      "by": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "screens": {
+      "shop-web": [
+        "src/app/order-detail.component.ts"
+      ]
+    },
+    "webhooks": {
+      "shop-api": [
+        "src/bot/staff-bot.service.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:PATCH:/api/orders/:param/cancel"
+  ],
+  "reached": 11,
+  "entriesByService": {
+    "shop-api": 2,
+    "shop-web": 1
+  },
+  "reachedByService": {
+    "shop-api": 5,
+    "shop-web": 6
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})",
+    "impact({symbol: \"entry:shop-api:http:PATCH:/api/orders/:param/cancel\"})"
+  ]
+}

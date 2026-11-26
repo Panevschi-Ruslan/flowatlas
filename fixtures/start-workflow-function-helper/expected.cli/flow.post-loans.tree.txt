@@ -15,4 +15,4 @@
     ~  invoke-async lending-notify-borrower    lending/src/handlers/create-loan.ts:14
       @  lending-notify-borrower               lending/infra/functions.tf:27
         -> handler                             lending/src/handlers/notify-borrower.ts:1
-unresolved on this path: 0
+unresolved on this path: 2

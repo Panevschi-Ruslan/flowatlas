@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T11:32:17.743Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:23:54.911Z",
   "configHash": "c50b88062c2b",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 31,
       "types": 5,
       "unresolved": 3,
-      "durationMs": 623,
+      "durationMs": 5932,
       "packages": {
         "name": "corner-shop-checkout",
         "runtime": [
@@ -81,7 +81,7 @@
     "missed": 0,
     "sites": 0,
     "notes": 0,
-    "findings": 2,
+    "findings": 5,
     "unresolved": 0
   }
 }

@@ -1,13 +1,26 @@
-unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=13 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 5 to act on · missed: 7 · notes: 2 · findings: 0
+unresolved: 13 to act on · missed: 7 · notes: 2 · findings: 8
   2 missed places static reading cannot see, folded into 2 rows
+  8 findings: 6 function tasks retrying no transient error, 2 waiting tasks with no timeout
+  workflow-function-unretried (finding): 6 rows
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      circulation/statemachine/loan-approval.asl.json:155  loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
+      circulation/statemachine/loan-approval.asl.json:206  loan-approval: LookUpBranchPolicy invokes a function and retries none of the platform's transient errors, so one fails the execution
+      circulation/statemachine/loan-approval.asl.json:216  loan-approval: ApplyLateFeePolicy invokes a function and retries none of the platform's transient errors, so one fails the execution
+      notifications/workflows/borrower-notifications.asl.yaml:14  borrower-notifications: SendEmail invokes a function and retries none of the platform's transient errors, so one fails the execution
+      notifications/workflows/borrower-notifications.asl.yaml:22  borrower-notifications: SendText invokes a function and retries none of the platform's transient errors, so one fails the execution
+      notifications/workflows/overdue-reminders.asl.json:27  overdue-reminders: SendReminder invokes a function and retries none of the platform's transient errors, so one fails the execution
   reference-not-found: 4 rows
     Add the repository that deploys it to the configuration, so this step reaches its code.
       circulation/statemachine/loan-approval.asl.json:14  CheckBorrowerStanding [Task lambda:invoke] reaches the function check-borrower-standing, which no configured service declares
       circulation/statemachine/loan-approval.asl.json:155  ScoreBorrower [Task function] reaches the function score-borrower, which no configured service declares
       notifications/workflows/borrower-notifications.asl.yaml:14  SendEmail [Task lambda:invoke] reaches the function send-borrower-email, which no configured service declares
       notifications/workflows/borrower-notifications.asl.yaml:22  SendText [Task lambda:invoke] reaches the function send-borrower-text, which no configured service declares
+  workflow-task-untimed (finding): 2 rows
+    Give the task a TimeoutSeconds, or the state machine one.
+      circulation/statemachine/loan-approval.asl.json:109  loan-approval: AwaitLibrarianApproval waits on a task token handed back (.waitForTaskToken) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit
+      circulation/statemachine/loan-approval.asl.json:166  loan-approval: NotifyBorrower waits on the states job it starts (.sync) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit
   workflow-template-unbound: 1 row
     Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
       circulation/statemachine/loan-approval.asl.json:216  ApplyLateFeePolicy invokes a function named by ${LateFeePolicyFunctionArn}, and nothing here says what ${LateFeePolicyFunctionArn} stands for
@@ -27,13 +40,23 @@ desync: none
 
 contracts: no errors, 0 excused, 3 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 5 now, +5)
+baseline: missing (0 accepted, 13 now, +13)
   no baseline at <root>/fixtures/stepfunctions-asl-files/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   reference-not-found: 0 → 4 (+4)
+  workflow-function-unretried: 0 → 6 (+6)
+  workflow-task-untimed: 0 → 2 (+2)
   workflow-template-unbound: 0 → 1 (+1)
-  new (5):
+  new (13):
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy|workflow-function-unretried
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy|workflow-template-unbound
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval|workflow-task-untimed
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/CheckBorrowerStanding|reference-not-found
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy|workflow-function-unretried
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower|workflow-task-untimed
     circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower|reference-not-found
+    circulation|statemachine/loan-approval.asl.json|circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower|workflow-function-unretried
     notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail|reference-not-found
+    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail|workflow-function-unretried
     notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText|reference-not-found
+    notifications|workflows/borrower-notifications.asl.yaml|notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText|workflow-function-unretried
+    notifications|workflows/overdue-reminders.asl.json|notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder|workflow-function-unretried

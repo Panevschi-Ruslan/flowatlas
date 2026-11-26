@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T16:46:01.871Z",
+  "configHash": "639dbe5fc77e",
+  "services": [
+    {
+      "name": "kiosk-web",
+      "repo": "./kiosk-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 19,
+      "edges": 14,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1414,
+      "packages": {
+        "name": "kiosk-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "market-api",
+      "repo": "./market-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 45,
+      "edges": 34,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 2264,
+      "packages": {
+        "name": "market-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "redis",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "market-bot",
+      "repo": "./market-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 13,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1646,
+      "packages": {
+        "name": "market-bot",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs",
+          "telegraf"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "market-web",
+      "repo": "./market-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 63,
+      "edges": 60,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1416,
+      "packages": {
+        "name": "market-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 11,
+    "resolved": 11,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 8,
+    "uncalled": [
+      "entry:market-api:http:DELETE:/api/admin/:param/bundles/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 26,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all ALL /api/* in market-api answers GET /api/:param",
+      "hint": "No route of market-api spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:26:12"
+    },
+    {
+      "service": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 26,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all ALL /api/* in market-api answers DELETE /api/items/:param",
+      "hint": "No route of market-api spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:market-web#src/app/items.client.ts:26:12"
+    }
+  ],
+  "totals": {
+    "nodes": 145,
+    "edges": 141,
+    "types": 0,
+    "missed": 5,
+    "sites": 6,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 5
+  }
+}

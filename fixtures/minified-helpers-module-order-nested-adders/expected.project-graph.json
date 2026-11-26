@@ -1,0 +1,1400 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:27.887Z",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "console#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Archive",
+      "type": "ui_component",
+      "label": "Archive",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/panels/2"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Billing",
+      "type": "ui_component",
+      "label": "Billing",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/steps/1"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Clock",
+      "type": "ui_component",
+      "label": "Clock",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Hats",
+      "type": "ui_component",
+      "label": "Hats",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/catalog/hats"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/catalog/home"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Inbox",
+      "type": "ui_component",
+      "label": "Inbox",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/panels/1"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Intro",
+      "type": "ui_component",
+      "label": "Intro",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/steps/3"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Outbox",
+      "type": "ui_component",
+      "label": "Outbox",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/panels/0"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Profile",
+      "type": "ui_component",
+      "label": "Profile",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/steps/2"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Sale",
+      "type": "ui_component",
+      "label": "Sale",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 16,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/catalog/sale"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Shoes",
+      "type": "ui_component",
+      "label": "Shoes",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/catalog/shoes"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:TourLate",
+      "type": "ui_component",
+      "label": "TourLate",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:TourStart",
+      "type": "ui_component",
+      "label": "TourStart",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Weather",
+      "type": "ui_component",
+      "label": "Weather",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Welcome",
+      "type": "ui_component",
+      "label": "Welcome",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/steps/0"
+      }
+    },
+    {
+      "id": "console#src/lib/registries.ts:tourRoutes",
+      "type": "function",
+      "label": "tourRoutes",
+      "repo": "console",
+      "file": "src/lib/registries.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Page[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/registries.ts:widgetRoutes",
+      "type": "function",
+      "label": "widgetRoutes",
+      "repo": "console",
+      "file": "src/lib/registries.ts",
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Page[]"
+        }
+      }
+    },
+    {
+      "id": "entry:cms:http:DELETE:/api/stamps/stamps/:param",
+      "type": "entry",
+      "label": "DELETE /api/stamps/stamps/:id",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/stamps/stamps/:id",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "stamps",
+        "package": "strapi-plugin-stamps",
+        "declaredIn": "node_modules/strapi-plugin-stamps/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "stamp.remove",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/badges/badges",
+      "type": "entry",
+      "label": "GET /api/badges/badges",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/badges/badges",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "badges",
+        "package": "strapi-plugin-badges",
+        "declaredIn": "node_modules/strapi-plugin-badges/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "badge.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/ribbons/ribbons",
+      "type": "entry",
+      "label": "GET /api/ribbons/ribbons",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/ribbons/ribbons",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "ribbons",
+        "package": "strapi-plugin-ribbons",
+        "declaredIn": "node_modules/strapi-plugin-ribbons/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "ribbon.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/stamps/stamps",
+      "type": "entry",
+      "label": "GET /api/stamps/stamps",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/stamps/stamps",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "stamps",
+        "package": "strapi-plugin-stamps",
+        "declaredIn": "node_modules/strapi-plugin-stamps/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "stamp.find",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:POST:/api/badges/badges",
+      "type": "entry",
+      "label": "POST /api/badges/badges",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/badges/badges",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "badges",
+        "package": "strapi-plugin-badges",
+        "declaredIn": "node_modules/strapi-plugin-badges/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "badge.create",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:PUT:/stamps/settings",
+      "type": "entry",
+      "label": "PUT /stamps/settings",
+      "repo": "cms",
+      "file": "package.json",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/stamps/settings",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "stamps",
+        "package": "strapi-plugin-stamps",
+        "declaredIn": "node_modules/strapi-plugin-stamps/strapi-server.js",
+        "handlerVia": "package",
+        "handlerName": "settings.set",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:console:screen:/catalog/hats",
+      "type": "entry",
+      "label": "/catalog/hats",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/hats",
+        "by": "route-table",
+        "screens": [
+          "Hats"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/catalog/home",
+      "type": "entry",
+      "label": "/catalog/home",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/home",
+        "by": "route-table",
+        "screens": [
+          "Home"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/catalog/sale",
+      "type": "entry",
+      "label": "/catalog/sale",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/sale",
+        "by": "route-table",
+        "screens": [
+          "Sale"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/catalog/shoes",
+      "type": "entry",
+      "label": "/catalog/shoes",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 30,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog/shoes",
+        "by": "route-table",
+        "screens": [
+          "Shoes"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/0",
+      "type": "entry",
+      "label": "/panels/0",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/0",
+        "by": "route-table",
+        "screens": [
+          "Outbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/1",
+      "type": "entry",
+      "label": "/panels/1",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/1",
+        "by": "route-table",
+        "screens": [
+          "Inbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/panels/2",
+      "type": "entry",
+      "label": "/panels/2",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/panels/2",
+        "by": "route-table",
+        "screens": [
+          "Archive"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/0",
+      "type": "entry",
+      "label": "/steps/0",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/0",
+        "by": "route-table",
+        "screens": [
+          "Welcome"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/1",
+      "type": "entry",
+      "label": "/steps/1",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/1",
+        "by": "route-table",
+        "screens": [
+          "Billing"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/2",
+      "type": "entry",
+      "label": "/steps/2",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/2",
+        "by": "route-table",
+        "screens": [
+          "Profile"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/steps/3",
+      "type": "entry",
+      "label": "/steps/3",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/steps/3",
+        "by": "route-table",
+        "screens": [
+          "Intro"
+        ]
+      }
+    },
+    {
+      "id": "external_api:localhost:4720",
+      "type": "external_api",
+      "label": "localhost:4720",
+      "repo": "poller",
+      "meta": {
+        "host": "localhost:4720"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:11:29",
+      "type": "http_out",
+      "label": "GET /api/stamps/stamps",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4720/api/stamps/stamps",
+        "path": "/api/stamps/stamps",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4720",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:12:40",
+      "type": "http_out",
+      "label": "DELETE /api/stamps/stamps/:param",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "method": "DELETE",
+        "url": "http://localhost:4720/api/stamps/stamps/${…}",
+        "path": "/api/stamps/stamps/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4720",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:15:28",
+      "type": "http_out",
+      "label": "GET /api/seals/seals",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 15,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4720/api/seals/seals",
+        "path": "/api/seals/seals",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4720",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:4:29",
+      "type": "http_out",
+      "label": "GET /api/badges/badges",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 4,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4720/api/badges/badges",
+        "path": "/api/badges/badges",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4720",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:5:44",
+      "type": "http_out",
+      "label": "POST /api/badges/badges",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:4720/api/badges/badges",
+        "path": "/api/badges/badges",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "unknown",
+        "bodyFrom": "value",
+        "host": "localhost:4720",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:8:30",
+      "type": "http_out",
+      "label": "GET /api/ribbons/ribbons",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4720/api/ribbons/ribbons",
+        "path": "/api/ribbons/ribbons",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4720",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:addBadge",
+      "type": "function",
+      "label": "addBadge",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:badges",
+      "type": "function",
+      "label": "badges",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:ribbons",
+      "type": "function",
+      "label": "ribbons",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:seals",
+      "type": "function",
+      "label": "seals",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:stamps",
+      "type": "function",
+      "label": "stamps",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:unstamp",
+      "type": "function",
+      "label": "unstamp",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:cms",
+      "type": "repo",
+      "label": "cms",
+      "repo": "cms",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "strapi-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4720,
+            "file": "config/server.ts",
+            "line": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 16,
+          "filesRead": 16,
+          "filesUnreadable": 0,
+          "functions": 21,
+          "components": 16,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:poller",
+      "type": "repo",
+      "label": "poller",
+      "repo": "poller",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/registries.ts:tourRoutes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Page[]",
+      "file": "src/App.tsx",
+      "line": 22
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/registries.ts:widgetRoutes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Page[]",
+      "file": "src/App.tsx",
+      "line": 25
+    },
+    {
+      "from": "entry:console:screen:/catalog/hats",
+      "to": "console#src/features/screens.tsx:Hats",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/hats"
+      }
+    },
+    {
+      "from": "entry:console:screen:/catalog/home",
+      "to": "console#src/features/screens.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/home"
+      }
+    },
+    {
+      "from": "entry:console:screen:/catalog/sale",
+      "to": "console#src/features/screens.tsx:Sale",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/sale"
+      }
+    },
+    {
+      "from": "entry:console:screen:/catalog/shoes",
+      "to": "console#src/features/screens.tsx:Shoes",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 30,
+      "meta": {
+        "route": "/catalog/shoes"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/0",
+      "to": "console#src/features/screens.tsx:Outbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/panels/0"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/1",
+      "to": "console#src/features/screens.tsx:Inbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/panels/1"
+      }
+    },
+    {
+      "from": "entry:console:screen:/panels/2",
+      "to": "console#src/features/screens.tsx:Archive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 19,
+      "meta": {
+        "route": "/panels/2"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/0",
+      "to": "console#src/features/screens.tsx:Welcome",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/0"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/1",
+      "to": "console#src/features/screens.tsx:Billing",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/1"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/2",
+      "to": "console#src/features/screens.tsx:Profile",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/2"
+      }
+    },
+    {
+      "from": "entry:console:screen:/steps/3",
+      "to": "console#src/features/screens.tsx:Intro",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 15,
+      "meta": {
+        "route": "/steps/3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:11:29",
+      "to": "entry:cms:http:GET:/api/stamps/stamps",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:12:40",
+      "to": "entry:cms:http:DELETE:/api/stamps/stamps/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:15:28",
+      "to": "external_api:localhost:4720",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 15
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:4:29",
+      "to": "entry:cms:http:GET:/api/badges/badges",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 4,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:5:44",
+      "to": "entry:cms:http:POST:/api/badges/badges",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 5,
+      "params": [
+        "unknown"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:8:30",
+      "to": "entry:cms:http:GET:/api/ribbons/ribbons",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/server.ts:3"
+      }
+    },
+    {
+      "from": "poller#src/poll.ts:addBadge",
+      "to": "http_out:poller#src/poll.ts:5:44",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 5
+    },
+    {
+      "from": "poller#src/poll.ts:badges",
+      "to": "http_out:poller#src/poll.ts:4:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 4
+    },
+    {
+      "from": "poller#src/poll.ts:ribbons",
+      "to": "http_out:poller#src/poll.ts:8:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 8
+    },
+    {
+      "from": "poller#src/poll.ts:seals",
+      "to": "http_out:poller#src/poll.ts:15:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 15
+    },
+    {
+      "from": "poller#src/poll.ts:stamps",
+      "to": "http_out:poller#src/poll.ts:11:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 11
+    },
+    {
+      "from": "poller#src/poll.ts:unstamp",
+      "to": "http_out:poller#src/poll.ts:12:40",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 12
+    }
+  ],
+  "types": {
+    "type:console#Page": {
+      "name": "Page",
+      "kind": "object",
+      "declaredIn": "console#src/lib/registries.ts",
+      "structuralHash": "42dddeeb16fddd2a",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "node_modules/strapi-plugin-seals/strapi-server.js",
+      "line": 1,
+      "reason": "route-registry-unread",
+      "message": "The routes of node_modules/strapi-plugin-seals/strapi-server.js are not read: it exports neither a core router nor an object with a list of routes.",
+      "hint": "Export createCoreRouter('api::<api>.<type>') with the type's schema.json beside it, or an object (or a function returning one) whose routes are written as a list of { method, path, handler }.",
+      "symbol": "node_modules/strapi-plugin-seals/strapi-server.js",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 23,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "sites": 2,
+      "message": "2 entries of tourRoutes(), which a route of src/App.tsx is written over, are not read, so the screens they place are not placed (the places of the items of tourRoutes() are not known: tour-late.ts is loaded only by a dynamic import(), at a time not known; an entry's path `/tours/${at}` is not read)",
+      "hint": "Write the entries as objects in place - in the list, or handed to the functions adding to a registry - with the path as text and the screen as a component of the repository, and map them, where they are mapped, to an object written over each.",
+      "symbol": "routes over tourRoutes()",
+      "meta": {
+        "unread": 2,
+        "read": 0,
+        "causes": [
+          {
+            "cause": "route-entries-unread",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/App.tsx",
+                "line": 23,
+                "symbol": "routes over tourRoutes()",
+                "meta": {
+                  "list": "tourRoutes()",
+                  "why": [
+                    "the places of the items of tourRoutes() are not known: tour-late.ts is loaded only by a dynamic import(), at a time not known",
+                    "an entry's path `/tours/${at}` is not read"
+                  ]
+                }
+              },
+              {
+                "file": "src/App.tsx",
+                "line": 26,
+                "symbol": "routes over widgetRoutes()",
+                "meta": {
+                  "list": "widgetRoutes()",
+                  "why": [
+                    "the places of the items of widgetRoutes() are not known: the modules adding to it are reached from 2 entry points (admin.tsx, main.tsx), whose order depends on which one is loaded",
+                    "an entry's path `/widgets/${at}` is not read"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 16,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/lib/registries.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "poller"
+    },
+    {
+      "service": "poller",
+      "file": "src/poll.ts",
+      "line": 15,
+      "reason": "target-route-not-found",
+      "message": "target service cms has no route GET /api/seals/seals",
+      "hint": "Route renamed? Check cms's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:poller#src/poll.ts:15:28"
+    }
+  ]
+}

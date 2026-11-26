@@ -1,0 +1,11 @@
+{
+  "name": "edge",
+  "private": true,
+  "scripts": {
+    "start": "fastify start --config fastify.config.ts dist/app.js"
+  },
+  "dependencies": {
+    "fastify": "^5.2.0",
+    "fastify-cli": "^8.0.0"
+  }
+}

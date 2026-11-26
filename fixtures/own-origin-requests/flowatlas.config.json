@@ -1,0 +1,20 @@
+{
+  "services": [
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

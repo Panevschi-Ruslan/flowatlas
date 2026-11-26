@@ -1,0 +1,213 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T14:35:12.176Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:web#server/shop.ts:5:21",
+        "to": "entry:catalog:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/shop.ts:5:21|http_calls|entry:catalog:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#server/shop.ts:readItems declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#server/shop.ts:5:21",
+        "to": "entry:catalog:http:GET:/items",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/shop.ts:5:21|http_calls|entry:catalog:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /items@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#server/status.ts:12:21",
+        "to": "entry:status:http:GET:/admin/checks",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/status.ts:12:21|http_calls|entry:status:http:GET:/admin/checks",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#server/status.ts:readAdminChecks declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#server/status.ts:12:21",
+        "to": "entry:status:http:GET:/admin/checks",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/status.ts:12:21|http_calls|entry:status:http:GET:/admin/checks",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "status#src/index.ts:GET /admin/checks@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#server/status.ts:6:21",
+        "to": "entry:status:http:GET:/checks",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/status.ts:6:21|http_calls|entry:status:http:GET:/checks",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#server/status.ts:readChecks declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#server/status.ts:6:21",
+        "to": "entry:status:http:GET:/checks",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/status.ts:6:21|http_calls|entry:status:http:GET:/checks",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "status#src/index.ts:GET /checks@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#server/verify.ts:6:26",
+        "to": "entry:web:http:POST:/api/auth/verify-email",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/verify.ts:6:26|http_calls|entry:web:http:POST:/api/auth/verify-email",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#server/verify.ts:getServerSideProps declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:web#server/verify.ts:6:26",
+        "to": "entry:web:http:POST:/api/auth/verify-email",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:web#server/verify.ts:6:26|http_calls|entry:web:http:POST:/api/auth/verify-email",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#server/verify.ts:getServerSideProps declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#components/Upload.tsx:4:3",
+        "to": "entry:web:http:POST:/api/uploads",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#components/Upload.tsx:4:3|hits|entry:web:http:POST:/api/uploads",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "web#pages/api/uploads.ts:handler reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#components/Upload.tsx:4:3",
+        "to": "entry:web:http:POST:/api/uploads",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#components/Upload.tsx:4:3|hits|entry:web:http:POST:/api/uploads",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#components/Upload.tsx:openUpload declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#server/shop.ts:5:21",
+        "to": "entry:catalog:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#server/shop.ts:5:21|hits|entry:catalog:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#server/shop.ts:readItems declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#server/shop.ts:5:21",
+        "to": "entry:catalog:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#server/shop.ts:5:21|hits|entry:catalog:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /items@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#server/status.ts:12:21",
+        "to": "entry:status:http:GET:/admin/checks",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#server/status.ts:12:21|hits|entry:status:http:GET:/admin/checks",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#server/status.ts:readAdminChecks declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#server/status.ts:12:21",
+        "to": "entry:status:http:GET:/admin/checks",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#server/status.ts:12:21|hits|entry:status:http:GET:/admin/checks",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "status#src/index.ts:GET /admin/checks@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#server/status.ts:6:21",
+        "to": "entry:status:http:GET:/checks",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#server/status.ts:6:21|hits|entry:status:http:GET:/checks",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#server/status.ts:readChecks declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#server/status.ts:6:21",
+        "to": "entry:status:http:GET:/checks",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#server/status.ts:6:21|hits|entry:status:http:GET:/checks",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "status#src/index.ts:GET /checks@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 16,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

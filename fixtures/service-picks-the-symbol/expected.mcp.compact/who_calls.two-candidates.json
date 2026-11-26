@@ -1,0 +1,118 @@
+{
+  "ambiguous": "\"GET /books/42\" names 2 symbols; each is answered, the liveliest first",
+  "answers": [
+    {
+      "asked": "entry:lending-api:http:GET:/books/:param",
+      "target": {
+        "id": "entry:lending-api:http:GET:/books/:param",
+        "loc": "src/books.controller.ts:23",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:reader-web#src/app/books.client.ts:21:12",
+          "label": "GET /books/:param",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /book/:param",
+          "edge": {
+            "type": "hits",
+            "returns": "string"
+          },
+          "children": [
+            {
+              "id": "reader-web#src/app/books.client.ts:BooksClient.get",
+              "line": 20,
+              "reach": "alive",
+              "from": "screen /book/:param",
+              "edge": "calls"
+            }
+          ]
+        },
+        {
+          "id": "http_out:lending-gateway#src/books.client.ts:15:43",
+          "label": "GET /books/:param",
+          "reach": "alive",
+          "from": "GET /books/:param",
+          "edge": {
+            "type": "http_calls",
+            "returns": "string"
+          },
+          "children": [
+            {
+              "id": "lending-gateway#src/books.client.ts:BooksClient.fetch",
+              "line": 14,
+              "reach": "alive",
+              "from": "GET /books/:param",
+              "edge": "calls"
+            }
+          ]
+        }
+      ],
+      "waysIn": [
+        {
+          "id": "entry:lending-gateway:http:GET:/books/:param",
+          "line": 9,
+          "reach": "alive",
+          "hops": 4,
+          "by": "lending-gateway#src/books.controller.ts:BooksController.findOne"
+        },
+        {
+          "id": "entry:reader-web:screen:/book/:param",
+          "reach": "outside",
+          "hops": 5,
+          "by": "reader-web#src/app/book-page.component.ts:BookPageComponent"
+        },
+        {
+          "id": "entry:desk-bot:bot_command:book",
+          "line": 14,
+          "reach": "outside",
+          "hops": 7,
+          "by": "desk-bot#src/desk-bot.ts:DeskBot.showBook"
+        }
+      ],
+      "complete": true
+    },
+    {
+      "asked": "entry:lending-gateway:http:GET:/books/:param",
+      "target": {
+        "id": "entry:lending-gateway:http:GET:/books/:param",
+        "loc": "src/books.controller.ts:9",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "http_out:desk-bot#src/desk-bot.ts:19:21",
+          "label": "GET /books/first",
+          "reach": "alive",
+          "from": "bot_command book",
+          "edge": "http_calls",
+          "children": [
+            {
+              "id": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
+              "line": 18,
+              "reach": "alive",
+              "from": "bot_command book",
+              "edge": "calls"
+            }
+          ]
+        }
+      ],
+      "waysIn": [
+        {
+          "id": "entry:desk-bot:bot_command:book",
+          "line": 14,
+          "reach": "outside",
+          "hops": 3,
+          "by": "desk-bot#src/desk-bot.ts:DeskBot.showBook"
+        }
+      ],
+      "complete": true
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:lending-gateway:http:GET:/books/:param\"})",
+    "get_flow({entry: \"entry:desk-bot:bot_command:book\"})"
+  ]
+}

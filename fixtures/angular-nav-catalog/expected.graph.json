@@ -1,0 +1,503 @@
+{
+  "schemaVersion": 8,
+  "repo": "angular-nav-catalog",
+  "generatedAt": "2026-11-23T14:32:11.854Z",
+  "nodes": [
+    {
+      "id": "angular-nav-catalog#node_modules/@angular/router:Router",
+      "type": "provider",
+      "label": "Router",
+      "repo": "angular-nav-catalog",
+      "file": "node_modules/@angular/router",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/router",
+        "external": true
+      }
+    },
+    {
+      "id": "angular-nav-catalog#src/app/guards.ts:observerGuard",
+      "type": "function",
+      "label": "observerGuard",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/guards.ts",
+      "line": 2
+    },
+    {
+      "id": "angular-nav-catalog#src/app/layout/shell.component.ts:ShellComponent",
+      "type": "ui_component",
+      "label": "ShellComponent",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/layout/shell.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-shell",
+        "route": "/"
+      }
+    },
+    {
+      "id": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+      "type": "ui_component",
+      "label": "SidebarComponent",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/layout/sidebar.component.ts",
+      "line": 13,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-sidebar",
+        "templateUrl": "./sidebar.component.html"
+      }
+    },
+    {
+      "id": "angular-nav-catalog#src/app/pages/archive/archive.component.ts:ArchiveComponent",
+      "type": "ui_component",
+      "label": "ArchiveComponent",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/pages/archive/archive.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-archive",
+        "route": "/archive"
+      }
+    },
+    {
+      "id": "angular-nav-catalog#src/app/pages/star-map/star-map.component.ts:StarMapComponent",
+      "type": "ui_component",
+      "label": "StarMapComponent",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/pages/star-map/star-map.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-star-map",
+        "route": "/star-map"
+      }
+    },
+    {
+      "id": "angular-nav-catalog#src/app/pages/telescopes/telescopes.component.ts:TelescopesComponent",
+      "type": "ui_component",
+      "label": "TelescopesComponent",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/pages/telescopes/telescopes.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-telescopes",
+        "route": "/telescopes"
+      }
+    },
+    {
+      "id": "angular-nav-catalog#src/app/settings/profile.component.ts:ProfileComponent",
+      "type": "ui_component",
+      "label": "ProfileComponent",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/settings/profile.component.ts",
+      "line": 4,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-profile",
+        "route": "/settings/profile"
+      }
+    },
+    {
+      "id": "entry:angular-nav-catalog:screen:/",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/app.routes.ts",
+      "line": 13,
+      "meta": {
+        "path": "/",
+        "by": "angular-routes",
+        "screens": [
+          "ShellComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-nav-catalog:screen:/archive",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/archive",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "meta": {
+        "path": "/archive",
+        "by": "angular-routes",
+        "screens": [
+          "ArchiveComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-nav-catalog:screen:/settings/profile",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/settings/profile",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/settings/settings.routes.ts",
+      "line": 6,
+      "meta": {
+        "path": "/settings/profile",
+        "by": "angular-routes",
+        "screens": [
+          "ProfileComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-nav-catalog:screen:/star-map",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/star-map",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/app.routes.ts",
+      "line": 17,
+      "meta": {
+        "path": "/star-map",
+        "by": "angular-routes",
+        "screens": [
+          "StarMapComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:angular-nav-catalog:screen:/telescopes",
+      "type": "entry",
+      "kind": "screen",
+      "label": "/telescopes",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "meta": {
+        "path": "/telescopes",
+        "by": "angular-routes",
+        "guards": [
+          "canActivate observerGuard"
+        ],
+        "screens": [
+          "TelescopesComponent"
+        ]
+      }
+    },
+    {
+      "id": "repo:angular-nav-catalog",
+      "type": "repo",
+      "label": "angular-nav-catalog",
+      "repo": "angular-nav-catalog",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "templates": 6,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:10:13",
+      "type": "ui_action",
+      "label": "click=\"router.navigate([entry.route])\"",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "router.navigate([entry.route])",
+        "component": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+        "template": "src/app/layout/sidebar.component.html",
+        "args": [
+          "[entry.route]"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:13:8",
+      "type": "ui_action",
+      "label": "routerLink=\"item.path\"",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 13,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "item.path",
+        "component": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+        "template": "src/app/layout/sidebar.component.html",
+        "route": null
+      }
+    },
+    {
+      "id": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:3:8",
+      "type": "ui_action",
+      "label": "routerLink=\"item.route\"",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 3,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "item.route",
+        "component": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+        "template": "src/app/layout/sidebar.component.html",
+        "route": null,
+        "routes": [
+          "/calibration",
+          "/star-map",
+          "/telescopes"
+        ],
+        "listedFrom": [
+          "NAV_CATALOG"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:7:43",
+      "type": "ui_action",
+      "label": "routerLink=\"{{ link.route }}\"",
+      "repo": "angular-nav-catalog",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 7,
+      "kind": "route",
+      "meta": {
+        "event": "routerLink",
+        "handler": "{{ link.route }}",
+        "component": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+        "template": "src/app/layout/sidebar.component.html",
+        "route": ":param",
+        "routes": [
+          "/calibration",
+          "/star-map",
+          "/telescopes"
+        ],
+        "listedFrom": [
+          "SECTIONS",
+          "NAV_CATALOG"
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "angular-nav-catalog#src/app/layout/shell.component.ts:ShellComponent",
+      "to": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/layout/shell.component.ts",
+      "line": 7,
+      "meta": {
+        "renders": "app-sidebar"
+      }
+    },
+    {
+      "from": "angular-nav-catalog#src/app/layout/sidebar.component.ts:SidebarComponent",
+      "to": "angular-nav-catalog#node_modules/@angular/router:Router",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/layout/sidebar.component.ts",
+      "line": 28
+    },
+    {
+      "from": "angular-nav-catalog#src/app/pages/telescopes/telescopes.component.ts:TelescopesComponent",
+      "to": "angular-nav-catalog#src/app/guards.ts:observerGuard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "meta": {
+        "guard": "canActivate",
+        "route": "/telescopes",
+        "order": 0
+      }
+    },
+    {
+      "from": "entry:angular-nav-catalog:screen:/",
+      "to": "angular-nav-catalog#src/app/layout/shell.component.ts:ShellComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 13,
+      "meta": {
+        "route": "/"
+      }
+    },
+    {
+      "from": "entry:angular-nav-catalog:screen:/archive",
+      "to": "angular-nav-catalog#src/app/pages/archive/archive.component.ts:ArchiveComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 22,
+      "meta": {
+        "route": "/archive"
+      }
+    },
+    {
+      "from": "entry:angular-nav-catalog:screen:/settings/profile",
+      "to": "angular-nav-catalog#src/app/settings/profile.component.ts:ProfileComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/settings/settings.routes.ts",
+      "line": 6,
+      "meta": {
+        "route": "/settings/profile"
+      }
+    },
+    {
+      "from": "entry:angular-nav-catalog:screen:/star-map",
+      "to": "angular-nav-catalog#src/app/pages/star-map/star-map.component.ts:StarMapComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 17,
+      "meta": {
+        "route": "/star-map"
+      }
+    },
+    {
+      "from": "entry:angular-nav-catalog:screen:/telescopes",
+      "to": "angular-nav-catalog#src/app/pages/telescopes/telescopes.component.ts:TelescopesComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 21,
+      "meta": {
+        "route": "/telescopes"
+      }
+    },
+    {
+      "from": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:10:13",
+      "to": "angular-nav-catalog#src/app/settings/profile.component.ts:ProfileComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 10,
+      "meta": {
+        "navigates": "/settings/profile",
+        "route": "/settings/profile",
+        "page": "src/app/settings/profile.component.ts"
+      }
+    },
+    {
+      "from": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:3:8",
+      "to": "angular-nav-catalog#src/app/pages/star-map/star-map.component.ts:StarMapComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 3,
+      "meta": {
+        "navigates": "/star-map",
+        "route": "/star-map",
+        "listed": true
+      }
+    },
+    {
+      "from": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:3:8",
+      "to": "angular-nav-catalog#src/app/pages/telescopes/telescopes.component.ts:TelescopesComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 3,
+      "meta": {
+        "navigates": "/telescopes",
+        "route": "/telescopes",
+        "listed": true
+      }
+    },
+    {
+      "from": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:7:43",
+      "to": "angular-nav-catalog#src/app/pages/star-map/star-map.component.ts:StarMapComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 7,
+      "meta": {
+        "navigates": "/star-map",
+        "route": "/star-map",
+        "listed": true
+      }
+    },
+    {
+      "from": "ui_action:angular-nav-catalog#src/app/layout/sidebar.component.html:7:43",
+      "to": "angular-nav-catalog#src/app/pages/telescopes/telescopes.component.ts:TelescopesComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 7,
+      "meta": {
+        "navigates": "/telescopes",
+        "route": "/telescopes",
+        "listed": true
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 3,
+      "reason": "route-target-unresolved",
+      "level": "action",
+      "hint": "No configured route answers /calibration, which an entry of NAV_CATALOG this link is rendered over names.",
+      "symbol": "SidebarComponent item.route -> /calibration"
+    },
+    {
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 7,
+      "reason": "route-target-unresolved",
+      "level": "action",
+      "hint": "No configured route answers /calibration, which an entry of SECTIONS, NAV_CATALOG this link is rendered over names.",
+      "symbol": "SidebarComponent {{ link.route }} -> /calibration"
+    },
+    {
+      "file": "src/app/layout/sidebar.component.html",
+      "line": 13,
+      "reason": "route-link-dynamic",
+      "level": "info",
+      "hint": "The path is read from what the template reads, and that was not followed: the list remote$ | async is not a member, a call of one with nothing handed, or a member of a loop's element.",
+      "symbol": "SidebarComponent item.path"
+    }
+  ]
+}

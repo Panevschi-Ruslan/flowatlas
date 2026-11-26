@@ -1,0 +1,18 @@
+{
+  "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+  "type": "method",
+  "service": "ops-bot",
+  "loc": "src/ops-bot.ts:29",
+  "verdict": "maybe",
+  "reason": "nothing calls it, though its class is used: a call through a receiver the reading could not type may",
+  "callers": 0,
+  "evidence": {
+    "classReached": true
+  },
+  "from": "behind",
+  "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+  "next": [
+    "get_source({symbol: \"ops-bot#src/ops-bot.ts:OpsBot.handleStatus\"})",
+    "cant_follow({service: \"ops-bot\"})"
+  ]
+}

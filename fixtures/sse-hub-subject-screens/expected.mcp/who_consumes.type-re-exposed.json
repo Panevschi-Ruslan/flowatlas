@@ -1,0 +1,47 @@
+{
+  "channel": {
+    "id": "channel:board:*:events",
+    "type": "channel",
+    "label": "board:*:events",
+    "loc": "src/boards/boards.service.ts:15",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "type": "consumer",
+      "label": "BoardPageComponent.load",
+      "loc": "src/app/boards/board-page.component.ts:29",
+      "service": "admin",
+      "kind": "sse",
+      "selectedIn": "BoardPageComponent.ngOnInit",
+      "via": "filter",
+      "endLine": 31,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.append",
+      "type": "consumer",
+      "label": "CardTimelineComponent.append",
+      "loc": "src/app/boards/card-timeline.component.ts:28",
+      "service": "admin",
+      "kind": "sse",
+      "selectedIn": "CardTimelineComponent.ngOnInit",
+      "via": "if",
+      "endLine": 30,
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    }
+  ],
+  "total": 2,
+  "type": "CARD_ADDED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:board:*:events\", type: \"CARD_ADDED\"})",
+    "impact({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})",
+    "get_source({symbol: \"consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load\"})"
+  ]
+}

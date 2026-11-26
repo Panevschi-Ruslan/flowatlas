@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T06:06:12.680Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:43:59.324Z",
   "services": [
     {
       "name": "api",
@@ -77,7 +77,21 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "email",
+            "line": 9
+          },
+          {
+            "field": "id",
+            "line": 9
+          },
+          {
+            "field": "id",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -147,7 +161,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     }
   ],

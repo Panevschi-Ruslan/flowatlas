@@ -1,0 +1,40 @@
+{
+  "kind": "config-not-set",
+  "rows": [
+    {
+      "kind": "config-not-set",
+      "id": "config_key:ledger#CACHE_HOST",
+      "service": "ledger",
+      "loc": "src/settings.ts:8",
+      "message": "CACHE_HOST is read with no default, and none of ledger's deployment files sets it (docker-compose.yml)",
+      "precision": "medium",
+      "evidence": "every deployment file of the service was read for the names it sets; a value given outside the files (a secret store, a console, the shell) is what would make this wrong",
+      "fix": "set CACHE_HOST where ledger is deployed, or give the read a default",
+      "rank": 1,
+      "next": "get_source({symbol: \"config_key:ledger#CACHE_HOST\"})"
+    },
+    {
+      "kind": "config-not-set",
+      "id": "config_key:ledger#LEDGER_REGION",
+      "service": "ledger",
+      "loc": "src/settings.ts:4",
+      "message": "LEDGER_REGION is read with no default, and none of ledger's deployment files sets it (docker-compose.yml); LEDGER_ZONE, set in docker-compose.yml and read nowhere, is likely the same setting renamed",
+      "precision": "medium",
+      "evidence": "every deployment file of the service was read for the names it sets; a value given outside the files (a secret store, a console, the shell) is what would make this wrong",
+      "fix": "one setting renamed on one side: read LEDGER_ZONE, or set LEDGER_REGION where LEDGER_ZONE is set",
+      "rank": 2,
+      "next": "get_source({symbol: \"config_key:ledger#LEDGER_REGION\"})"
+    }
+  ],
+  "total": 2,
+  "heldBack": {
+    "config-not-set": {
+      "count": 2,
+      "why": "doppler run in Dockerfile hands settings in when it runs, which no file read names"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"config_key:ledger#CACHE_HOST\"})",
+    "get_source({symbol: \"config_key:ledger#LEDGER_REGION\"})"
+  ]
+}

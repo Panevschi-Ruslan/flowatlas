@@ -1,0 +1,30 @@
+{
+  "channel": {
+    "id": "channel:board:*:orders",
+    "type": "channel",
+    "label": "board:*:orders",
+    "loc": "src/boards/orders.service.ts:20",
+    "service": "boards-api"
+  },
+  "producers": [
+    {
+      "id": "producer:boards-api#src/boards/orders.service.ts:29:11",
+      "type": "producer",
+      "label": "event board:*:orders",
+      "loc": "src/boards/orders.service.ts:29",
+      "service": "boards-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /boards/:param/orders/:param/alert",
+      "throughDead": true
+    }
+  ],
+  "total": 1,
+  "type": "SCHEDULED_ALERT",
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:board:*:orders\", type: \"SCHEDULED_ALERT\"})",
+    "impact({symbol: \"producer:boards-api#src/boards/orders.service.ts:29:11\"})",
+    "get_source({symbol: \"producer:boards-api#src/boards/orders.service.ts:29:11\"})"
+  ]
+}

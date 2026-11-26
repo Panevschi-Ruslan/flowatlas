@@ -1,0 +1,181 @@
+{
+  "requests": [
+    {
+      "route": "entry:stock-api:http:POST:/products",
+      "by": "stock-api#src/products/products.controller.ts:ProductsController.create"
+    }
+  ],
+  "root": {
+    "node": {
+      "id": "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+      "type": "method",
+      "label": "CatalogComponent.add",
+      "loc": "src/app/catalog.component.ts:20",
+      "service": "store-web",
+      "endLine": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    "children": [
+      {
+        "node": {
+          "id": "store-web#src/app/products.client.ts:ProductsClient.create",
+          "type": "method",
+          "label": "ProductsClient.create",
+          "loc": "src/app/products.client.ts:23",
+          "endLine": 48,
+          "meta": {
+            "signature": {
+              "params": [
+                {
+                  "name": "product",
+                  "type": "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+                }
+              ],
+              "returns": "string"
+            }
+          }
+        },
+        "edge": {
+          "type": "calls",
+          "confidence": "static"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "ui_api_call:store-web#src/app/products.client.ts:47:12",
+              "type": "ui_api_call",
+              "label": "POST /products",
+              "loc": "src/app/products.client.ts:47",
+              "kind": "http",
+              "meta": {
+                "method": "POST",
+                "url": "${apiUrl}/products",
+                "path": "/products",
+                "baseUrlEnv": "apiUrl",
+                "responseType": "string",
+                "bodyType": "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}",
+                "bodyFrom": "literal",
+                "bodyKeys": [
+                  "name",
+                  "price",
+                  "sku"
+                ],
+                "answerRead": [],
+                "via": "template-env",
+                "sendsJson": true,
+                "targetService": "stock-api"
+              }
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "entry:stock-api:http:POST:/products",
+                  "type": "entry",
+                  "label": "POST /products",
+                  "loc": "src/products/products.controller.ts:23",
+                  "service": "stock-api",
+                  "kind": "http",
+                  "meta": {
+                    "method": "POST",
+                    "path": "/products"
+                  }
+                },
+                "edge": {
+                  "type": "hits",
+                  "confidence": "static",
+                  "params": [
+                    "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+                  ],
+                  "returns": "string"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "stock-api#src/products/products.controller.ts:ProductsController.create",
+                      "type": "method",
+                      "label": "ProductsController.create",
+                      "loc": "src/products/products.controller.ts:23",
+                      "endLine": 52,
+                      "meta": {
+                        "signature": {
+                          "params": [
+                            {
+                              "name": "body",
+                              "type": "{sku:string;name:string;description?:string;image?:string;price:number;currency?:string;weight?:number;width?:number;height?:number;depth?:number;color?:string;brand?:string;category?:string;tags?:string[];barcode?:string;supplier?:string;origin?:string;taxClass?:string;visible?:boolean;featured?:boolean;minOrder?:number;maxOrder?:number}"
+                            }
+                          ],
+                          "returns": "string"
+                        },
+                        "fieldsRead": [
+                          {
+                            "field": "name",
+                            "line": 51
+                          },
+                          {
+                            "field": "sku",
+                            "line": 51
+                          }
+                        ]
+                      }
+                    },
+                    "edge": {
+                      "type": "handles",
+                      "confidence": "static"
+                    },
+                    "children": [
+                      {
+                        "node": {
+                          "id": "stock-api#src/products/products.service.ts:ProductsService.create",
+                          "type": "method",
+                          "label": "ProductsService.create",
+                          "loc": "src/products/products.service.ts:16",
+                          "endLine": 19,
+                          "meta": {
+                            "signature": {
+                              "params": [
+                                {
+                                  "name": "sku",
+                                  "type": "string"
+                                },
+                                {
+                                  "name": "name",
+                                  "type": "string"
+                                }
+                              ],
+                              "returns": "string"
+                            }
+                          }
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "complete": true,
+  "next": [
+    "describe_for_prompt({id: \"store-web#src/app/catalog.component.ts:CatalogComponent.add\"})",
+    "impact({symbol: \"store-web#src/app/catalog.component.ts:CatalogComponent.add\"})",
+    "get_source({symbol: \"store-web#src/app/products.client.ts:ProductsClient.create\"})"
+  ]
+}

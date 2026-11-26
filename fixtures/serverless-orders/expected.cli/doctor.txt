@@ -1,0 +1,32 @@
+unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 4 to act on · missed: 0 · notes: 0 · findings: 4
+  4 findings: 2 function tasks retrying no transient error, 1 redrive after too few receives, 1 queue hiding a message too briefly
+  workflow-function-unretried (finding): 2 rows
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      orders/serverless.yml:137  orders-dev-shipping: ReserveStock invokes a function and retries none of the platform's transient errors, so one fails the execution
+      orders/serverless.yml:145  orders-dev-shipping: ChargePayment invokes a function and retries none of the platform's transient errors, so one fails the execution
+  queue-receives-few (finding): 1 row
+    Set maxReceiveCount to at least 5.
+      orders/serverless.yml:177  resources.Resources.PlacedQueue hands a message of orders-dev-placed to its dead-letter queue after 3 receives, under the 5 the platform recommends: a throttled or briefly failing function gets too few retries
+  queue-visibility-short (finding): 1 row
+    Raise the visibility timeout of orders-dev-placed to at least 36s, or lower the function's timeout.
+      orders/serverless.yml:68  orders-dev-placed hides a message for 30s (the default), under 6 times the 6s timeout of orders-dev-ship-order (36s): a message can come back while it is still being processed, and be processed twice
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 5 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 4 now, +4)
+  no baseline at <root>/fixtures/serverless-orders/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  queue-receives-few: 0 → 1 (+1)
+  queue-visibility-short: 0 → 1 (+1)
+  workflow-function-unretried: 0 → 2 (+2)
+  new (4):
+    orders|serverless.yml|channel:sqs/orders-dev-placed|queue-receives-few
+    orders|serverless.yml|consumer:orders#serverless.yml:functions.ship-order.events[0]|queue-visibility-short
+    orders|serverless.yml|orders#serverless.yml:orders-dev-shipping/ChargePayment|workflow-function-unretried
+    orders|serverless.yml|orders#serverless.yml:orders-dev-shipping/ReserveStock|workflow-function-unretried

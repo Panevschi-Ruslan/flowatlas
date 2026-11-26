@@ -1,0 +1,26 @@
+{
+  "matches": [
+    {
+      "id": "shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder",
+      "type": "method",
+      "label": "DeskOrderService.amendOrder",
+      "loc": "src/app/desk-order.service.ts:11",
+      "service": "shop-admin",
+      "endLine": 13,
+      "reach": "alive",
+      "from": "screen /desk",
+      "requests": [
+        {
+          "route": "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify",
+          "by": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController.modify"
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "complete": true,
+  "next": [
+    "impact({symbol: \"shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder\"})",
+    "get_source({symbol: \"shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder\"})"
+  ]
+}

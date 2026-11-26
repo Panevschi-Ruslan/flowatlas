@@ -1,0 +1,30 @@
+{
+  "settled": "no consumer of STEP_READY reads stepName; on status_feed code does (alsoOn)",
+  "channel": {
+    "id": "channel:tenant:*:events",
+    "loc": "src/steps/steps.controller.ts:58",
+    "service": "desk-api"
+  },
+  "consumers": [],
+  "total": 0,
+  "type": "STEP_READY",
+  "field": "stepName",
+  "alsoOn": [
+    {
+      "channel": "channel:status_feed",
+      "count": 1,
+      "readers": [
+        {
+          "id": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+          "line": 28
+        }
+      ]
+    }
+  ],
+  "alsoOnRest": "and 3 other channels carry STEP_READY with no handler reading stepName",
+  "readsNothing": [
+    "consumer:staff-web#src/app/steps/call-board.component.ts:CallBoardComponent.load",
+    "consumer:staff-web#src/app/steps/staff-steps.component.ts:StaffStepsComponent.load"
+  ],
+  "complete": true
+}

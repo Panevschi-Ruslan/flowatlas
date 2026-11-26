@@ -1,0 +1,294 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Orders, shipping and notices for a small shop.
+
+Parameters:
+  Stage:
+    Type: String
+    AllowedValues: [dev, prod]
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+    Environment:
+      Variables:
+        ORDERS_TABLE: !Ref OrdersTable
+
+Resources:
+  # ------------------------------------------------------------ the APIs
+
+  OrdersApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${Stage}-orders
+      StageName: !Ref Stage
+
+  OrdersHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub ${Stage}-orders
+
+  LiveApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${Stage}-orders-websockets
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+
+  LiveIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref LiveApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LiveSocketFunction.Arn}/invocations
+
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LiveApi
+      RouteKey: $connect
+      Target: !Sub integrations/${LiveIntegration}
+
+  SubscribeRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref LiveApi
+      RouteKey: subscribe
+      Target: !Sub integrations/${LiveIntegration}
+
+  # ------------------------------------------------------- the functions
+
+  PlaceOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-place-order
+      Handler: orders/place-order.handler
+      Environment:
+        Variables:
+          ORDERS_QUEUE_URL: !Ref PlacedQueue
+          ORDERS_BUS_NAME: !Ref OrdersBus
+      Events:
+        Place:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrdersApi
+            Path: /orders
+            Method: post
+
+  GetOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-get-order
+      Handler: orders/get-order.handler
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrdersApi
+            Path: /orders/{id}
+            Method: get
+
+  CancelOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-cancel-order
+      Handler: orders/cancel-order.handler
+      Environment:
+        Variables:
+          ORDERS_BUS_NAME: !Ref OrdersBus
+      Events:
+        Cancel:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrdersApi
+            Path: /orders/{id}
+            Method: delete
+
+  ListOrdersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-list-orders
+      Handler: orders/list-orders.handler
+      Events:
+        List:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref OrdersHttpApi
+            Path: /orders
+            Method: get
+
+  ReceiptFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-receipt
+      Handler: orders/receipt.handler
+      FunctionUrlConfig:
+        AuthType: NONE
+
+  OrderChangedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-order-changed
+      Handler: orders/order-changed.handler
+      Events:
+        Changed:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt OrdersTable.StreamArn
+            StartingPosition: LATEST
+
+  ShipOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-ship-order
+      Handler: shipping/ship-order.handler
+      Environment:
+        Variables:
+          INVOICES_BUCKET: !Ref InvoicesBucket
+          SHIPPED_TOPIC_ARN: !Ref ShippedTopic
+      Events:
+        Placed:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt PlacedQueue.Arn
+            BatchSize: 10
+
+  ReserveStockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-reserve-stock
+      Handler: shipping/reserve-stock.handler
+
+  ChargePaymentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-charge-payment
+      Handler: shipping/charge-payment.handler
+
+  NotifyCustomerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-notify-customer
+      Handler: notices/notify-customer.handler
+      Events:
+        Shipped:
+          Type: SNS
+          Properties:
+            Topic: !Ref ShippedTopic
+
+  RefundOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-refund-order
+      Handler: refunds/refund-order.handler
+      Events:
+        Cancelled:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref OrdersBus
+            RuleName: !Sub orders-${Stage}-order-cancelled
+            Pattern:
+              source: [orders.service]
+              detail-type: [OrderCancelled]
+
+  NightlyReportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-nightly-report
+      Handler: reports/nightly-report.handler
+      Events:
+        Nightly:
+          Type: Schedule
+          Properties:
+            Name: !Sub orders-${Stage}-nightly-report
+            Schedule: cron(0 2 * * ? *)
+
+  IndexInvoiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-index-invoice
+      Handler: invoices/index-invoice.handler
+      Events:
+        Uploaded:
+          Type: S3
+          Properties:
+            Bucket: !Ref InvoicesBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: invoices/
+                  - Name: suffix
+                    Value: .pdf
+
+  LiveSocketFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub orders-${Stage}-live-socket
+      Handler: live/live-socket.handler
+
+  # -------------------------------------------------------- the workflow
+
+  ShippingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub orders-${Stage}-shipping
+      DefinitionUri: statemachine/shipping.asl.json
+      DefinitionSubstitutions:
+        reserve_stock_arn: !GetAtt ReserveStockFunction.Arn
+        charge_payment_arn: !GetAtt ChargePaymentFunction.Arn
+      Events:
+        Placed:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref OrdersBus
+            RuleName: !Sub orders-${Stage}-order-placed
+            Pattern:
+              source: [orders.service]
+              detail-type: [OrderPlaced]
+
+  # ------------------------------------------- what the handlers send to
+
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub orders-${Stage}-orders
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: orderId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: orderId
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  PlacedDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub orders-${Stage}-placed-dlq
+
+  PlacedQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub orders-${Stage}-placed
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PlacedDeadLetterQueue.Arn
+        maxReceiveCount: 3
+
+  ShippedTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub orders-${Stage}-shipped
+
+  OrdersBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub orders-${Stage}
+
+  InvoicesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub orders-${Stage}-invoices

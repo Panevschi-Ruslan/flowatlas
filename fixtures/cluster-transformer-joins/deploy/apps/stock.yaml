@@ -1,0 +1,7 @@
+releases:
+  - name: stock
+    namespace: shop
+    chart: ../charts/stock
+    hooks:
+      - events: [presync]
+        command: ./scripts/migrate.sh

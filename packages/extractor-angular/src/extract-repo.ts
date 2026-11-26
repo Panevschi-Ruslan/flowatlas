@@ -1,16 +1,24 @@
 import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
+  markUnreferenced,
   AdapterRegistry,
   builtInShapesFor,
   countSources,
   createProject,
   GraphBuilder,
+  LISTEN_META,
+  listeningOf,
+  OWN_ORIGIN_META,
+  PROXY_META,
+  proxiesOf,
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
   closeStandIns,
+  withoutOtherServicesWaysIn,
   reportSkippedTestDirectories,
+  reportTsconfigReach,
   reportPatterns,
   readPatterns,
   reportStandIns,
@@ -27,12 +35,18 @@ import {
   type RepoGraph,
   type SourceRootOptions,
   type ServiceConfig,
+  projectText,
+  adapterForceOf,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
 import { declaresAngular } from './framework.js';
 import { buildAngularClassIndex } from './index-classes.js';
+import { messageTypesPass } from '@flowatlas/adapters-broker';
+import { requestFactsPass } from '@flowatlas/adapters-entry';
 import { callsPass } from './passes/calls.js';
 import { classesPass } from './passes/classes.js';
+import { graphqlPass } from './passes/graphql.js';
+import { proceduresPass } from './passes/procedures.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { modulesPass } from './passes/modules.js';
@@ -40,6 +54,9 @@ import { signaturesPass } from './passes/signatures.js';
 import { socketsPass } from './passes/sockets.js';
 import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
+import { navigationsPass } from './passes/navigations.js';
+import { guardsPass } from './passes/guards.js';
+import { screensPass } from './passes/screens.js';
 import type { AngularExtractorPass } from './passes/types.js';
 import { ANGULAR_SHAPES } from './shapes/index.js';
 
@@ -133,11 +150,25 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   modulesPass,
   classesPass,
   templatesPass,
+  // After the routes are read and the classes indexed: a navigation lands on a routed screen (P276).
+  navigationsPass,
+  // After the navigations, so a guard that navigates is the node they drew (P291).
+  guardsPass,
+  // After the guards, so the screen's entry lists what they drew (P363).
+  screensPass,
   callsPass,
   httpPass,
+  // After the requests, so a request that sends an operation is one node (P232).
+  graphqlPass,
+  // Requests for procedures, read by the reader the other halves share (P247).
+  proceduresPass,
   ssePass,
   socketsPass,
   markersPass,
+  // After every reader that draws a consumer: the types of message each chooses on (P358).
+  messageTypesPass,
+  // After every reader that draws a request: the statuses it branches on, its credentials and headers (P388).
+  requestFactsPass,
   signaturesPass,
 ];
 
@@ -194,6 +225,14 @@ export const extractAngular = (
   // that any pass collected is known.
   if (options.noTypes !== true) ctx.types.finalize();
 
+  // The methods and components whose name the repository writes nowhere else (P370).
+  markUnreferenced(base.builder, base.project, base.repoDir, base.pkg as Readonly<Record<string, unknown>>);
+
+  // Where the application's dev server listens (P254).
+  const listen = listeningOf(base);
+  // What its dev server forwards to another server, and the rules not read (P257).
+  const proxy = proxiesOf(base);
+  for (const row of proxy.rows) base.builder.addUnresolved(row);
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',
@@ -202,6 +241,9 @@ export const extractAngular = (
     meta: {
       stats: ctx.stats,
       adapters: { frontend: base.adapters.frontend.map((adapter) => adapter.name) },
+      ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
+      ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
+      ...(proxy.ownOrigin === true ? { [OWN_ORIGIN_META]: true } : {}),
     },
   });
 };
@@ -235,11 +277,16 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const pkg: PackageJson = readResolvedPackageJson(rootDir) ?? {};
 
   const registry = options.registry ?? new AdapterRegistry();
-  const adapters = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});
+  const adapters = registry.detect(pkg, adapterForceOf(config.adapters));
 
   const builder = new GraphBuilder({
     repo,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
+    // The tagged comments above declarations (P234), from the files this reading parsed.
+    notesFrom: {
+      text: projectText(project, rootDir),
+      ...(config?.docs?.commentTags === undefined ? {} : { tags: config.docs.commentTags }),
+    },
   });
 
   const base: ExtractContext = {
@@ -267,6 +314,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // does the count of them the repository node carries.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportTsconfigReach(base);
   reportStandIns(base);
   reportPatterns(base, patterns);
 
@@ -283,7 +331,14 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   }
 
   closeStandIns(base);
-  return builder.build();
+  // What is written in another configured service's package is that service's
+  // way in, read there (P282).
+  return withoutOtherServicesWaysIn(builder.build(), {
+    rootDir,
+    ...(options.config === undefined ? {} : { config: options.config }),
+    ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+    ...(options.service === undefined ? {} : { service: options.service }),
+  });
 };
 
 export const defaultOutputPath = (rootDir: string, output = '.flowatlas'): string =>

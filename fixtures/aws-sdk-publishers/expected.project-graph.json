@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:49:11.305Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:32:26.791Z",
   "services": [
     {
       "name": "loans",
@@ -430,7 +430,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 12,
+            "why": "handed to publishHoldCancelled"
+          }
+        ]
       }
     },
     {
@@ -453,7 +460,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 7,
+            "why": "handed to publishHoldPlaced"
+          }
+        ]
       }
     },
     {
@@ -533,7 +547,22 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 8,
+            "why": "handed to publishLoanCreated"
+          },
+          {
+            "line": 9,
+            "why": "handed to auditLoan"
+          },
+          {
+            "line": 10,
+            "why": "handed to res.status(201).json"
+          }
+        ]
       }
     },
     {
@@ -556,7 +585,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -636,7 +666,18 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 9,
+            "why": "handed to queueReturn"
+          },
+          {
+            "line": 10,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -659,7 +700,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 15,
+            "why": "handed to queueReturns"
+          }
+        ]
       }
     },
     {
@@ -682,7 +730,14 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 20,
+            "why": "handed to queueOverdue"
+          }
+        ]
       }
     },
     {
@@ -903,7 +958,7 @@
               {
                 "environment": "OVERDUE_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }
@@ -1012,7 +1067,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "api/app.ts",
+            "line": 17
+          }
+        ]
       }
     }
   ],
@@ -1528,6 +1590,9 @@
       "to": "channel:sqs/library-returns",
       "type": "emits",
       "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
       "file": "api/returns/returns-queue.ts",
       "line": 30
     },
@@ -1832,14 +1897,6 @@
       "meta": {
         "variable": "AUDIT_BUS_NAME"
       },
-      "service": "loans"
-    },
-    {
-      "file": "api/returns/returns-queue.ts",
-      "line": 30,
-      "reason": "payload-type-unknown",
-      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
-      "symbol": "sqs/library-returns",
       "service": "loans"
     },
     {

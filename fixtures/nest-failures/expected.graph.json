@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-failures",
-  "generatedAt": "2026-10-17T01:51:17.595Z",
+  "generatedAt": "2026-11-23T14:42:18.557Z",
   "nodes": [
     {
       "id": "entry:nest-failures:http:DELETE:/orders/:param",
@@ -293,7 +293,8 @@
       "file": "src/guards/owner.guard.ts",
       "line": 3,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {
@@ -343,7 +344,41 @@
             }
           ],
           "returns": "type:nest-failures#Order"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "line": 24
+          },
+          {
+            "field": "coupon",
+            "in": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "line": 25
+          },
+          {
+            "field": "quantity",
+            "in": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "line": 26
+          },
+          {
+            "field": "sku",
+            "in": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "line": 26
+          },
+          {
+            "field": "id",
+            "in": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "line": 27
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "nest-failures#src/orders/orders.service.ts:OrdersService.create",
+            "line": 27,
+            "why": "handed to this.orders.set"
+          }
+        ]
       }
     },
     {
@@ -362,7 +397,8 @@
             }
           ],
           "returns": "type:nest-failures#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -381,7 +417,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -473,7 +510,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

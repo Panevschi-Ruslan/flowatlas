@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T21:31:23.194Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:41:38.589Z",
   "services": [
     {
       "name": "shop",
@@ -92,7 +92,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -139,7 +146,14 @@
             }
           ],
           "returns": "type:shop#ProductDto"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 24,
+            "why": "spread into another value"
+          }
+        ]
       }
     },
     {
@@ -158,7 +172,8 @@
             }
           ],
           "returns": "type:shop#ProductDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -178,7 +193,8 @@
             }
           ],
           "returns": "type:shop#ProductDto[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -197,7 +213,8 @@
             }
           ],
           "returns": "type:shop#ReviewDto[]"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

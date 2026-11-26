@@ -1,0 +1,18 @@
+import { Injectable } from '@nestjs/common';
+
+/**
+ * The project's own bus. No broker library: `flowatlas.config.json` describes
+ * `publish` and `subscribe` as the producer and the subscriber.
+ */
+@Injectable()
+export class ShopBus {
+  publish<T>(channel: string, message: T): void {
+    void channel;
+    void message;
+  }
+
+  subscribe<T>(pattern: string, handler: (message: T) => void): void {
+    void pattern;
+    void handler;
+  }
+}

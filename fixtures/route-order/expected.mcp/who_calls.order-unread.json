@@ -1,0 +1,77 @@
+{
+  "target": {
+    "id": "catalog-api#src/item-extras.routes.ts:listNewest",
+    "type": "function",
+    "label": "listNewest",
+    "loc": "src/item-extras.routes.ts:5",
+    "service": "catalog-api",
+    "reach": "alive",
+    "from": "GET /items/new"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "entry:catalog-api:http:GET:/items/new",
+        "type": "entry",
+        "label": "GET /items/new",
+        "loc": "src/item-extras.routes.ts:9",
+        "kind": "http",
+        "reach": "alive"
+      },
+      "edge": {
+        "type": "handles",
+        "confidence": "static"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "ui_api_call:shop-web#src/app/catalog-api.service.ts:19:12",
+            "type": "ui_api_call",
+            "label": "GET /items/new",
+            "loc": "src/app/catalog-api.service.ts:19",
+            "service": "shop-web",
+            "kind": "http",
+            "reach": "alive",
+            "from": "screen /dashboard"
+          },
+          "edge": {
+            "type": "hits",
+            "confidence": "heuristic",
+            "returns": "unknown[]"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:catalog-api:http:GET:/items/new",
+      "type": "entry",
+      "label": "GET /items/new",
+      "loc": "src/item-extras.routes.ts:9",
+      "service": "catalog-api",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 1,
+      "by": "catalog-api#src/item-extras.routes.ts:listNewest"
+    },
+    {
+      "id": "entry:shop-web:screen:/dashboard",
+      "type": "entry",
+      "label": "/dashboard",
+      "loc": "src/app/app.routes.ts:5",
+      "service": "shop-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 6,
+      "by": "shop-web#src/app/dashboard.component.ts:DashboardComponent"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:catalog-api:http:GET:/items/new\"})",
+    "describe_for_prompt({id: \"entry:catalog-api:http:GET:/items/new\"})",
+    "impact({symbol: \"entry:catalog-api:http:GET:/items/new\"})"
+  ]
+}

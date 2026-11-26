@@ -1,0 +1,40 @@
+{
+  "channel": {
+    "id": "channel:crew:*:shifts",
+    "type": "channel",
+    "label": "crew:*:shifts",
+    "loc": "src/boards/boards.service.ts:38",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh",
+      "type": "consumer",
+      "label": "CrewPanelComponent.scheduleRefresh",
+      "loc": "src/app/boards/crew-panel.component.ts:27",
+      "service": "admin",
+      "kind": "sse",
+      "selectedIn": "CrewPanelComponent.ngOnInit",
+      "via": "if",
+      "endLine": 29,
+      "reach": "alive",
+      "from": "POST /boards/:param/crews/:param (boards-api)",
+      "ways": 8
+    }
+  ],
+  "total": 1,
+  "channelUsed": "channel:crew:*:shifts",
+  "type": "CREW_ASSIGNED",
+  "alsoOn": [
+    {
+      "channel": "channel:board:*:events",
+      "count": 1
+    }
+  ],
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:crew:*:shifts\", type: \"CREW_ASSIGNED\"})",
+    "impact({symbol: \"consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh\"})",
+    "get_source({symbol: \"consumer:admin#src/app/boards/crew-panel.component.ts:CrewPanelComponent.scheduleRefresh\"})"
+  ]
+}

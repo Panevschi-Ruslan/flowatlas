@@ -50,7 +50,7 @@ import {
   runExport,
 } from '../packages/cli/dist/index.js';
 import { catalogProblems, dslProblems } from '../packages/linker/dist/index.js';
-import { diffFixtureProject } from './diff-fixture.mjs';
+import { clientChecksFixtureProject, diffFixtureProject, verdictsFixtureProject } from './diff-fixture.mjs';
 import { makeDeployedProject, SHIPPED } from './deployed-fixture.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -444,6 +444,95 @@ const socketConfig = join(socketFixture, 'flowatlas.config.json');
  */
 const SOCKET_CASES = [
   ['expected.channel.updated.tree.txt', (io) => runChannel('orders/order:updated', { config: socketConfig, color: false, ascii: true, format: 'tree' }, io)],
+];
+
+/**
+ * GraphQL, both halves (P232): the walk from a screen into the resolvers of
+ * another repository through the fields its operation selects, the walk back
+ * from a field resolver to both browsers' screens, and the field the schema
+ * does not have.
+ */
+const graphqlFixture = join(root, 'fixtures', 'graphql-gateway');
+const graphqlPlain = { config: join(graphqlFixture, 'flowatlas.config.json'), color: false, ascii: true };
+/** impact as the graph server answers it (P370): the chains to each way in, the rows with their crossing, the maybe and the unreached. */
+const renderedPlain = { config: join(root, 'fixtures', 'angular-rendered-reach', 'flowatlas.config.json'), color: false, ascii: true };
+const RENDERED_TARGET = 'catalog-api#src/items.service.ts:ItemsService.findOne';
+const RENDERED_CASES = [
+  ['impact.rendered-child.tree.txt', (io) => runImpact(RENDERED_TARGET, { ...renderedPlain, format: 'tree' }, io)],
+  ['impact.rendered-child.json', (io) => runImpact(RENDERED_TARGET, { ...renderedPlain, format: 'json' }, io)],
+  ['impact.rendered-child.verbose.json', (io) => runImpact(RENDERED_TARGET, { ...renderedPlain, format: 'json', verbose: true }, io)],
+];
+
+/** impact past navigations, guards and a channel (P372): the chains, the rows, the channel's count, and its list. */
+const guardedPlain = { config: join(root, 'fixtures', 'impact-guarded-navigation', 'flowatlas.config.json'), color: false, ascii: true };
+const GUARDED_TARGET = 'store-api#src/items.service.ts:ItemsService.listByShop';
+const GUARDED_CASES = [
+  ['impact.items.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree' }, io)],
+  ['impact.tickets.tree.txt', (io) => runImpact('store-api#src/tickets.service.ts:TicketsService.acknowledge', { ...guardedPlain, format: 'tree' }, io)],
+  ['impact.items-across-channel.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree', channel: 'shop:*:orders' }, io)],
+  ['impact.items-across-consumer.tree.txt', (io) => runImpact(GUARDED_TARGET, { ...guardedPlain, format: 'tree', channel: 'StoreBot.onStatusEvent' }, io)],
+];
+
+/** impact's rows with the code that handles each way in (P374): a route's handler, the bot class behind a webhook, a screen's component. */
+const handlingPlain = { config: join(root, 'fixtures', 'rows-name-handling-code', 'flowatlas.config.json'), color: false, ascii: true };
+const HANDLING_CASES = [
+  ['impact.cancel.tree.txt', (io) => runImpact('shop-api#src/orders/orders.service.ts:OrdersService.cancel', { ...handlingPlain, format: 'tree' }, io)],
+];
+
+const GRAPHQL_CASES = [
+  ['flow.orders-page.tree.txt', (io) => runFlow('web#src/orders/OrdersPage.tsx:OrdersPage', { ...graphqlPlain, format: 'tree' }, io)],
+  ['impact.order-customer.tree.txt', (io) => runImpact('entry:orders:graphql:Order.customer', { ...graphqlPlain, format: 'tree' }, io)],
+  ['contracts.txt', (io) => runContracts({ config: graphqlPlain.config }, io)],
+];
+
+/**
+ * GraphQL federation (P241): the walk from a screen through a gateway into
+ * the subgraph that resolves each field - an entity hop into another
+ * subgraph's reference resolver included - and the walk back from a
+ * subgraph's field to the screens; with the supergraph in a file, and with
+ * the composition made in code beside a router declared by its files.
+ */
+const federationFixture = join(root, 'fixtures', 'graphql-federation');
+const federationPlain = { config: join(federationFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const FEDERATION_CASES = [
+  ['flow.orders-page.tree.txt', (io) => runFlow('web#src/OrdersPage.tsx:OrdersPage', { ...federationPlain, format: 'tree' }, io)],
+  ['impact.customer-reference.tree.txt', (io) => runImpact('entry:customers:graphql:Customer.__resolveReference', { ...federationPlain, format: 'tree' }, io)],
+  ['contracts.txt', (io) => runContracts({ config: federationPlain.config }, io)],
+];
+const composedFixture = join(root, 'fixtures', 'graphql-federation-composed');
+const composedPlain = { config: join(composedFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const COMPOSED_CASES = [
+  ['flow.customer-page.tree.txt', (io) => runFlow('web#src/CustomerPage.tsx:CustomerPage', { ...composedPlain, format: 'tree' }, io)],
+  ['flow.orders-board.tree.txt', (io) => runFlow('kiosk#src/OrdersBoard.tsx:OrdersBoard', { ...composedPlain, format: 'tree' }, io)],
+  ['impact.customer-orders.tree.txt', (io) => runImpact('entry:orders:graphql:Customer.orders', { ...composedPlain, format: 'tree' }, io)],
+];
+/**
+ * Entity interfaces, contexts and the router's checks (P245): a screen through
+ * the gateway hops into the interface object; one through the router meets
+ * the router's checks on the subgraph fields and plans what a context fills.
+ */
+const interfacesFixture = join(root, 'fixtures', 'graphql-federation-interfaces');
+const interfacesPlain = { config: join(interfacesFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const INTERFACES_CASES = [
+  ['flow.shelf-page.tree.txt', (io) => runFlow('web#src/ShelfPage.tsx:ShelfPage', { ...interfacesPlain, format: 'tree' }, io)],
+  ['flow.movie-card.tree.txt', (io) => runFlow('kiosk#src/MovieCard.tsx:MovieCard', { ...interfacesPlain, format: 'tree' }, io)],
+  ['flow.wishlist-page.tree.txt', (io) => runFlow('kiosk#src/WishlistPage.tsx:WishlistPage', { ...interfacesPlain, format: 'tree' }, io)],
+  ['impact.media-rating.tree.txt', (io) => runImpact('entry:reviews:graphql:Media.rating', { ...interfacesPlain, format: 'tree' }, io)],
+];
+
+const gapsFixture = join(root, 'fixtures', 'graphql-federation-gaps');
+const gapsPlain = { config: join(gapsFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const GAPS_CASES = [
+  ['flow.book-page.tree.txt', (io) => runFlow('shop#src/BookPage.tsx:BookPage', { ...gapsPlain, format: 'tree' }, io)],
+  ['flow.top-books.tree.txt', (io) => runFlow('shop#src/TopBooks.tsx:TopBooks', { ...gapsPlain, format: 'tree' }, io)],
+];
+
+// The router's check is not drawn in front of a field it fetches for a @requires (P256).
+const requiresFixture = join(root, 'fixtures', 'graphql-requires-auth');
+const requiresPlain = { config: join(requiresFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const REQUIRES_CASES = [
+  ['flow.shipping.tree.txt', (io) => runFlow('shop#src/Shipping.tsx:Shipping', { ...requiresPlain, format: 'tree' }, io)],
+  ['flow.weight.tree.txt', (io) => runFlow('shop#src/Weight.tsx:Weight', { ...requiresPlain, format: 'tree' }, io)],
 ];
 
 const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
@@ -977,6 +1066,8 @@ const specDiff = (options) => async (io) => {
 const DIFF_CASES = [
   ['diff.md', diffMarkdown({})],
   ['diff.class.md', diffMarkdown({ sequenceDetail: 'class', maxDiagrams: '1', context: '0' })],
+  // The same as a pull request's comment (P231): the verdict first, the marker that finds it again.
+  ['diff.comment.md', diffMarkdown({ format: 'comment' })],
   [
     'diff.json',
     async (io) => {
@@ -994,6 +1085,54 @@ const DIFF_CASES = [
   ['spec-diff.md', specDiff({ format: 'markdown' })],
   ['spec-diff.json', specDiff({ format: 'json' })],
   ['spec-diff.sarif.json', specDiff({ format: 'sarif' })],
+];
+
+/**
+ * What each API or message change of `fixtures/api-change-verdicts` does to
+ * the code that uses it (P390): `spec diff` in each format and the pull
+ * request's comment, the catalog compared (the other two repositories are not
+ * edited). The project is made once, with fixed dates.
+ */
+let verdictsProject;
+const verdictsOnce = async () => (verdictsProject ??= await verdictsFixtureProject(root));
+const verdictsSpecDiff = (options) => async (io) => {
+  const { scratch, config: verdictsConfig } = await verdictsOnce();
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  const said = options.format === undefined ? (text) => io.err(placed(text)) : () => undefined;
+  await runSpecDiff('HEAD~1', undefined, { config: verdictsConfig, service: ['catalog'], ...options }, { out: (text) => io.out(placed(text)), err: said, tty: false });
+};
+const verdictsComment = async (io) => {
+  const { scratch, config: verdictsConfig } = await verdictsOnce();
+  const run = await runDiff('HEAD~1', undefined, { config: verdictsConfig, service: ['catalog'], generatedAt: FIXED, format: 'comment', spec: true, diagrams: false, section: ['api'] }, quiet);
+  io.out(run.text.split(scratch).join('<scratch>'));
+};
+
+/**
+ * What clients already check, weighed in the verdicts (P402): over
+ * `fixtures/client-checks-verdicts`, a query key every caller sends, a header
+ * one does not, a status a switch with a default meets and a message kind a
+ * switch with none left over does not handle. The project is made once.
+ */
+let clientChecksProject;
+const clientChecksSpecDiff = (options) => async (io) => {
+  clientChecksProject ??= await clientChecksFixtureProject(root);
+  const { scratch, config: checksConfig } = clientChecksProject;
+  const placed = (text) => text.split(scratch).join('<scratch>');
+  const said = options.format === undefined ? (text) => io.err(placed(text)) : () => undefined;
+  await runSpecDiff('HEAD~1', undefined, { config: checksConfig, service: ['catalog'], ...options }, { out: (text) => io.out(placed(text)), err: said, tty: false });
+};
+
+const CLIENT_CHECK_CASES = [
+  ['spec-diff.txt', clientChecksSpecDiff({})],
+  ['spec-diff.json', clientChecksSpecDiff({ format: 'json' })],
+];
+
+const VERDICT_CASES = [
+  ['spec-diff.txt', verdictsSpecDiff({})],
+  ['spec-diff.md', verdictsSpecDiff({ format: 'markdown' })],
+  ['spec-diff.json', verdictsSpecDiff({ format: 'json' })],
+  ['spec-diff.sarif.json', verdictsSpecDiff({ format: 'sarif' })],
+  ['diff.comment.md', verdictsComment],
 ];
 
 /**
@@ -1099,6 +1238,60 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
   ]),
   terraformShape('lambda-terraform-shared-paths', [['flow.status-board.tree.txt', 'invoke:library-branch-kiosk-status-board']]),
+  // One deployment written five ways (P57, P246, P248): the same walks, from each format's files.
+  ...['terraform-orders', 'serverless-orders', 'cdk-orders', 'sam-orders', 'cloudformation-orders'].map((name) =>
+    terraformShape(name, [
+      ['flow.post-orders.tree.txt', 'POST /orders'],
+      ['flow.shipping.tree.txt', 'workflow:orders-dev-shipping'],
+    ]),
+  ),
+  terraformShape('serverless-shapes', [
+    ['flow.welcome.tree.txt', 'event:cognito/club-members/post_confirmation'],
+    ['flow.lapse.tree.txt', 'invoke:accounts-prod-lapse'],
+  ]),
+  terraformShape('sam-shapes', [
+    ['flow.lend.tree.txt', 'POST /loans'],
+    ['flow.overdue.tree.txt', 'workflow:library-prod-overdue'],
+  ]),
+  terraformShape('cloudformation-shapes', [
+    ['flow.start-ride.tree.txt', 'POST /rides'],
+    ['flow.billing.tree.txt', 'workflow:rides-harbour-billing'],
+  ]),
+  terraformShape('cdk-shapes', [
+    ['flow.renewals.tree.txt', 'workflow:${…}@ClubStack.Renewals'],
+    ['flow.lapses.tree.txt', 'workflow:club-dev-lapses'],
+  ]),
+  // Routes on another repository's API and values read from its outputs (P249).
+  terraformShape('multi-repo-exports', [
+    ['flow.reorder.tree.txt', 'invoke:catalog-reorder'],
+    ['flow.post-orders.tree.txt', 'POST /orders'],
+  ]),
+  terraformShape('serverless-compose', [['flow.post-jobs.tree.txt', 'POST /jobs']]),
+  // Values shared through parameters of the account, read by any of the five readers (P253).
+  terraformShape('multi-repo-parameters', [
+    ['flow.post-orders.tree.txt', 'POST /orders'],
+    ['flow.restock.tree.txt', 'invoke:catalog-prod-restock'],
+  ]),
+  // Stack configurations and rain commands, YAML parameter files, rule targets
+  // and subscription endpoints of imports, and names built of several (P259).
+  terraformShape('multi-repo-shared-values', [
+    ['flow.ship.tree.txt', 'invoke:orders-prod-ship'],
+    ['flow.close-month.tree.txt', 'invoke:shop-reports-prod-close'],
+  ]),
+  // Two values of other deployments in one string in the CDK and Terraform, a
+  // failure destination of an import inside a mapping's choice, sceptre's
+  // inherited parameters, Jinja and stack outputs, rain in a pipeline (P261).
+  terraformShape('multi-repo-deploy-values', [
+    ['flow.audit-index.tree.txt', 'invoke:shop-audit-index'],
+    ['flow.ship.tree.txt', 'invoke:shop-prod-ship'],
+    ['flow.clicks.tree.txt', 'event:kinesis/shop-prod-clicks'],
+  ]),
+  terraformShape('multi-repo-failure-values', [
+    ['flow.clicks-ledger.tree.txt', 'entry:ledger:event:kinesis/shop-prod-clicks'],
+    ['flow.clicks-audit.tree.txt', 'entry:audit:event:kinesis/shop-prod-clicks'],
+    ['flow.ship.tree.txt', 'invoke:shop-prod-ship'],
+    ['flow.count.tree.txt', 'invoke:shop-stock-count'],
+  ]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],
@@ -1138,6 +1331,15 @@ const SUITES = [
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
+  { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
+  { dir: join(root, 'fixtures', 'angular-rendered-reach', 'expected.cli'), owned: true, cases: RENDERED_CASES },
+  { dir: join(root, 'fixtures', 'impact-guarded-navigation', 'expected.cli'), owned: true, cases: GUARDED_CASES },
+  { dir: join(root, 'fixtures', 'rows-name-handling-code', 'expected.cli'), owned: true, cases: HANDLING_CASES },
+  { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
+  { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
+  { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },
+  { dir: join(gapsFixture, 'expected.cli'), owned: true, cases: GAPS_CASES },
+  { dir: join(requiresFixture, 'expected.cli'), owned: true, cases: REQUIRES_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },
@@ -1161,6 +1363,8 @@ const SUITES = [
   { dir: join(root, 'fixtures', 'multi-repo-dead-routes', 'expected.cli'), owned: true, cases: DEAD_ROUTE_CASES },
   { dir: join(root, 'fixtures', 'house-patterns', 'expected.cli'), owned: true, cases: HOUSE_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-diff', 'expected.cli'), owned: true, cases: DIFF_CASES },
+  { dir: join(root, 'fixtures', 'api-change-verdicts', 'expected.cli'), owned: true, cases: VERDICT_CASES },
+  { dir: join(root, 'fixtures', 'client-checks-verdicts', 'expected.cli'), owned: true, cases: CLIENT_CHECK_CASES },
   { dir: join(root, 'fixtures', 'missing-repo', 'expected.cli'), owned: true, cases: MISSING_REPO_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-rules', 'expected.cli'), owned: true, cases: RULES_CASES },
   { dir: join(root, 'fixtures', 'multi-repo-deployed', 'expected.cli'), owned: true, cases: DEPLOYED_CASES },
@@ -1224,6 +1428,8 @@ for (const [file, ask] of CASES) {
 }
 
 if (diffProject !== undefined) rmSync(diffProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+if (verdictsProject !== undefined) rmSync(verdictsProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+if (clientChecksProject !== undefined) rmSync(clientChecksProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 if (deployedProject !== undefined) rmSync(deployedProject.scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 
 for (const { dir, owned, cases } of SUITES) {

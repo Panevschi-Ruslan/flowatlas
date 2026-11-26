@@ -1,0 +1,21 @@
+{
+  "settled": "1 consumer of RESYNC, all listed",
+  "channel": {
+    "id": "channel:tenant:*:events",
+    "loc": "src/steps/steps.controller.ts:58",
+    "service": "desk-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw",
+      "line": 23,
+      "kind": "event",
+      "via": "guard",
+      "reach": "alive",
+      "from": "event tenant:*:events"
+    }
+  ],
+  "total": 1,
+  "type": "RESYNC",
+  "complete": true
+}

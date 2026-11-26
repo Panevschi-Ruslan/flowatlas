@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: A catalog that tells several queues of every change, each named in a list or a map of its own.
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+
+Resources:
+  SearchQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: catalog-search
+  PricesQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: catalog-prices
+  FeedQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: catalog-feed
+
+  Publish:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: publish.handler
+
+  Indexer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: workers.handler
+      Events:
+        Search:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SearchQueue.Arn
+        Prices:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt PricesQueue.Arn
+        Feed:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt FeedQueue.Arn

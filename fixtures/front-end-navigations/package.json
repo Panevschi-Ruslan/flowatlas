@@ -1,0 +1,13 @@
+{
+  "name": "front-end-navigations",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root. Declares the five front ends, and holds no code of its own.",
+  "workspaces": [
+    "storefront",
+    "shop",
+    "backoffice",
+    "kiosk",
+    "admin"
+  ]
+}

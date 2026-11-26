@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:00:29.658Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:42.860Z",
   "services": [
     {
       "name": "gateway",
@@ -260,7 +260,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -341,7 +347,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -372,7 +384,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 23
+          }
+        ]
       }
     },
     {
@@ -792,7 +810,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -856,7 +875,8 @@
       "file": "src/auth/auth.guard.ts",
       "line": 10,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {
@@ -970,7 +990,8 @@
         "signature": {
           "params": [],
           "returns": "{ok:boolean}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1001,7 +1022,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -1347,7 +1374,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 13
+          }
+        ]
       }
     },
     {
@@ -1378,7 +1411,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 12
+          }
+        ]
       }
     },
     {
@@ -1392,7 +1431,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1702,7 +1742,14 @@
             "nestjs-http",
             "nestjs-schedule"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3003,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1728,7 +1775,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1753,7 +1807,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1780,7 +1841,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1823,6 +1891,7 @@
         "bodyKeys": [
           "customerId"
         ],
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",

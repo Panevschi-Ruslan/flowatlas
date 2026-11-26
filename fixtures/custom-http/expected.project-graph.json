@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:11.904Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:31.561Z",
   "services": [
     {
       "name": "api",
@@ -30,7 +30,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -62,7 +63,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -85,7 +87,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -108,7 +111,8 @@
             }
           ],
           "returns": "type:minihttp#Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

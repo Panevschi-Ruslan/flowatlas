@@ -34,6 +34,95 @@ export interface EnvironmentValue {
   readonly variable?: string;
   /** The variable files that disagree on it, and what each says. */
   readonly files?: Readonly<Record<string, string>>;
+  /** The key of a value another deployment publishes, which this one is (P249). */
+  readonly imported?: string;
+  /** The service that declares what it refers to, where that is another one's: an API it publishes (P249). */
+  readonly service?: string;
+  /** For an API's address, written out, the path it asks for on the API, after its stage (P268). */
+  readonly path?: string;
+  /** That API's address is built around a reference to it rather than written out with an id (P272). */
+  readonly referenced?: boolean;
+}
+
+/**
+ * On a node that runs code a deployment configures, what the deployment lets
+ * it send to, write to, invoke or start (P272): a list of {@link GrantValue}.
+ */
+export const GRANTS_META = 'grants';
+
+/** One grant, as the graph keeps it: the deployment's `DeployedGrant`, minus where it is written. */
+export interface GrantValue {
+  /** The kind of thing granted, as `DeployedKind` spells it. */
+  readonly kind: string;
+  readonly name?: string;
+  readonly any?: string;
+  readonly unread?: string;
+  readonly by: string;
+}
+
+/**
+ * On a producer whose address is not read, the address with the part it
+ * could not read named by the kind of deployed thing that part names (P272):
+ * a list of {@link GrantableAddress}. What the deployment of a function that
+ * runs it grants it of that kind, where it grants a few things by name, is
+ * where it can send.
+ */
+export const GRANTABLE_META = 'grantable';
+
+/** A part of an address: written in the code, or the one part it could not read, by what it names. */
+export type GrantablePart = string | { readonly granted: string };
+
+/** An address a grant may bound, and the message sent to it. */
+export interface GrantableAddress {
+  readonly parts: readonly GrantablePart[];
+  readonly payload?: string;
+}
+
+/**
+ * On a repository's node, the values its deployments publish for other
+ * deployments to read (P249): a list of {@link ExportedValue}.
+ */
+export const EXPORTS_META = 'exports';
+
+/** One published value, as the graph keeps it. */
+export interface ExportedValue {
+  readonly keys: readonly string[];
+  readonly address: string;
+  readonly file: string;
+  readonly line: number;
+  /** What the value names, as an {@link EnvironmentValue} spells it: `kind` and the name in `value`. */
+  readonly kind?: string;
+  readonly value?: string;
+  /** The value as text, when it is text. */
+  readonly text?: string;
+  readonly unread?: string;
+  readonly deployedBy?: string;
+}
+
+/**
+ * On a repository's node, every place its deployments read a value another
+ * publishes (P249): a list of {@link ImportedValue}. Something imported is
+ * named by its key's stand-in, which the linker renames to what the value
+ * names, and a value of the environment carries the key under `imported`.
+ */
+export const IMPORTS_META = 'imports';
+
+/** One place a published value is read. */
+export interface ImportedValue {
+  readonly key: string;
+  readonly file: string;
+  readonly line: number;
+  readonly what: string;
+  /** The kinds it may be, where it is used; absent where it may be anything. */
+  readonly kinds?: readonly string[];
+  /** One reading of the declaration per kind it may be, by address, of which the linker keeps one (P253). */
+  readonly alternatives?: readonly { readonly kind: string; readonly address: string }[];
+  /** `name` where the value is the name of what it names, written into an address of it (P253). */
+  readonly as?: 'name';
+  /** The name built of several values it is one part of, each part's stand-in in place (P259). */
+  readonly within?: string;
+  /** The repository whose value it was joined to, once it is. */
+  readonly from?: string;
 }
 
 /**

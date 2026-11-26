@@ -15,7 +15,7 @@ const CONFIG = join(ROOT, 'fixtures', 'cant-follow', 'flowatlas.config.json');
 let client: Client;
 
 const call = async (args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name: 'cant_follow', arguments: args })) as {
+  const response = (await client.callTool({ name: 'cant_follow', arguments: { verbose: true, ...args } })) as {
     content: Array<{ text: string }>;
   };
   return JSON.parse(response.content[0]!.text);
@@ -119,7 +119,7 @@ describe('cant_follow on a project read without an install (P78)', () => {
   });
 
   it('names shapes --suggest for a package nothing stands in for', async () => {
-    const response = (await standIns.callTool({ name: 'cant_follow', arguments: { cause: 'module-not-installed' } })) as {
+    const response = (await standIns.callTool({ name: 'cant_follow', arguments: { verbose: true, cause: 'module-not-installed' } })) as {
       content: Array<{ text: string }>;
     };
     const answer = JSON.parse(response.content[0]!.text);
@@ -169,7 +169,7 @@ describe('cant_follow and accepted.json (P80)', () => {
   });
 
   const ask = async (args: Record<string, unknown> = {}): Promise<any> => {
-    const response = (await ruled.callTool({ name: 'cant_follow', arguments: args })) as { content: Array<{ text: string }> };
+    const response = (await ruled.callTool({ name: 'cant_follow', arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
     return JSON.parse(response.content[0]!.text);
   };
 

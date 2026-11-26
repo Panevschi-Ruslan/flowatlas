@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "express-wrapped-handler",
-  "generatedAt": "2026-10-08T09:12:34.381Z",
+  "generatedAt": "2026-11-23T14:34:58.797Z",
   "nodes": [
     {
       "id": "entry:express-wrapped-handler:http:GET:/api/v1/videos/:param",
@@ -131,7 +131,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 50
+          }
+        ]
       }
     },
     {
@@ -150,7 +156,10 @@
       "repo": "express-wrapped-handler",
       "file": "src/controllers/videos.ts",
       "line": 19,
-      "kind": "function"
+      "kind": "function",
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "express-wrapped-handler#src/controllers/videos.ts:getRateFactory",
@@ -168,7 +177,14 @@
             }
           ],
           "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 56,
+            "why": "handed to countRates"
+          }
+        ]
       }
     },
     {
@@ -191,7 +207,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -274,7 +291,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 9101,
+            "file": "src/server.ts",
+            "line": 9
+          }
+        ]
       }
     }
   ],

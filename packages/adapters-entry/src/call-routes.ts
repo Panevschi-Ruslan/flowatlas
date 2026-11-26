@@ -5,6 +5,7 @@ import type {
   EntryNode,
   EntryWrapping,
   ExtractContext,
+  ListenPort,
 } from '@flowatlas/core';
 import {
   evaluateExpression,
@@ -22,7 +23,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { MountShape, RouteDialect } from './route-dialects.js';
 import { EXPRESS, FASTIFY, HONO, KOA, MOUNT_HELPERS } from './route-dialects.js';
 import { Registries, registryOf } from './route-registries.js';
-import { appDeclaration, statedApp, statedBase } from './stated-apps.js';
+import { appDeclaration, madeDirectly, statedApp, statedBase, valuesHandedTo, valuesWrittenTo } from './stated-apps.js';
 import {
   builtByFactory,
   enclosingClass,
@@ -36,6 +37,7 @@ import {
   repoSources,
 } from './shared.js';
 import { evidenceOf, unwrapWork } from './wrapped-work.js';
+import { fastifyCliListens, honoListens, listensByCall } from './listen-ports.js';
 
 /**
  * The sentence for a route whose own path could not be read.
@@ -134,10 +136,12 @@ const propertyOf = (argument: TsNode | undefined, key: string): TsNode | undefin
 };
 
 /**
- * How an application was recognised: by the type the checker resolved, or by
- * what the source states where the checker resolved none (R142).
+ * How an application was recognised: by the type the checker resolved, by the
+ * framework's own maker called right there where the checker resolved none
+ * (P346), or by any other statement of the source (R142). Only the last is
+ * `heuristic`; the maker's value is the value a type would have described.
  */
-type Recognised = 'type' | 'source';
+type Recognised = 'type' | 'maker' | 'source';
 
 /**
  * Whether a type is one the framework declares routes on.
@@ -157,7 +161,10 @@ type Recognised = 'type' | 'source';
  */
 const recognised = (expr: TsNode, dialect: RouteDialect): Recognised | undefined => {
   const origin = resolveTypeOrigin(expr);
-  if (origin === null) return statedApp(expr, dialect) === undefined ? undefined : 'source';
+  if (origin === null) {
+    if (statedApp(expr, dialect) === undefined) return undefined;
+    return madeDirectly(expr, dialect) ? 'maker' : 'source';
+  }
   const named = (pkg: string | null, typeName: string | undefined): boolean =>
     pkg !== null &&
     typeName !== undefined &&
@@ -192,8 +199,10 @@ interface AppCall {
   /** Where in the repository it is written, for putting installs in order. */
   site: Site;
   /**
-   * Whether the receiver was recognised from what the source states rather than
-   * from a resolved type. Every route read off it is then `heuristic`.
+   * Whether the receiver was recognised from what the source states, other than
+   * the framework's own maker called right there, rather than from a resolved
+   * type. Every route read off it is then `heuristic`, and so is every route
+   * under a mount written on it.
    */
   stated?: true;
   /**
@@ -545,9 +554,10 @@ const assignedApps = (declaration: TsNode, dialect: RouteDialect): TsNode[] => {
  * A parameter's default is one of them, and it is the one that earns this its own
  * function. `export default function init(app: Koa = new Koa(), server?: Server)`
  * is how a wiki app's web service declares the application every one of its routes
- * is served on: the service is started through a map of dynamic imports, so no
- * call to `init` can be followed from here, and the default is the only statement
- * in the repository about what `app` is.
+ * is served on. Where every call of `init` can be found - through a map of
+ * dynamic imports too - what the callers hand it is read first (P354); where one
+ * cannot, the default is the only statement in the repository about what `app`
+ * is.
  *
  * Read as the parameter's value, with the same walk a `const` gets, because it is
  * the same kind of fact and it is better evidence than what stood here before: a
@@ -643,6 +653,13 @@ interface Install {
 interface RouteContext {
   prefix: string;
   guards: readonly Install[];
+  /**
+   * A mount on the way down was written on an application recognised only by
+   * what the source states (R142). The address rests on that reading, so a
+   * route placed through it is no surer than `heuristic`, however its own
+   * application was made (P346).
+   */
+  stated?: true;
 }
 
 const ROOT: RouteContext = { prefix: '', guards: [] };
@@ -695,6 +712,8 @@ interface Mount {
    * what the hint asked.
    */
   through?: string;
+  /** Written on a parent recognised only by what the source states (R142). */
+  stated?: true;
 }
 
 /**
@@ -824,6 +843,7 @@ class Applications {
         site: site.site,
         ...(at === undefined ? {} : { at }),
         ...(at === undefined && helper !== undefined ? { through: label(written) } : {}),
+        ...(site.stated === true ? { stated: true as const } : {}),
       });
       this.#mounts.set(target, found);
     }
@@ -873,7 +893,12 @@ class Applications {
     }
     for (const target of found) {
       const mounts = this.#mounts.get(target) ?? [];
-      mounts.push({ parent: site.receiver, site: site.site, ...(at === undefined ? {} : { at }) });
+      mounts.push({
+        parent: site.receiver,
+        site: site.site,
+        ...(at === undefined ? {} : { at }),
+        ...(site.stated === true ? { stated: true as const } : {}),
+      });
       this.#mounts.set(target, mounts);
     }
     return true;
@@ -994,6 +1019,7 @@ class Applications {
             const owner = appOwner(callee.getExpression(), dialect);
             const here = siteOf(node, this.#ctx);
             return inner.map((context) => ({
+              ...context,
               prefix: joinPath(context.prefix, at),
               guards: [...context.guards, ...this.guardsOn(owner, here, context.prefix)],
             }));
@@ -1049,14 +1075,38 @@ class Applications {
     }
   }
 
+  /**
+   * Where an application whose value is not written at its declaration is
+   * served, from every value it is given (P354): what every caller of its
+   * function hands a parameter - `mount(app)` from a service's start,
+   * `init(app)` through a map of lazy imports - and what the repository
+   * writes into a property declared bare, `app; constructor() { this.app =
+   * express(); }`. Undefined where a caller or a write cannot be seen, or one
+   * gives something whose place cannot be read; the declaration's own value,
+   * or nothing, is then what is read, as before.
+   */
+  #handedContexts(declaration: TsNode, seen: Set<TsNode>): RouteContext[] | undefined {
+    const values = Node.isParameterDeclaration(declaration) ? valuesHandedTo(declaration) : valuesWrittenTo(declaration);
+    if (values === undefined) return undefined;
+    const out: RouteContext[] = [];
+    for (const value of values) {
+      const contexts = this.contextsOf(value, seen);
+      if (contexts === undefined) return undefined;
+      out.push(...contexts);
+    }
+    return out;
+  }
+
   #basesOf(declaration: TsNode, seen: Set<TsNode>): RouteContext[] | undefined {
     const shifted = this.#shifted.get(declaration);
     if (this.#shifted.has(declaration) && shifted === undefined) return undefined;
 
     const initializer = valueWritten(declaration);
     // A binding whose value is not written here: the base is whatever the caller
-    // had, which only the caller knows.
-    const written = initializer === undefined ? undefined : this.contextsOf(initializer, seen);
+    // had, which only the caller knows - and where every caller is known, it is
+    // every place each of them hands it (P354).
+    const handed = this.#handedContexts(declaration, seen);
+    const written = handed ?? (initializer === undefined ? undefined : this.contextsOf(initializer, seen));
     const own =
       written === undefined || shifted === undefined
         ? written
@@ -1081,9 +1131,11 @@ class Applications {
           ...this.guardsOn(parent, mount.site, outer.prefix),
         ];
         for (const inner of own ?? [ROOT]) {
+          const stated = outer.stated === true || mount.stated === true || inner.stated === true;
           out.push({
             prefix: joinPath(outer.prefix, mount.at, inner.prefix),
             guards: [...inherited, ...inner.guards],
+            ...(stated ? { stated: true as const } : {}),
           });
         }
       }
@@ -1286,9 +1338,44 @@ const pathIndex = (site: AppCall, dialect: RouteDialect): number =>
   (dialect.verbArgument !== undefined && site.method === dialect.verbArgument ? 1 : 0) +
   dialect.pathAt;
 
+/**
+ * A route declared with its verbs as a list, at positions the dialect names:
+ * koa-router's `router.register('jobs.:interval', ['get', 'post'], [validate,
+ * run])` (P270). The handlers are a list or one function; the last answers the
+ * request and the ones before it are that route's middleware, as they are
+ * written between the path and the handler of a verb call.
+ */
+const listedRouteOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Route | undefined => {
+  const shape = dialect.verbList;
+  if (shape === undefined || site.method !== shape.method) return undefined;
+  const verbs = verbsArg(site.args[shape.verbsAt]);
+  const paths = pathsArg(site.args[shape.pathAt]);
+  const written = site.args[shape.handlersAt];
+  if (verbs === undefined || paths === undefined || written === undefined) return undefined;
+  const list = unwrap(written);
+  const handlers = Node.isArrayLiteralExpression(list) ? list.getElements() : [written];
+  const last = handlers[handlers.length - 1];
+  if (last === undefined || Node.isSpreadElement(last)) return undefined;
+  return {
+    verbs,
+    paths,
+    middleware: handlers.slice(0, -1).map((argument) => label(argument)),
+    answer: answered(site, throughWrapper(last), verbs, paths, ctx),
+  };
+};
+
+/** Whether a call is the dialect's list form, which declares a route as a verb call does. */
+const isListedCall = (site: AppCall, dialect: RouteDialect): boolean =>
+  dialect.verbList !== undefined &&
+  site.method === dialect.verbList.method &&
+  site.args.length > Math.max(dialect.verbList.pathAt, dialect.verbList.verbsAt, dialect.verbList.handlersAt);
+
 const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Route | undefined => {
   const asObject = objectRouteOf(site, dialect, ctx);
   if (asObject !== undefined) return asObject;
+  if (dialect.verbList !== undefined && site.method === dialect.verbList.method) {
+    return listedRouteOf(site, dialect, ctx);
+  }
 
   const byArgument = dialect.verbArgument !== undefined && site.method === dialect.verbArgument;
   const verb = dialect.verbs.get(site.method);
@@ -1427,6 +1514,13 @@ export interface CallRoutesOptions {
   readonly reportSilence?: boolean;
 }
 
+/** The dialects whose server starts other than by `app.listen(port)` as well (P250). */
+// fastify-cli's `fastify start` listens for an application that calls no `listen` of its own (P321).
+const LISTENS_OF: Readonly<Record<string, (ctx: ExtractContext) => ListenPort[]>> = {
+  [HONO.name]: honoListens,
+  [FASTIFY.name]: (ctx) => [...listensByCall(ctx), ...fastifyCliListens(ctx)],
+};
+
 export const callRoutesAdapter = (
   dialect: RouteDialect,
   options: CallRoutesOptions = {},
@@ -1437,6 +1531,9 @@ export const callRoutesAdapter = (
   // guards and pipes never run for them and none are drawn.
   outsideApplication: true,
   detect: (pkg) => hasAnyDependency(pkg, dialect.packages),
+  // Where the application's server listens (P250): `app.listen(port)` for
+  // every dialect, and Hono's own ways of starting one.
+  listens: (ctx: ExtractContext) => (LISTENS_OF[dialect.name] ?? listensByCall)(ctx),
   extractEntries: (ctx: ExtractContext) => {
     const sources = [...repoSources(ctx)];
     const applications = new Applications(dialect, ctx, new Registries(sources));
@@ -1585,8 +1682,11 @@ export const callRoutesAdapter = (
                 ...(route.answer.why === undefined ? {} : { wrapperUnread: route.answer.why }),
                 // An application recognised from the source rather than from a
                 // resolved type: what the author meant, not what a compiler
-                // checked, and never more than `heuristic` (R142, as R122).
-                ...(site.stated === true ? { confidence: 'heuristic' } : {}),
+                // checked, and never more than `heuristic` (R142, as R122) -
+                // nor is a route placed through a mount written on one. The
+                // framework's own maker called right there is the value
+                // itself and carries what a typed reading carries (P346).
+                ...(site.stated === true || context.stated === true ? { confidence: 'heuristic' } : {}),
               },
             });
           }
@@ -1797,12 +1897,28 @@ const reportUnreadable = (ctx: ExtractContext, site: AppCall, dialect: RouteDial
     site.method === dialect.routeObject.method &&
     site.args[0] !== undefined &&
     Node.isObjectLiteralExpression(unwrap(site.args[0] as TsNode));
-  if (!dialect.verbs.has(site.method) && !byArgument && !asObject) return;
-  const pathAt = pathIndex(site, dialect);
-  if (!asObject && site.args.length < pathAt + 2) return;
+  const listed = isListedCall(site, dialect);
+  if (!dialect.verbs.has(site.method) && !byArgument && !asObject && !listed) return;
+  const pathAt = listed ? (dialect.verbList?.pathAt ?? 0) : pathIndex(site, dialect);
+  if (!asObject && !listed && site.args.length < pathAt + 2) return;
   const written = asObject
     ? propertyOf(site.args[0], dialect.routeObject?.pathKey ?? '')
     : site.args[pathAt];
+
+  // The list form's address read and its verbs not: the verbs are the half missing.
+  const verbsWritten = listed ? site.args[dialect.verbList?.verbsAt ?? 1] : undefined;
+  if (listed && pathsArg(written) !== undefined && verbsArg(verbsWritten) === undefined) {
+    ctx.builder.addUnresolved({
+      file: site.site.file,
+      line: site.site.line,
+      reason: 'route-verb-unread',
+      message: `${label(site.receiver)}.${site.method}(${label(written)}) is handed its verbs as ${label(verbsWritten)}, which is decided at run time, so no way in was drawn for it.`,
+      hint: "Write the verbs as a list of strings, ['get', 'post'], so the route can be named and joined to what asks for it.",
+      symbol: `${label(site.receiver)}.${site.method}(${label(written)})`,
+      adapter: dialect.name,
+    });
+    return;
+  }
 
   ctx.builder.addUnresolved({
     file: site.site.file,

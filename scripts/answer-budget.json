@@ -1,0 +1,4620 @@
+{
+  "about": "What an agent pays per question (P373): node scripts/answer-budget.mjs. questions and expect are written by hand, the right answer; fixed and recorded are measured, and only --update rewrites them.",
+  "tolerance": {
+    "ratio": 0.1,
+    "chars": 300
+  },
+  "fixedOn": "multi-repo",
+  "questions": [
+    {
+      "id": "impact.multi-repo",
+      "ask": "which ways in could break if OrdersService.findOne changes",
+      "fixture": "multi-repo",
+      "tool": "impact",
+      "args": {
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:orders:http:GET:/orders/:param",
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:gateway:http:POST:/orders/:param/invoice"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:orders:http:POST:/orders"
+          ]
+        },
+        "settled": true
+      },
+      "note": "P372: POST /orders reaches the method only across the order.created channel, so it is counted under throughChannels, not listed in entries."
+    },
+    {
+      "id": "impact.calling-side",
+      "ask": "which ways in could break if OrdersService.updateStatus changes",
+      "fixture": "impact-calling-side",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders.service.ts:OrdersService.updateStatus"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "lists": {
+          "entries": [
+            "entry:backoffice-web:screen:/board",
+            "entry:shop-api:http:PATCH:/orders/status",
+            "entry:shop-api:http:POST:/hooks/chat",
+            "ops-bot#src/ops-bot.ts:OpsBot.handleStatus"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "ops-bot#src/ops-bot.ts:OpsBot.handleStatus": {
+              "reach": "maybe"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      }
+    },
+    {
+      "id": "impact.shared-client-items",
+      "ask": "which ways in could break if ItemsService.listByShop changes",
+      "fixture": "impact-shared-client",
+      "tool": "impact",
+      "args": {
+        "symbol": "market-api#src/items.service.ts:ItemsService.listByShop"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:market-api:http:GET:/api/items",
+            "entry:market-web:screen:/history",
+            "entry:kiosk-web:screen:/browse",
+            "entry:market-bot:bot_command:items"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:market-api:http:POST:/api/items",
+            "entry:market-api:http:ALL:/api/*",
+            "entry:market-web:screen:/catalog",
+            "entry:market-web:screen:/reports",
+            "entry:market-web:screen:/settings",
+            "entry:kiosk-web:screen:/order"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      }
+    },
+    {
+      "id": "impact.shared-client-desks",
+      "ask": "which ways in could break if DesksService.ackCall changes",
+      "fixture": "impact-shared-client",
+      "tool": "impact",
+      "args": {
+        "symbol": "market-api#src/desks.service.ts:DesksService.ackCall"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:market-api:http:POST:/api/staff/desks/:param/ack-call",
+            "entry:market-web:screen:/staff"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:market-api:http:POST:/api/staff/desks/:param/call",
+            "entry:market-web:screen:/staff/desks/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      }
+    },
+    {
+      "id": "impact.rendered-reach",
+      "ask": "which ways in could break if ItemsService.findOne changes",
+      "fixture": "angular-rendered-reach",
+      "tool": "impact",
+      "args": {
+        "symbol": "catalog-api#src/items.service.ts:ItemsService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "lists": {
+          "entries": [
+            "entry:catalog-api:http:GET:/items/:param",
+            "entry:catalog-web:screen:/catalog"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey": {
+              "reach": "maybe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "who_calls.multi-repo",
+      "ask": "who calls OrdersService.findOne, up to the ways in",
+      "fixture": "multi-repo",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "orders#src/orders/orders.service.ts:OrdersService.findOne"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+          ],
+          "waysIn": [
+            "entry:orders:http:GET:/orders/:param",
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:gateway:http:POST:/orders/:param/invoice",
+            "entry:billing:http:POST:/invoices",
+            "entry:billing:event:order.created",
+            "entry:billing:event:invoice.requested"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ],
+        "notListed": {
+          "waysIn": [
+            "entry:orders:http:POST:/orders"
+          ]
+        }
+      },
+      "note": "P376: one call walks to every way in, each listed once in waysIn; POST /orders reaches the method only across the order.created channel (P372), so it is counted under throughChannels, not listed."
+    },
+    {
+      "id": "who_calls.helpdesk",
+      "ask": "who calls TicketsService.assign",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:desk-api:http:POST:/desks/:param/tickets/:param/assign"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      }
+    },
+    {
+      "id": "who_calls.long-chain",
+      "ask": "who calls StockService.level, up to the ways in",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "stock-api#src/stock/stock.service.ts:StockService.level"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+            "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+            "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly"
+          ],
+          "waysIn": [
+            "entry:stock-api:http:POST:/checkout",
+            "entry:stock-api:http:DELETE:/checkout/:param",
+            "entry:stock-api:http:GET:/reports/daily",
+            "entry:stock-api:cron:StockJobs.nightly",
+            "entry:store-web:screen:/checkout",
+            "entry:store-web:screen:/reports"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P376: GET /reports/daily is five calls from the method and the report screen further; a walk to a fixed depth of 3 stopped before both."
+    },
+    {
+      "id": "who_calls.class-shared-callers",
+      "ask": "who calls the methods of StockService, and from which ways in",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "stock-api#src/stock/stock.service.ts:StockService"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.cancel",
+            "stock-api#src/reports/report.builder.ts:ReportBuilder.row",
+            "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly"
+          ],
+          "waysIn": [
+            "entry:stock-api:http:POST:/checkout",
+            "entry:stock-api:http:DELETE:/checkout/:param",
+            "entry:stock-api:http:GET:/reports/daily",
+            "entry:stock-api:cron:StockJobs.nightly",
+            "entry:store-web:screen:/checkout",
+            "entry:store-web:screen:/reports"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ],
+        "rowsSay": {
+          "waysIn": {
+            "entry:stock-api:http:POST:/checkout": {
+              "reaches": [
+                "level",
+                "reserve"
+              ]
+            },
+            "entry:stock-api:http:DELETE:/checkout/:param": {
+              "reaches": [
+                "level",
+                "release"
+              ]
+            },
+            "entry:stock-api:cron:StockJobs.nightly": {
+              "reaches": [
+                "level",
+                "restock"
+              ]
+            },
+            "entry:stock-api:http:GET:/reports/daily": {
+              "reaches": [
+                "level"
+              ]
+            },
+            "entry:store-web:screen:/checkout": {
+              "reaches": [
+                "level",
+                "release",
+                "reserve"
+              ]
+            },
+            "entry:store-web:screen:/reports": {
+              "reaches": [
+                "level"
+              ]
+            }
+          }
+        }
+      },
+      "note": "P376: each way in once, saying which of the four methods it reaches; none reaches all four."
+    },
+    {
+      "id": "who_calls.several-symbols",
+      "ask": "who calls StockService.reserve and StockService.restock",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbols": [
+          "stock-api#src/stock/stock.service.ts:StockService.reserve",
+          "stock-api#src/stock/stock.service.ts:StockService.restock"
+        ]
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+            "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly"
+          ],
+          "waysIn": [
+            "entry:stock-api:http:POST:/checkout",
+            "entry:stock-api:cron:StockJobs.nightly",
+            "entry:store-web:screen:/checkout"
+          ]
+        },
+        "exact": [
+          "callers",
+          "waysIn"
+        ]
+      }
+    },
+    {
+      "id": "who_calls.routes-several",
+      "ask": "which routes of ProductsController does no code call, and who calls the others",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbols": [
+          "entry:stock-api:http:GET:/products",
+          "entry:stock-api:http:GET:/products/:param",
+          "entry:stock-api:http:POST:/products",
+          "entry:stock-api:http:PUT:/products/:param",
+          "entry:stock-api:http:DELETE:/products/:param"
+        ]
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "ui_api_call:store-web#src/app/products.client.ts:16:12",
+            "ui_api_call:store-web#src/app/products.client.ts:20:12",
+            "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "ui_api_call:store-web#src/app/products.client.ts:51:12"
+          ],
+          "waysIn": [
+            "entry:store-web:screen:/catalog",
+            "entry:store-web:screen:/catalog/:param"
+          ]
+        },
+        "exact": [
+          "callers",
+          "waysIn"
+        ],
+        "rowsSay": {
+          "waysIn": {
+            "entry:store-web:screen:/catalog": {
+              "reaches": [
+                "GET /products",
+                "POST /products"
+              ]
+            },
+            "entry:store-web:screen:/catalog/:param": {
+              "reaches": [
+                "GET /products/:param",
+                "PUT /products/:param"
+              ]
+            }
+          }
+        }
+      },
+      "note": "P379: five routes asked together, each one's direct callers and the two screens said once, complete; the delete route has none."
+    },
+    {
+      "id": "who_calls.routes-depth",
+      "ask": "who calls each route of ProductsController, one hop",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "symbols": [
+          "entry:stock-api:http:GET:/products",
+          "entry:stock-api:http:GET:/products/:param",
+          "entry:stock-api:http:POST:/products",
+          "entry:stock-api:http:PUT:/products/:param",
+          "entry:stock-api:http:DELETE:/products/:param"
+        ],
+        "depth": 1
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "ui_api_call:store-web#src/app/products.client.ts:16:12",
+            "ui_api_call:store-web#src/app/products.client.ts:20:12",
+            "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "ui_api_call:store-web#src/app/products.client.ts:51:12"
+          ],
+          "waysIn": [
+            "entry:store-web:screen:/catalog",
+            "entry:store-web:screen:/catalog/:param"
+          ]
+        },
+        "exact": [
+          "callers",
+          "waysIn"
+        ]
+      },
+      "note": "P379: with a depth, several symbols answered each its tree alone, every answer incomplete, no waysIn, next asking who_calls again on each."
+    },
+    {
+      "id": "get_flow.inline-type",
+      "ask": "what does CatalogComponent.add call, at detail 2",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "get_flow",
+      "args": {
+        "entry": "CatalogComponent.add",
+        "detail": 2
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "root": [
+            "store-web#src/app/catalog.component.ts:CatalogComponent.add",
+            "store-web#src/app/products.client.ts:ProductsClient.create",
+            "ui_api_call:store-web#src/app/products.client.ts:47:12",
+            "entry:stock-api:http:POST:/products",
+            "stock-api#src/products/products.controller.ts:ProductsController.create",
+            "stock-api#src/products/products.service.ts:ProductsService.create"
+          ]
+        },
+        "rowsSay": {
+          "root": {
+            "store-web#src/app/products.client.ts:ProductsClient.create": {
+              "edge": "calls",
+              "meta": {
+                "signature": {
+                  "params": [
+                    {
+                      "name": "product",
+                      "type": "{…22 fields}"
+                    }
+                  ],
+                  "returns": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "note": "P379: the create's body, 22 fields written inline, was said whole on the edge, the signature and the request's bodyType. P382: the edge no longer repeats the types the step's signature says, so the 22 fields are said once, on the signature."
+    },
+    {
+      "id": "list_entries.class-callers",
+      "ask": "which routes does ProductsController declare, and who calls each",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "list_entries",
+      "args": {
+        "in": "ProductsController"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "entries"
+        ],
+        "rowsSay": {
+          "entries": {
+            "entry:stock-api:http:GET:/products": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:16:12"
+            },
+            "entry:stock-api:http:GET:/products/:param": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:20:12"
+            },
+            "entry:stock-api:http:POST:/products": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:47:12"
+            },
+            "entry:stock-api:http:PUT:/products/:param": {
+              "reach": "alive",
+              "callers": 1,
+              "caller": "ui_api_call:store-web#src/app/products.client.ts:51:12"
+            },
+            "entry:stock-api:http:DELETE:/products/:param": {
+              "reach": "dead"
+            }
+          }
+        }
+      },
+      "note": "P379: each row says who calls it, as dead on a class does; the rows said reach alone, and the agent asked who_calls on every route."
+    },
+    {
+      "id": "who_consumes.helpdesk-type",
+      "ask": "which screens react to TICKET_ASSIGNED",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "desk:*:events",
+        "type": "TICKET_ASSIGNED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+            "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent"
+          ]
+        },
+        "rowsSay": {
+          "consumers": {
+            "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent": {
+              "reach": "alive",
+              "from": "screen /queue"
+            },
+            "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent": {
+              "reach": "alive",
+              "from": "screen /tickets/:param"
+            }
+          }
+        },
+        "exact": [
+          "consumers"
+        ],
+        "settled": true
+      }
+    },
+    {
+      "id": "who_consumes.relayed-type",
+      "ask": "which handlers take ORDER_READY",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "order_updates",
+        "type": "ORDER_READY"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+            "consumer:web#src/screens/PickupBoard.tsx:PickupBoard"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      }
+    },
+    {
+      "id": "who_consumes.every-channel",
+      "ask": "which handlers take HELP_REQUESTED",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "desk_alerts",
+        "type": "HELP_REQUESTED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff"
+          ]
+        }
+      }
+    },
+    {
+      "id": "search.type-name",
+      "ask": "where is HELP_REQUESTED sent and handled",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "search",
+      "args": {
+        "query": "HELP_REQUESTED"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "messages": [
+            "channel:desk_alerts#HELP_REQUESTED"
+          ]
+        }
+      }
+    },
+    {
+      "id": "search.type-name-screens",
+      "ask": "where is TICKET_ASSIGNED sent and handled",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "search",
+      "args": {
+        "query": "TICKET_ASSIGNED"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "messages": [
+            "channel:desk:*:events#TICKET_ASSIGNED"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fields.handler-reads",
+      "ask": "which handler reads the label of ORDER_READY",
+      "fixture": "fields-read-and-sent",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "order_updates",
+        "type": "ORDER_READY",
+        "field": "label"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      }
+    },
+    {
+      "id": "fields.route-reads",
+      "ask": "which code on PATCH /api/orders/:id/cancel reads userRef",
+      "fixture": "fields-read-and-sent",
+      "tool": "check_contract",
+      "args": {
+        "edge": "PATCH /api/orders/:id/cancel",
+        "field": "userRef"
+      },
+      "lists": [
+        "reads"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "reads": [
+            "shop-api#src/auth/client.guard.ts:ClientGuard.clientRef"
+          ]
+        },
+        "rowsSay": {
+          "reads": {
+            "shop-api#src/auth/client.guard.ts:ClientGuard.clientRef": {
+              "layer": "guard"
+            }
+          }
+        },
+        "exact": [
+          "reads"
+        ]
+      }
+    },
+    {
+      "id": "fields.missing-unused",
+      "ask": "what HELP_REQUESTED's handler reads that its publish does not send",
+      "fixture": "fields-read-and-sent",
+      "tool": "check_contract",
+      "args": {
+        "channel": "desk_events",
+        "type": "HELP_REQUESTED"
+      },
+      "lists": [
+        "missing",
+        "unused"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "missing": [
+            "deskId"
+          ],
+          "unused": [
+            "deskNumber"
+          ]
+        },
+        "exact": [
+          "missing",
+          "unused"
+        ]
+      }
+    },
+    {
+      "id": "dead.components",
+      "ask": "are these four components dead",
+      "fixture": "angular-rendered-reach",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "catalog-web#src/app/item-card.component.ts:ItemCardComponent",
+          "catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent",
+          "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent",
+          "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "catalog-web#src/app/item-card.component.ts:ItemCardComponent": {
+              "verdict": "alive"
+            },
+            "catalog-web#src/app/legacy-badge.component.ts:LegacyBadgeComponent": {
+              "verdict": "likely-dead"
+            },
+            "catalog-web#src/app/promo-dialog.component.ts:PromoDialogComponent": {
+              "verdict": "maybe"
+            },
+            "catalog-web#src/app/settings-page.component.ts:SettingsPageComponent": {
+              "verdict": "alive"
+            }
+          }
+        }
+      },
+      "note": "P396: a component an unread call could reach says maybe, the word impact and who_calls say for it, where it said likely-dead."
+    },
+    {
+      "id": "dead.handler-and-method",
+      "ask": "is the queue screen's handler or TicketsService.reopen dead",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+          "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent": {
+              "verdict": "alive"
+            },
+            "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen": {
+              "verdict": "maybe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "get_flow.route",
+      "ask": "how does GET /orders/:id flow, at detail 1",
+      "fixture": "multi-repo",
+      "tool": "get_flow",
+      "args": {
+        "entry": "entry:gateway:http:GET:/orders/:param"
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "lists": {
+          "root": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:orders:http:GET:/orders/:param",
+            "orders#src/orders/orders.service.ts:OrdersService.findOne",
+            "table:orders#orders"
+          ]
+        }
+      }
+    },
+    {
+      "id": "get_flow.route-detail-2",
+      "ask": "how does GET /orders/:id flow, at detail 2",
+      "fixture": "multi-repo",
+      "tool": "get_flow",
+      "args": {
+        "entry": "entry:gateway:http:GET:/orders/:param",
+        "detail": 2
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "lists": {
+          "root": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:orders:http:GET:/orders/:param",
+            "orders#src/orders/orders.service.ts:OrdersService.findOne",
+            "table:orders#orders"
+          ]
+        }
+      }
+    },
+    {
+      "id": "find_symbol.several",
+      "ask": "where are getHistory, StaffBoardService.ackCall and ShopEventsService.connect",
+      "fixture": "impact-shared-client",
+      "tool": "find_symbol",
+      "args": {
+        "queries": [
+          "getHistory",
+          "StaffBoardService.ackCall",
+          "ShopEventsService.connect"
+        ]
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "matches": [
+            "market-web#src/app/items.client.ts:ItemsClient.getHistory",
+            "market-web#src/app/staff-board.service.ts:StaffBoardService.ackCall",
+            "market-web#src/app/shop-events.service.ts:ShopEventsService.connect"
+          ]
+        }
+      }
+    },
+    {
+      "id": "find_symbol.unreferenced",
+      "ask": "where are oneLegacy and byKey, and do they run",
+      "fixture": "angular-rendered-reach",
+      "tool": "find_symbol",
+      "args": {
+        "queries": [
+          "oneLegacy",
+          "byKey"
+        ]
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "rowsSay": {
+          "matches": {
+            "catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy": {
+              "reach": "unreached"
+            },
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey": {
+              "reach": "maybe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "list_entries.paged",
+      "ask": "every way in, three to a page",
+      "fixture": "multi-repo",
+      "tool": "list_entries",
+      "args": {
+        "maxNodes": 3
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:billing:event:order.created"
+          ]
+        }
+      }
+    },
+    {
+      "id": "impact.handling-code",
+      "ask": "which ways in could break if OrdersService.cancel changes, and which file holds the code each one runs",
+      "fixture": "rows-name-handling-code",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+            "entry:shop-api:http:POST:/bot/staff/webhook",
+            "entry:shop-web:screen:/orders/:param"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel": {
+              "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+            },
+            "entry:shop-api:http:POST:/bot/staff/webhook": {
+              "by": "shop-api#src/bot/staff-bot.service.ts:StaffBot.handleCallbackQuery"
+            },
+            "entry:shop-web:screen:/orders/:param": {
+              "by": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P374: each row names the code that handles it - the webhook the bot class its worker hands the update to, never the worker file."
+    },
+    {
+      "id": "fields.default-key",
+      "ask": "which code on PATCH /api/orders/:id/cancel reads userRef, read through a key the guard holds as a default",
+      "fixture": "rows-name-handling-code",
+      "tool": "check_contract",
+      "args": {
+        "edge": "PATCH /api/orders/:id/cancel",
+        "field": "userRef"
+      },
+      "lists": [
+        "reads"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "reads": [
+            "shop-api#src/auth/client.guard.ts:ClientGuard.suppliedId"
+          ]
+        },
+        "rowsSay": {
+          "reads": {
+            "shop-api#src/auth/client.guard.ts:ClientGuard.suppliedId": {
+              "layer": "guard",
+              "sureness": "default"
+            }
+          }
+        },
+        "exact": [
+          "reads"
+        ]
+      }
+    },
+    {
+      "id": "who_consumes.never-subscribed",
+      "ask": "which code reacts to HELP_REQUESTED on desk_alerts, and does it run",
+      "fixture": "rows-name-handling-code",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "desk_alerts",
+        "type": "HELP_REQUESTED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:shop-api#src/notify/alert-relay.service.ts:AlertRelay.pageStaff",
+            "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload",
+            "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.handle"
+          ]
+        },
+        "notListed": {
+          "consumers": [
+            "consumer:shop-web#src/app/toast.service.ts:Toast.showInfo"
+          ]
+        },
+        "rowsSay": {
+          "consumers": {
+            "consumer:shop-web#src/app/desk-board.component.ts:DeskBoardComponent.reload": {
+              "reach": "alive"
+            },
+            "consumer:shop-web#src/app/order-notices.service.ts:OrderNotices.handle": {
+              "reach": "dead"
+            }
+          }
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P374: the notice service nothing builds handles the type where it is written, never in the toast it calls, and never runs."
+    },
+    {
+      "id": "search.every-channel-type",
+      "ask": "where is HELP_REQUESTED sent and handled, a subscriber to every channel among its handlers",
+      "fixture": "rows-name-handling-code",
+      "tool": "search",
+      "args": {
+        "query": "HELP_REQUESTED"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "messages": [
+            "channel:desk_alerts#HELP_REQUESTED"
+          ]
+        },
+        "notListed": {
+          "messages": [
+            "channel:cart_canceled#HELP_REQUESTED",
+            "channel:cart_expired#HELP_REQUESTED"
+          ]
+        },
+        "exact": [
+          "messages"
+        ]
+      },
+      "note": "P374: the every-channel subscriber draws its type only on the channel that publishes it."
+    },
+    {
+      "id": "impact.detail-2-lean",
+      "ask": "which ways in could break if OrdersService.cancel changes, asked at detail 2",
+      "fixture": "rows-name-handling-code",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+        "detail": 2
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+            "entry:shop-api:http:POST:/bot/staff/webhook",
+            "entry:shop-web:screen:/orders/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P375: the rows keep their plain facts at detail 2, never the six failures and two guards of the route; the target keeps its own."
+    },
+    {
+      "id": "impact.reached-through-route",
+      "ask": "which of the ways in that could break if OrdersService.cancel changes reach it through another one listed",
+      "fixture": "rows-name-handling-code",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "rowsSay": {
+          "entries": {
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel": {
+              "rowsVia": 1
+            },
+            "entry:shop-web:screen:/orders/:param": {
+              "via": "PATCH /api/orders/:param/cancel (shop-api)"
+            }
+          }
+        },
+        "lists": {
+          "entries": [
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+            "entry:shop-api:http:POST:/bot/staff/webhook",
+            "entry:shop-web:screen:/orders/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P375: the route the screen requests says one listed row reaches the method through it, and the screen names it in via."
+    },
+    {
+      "id": "dead.class-routes",
+      "ask": "which HTTP routes ReportsController declares does no code call",
+      "fixture": "rows-name-handling-code",
+      "tool": "dead",
+      "args": {
+        "id": "ReportsController"
+      },
+      "lists": [
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:shop-api:http:DELETE:/api/reports/:param",
+            "entry:shop-api:http:GET:/api/reports/daily",
+            "entry:shop-api:http:GET:/api/reports/weekly",
+            "entry:shop-api:http:POST:/api/reports/export"
+          ]
+        },
+        "rowsSay": {
+          "waysIn": {
+            "entry:shop-api:http:DELETE:/api/reports/:param": {
+              "verdict": "dead"
+            },
+            "entry:shop-api:http:GET:/api/reports/weekly": {
+              "verdict": "dead"
+            },
+            "entry:shop-api:http:GET:/api/reports/daily": {
+              "verdict": "alive"
+            },
+            "entry:shop-api:http:POST:/api/reports/export": {
+              "verdict": "alive"
+            }
+          }
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P375: one call judges each route the controller declares, where listing every route under a path was the way."
+    },
+    {
+      "id": "list_entries.class-uncalled",
+      "ask": "list the routes ReportsController declares that no code calls",
+      "fixture": "rows-name-handling-code",
+      "tool": "list_entries",
+      "args": {
+        "in": "ReportsController",
+        "reach": "dead"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:http:DELETE:/api/reports/:param",
+            "entry:shop-api:http:GET:/api/reports/weekly"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P375: exactly the two routes the reports screen never requests."
+    },
+    {
+      "id": "impact.channels-once",
+      "ask": "which ways in could break if ItemsService.listByShop changes, where a bot re-fetching it takes messages from three channels",
+      "fixture": "impact-guarded-navigation",
+      "tool": "impact",
+      "args": {
+        "symbol": "store-api#src/items.service.ts:ItemsService.listByShop"
+      },
+      "lists": [
+        "entries",
+        "throughChannels"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:store-api:http:GET:/api/shops/items",
+            "entry:store-bot:bot_command:items",
+            "entry:store-web:screen:/dashboard",
+            "entry:store-web:screen:/history"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "entry:store-api:http:DELETE:/api/orders/:param",
+            "entry:store-api:http:PATCH:/api/orders/:param/status",
+            "entry:store-api:http:POST:/api/orders",
+            "entry:store-api:http:POST:/api/orders/:param/pay",
+            "entry:store-web:screen:/orders"
+          ]
+        },
+        "exact": [
+          "throughChannels"
+        ],
+        "rowsSay": {
+          "throughChannels": {
+            "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent": {
+              "channels": [
+                "shop:*:closed",
+                "shop:*:orders",
+                "shop:*:paid"
+              ],
+              "ways": 5
+            }
+          }
+        }
+      },
+      "note": "P378: the bot's consumer takes messages from three channels; what lies beyond them is said once, one row with its three channels and the five distinct ways in, where it was three rows repeating the routes and their samples (4, 1 and 3 ways)."
+    },
+    {
+      "id": "who_calls.channels-counted",
+      "ask": "who calls ItemsService.listByShop, up to the ways in",
+      "fixture": "impact-guarded-navigation",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "store-api#src/items.service.ts:ItemsService.listByShop"
+      },
+      "lists": [
+        "waysIn",
+        "throughChannels"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:store-api:http:GET:/api/shops/items",
+            "entry:store-bot:bot_command:items",
+            "entry:store-web:screen:/dashboard",
+            "entry:store-web:screen:/history"
+          ]
+        },
+        "notListed": {
+          "waysIn": [
+            "entry:store-api:http:DELETE:/api/orders/:param",
+            "entry:store-api:http:PATCH:/api/orders/:param/status",
+            "entry:store-api:http:POST:/api/orders",
+            "entry:store-api:http:POST:/api/orders/:param/pay",
+            "entry:store-web:screen:/orders"
+          ]
+        },
+        "exact": [
+          "throughChannels"
+        ],
+        "rowsSay": {
+          "throughChannels": {
+            "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent": {
+              "channels": [
+                "shop:*:closed",
+                "shop:*:orders",
+                "shop:*:paid"
+              ],
+              "ways": 5
+            }
+          }
+        }
+      },
+      "note": "P378: who calls the code is the question, so what lies past the bot's three channels is one row counting the five ways in, no sample; next names the impact call listing them."
+    },
+    {
+      "id": "impact.across-consumer",
+      "ask": "which ways in lie beyond every channel the bot's consumer takes messages from",
+      "fixture": "impact-guarded-navigation",
+      "tool": "impact",
+      "args": {
+        "symbol": "store-api#src/items.service.ts:ItemsService.listByShop",
+        "channel": "consumer:store-bot#src/store-bot.ts:StoreBot.onStatusEvent"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:store-api:http:DELETE:/api/orders/:param",
+            "entry:store-api:http:PATCH:/api/orders/:param/status",
+            "entry:store-api:http:POST:/api/orders",
+            "entry:store-api:http:POST:/api/orders/:param/pay",
+            "entry:store-web:screen:/orders"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P378: impact's channel input given a row's consumer lists the ways in beyond all of its channels, each once."
+    },
+    {
+      "id": "get_flow.short-name",
+      "ask": "which back-end handler does CatalogService.getGrouped's request land on",
+      "fixture": "request-lands-on-route",
+      "tool": "get_flow",
+      "args": {
+        "entry": "CatalogService.getGrouped"
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "root": [
+            "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped",
+            "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+            "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+          ]
+        }
+      },
+      "note": "P377: get_flow takes Class.method as who_calls does; it answered \"no entry matches\" with no suggestions."
+    },
+    {
+      "id": "who_calls.request-lands",
+      "ask": "who calls CatalogService.getGrouped, and where does its request land",
+      "fixture": "request-lands-on-route",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "CatalogService.getGrouped"
+      },
+      "lists": [
+        "target",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:shop-admin:screen:/catalog"
+          ]
+        },
+        "rowsSay": {
+          "target": {
+            "shop-admin#src/app/catalog.service.ts:CatalogService.getGrouped": {
+              "requests": [
+                {
+                  "route": "entry:shop-api:http:GET:/api/admin/:param/catalog/grouped",
+                  "by": "shop-api#src/catalog/admin-catalog.controller.ts:AdminCatalogController.grouped"
+                }
+              ]
+            }
+          }
+        },
+        "exact": [
+          "waysIn"
+        ],
+        "settled": true
+      },
+      "note": "P377: the target says the route its request lands on and the handler there, built through the base client and the global prefix."
+    },
+    {
+      "id": "find_symbol.request-lands",
+      "ask": "find DeskOrderService.amendOrder and the route handler its request lands on",
+      "fixture": "request-lands-on-route",
+      "tool": "find_symbol",
+      "args": {
+        "query": "DeskOrderService.amendOrder"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "rowsSay": {
+          "matches": {
+            "shop-admin#src/app/desk-order.service.ts:DeskOrderService.amendOrder": {
+              "requests": [
+                {
+                  "route": "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify",
+                  "by": "shop-api#src/orders/admin-orders.controller.ts:AdminOrdersController.modify"
+                }
+              ]
+            }
+          }
+        },
+        "exact": [
+          "matches"
+        ]
+      },
+      "note": "P377: the match says where its request lands; the agent read the client and its base class to rebuild the address."
+    },
+    {
+      "id": "search.client-path",
+      "ask": "which route serves the path the client writes as /admin/:rid/orders/${id}/modify",
+      "fixture": "request-lands-on-route",
+      "tool": "search",
+      "args": {
+        "query": "/admin/:rid/orders/${id}/modify",
+        "kinds": [
+          "routes"
+        ]
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "routes": [
+            "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify"
+          ]
+        },
+        "exact": [
+          "routes"
+        ]
+      },
+      "note": "P377: any parameter name, and no global prefix; it answered \"nothing matches\"."
+    },
+    {
+      "id": "search.folder-name",
+      "ask": "which routes of the back end checked out as shop-backend say modify",
+      "fixture": "request-lands-on-route",
+      "tool": "search",
+      "args": {
+        "query": "modify",
+        "kinds": [
+          "routes"
+        ],
+        "service": "shop-backend"
+      },
+      "lists": [
+        "results.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "routes": [
+            "entry:shop-api:http:POST:/api/admin/:param/orders/:param/modify"
+          ]
+        },
+        "exact": [
+          "routes"
+        ]
+      },
+      "note": "P377: the repository folder names the service shop-api; it answered \"nothing matches\"."
+    },
+    {
+      "id": "who_calls.service-picks",
+      "ask": "who calls GET /api/items of the market-api service",
+      "fixture": "impact-shared-client",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "GET /api/items",
+        "service": "market-api"
+      },
+      "lists": [
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:kiosk-web:screen:/browse",
+            "entry:market-bot:bot_command:items",
+            "entry:market-web:screen:/history"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P381: the service picks the route and cuts none of its callers; it answered 375 characters, no caller, \"nothing reaches this\", complete."
+    },
+    {
+      "id": "impact.own-service",
+      "ask": "what breaks if GET /orders/:id of the orders service changes",
+      "fixture": "multi-repo",
+      "tool": "impact",
+      "args": {
+        "symbol": "entry:orders:http:GET:/orders/:param",
+        "service": "orders"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:billing:event:invoice.requested",
+            "entry:billing:event:order.created",
+            "entry:billing:http:POST:/invoices",
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:gateway:http:POST:/orders/:param/invoice"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the five ways in in other services; it answered 832 characters with no entry, complete."
+    },
+    {
+      "id": "who_calls.two-services",
+      "ask": "who calls GET /orders/:id",
+      "fixture": "multi-repo",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "GET /orders/:id"
+      },
+      "lists": [
+        "target"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "target": [
+            "entry:gateway:http:GET:/orders/:param",
+            "entry:orders:http:GET:/orders/:param"
+          ]
+        },
+        "exact": [
+          "target"
+        ]
+      },
+      "note": "P381: both services' routes answered in one call; it answered their candidates (333 characters), then one call each."
+    },
+    {
+      "id": "who_calls.ids",
+      "ask": "who calls ProductsController's five routes, asked with ids",
+      "fixture": "callers-walked-to-ways-in",
+      "tool": "who_calls",
+      "args": {
+        "ids": [
+          "entry:stock-api:http:GET:/products",
+          "entry:stock-api:http:GET:/products/:param",
+          "entry:stock-api:http:POST:/products",
+          "entry:stock-api:http:PUT:/products/:param",
+          "entry:stock-api:http:DELETE:/products/:param"
+        ]
+      },
+      "lists": [
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:store-web:screen:/catalog",
+            "entry:store-web:screen:/catalog/:param"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P381: ids is the tool's symbols; it answered {\"error\":\"ask with symbol or symbols\"}."
+    },
+    {
+      "id": "dead.through-dead",
+      "ask": "is TicketsService.assign dead, and TicketsService.reopen",
+      "fixture": "helpdesk-screen-reach",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "desk-api#src/tickets/tickets.service.ts:TicketsService.assign",
+          "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "desk-api#src/tickets/tickets.service.ts:TicketsService.assign": {
+              "reach": "dead",
+              "throughDead": true
+            },
+            "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen": {
+              "verdict": "maybe"
+            }
+          }
+        }
+      },
+      "note": "P381: assign is called only through a route nothing calls; it answered a bare alive."
+    },
+    {
+      "id": "list_entries.uncalled",
+      "ask": "which routes of the orders service does no caller in the project join",
+      "fixture": "multi-repo",
+      "tool": "list_entries",
+      "args": {
+        "service": "orders",
+        "called": false
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:orders:http:GET:/a/:param",
+            "entry:orders:http:GET:/orders/latest",
+            "entry:orders:http:POST:/orders",
+            "entry:orders:http:POST:/orders/:param/archive"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the four the fixture plants; reach: \"dead\" answered two of them, complete (347 characters)."
+    },
+    {
+      "id": "list_entries.dead-not-whole",
+      "ask": "which routes of the orders service are dead",
+      "fixture": "multi-repo",
+      "tool": "list_entries",
+      "args": {
+        "service": "orders",
+        "reach": "dead"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "entries": [
+            "entry:orders:http:GET:/a/:param",
+            "entry:orders:http:POST:/orders"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the two judged dead, not complete: two more no caller joins are judged maybe, and next lists every one with called: false."
+    },
+    {
+      "id": "impact.by-kind",
+      "ask": "which screens and bots break if BooksService.findOne changes, by file",
+      "fixture": "service-picks-the-symbol",
+      "tool": "impact",
+      "args": {
+        "symbol": "BooksService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:desk-bot:bot_command:book",
+            "entry:lending-api:http:GET:/books/:param",
+            "entry:lending-gateway:http:GET:/books/:param",
+            "entry:reader-web:screen:/book/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: byKind names the screen, the bot and the gateway by the files handling them, and changing the back end's own route."
+    },
+    {
+      "id": "impact.symbols",
+      "ask": "what breaks if BooksService.findOne and HoldsService.place change together",
+      "fixture": "service-picks-the-symbol",
+      "tool": "impact",
+      "args": {
+        "symbols": [
+          "BooksService.findOne",
+          "HoldsService.place"
+        ]
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:desk-bot:bot_command:book",
+            "entry:lending-api:http:GET:/books/:param",
+            "entry:lending-api:http:POST:/books/:param/hold",
+            "entry:lending-gateway:http:GET:/books/:param",
+            "entry:reader-web:screen:/book/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: one change, every way in once; impact took one symbol, two calls repeating the screen and the bot."
+    },
+    {
+      "id": "impact.callers-in",
+      "ask": "which ways in of reader-web reach GET /books/:id of the back end",
+      "fixture": "service-picks-the-symbol",
+      "tool": "impact",
+      "args": {
+        "symbol": "entry:lending-api:http:GET:/books/:param",
+        "callersIn": "reader-web"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "entries": [
+            "entry:reader-web:screen:/book/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P381: the filter says the two ways in it left out and the call without it, never complete."
+    },
+    {
+      "id": "check_contract.route-alias",
+      "ask": "who reads userRef of the body sent to PATCH /api/orders/:orderId/cancel",
+      "fixture": "one-call-per-question",
+      "tool": "check_contract",
+      "args": {
+        "route": "PATCH /api/orders/:orderId/cancel",
+        "field": "userRef"
+      },
+      "lists": [
+        "reads"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "reads"
+        ],
+        "lists": {
+          "reads": [
+            "shop-api#src/auth/client.guard.ts:ClientGuard.clientRef"
+          ]
+        }
+      },
+      "note": "P382: `route` is read as `edge`, the parameter named as the caller names it; it answered \"give either edge, or both from and to\", and the agent grepped and read the handlers."
+    },
+    {
+      "id": "check_contract.type-on-two-channels",
+      "ask": "does every handler of HELP_REQUESTED get the fields it reads",
+      "fixture": "one-call-per-question",
+      "tool": "check_contract",
+      "args": {
+        "channel": "HELP_REQUESTED"
+      },
+      "lists": [
+        "missing",
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "missing"
+        ],
+        "lists": {
+          "missing": [
+            "deskId"
+          ],
+          "consumers": [
+            "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.page",
+            "consumer:ops-bot#src/floor/floor.watcher.ts:FloorWatcher.onFloorEvent"
+          ]
+        }
+      },
+      "note": "P382: a type of message given as the channel is answered on each channel carrying it; it answered no channel \"HELP_REQUESTED\"."
+    },
+    {
+      "id": "check_contract.type-as-channel",
+      "ask": "what does each side of ORDER_READY send and read",
+      "fixture": "one-call-per-question",
+      "tool": "check_contract",
+      "args": {
+        "channel": "ORDER_READY"
+      },
+      "lists": [
+        "consumers",
+        "producers"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "consumers"
+        ],
+        "lists": {
+          "consumers": [
+            "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady"
+          ],
+          "producers": [
+            "producer:shop-api#src/orders/orders.service.ts:11:11"
+          ]
+        }
+      },
+      "note": "P382: the one channel carrying the type, answered for that type."
+    },
+    {
+      "id": "get_source.class-skeleton",
+      "ask": "what does OrdersController hold, and where",
+      "fixture": "one-call-per-question",
+      "tool": "get_source",
+      "args": {
+        "symbol": "OrdersController"
+      },
+      "lists": [
+        "text"
+      ],
+      "expect": {
+        "says": [
+          "29    async cancel(@Param('orderId') orderId: string, @Body() _body: CancelOrderBody): Promise<void> { … }",
+          "39    addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number { … }",
+          "48    listNotes(@Param('orderId') orderId: string): string[] { … }",
+          "whole: true"
+        ],
+        "saysNot": [
+          "pinnedA - pinnedB",
+          "\\n"
+        ]
+      },
+      "note": "P382: a class answers its skeleton as plain text, each body folded with its line numbers; it answered every body as a JSON string, escaped."
+    },
+    {
+      "id": "get_flow.detail-2-once",
+      "ask": "what runs behind PATCH /api/orders/:orderId/cancel, at detail 2",
+      "fixture": "one-call-per-question",
+      "tool": "get_flow",
+      "args": {
+        "route": "PATCH /api/orders/:orderId/cancel",
+        "detail": 2
+      },
+      "lists": [
+        "root"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "root": [
+            "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+            "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+            "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+            "channel:order_updates",
+            "ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled"
+          ]
+        },
+        "rowsSay": {
+          "root": {
+            "shop-api#src/orders/orders.controller.ts:OrdersController.cancel": {
+              "edge": "handles"
+            }
+          }
+        }
+      },
+      "note": "P382: `route` is read as `entry`; the step's edge says no types its signature says, and the reader's own meta and the route's fails and guards said twice are gone."
+    },
+    {
+      "id": "find_symbol.two-words",
+      "ask": "where is the order cancel code, asked as two words",
+      "fixture": "multi-repo",
+      "tool": "find_symbol",
+      "args": {
+        "query": "order cancel"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "matches": [
+            "gateway#src/clients/orders.client.ts:OrdersClient.cancel",
+            "entry:gateway:http:POST:/orders/:param/cancel"
+          ]
+        },
+        "notListed": {
+          "matches": [
+            "orders#src/orders/orders.controller.ts:OrdersController.archive"
+          ]
+        }
+      },
+      "note": "P383: no name holds \"order cancel\" as written; it answered no match, complete. Found by its words, never complete."
+    },
+    {
+      "id": "search.sentence",
+      "ask": "where is the order cancelled",
+      "fixture": "multi-repo",
+      "tool": "search",
+      "args": {
+        "query": "where is the order cancelled"
+      },
+      "lists": [
+        "best"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "best": [
+            "entry:gateway:http:POST:/orders/:param/cancel",
+            "gateway#src/clients/orders.client.ts:OrdersClient.cancel"
+          ]
+        }
+      },
+      "note": "P383: it answered isError \"nothing matches\"."
+    },
+    {
+      "id": "search.sentence-payments",
+      "ask": "what handles payments",
+      "fixture": "search-takes-a-sentence",
+      "tool": "search",
+      "args": {
+        "query": "what handles payments"
+      },
+      "lists": [
+        "best"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "best": [
+            "entry:shop-api:http:POST:/payments",
+            "shop-api#src/payments/payments.controller.ts:PaymentsController.capture",
+            "shop-web#src/app/payments.client.ts:PaymentsClient.pay"
+          ]
+        },
+        "notListed": {
+          "best": [
+            "entry:shop-api:http:POST:/orders/:param/cancel"
+          ]
+        }
+      },
+      "note": "P383: it answered isError \"nothing matches\"."
+    },
+    {
+      "id": "find_symbol.camel-words",
+      "ask": "where is cancelOrder",
+      "fixture": "search-takes-a-sentence",
+      "tool": "find_symbol",
+      "args": {
+        "query": "cancelOrder"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "matches": [
+            "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+            "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+            "entry:shop-api:http:POST:/orders/:param/cancel"
+          ]
+        },
+        "notListed": {
+          "matches": [
+            "shop-api#src/common/cancellation-tokens.ts:CancellationTokens"
+          ]
+        }
+      },
+      "note": "P383: the client method is named cancel; it answered no match, complete. The decoy holds one of the two words and is left out."
+    },
+    {
+      "id": "search.or",
+      "ask": "where are orders cancelled or refunded",
+      "fixture": "search-takes-a-sentence",
+      "tool": "search",
+      "args": {
+        "query": "cancel OR refund"
+      },
+      "lists": [
+        "best"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "best": [
+            "entry:shop-api:http:POST:/orders/:param/cancel",
+            "entry:shop-api:http:POST:/orders/:param/refund"
+          ]
+        }
+      },
+      "note": "P383: it answered isError \"nothing matches\"."
+    },
+    {
+      "id": "findings.multi-repo",
+      "ask": "what looks broken between the services",
+      "fixture": "multi-repo",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "call-to-missing-route": [
+            "http_out:gateway#src/clients/orders.client.ts:44:12",
+            "ui_api_call:web#src/app/orders-api.service.ts:26:12"
+          ]
+        },
+        "rowsSay": {
+          "call-to-missing-route": {
+            "http_out:gateway#src/clients/orders.client.ts:44:12": {
+              "precision": "high",
+              "fix": "the nearest route: POST /orders/:param/archive (one segment off: cancel for archive)"
+            }
+          }
+        },
+        "exact": [
+          "call-to-missing-route"
+        ]
+      },
+      "note": "P384: the gateway's cancel call to the route renamed archive and the browser's receipt call were gaps only (start_here, cant_follow); findings listed unguarded routes and one-ended channels."
+    },
+    {
+      "id": "findings.fields-renamed",
+      "ask": "what looks broken between the shop and the bot",
+      "fixture": "fields-read-and-sent",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "rowsSay": {
+          "field-never-sent": {
+            "ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent": {
+              "precision": "high",
+              "fix": "likely renamed: deskNumber is sent, deskId is read"
+            }
+          }
+        },
+        "exact": [
+          "field-never-sent"
+        ],
+        "notListed": {
+          "contract-break": [
+            "producer:shop-api#src/orders/orders.service.ts:16:11"
+          ]
+        }
+      },
+      "note": "P384: deskId read and never sent was no finding; the one finding listed was a field optional for the receiver and always sent, which breaks nothing and is now information."
+    },
+    {
+      "id": "findings.between-services",
+      "ask": "what looks broken between the catalog, the storefront and the legacy service",
+      "fixture": "findings-between-services",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "call-to-missing-route": [
+            "http_out:storefront#src/catalog.client.ts:25:26"
+          ],
+          "type-never-published": [
+            "channel:catalog_events#LISTING_CANCELED"
+          ],
+          "unguarded-among-guarded": [
+            "entry:catalog-api:http:DELETE:/products/:param"
+          ],
+          "field-never-sent": [
+            "catalog-api#src/products/products.controller.ts:ProductsController.create",
+            "storefront#src/catalog-events.service.ts:CatalogEventsService.onCatalogEvent"
+          ],
+          "annotation-to-missing-route": [
+            "http_out:storefront#src/catalog.client.ts:40:34"
+          ]
+        },
+        "notListed": {
+          "call-to-missing-route": [
+            "http_out:storefront#src/legacy.client.ts:19:26"
+          ],
+          "unguarded-among-guarded": [
+            "entry:catalog-api:http:GET:/stock/:param"
+          ]
+        },
+        "exact": [
+          "call-to-missing-route",
+          "type-never-published",
+          "unguarded-among-guarded",
+          "field-never-sent"
+        ]
+      },
+      "note": "P384: each defect gated on its evidence; the call to the legacy service, whose items controller was not read, and the type a publish of unread type may send are held back."
+    },
+    {
+      "id": "findings.that-hold",
+      "ask": "what looks broken between the shop's screens, the stores service and the back office",
+      "fixture": "findings-that-hold",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "type-never-published": [
+            "channel:shop:*:events#ORDER_REFUNDED"
+          ],
+          "answer-field-never-returned": [
+            "shop-web#src/screens/StorePage.tsx:StorePage"
+          ],
+          "contract-break": [
+            "http_out:back-office#src/stores.client.ts:28:34"
+          ]
+        },
+        "notListed": {
+          "type-never-published": [
+            "channel:shop:*:orders#AUDIT_ENTRY_CREATED",
+            "channel:shop:*:events#ORDER_PLACED",
+            "channel:shop:*:orders#ALERT_RAISED"
+          ],
+          "answer-field-never-returned": [
+            "shop-web#src/screens/StorePage.tsx:distanceLabel",
+            "shop-web#src/screens/StorePage.tsx:changeSummary"
+          ]
+        },
+        "exact": [
+          "type-never-published",
+          "answer-field-never-returned",
+          "contract-break"
+        ]
+      },
+      "note": "P395: a type published on the other channel a stream relays, a type on a stream relaying a channel not read, and fields read behind a presence check are not listed; the seven contract warnings are counted with the call that lists them."
+    },
+    {
+      "id": "findings.hub-screens-types",
+      "ask": "which types do the board screens handle that nothing publishes",
+      "fixture": "sse-hub-subject-screens",
+      "tool": "findings",
+      "args": {
+        "kind": "type-never-published"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": []
+        },
+        "notListed": {
+          "rows": [
+            "channel:crew:*:shifts#CARD_MOVED",
+            "channel:crew:*:shifts#CARD_ARCHIVED",
+            "channel:crew:*:shifts#CARD_ADDED"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P395: ten rows at high before, each a type checked against crew:*:shifts alone though the hub relays board:*:events too, which publishes most of them; the one published on neither is held back, since a publish on board:*:events sends a type not read."
+    },
+    {
+      "id": "findings.handler-types",
+      "ask": "which fields do the build handlers read that no publish of their type sends",
+      "fixture": "findings-that-hold",
+      "tool": "findings",
+      "args": {
+        "kind": "field-never-sent"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued"
+          ]
+        },
+        "notListed": {
+          "rows": [
+            "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+            "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+            "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P397: four rows before, three of them a handler's reads set against another type's publishes (the relay's if/else and each parameter say the type); now priority under JOB_QUEUED, and the handler whose parameter and caller disagree held back."
+    },
+    {
+      "id": "findings.client-checks",
+      "ask": "which fields of an item do the shop's screens read that the API never returns",
+      "fixture": "client-checks-read",
+      "tool": "findings",
+      "args": {
+        "kind": "answer-field-never-returned"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "shop-app#src/api.ts:loadItem",
+            "shop-web#src/app/item-page.component.ts:ItemPageComponent"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P402: legacyCode, read plainly by the page's template and by the app's loadItem through a ky instance; promo, badge and shares are read behind a check (the template's @if, ?. and ??, the app's ternary) and held back. Before, the template's checks were not read and the app's answer was not read at all."
+    },
+    {
+      "id": "check_contract.gathered-answer",
+      "ask": "which fields of the item counts do the clients read, asked for together with the item",
+      "fixture": "client-checks-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/items/:param/stats"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "missing": [
+            "shares"
+          ],
+          "unused": [
+            "saves"
+          ]
+        },
+        "exact": [
+          "missing",
+          "unused"
+        ]
+      },
+      "note": "P402: forkJoin({ item, stats }) and Promise.all([item, stats]) each tie the counts' reads to their own request: views by both clients, shares guarded by the page's ??, saves read by none. Before, both requests said their answer was gathered and not followed."
+    },
+    {
+      "id": "who_calls.shadowed-handler",
+      "ask": "who calls OrdersController.latest, declared below a parameter route of its controller",
+      "fixture": "route-order",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "OrdersController.latest"
+      },
+      "lists": [
+        "target",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "waysIn": [
+            "entry:shop-api:http:GET:/orders/latest"
+          ]
+        },
+        "rowsSay": {
+          "target": {
+            "shop-api#src/orders/orders.controller.ts:OrdersController.latest": {
+              "reach": "dead"
+            }
+          },
+          "waysIn": {
+            "entry:shop-api:http:GET:/orders/latest": {
+              "reach": "dead"
+            }
+          }
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P385: GET /orders/:orderId is declared above GET /orders/latest and answers it first; the client's request was joined to latest, which never runs."
+    },
+    {
+      "id": "who_calls.shadowing-handler",
+      "ask": "which requests land on OrdersController.findOne",
+      "fixture": "route-order",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "OrdersController.findOne"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "entry:shop-api:http:GET:/orders/:param",
+            "ui_api_call:shop-web#src/app/orders-api.service.ts:24:12",
+            "ui_api_call:shop-web#src/app/orders-api.service.ts:28:12",
+            "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12"
+          ]
+        }
+      },
+      "note": "P385: the requests for /orders/latest and /orders/export land on :orderId, registered first; they were joined to the routes that never run."
+    },
+    {
+      "id": "dead.shadowed",
+      "ask": "are the latest and export routes and the latest handler dead",
+      "fixture": "route-order",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "entry:shop-api:http:GET:/orders/latest",
+          "entry:shop-api:http:GET:/orders/export",
+          "shop-api#src/orders/orders.controller.ts:OrdersController.latest"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "entry:shop-api:http:GET:/orders/latest": {
+              "verdict": "dead"
+            },
+            "entry:shop-api:http:GET:/orders/export": {
+              "verdict": "dead"
+            },
+            "shop-api#src/orders/orders.controller.ts:OrdersController.latest": {
+              "verdict": "dead"
+            }
+          }
+        }
+      },
+      "note": "P385: each was alive, called by a request a route registered before it answers."
+    },
+    {
+      "id": "find_symbol.request-lands-shadowed",
+      "ask": "where does OrdersApi.exportAll's request land",
+      "fixture": "route-order",
+      "tool": "find_symbol",
+      "args": {
+        "query": "OrdersApi.exportAll"
+      },
+      "lists": [
+        "matches"
+      ],
+      "expect": {
+        "complete": true,
+        "rowsSay": {
+          "matches": {
+            "shop-web#src/app/orders-api.service.ts:OrdersApi.exportAll": {
+              "requests": [
+                {
+                  "route": "entry:shop-api:http:GET:/orders/:param",
+                  "by": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "note": "P385: OrdersController is registered before OrderExportsController in OrdersModule, so :orderId answers /orders/export."
+    },
+    {
+      "id": "findings.route-order",
+      "ask": "what looks broken between the services",
+      "fixture": "route-order",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "route-shadowed-by-earlier": [
+            "GET /items/featured",
+            "GET /orders/export",
+            "GET /orders/latest"
+          ]
+        }
+      },
+      "note": "P385: three routes a parameter route registered first answers; none was a finding."
+    },
+    {
+      "id": "card.route-aloud",
+      "ask": "who calls GET /api/orders/{orderId}, and what breaks if I change it",
+      "fixture": "prompt-cards",
+      "prompt": "Who calls GET /api/orders/{orderId}, and what breaks if I change it?",
+      "expect": {
+        "cards": [
+          "who_calls({symbol: \"entry:shop-api:http:GET:/api/orders/:param\"})"
+        ],
+        "mentions": [
+          "shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder",
+          "entry:shop-web:screen:/orders"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn. The route is said with another parameter spelling than the code's."
+    },
+    {
+      "id": "card.client-method",
+      "ask": "where does OrdersApiService.cancelOrder's request land",
+      "fixture": "prompt-cards",
+      "prompt": "where does OrdersApiService.cancelOrder's request land?",
+      "expect": {
+        "cards": [
+          "find_symbol({query: \"shop-web#src/app/orders-api.service.ts:OrdersApiService.cancelOrder\"})"
+        ],
+        "mentions": [
+          "entry:shop-api:http:POST:/api/orders/:param/cancel",
+          "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn."
+    },
+    {
+      "id": "card.message-type",
+      "ask": "which code handles ORDER_CANCELLED",
+      "fixture": "prompt-cards",
+      "prompt": "which code handles ORDER_CANCELLED?",
+      "expect": {
+        "cards": [
+          "who_emits({channel: \"channel:shop:*:orders#ORDER_CANCELLED\"})",
+          "who_consumes({channel: \"channel:shop:*:orders#ORDER_CANCELLED\"})"
+        ],
+        "mentions": [
+          "consumer:mailer#src/mail/order-mail.dispatcher.ts:OrderMailDispatcher.dispatch",
+          "producer:shop-api#src/orders/orders.service.ts:28:5"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn."
+    },
+    {
+      "id": "card.handler-in-service",
+      "ask": "what breaks if I change OrdersController.findOne in stock-api",
+      "fixture": "prompt-cards",
+      "prompt": "what breaks if I change OrdersController.findOne in stock-api",
+      "expect": {
+        "cards": [
+          "impact({symbol: \"stock-api#src/orders/orders.controller.ts:OrdersController.findOne\"})"
+        ],
+        "mentions": [
+          "entry:shop-web:screen:/orders"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn. Two services hold the name; the one the prompt names is answered."
+    },
+    {
+      "id": "card.service-unused",
+      "ask": "what in shop-api is unused",
+      "fixture": "prompt-cards",
+      "prompt": "what in shop-api is unused?",
+      "expect": {
+        "cards": [
+          "dead({service: \"shop-api\"})"
+        ],
+        "mentions": [
+          "entry:shop-api:http:GET:/api/reports/daily"
+        ]
+      },
+      "note": "P386: answered before the first turn by the prompt hook; asked as a tool it takes the call turn and the answer turn."
+    },
+    {
+      "id": "card.names-nothing",
+      "ask": "write a haiku about orders",
+      "fixture": "prompt-cards",
+      "prompt": "write a haiku about orders",
+      "expect": {
+        "silent": true
+      },
+      "note": "P386: a prompt naming nothing the graph holds gets no card and costs nothing."
+    },
+    {
+      "id": "check_change.edited",
+      "ask": "what does my uncommitted change break in the other repositories",
+      "fixture": "edit-breaks-other-repos",
+      "edited": true,
+      "tool": "check_change",
+      "args": {},
+      "lists": [
+        "vanishedTargets",
+        "retest"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "vanishedTargets": [
+            "http_out:storefront#src/catalog.client.ts:25:26"
+          ],
+          "retest": [
+            "entry:storefront:http:DELETE:/shop/items/:param"
+          ]
+        },
+        "exact": [
+          "vanishedTargets",
+          "retest"
+        ]
+      },
+      "note": "P387: the archive route renamed in the working tree, not committed or built: the storefront's call to it lost its route, and the storefront's DELETE route reaches it. Before, what_changed answered an error (no diff.json) and the agent ran flowatlas diff against a commit, which the uncommitted edit is not."
+    },
+    {
+      "id": "check_change.one-service",
+      "ask": "does what I changed in the alerts bot break anything elsewhere",
+      "fixture": "edit-breaks-other-repos",
+      "edited": true,
+      "tool": "check_change",
+      "args": {
+        "services": [
+          "alerts-bot"
+        ]
+      },
+      "lists": [
+        "vanishedTargets"
+      ],
+      "expect": {
+        "complete": true,
+        "exact": [
+          "vanishedTargets"
+        ],
+        "lists": {
+          "vanishedTargets": []
+        }
+      },
+      "note": "P387: only the alerts bot read again, where nothing changed: no lost join, the catalog's edits are not this question's."
+    },
+    {
+      "id": "answer.field-breaks",
+      "ask": "which screens break if status of GET /api/orders changes",
+      "fixture": "answer-fields-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/orders",
+        "field": "status"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "reads": [
+            "shop-app#src/OrdersList.tsx:OrderRow",
+            "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent"
+          ]
+        },
+        "exact": [
+          "reads"
+        ]
+      }
+    },
+    {
+      "id": "answer.not-answered",
+      "ask": "does a client read a field GET /api/profile never answers",
+      "fixture": "answer-fields-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/profile"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "missing": [
+            "nickname"
+          ]
+        },
+        "exact": [
+          "missing"
+        ]
+      }
+    },
+    {
+      "id": "answer.unused",
+      "ask": "which fields of GET /api/orders does no client read",
+      "fixture": "answer-fields-read",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /api/orders"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "unused": [
+            "internalNote",
+            "placedAt"
+          ],
+          "missing": [
+            "discount"
+          ]
+        },
+        "exact": [
+          "unused",
+          "missing"
+        ]
+      }
+    },
+    {
+      "id": "findings.deployment-settings",
+      "ask": "what in this deployment contradicts the code it runs",
+      "fixture": "deployment-settings-terraform",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "batch-failures-unreported": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders"
+          ],
+          "batch-failures-ignored": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders"
+          ],
+          "queue-visibility-short": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.ship_orders",
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.bill_orders"
+          ],
+          "queue-redrive-missing": [
+            "channel:sqs/shop-billing"
+          ],
+          "queue-receives-few": [
+            "channel:sqs/shop-shipments"
+          ],
+          "workflow-task-untimed": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval"
+          ],
+          "workflow-callback-no-heartbeat": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/AwaitApproval"
+          ],
+          "workflow-function-unretried": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ChargeCard"
+          ]
+        },
+        "exact": [
+          "batch-failures-unreported",
+          "batch-failures-ignored",
+          "queue-visibility-short",
+          "queue-redrive-missing",
+          "queue-receives-few",
+          "workflow-task-untimed",
+          "workflow-callback-no-heartbeat",
+          "workflow-function-unretried"
+        ],
+        "notListed": {
+          "batch-failures-unreported": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices"
+          ],
+          "queue-visibility-short": [
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.pack_orders",
+            "consumer:orders#infra/mappings.tf:aws_lambda_event_source_mapping.send_notices"
+          ],
+          "queue-redrive-missing": [
+            "channel:sqs/shop-packing",
+            "channel:sqs/shop-notices"
+          ],
+          "workflow-function-unretried": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ReserveStock"
+          ],
+          "workflow-task-untimed": [
+            "orders#statemachine/fulfil-order.asl.json:shop-fulfil-order/ShipParcel",
+            "orders#statemachine/accept-return.asl.json:shop-accept-return/AwaitInspection"
+          ]
+        }
+      },
+      "note": "P389: the planted contradictions, each beside a right twin (the Powertools packer, a redrive policy of 5, a machine timeout, a .sync task with a timeout, a retried function task); the notices mapping, whose visibility timeout and handler answer are not read, is a note and no finding. Before P389 the answer held none of these."
+    },
+    {
+      "id": "findings.boundary-mismatches",
+      "ask": "what looks broken between the shop, its services and its bot",
+      "fixture": "boundary-mismatches",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "contract-break": [
+            "ui_api_call:web#src/app/orders-api.service.ts:18:12"
+          ],
+          "sse-event-unhandled": [
+            "consumer:web#src/app/live.service.ts:LiveService.onReady"
+          ],
+          "bot-button-unhandled": [
+            "shop-bot#src/shop-bot.ts:ShopBot.showOrder"
+          ],
+          "bot-button-data-too-long": [
+            "shop-bot#src/shop-bot.ts:ShopBot.showOrder"
+          ],
+          "config-name-mismatch": [
+            "config_key:orders-api#PAYMENT_API_KEY"
+          ],
+          "status-never-answered": [
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12"
+          ],
+          "cors-credentials": [
+            "ui_api_call:web#src/app/orders-api.service.ts:13:12"
+          ],
+          "cors-header-not-allowed": [
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12"
+          ],
+          "cors-method-not-allowed": [
+            "ui_api_call:web#src/app/orders-api.service.ts:45:12"
+          ],
+          "config-not-set": [
+            "config_key:orders-api#REDIS_URL"
+          ],
+          "bot-handler-untriggered": [
+            "entry:shop-bot:bot_callback:order:tracking"
+          ],
+          "config-never-read": [
+            "config_key:orders-api#LEGACY_EXPORT_DIR"
+          ]
+        },
+        "notListed": {
+          "sse-event-unhandled": [
+            "consumer:web#src/app/live.service.ts:LiveService.onFeed",
+            "consumer:web#src/app/live.service.ts:LiveService.onNotice"
+          ],
+          "cors-credentials": [
+            "ui_api_call:web#src/app/accounts-api.service.ts:12:12"
+          ],
+          "cors-method-not-allowed": [
+            "ui_api_call:web#src/app/orders-api.service.ts:40:12"
+          ],
+          "config-not-set": [
+            "config_key:orders-api#LOG_LEVEL",
+            "config_key:orders-api#ORDER_MODE",
+            "config_key:orders-api#SMTP_HOST",
+            "config_key:accounts-api#SESSION_SECRET"
+          ],
+          "status-never-answered": [
+            "ui_api_call:web#src/app/orders-api.service.ts:30:12"
+          ]
+        },
+        "rowsSay": {
+          "config-name-mismatch": {
+            "config_key:orders-api#PAYMENT_API_KEY": {
+              "precision": "high",
+              "fix": "one name spelled two ways: read PAYMENTS_API_KEY, or set PAYMENT_API_KEY"
+            }
+          }
+        },
+        "exact": [
+          "contract-break",
+          "sse-event-unhandled",
+          "bot-button-unhandled",
+          "bot-button-data-too-long",
+          "config-name-mismatch",
+          "status-never-answered",
+          "cors-credentials",
+          "cors-header-not-allowed",
+          "cors-method-not-allowed",
+          "config-not-set",
+          "bot-handler-untriggered",
+          "config-never-read"
+        ]
+      },
+      "note": "P388: none of these was a finding; the answer listed nothing but the routes nothing guards and the stream routes' one-ended channels, and the forbidden field was a strip warning."
+    },
+    {
+      "id": "findings.stream-never-heard",
+      "ask": "why does the shop's ready screen never update",
+      "fixture": "boundary-mismatches",
+      "tool": "findings",
+      "args": {
+        "kind": "sse-event-unhandled"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "consumer:web#src/app/live.service.ts:LiveService.onReady"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "consumer:web#src/app/live.service.ts:LiveService.onReady": {
+              "precision": "high",
+              "fix": "listen with addEventListener(\"order-ready\", …), or send the frames with no event name"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P388: no such kind; the stream and its listener were joined with nothing saying the frames are named, so the agent read both files."
+    },
+    {
+      "id": "findings.dead-status-branch",
+      "ask": "which status branches of the shop can never run",
+      "fixture": "boundary-mismatches",
+      "tool": "findings",
+      "args": {
+        "kind": "status-never-answered"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "ui_api_call:web#src/app/orders-api.service.ts:23:12": {
+              "precision": "high",
+              "loc": "src/app/order-panel.component.ts:43"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P388: no such kind; get_flow said the route's fails, and the client's branches were in no answer."
+    },
+    {
+      "id": "findings.answer-never-returned",
+      "ask": "which fields do the shop screens read that the API never returns",
+      "fixture": "answer-fields-read",
+      "tool": "findings",
+      "args": {
+        "kind": "answer-field-never-returned"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "shop-app#src/ProfileCard.tsx:ProfileCard",
+            "shop-web#src/app/orders.component.ts:OrdersComponent"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "shop-app#src/ProfileCard.tsx:ProfileCard": {
+              "precision": "high",
+              "fix": "return `nickname` from GET /api/profile, or stop reading it"
+            },
+            "shop-web#src/app/orders.component.ts:OrdersComponent": {
+              "precision": "high"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P393: no such kind; check_contract on each route said its missing fields, one call per route, and findings named none."
+    },
+    {
+      "id": "who_consumes.type-as-channel",
+      "ask": "which code handles ORDER_READY",
+      "fixture": "typed-handlers-bus-wide-subscribers",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "ORDER_READY"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "consumers": [
+            "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+            "consumer:web#src/screens/PickupBoard.tsx:PickupBoard"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P393: a message type given as the channel answered \"no channel named channel:ORDER_READY\" with near channel names; the agent asked again with the channel and the type."
+    },
+    {
+      "id": "impact.maybe-confirm",
+      "ask": "which ways in could break if ItemsService.findOne changes, and how to settle the one that may",
+      "fixture": "angular-rendered-reach",
+      "tool": "impact",
+      "args": {
+        "symbol": "catalog-api#src/items.service.ts:ItemsService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "entries": [
+            "entry:catalog-api:http:GET:/items/:param",
+            "entry:catalog-web:screen:/catalog",
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey": {
+              "reach": "maybe",
+              "line": "21-23"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P393: the maybe row said the gap and nothing to settle it with. P396: confirm read as a step to take and cost a turn of its own, so only verbose answers say it; gap and the line range stay."
+    },
+    {
+      "id": "impact.bot-webhook",
+      "ask": "which ways in could break if OrdersService.updateStatus changes, by what they are",
+      "fixture": "impact-bot-webhook",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders.service.ts:OrdersService.updateStatus"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "lists": {
+          "entries": [
+            "entry:backoffice-web:screen:/board",
+            "entry:courier-bot:bot_callback:/^delivered:(\\w+)$/",
+            "entry:shop-api:bot_command:ready",
+            "entry:shop-api:http:PATCH:/api/orders/status",
+            "entry:shop-api:http:POST:/bot/desk/webhook"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P396: byKind left the bots out and changing held the bot's webhook; now bots names both bots (the courier bot's handler marked maybe) and changing the API alone. P398: the courier bot registers its buttons in a loop over a table written out, so its button is a way in of its own and the handler no maybe row."
+    },
+    {
+      "id": "dead.table-handler",
+      "ask": "is CourierBot.handleDelivered dead, and DeskBot.onButton",
+      "fixture": "impact-bot-webhook",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered",
+          "shop-api#src/desk-bot.ts:DeskBot.onButton"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "courier-bot#src/courier-bot.ts:CourierBot.handleDelivered": {
+              "verdict": "alive"
+            },
+            "shop-api#src/desk-bot.ts:DeskBot.onButton": {
+              "verdict": "alive"
+            }
+          }
+        }
+      },
+      "note": "P396: dead answered likely-dead where impact said maybe, and the agent spent 13 turns finding out which; both say maybe with the same gap. P398: the handler a table holds is reached from the button the loop registers, so it is alive (it was maybe behind the gap the table left)."
+    },
+    {
+      "id": "who_calls.table-handler",
+      "ask": "who calls StaffBot.showOrder, a button handler a table of prefixes holds",
+      "fixture": "handler-table-dispatch",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
+      },
+      "lists": [
+        "callers",
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "callers": [
+            "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28"
+          ],
+          "waysIn": [
+            "entry:staff-bot:bot_callback:view_order_*"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ],
+        "notListed": {
+          "callers": [
+            "staff-bot#src/staff-bot.ts:on callback_query@43",
+            "staff-bot#src/staff-bot.ts:StaffBot.setup",
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
+          ],
+          "waysIn": [
+            "entry:staff-bot:bot_event:callback_query"
+          ]
+        }
+      },
+      "note": "P398: route.handler(ctx, data) on this.buttonRoutes.find(...) was a gap and the handler maybe, the row a pilot dug into for turns; the callback_query handler that dispatches calls it, reached from the bot. P399: the listener choosing through the table opens a way in per prefix, so the handler is reached from bot_callback view_order_* through its element's arrow, not from the listener."
+    },
+    {
+      "id": "impact.table-api",
+      "ask": "which ways in could break if OrdersService.listActive changes",
+      "fixture": "handler-table-dispatch",
+      "tool": "impact",
+      "args": {
+        "symbol": "shop-api#src/orders.service.ts:OrdersService.listActive"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:http:GET:/api/orders/active",
+            "entry:staff-bot:bot_callback:view_order_*",
+            "entry:staff-bot:bot_command:orders"
+          ]
+        },
+        "notListed": {
+          "entries": [
+            "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+            "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+            "entry:staff-bot:bot_event:callback_query",
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P398: the bot is counted under bots by its ways in, a button through a table of prefixes and a command a loop over a table registers; no maybe row. P399: the button is the way in its prefix opens, bot_callback view_order_*; the listener is not listed."
+    },
+    {
+      "id": "dead.lifecycle-setup",
+      "ask": "is StaffBot.setup dead, which only onModuleInit calls, and onModuleInit",
+      "fixture": "handler-table-dispatch",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "staff-bot#src/staff-bot.ts:StaffBot.setup",
+          "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "staff-bot#src/staff-bot.ts:StaffBot.setup": {
+              "verdict": "alive",
+              "from": "startup (onModuleInit)"
+            },
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit": {
+              "verdict": "alive",
+              "from": "startup (onModuleInit)"
+            }
+          }
+        }
+      },
+      "note": "P399: a method only Nest's onModuleInit calls ended its chain at a maybe (from: behind); the framework calls the hook of a provider a module registers, so it is alive from startup."
+    },
+    {
+      "id": "impact.text-router",
+      "ask": "which ways in could break if TextRouter.route changes",
+      "fixture": "handler-table-dispatch",
+      "tool": "impact",
+      "args": {
+        "symbol": "staff-bot#src/text-router.ts:TextRouter.route"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:staff-bot:bot_event:text"
+          ]
+        },
+        "exact": [
+          "entries"
+        ],
+        "notListed": {
+          "entries": [
+            "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit",
+            "staff-bot#src/staff-bot.ts:StaffBot.setup"
+          ]
+        }
+      },
+      "note": "P399: the call in the text listener was drawn from setup too, so impact listed onModuleInit as a maybe row; it is the listener's alone."
+    },
+    {
+      "id": "findings.prefix-buttons",
+      "ask": "which bot buttons send data no handler takes",
+      "fixture": "handler-table-dispatch",
+      "tool": "findings",
+      "args": {
+        "kind": "bot-button-unhandled"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor"
+          ]
+        },
+        "rowsSay": {
+          "rows": {
+            "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor": {
+              "precision": "high"
+            }
+          }
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P399: the prefixes of a listener's table are ways in with their callback data, so view_order_${id} and set_status_${id} are handled and archive_order_${id} is named; behind the one callback_query way in every button was held back."
+    },
+    {
+      "id": "who_calls.request-settled",
+      "ask": "which route does the order screen's fetchOrder land on, and who calls it",
+      "fixture": "answers-that-end",
+      "tool": "who_calls",
+      "args": {
+        "symbol": "fetchOrder"
+      },
+      "lists": [
+        "waysIn"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "waysIn": [
+            "entry:web:screen:/orders/:param"
+          ]
+        },
+        "exact": [
+          "waysIn"
+        ]
+      },
+      "note": "P403: settled says where the request lands (GET /api/orders/:param, OrdersController.findOne) and that every way in is listed, with no next; an agent ran get_flow and a Read to confirm the same answer."
+    },
+    {
+      "id": "impact.through-channel-settled",
+      "ask": "which ways in could break if OrdersService.findOne changes",
+      "fixture": "answers-that-end",
+      "tool": "impact",
+      "args": {
+        "symbol": "OrdersService.findOne"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "entries": [
+            "entry:shop-api:event:packing_events",
+            "entry:shop-api:http:GET:/api/orders/:param",
+            "entry:web:screen:/orders/:param"
+          ]
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P403: the publishers beyond packing_events are counted in throughChannels with a sample; no impact on the channel in next, which repeated them at length."
+    },
+    {
+      "id": "who_consumes.selection-unread",
+      "ask": "which code handles ORDER_DELAYED on packing_events",
+      "fixture": "answers-that-end",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "packing_events",
+        "type": "ORDER_DELAYED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "consumers": []
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P403: no code that runs selects it; the consumer whose choice was not read is named with its line and why, one Read, where 'not read (A.f, B.g)' sent agents grepping. P404: CourierPager, which takes every type, is ruled out by where ORDER_DELAYED's name is written (only where it is sent); left names AuditFeed's set, the one place left, and the list is in verbose answers only."
+    },
+    {
+      "id": "who_consumes.name-sent-only",
+      "ask": "which code handles ROW_CLAIMED on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "ROW_CLAIMED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": []
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P404: no code compares ROW_CLAIMED, its name written only where it is sent; the three consumers taking every type are counted in the settled sentence, not listed in selectionUnread for the agent to read each."
+    },
+    {
+      "id": "who_consumes.past-a-hand-off",
+      "ask": "which code handles TABLE_FREED on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "TABLE_FREED"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "consumers": []
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P404: unsure, and left names the one place a choice may be made, RoomBoard.apply's comparison, three calls past the relay that takes every type; the compact answer lists no consumer to read."
+    },
+    {
+      "id": "who_consumes.case-handled-in-place",
+      "ask": "which code handles CALL_STAFF on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "CALL_STAFF"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [
+            "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P404: the case that looks the room up and formats a line is handled by PushService.dispatch, which holds the switch, not by findRoom, the lookup it makes first."
+    },
+    {
+      "id": "who_consumes.field-on-another-channel",
+      "ask": "which methods read roomName of ROOM_READY, asked on venue_events",
+      "fixture": "answers-that-settle",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "venue_events",
+        "type": "ROOM_READY",
+        "field": "roomName"
+      },
+      "lists": [
+        "consumers",
+        "alsoOn"
+      ],
+      "expect": {
+        "complete": false,
+        "lists": {
+          "consumers": [],
+          "alsoOn": [
+            "channel:staff_feed"
+          ]
+        },
+        "rowsSay": {
+          "alsoOn": {
+            "channel:staff_feed": {
+              "readers": [
+                {
+                  "id": "consumer:chat-bot#src/staff/staff-bot.service.ts:StaffBot.handleRoomReady",
+                  "line": 28
+                }
+              ]
+            }
+          }
+        },
+        "exact": [
+          "consumers",
+          "alsoOn"
+        ]
+      },
+      "note": "P404: no handler reads roomName on venue_events; alsoOn names the reader on staff_feed, the other channel the type is sent on, where an agent took six turns to find it. P405: each reader is named with the line it reads at."
+    },
+    {
+      "id": "get_flow.request-first",
+      "ask": "which route does RoomService.getFreeTimes in the chat bot call, and in which service does it land",
+      "fixture": "answers-that-settle",
+      "tool": "get_flow",
+      "args": {
+        "entry": "RoomService.getFreeTimes"
+      },
+      "lists": [
+        "requests"
+      ],
+      "expect": {
+        "complete": false,
+        "settled": true,
+        "lists": {
+          "requests": [
+            "entry:rooms-api:http:GET:/api/admin/:param/rooms/free-times"
+          ]
+        },
+        "exact": [
+          "requests"
+        ]
+      },
+      "note": "P404: requests first and settled say where the request lands (GET /api/admin/:param/rooms/free-times in rooms-api, RoomsController.freeTimes); the unread step is named off the request's way, where the route sat deep in the tree beside 'unread: 1 step'."
+    },
+    {
+      "id": "who_consumes.field-on-the-fifth-channel",
+      "ask": "which methods read stepName of STEP_READY, asked on the tenant events channel",
+      "fixture": "pilot-left-open",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "STEP_READY",
+        "field": "stepName"
+      },
+      "lists": [
+        "consumers",
+        "alsoOn"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [],
+          "alsoOn": [
+            "channel:status_feed"
+          ]
+        },
+        "rowsSay": {
+          "alsoOn": {
+            "channel:status_feed": {
+              "readers": [
+                {
+                  "id": "consumer:push-worker#src/bot/chat-bot.service.ts:ChatBot.handleStepReady",
+                  "line": 28
+                }
+              ]
+            }
+          }
+        },
+        "exact": [
+          "consumers",
+          "alsoOn"
+        ]
+      },
+      "note": "P405: STEP_READY is sent on five channels; alsoOn ranks them by readers of stepName and keeps status_feed, where ChatBot.handleStepReady reads it at line 28, the three session channels counted in alsoOnRest. P404 named the first three by name, none reading it, and an agent took 11 turns. The two screens that refetch are said in readsNothing, not 'not read'."
+    },
+    {
+      "id": "check_contract.dispatch-through-a-cast",
+      "ask": "does every field the handlers of CALL_STAFF on the tenant events channel read get sent",
+      "fixture": "pilot-left-open",
+      "tool": "check_contract",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "CALL_STAFF"
+      },
+      "lists": [
+        "missing"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "missing": [
+            "roomId"
+          ]
+        },
+        "rowsSay": {
+          "missing": {
+            "roomId": {
+              "guarded": true,
+              "effect": "returns early"
+            }
+          }
+        },
+        "exact": [
+          "missing"
+        ]
+      },
+      "note": "P405: PushService.dispatch holds the message in a local made by a cast and reads roomId under case 'CALL_STAFF' behind a check that returns early; the publisher sends roomNumber. Its reads were [] (its chooser parsed the message with JSON.parse and the reading stopped there)."
+    },
+    {
+      "id": "who_consumes.spread-set",
+      "ask": "which code handles RESYNC on the tenant events channel",
+      "fixture": "pilot-left-open",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "RESYNC"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [
+            "consumer:push-worker#src/live/live-feed.service.ts:LiveFeed.redraw"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P405: LiveFeed filters by new Set([...OTHER_EVENTS, ...SEAT_EVENTS, RESYNC_EVENT]), each part written in another file; read as their strings, where it was 'a set the code does not write out', the one open place."
+    },
+    {
+      "id": "list_entries.raw-path",
+      "ask": "which routes does KitsController declare, with the names of their path parameters",
+      "fixture": "pilot-left-open",
+      "tool": "list_entries",
+      "args": {
+        "in": "KitsController"
+      },
+      "lists": [
+        "entries"
+      ],
+      "expect": {
+        "complete": true,
+        "lists": {
+          "entries": [
+            "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped",
+            "entry:desk-api:http:POST:/api/admin/:param/kits/:param/restart"
+          ]
+        },
+        "rowsSay": {
+          "entries": {
+            "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped": {
+              "label": "GET /api/admin/:tenantId/kits/auto-stopped"
+            }
+          }
+        },
+        "exact": [
+          "entries"
+        ]
+      },
+      "note": "P405: the compact row's label says :tenantId, the raw path, where it said :param only and an agent spent 8 turns finding the name; verbose rows say rawPath."
+    },
+    {
+      "id": "who_consumes.reads-nothing",
+      "ask": "which methods read step of STEP_READY on the tenant events channel",
+      "fixture": "pilot-left-open",
+      "tool": "who_consumes",
+      "args": {
+        "channel": "tenant:*:events",
+        "type": "STEP_READY",
+        "field": "step"
+      },
+      "lists": [
+        "consumers"
+      ],
+      "expect": {
+        "complete": true,
+        "settled": true,
+        "lists": {
+          "consumers": [
+            "consumer:push-worker#src/push/push.service.ts:PushService.dispatch"
+          ]
+        },
+        "exact": [
+          "consumers"
+        ]
+      },
+      "note": "P405: the two screens choosing STEP_READY call load(), which takes no parameter and refetches; they read nothing of the message, said in readsNothing, where they were 'not read for the fields it reads' and the answer was unsure."
+    },
+    {
+      "id": "findings.that-agree",
+      "ask": "what looks broken between the catalog, the back office and the ops screens",
+      "fixture": "findings-that-agree",
+      "tool": "findings",
+      "args": {},
+      "lists": [
+        "top.*"
+      ],
+      "expect": {
+        "lists": {
+          "field-never-sent": [
+            "back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent"
+          ],
+          "answer-field-never-returned": [
+            "ops-web#src/products.ts:productLine"
+          ]
+        },
+        "notListed": {
+          "answer-field-never-returned": [
+            "ops-web#src/reports.ts:reportLine"
+          ]
+        },
+        "exact": [
+          "field-never-sent"
+        ]
+      },
+      "note": "P400: the else's handler takes STOCK_LOW and PRODUCT_RETIRED, so reason is missing under STOCK_LOW only; the product's answer is compared against the wire (an envelope, a field the serializer leaves out); the report's reads are held back, an interceptor reshaping its answer in a way not read."
+    },
+    {
+      "id": "check_contract.answer-wire",
+      "ask": "which fields of GET /products/:id does the ops screen read that are not on the wire",
+      "fixture": "findings-that-agree",
+      "tool": "check_contract",
+      "args": {
+        "edge": "GET /products/:id"
+      },
+      "lists": [
+        "answer.*"
+      ],
+      "expect": {
+        "lists": {
+          "missing": [
+            "price",
+            "data.costPrice"
+          ]
+        },
+        "notListed": {
+          "missing": [
+            "success",
+            "data.name"
+          ]
+        }
+      },
+      "note": "P400: the global interceptor wraps the answer in { success, data } and the serializer leaves costPrice out; before, data.costPrice and price were read as fields of the declared answer and success as one it never holds."
+    },
+    {
+      "id": "dead.bot-webhook",
+      "ask": "is POST /tg/:secret dead, and POST /catalog/:sku/price/:price",
+      "fixture": "findings-that-agree",
+      "tool": "dead",
+      "args": {
+        "ids": [
+          "entry:catalog-api:http:POST:/tg/:param",
+          "entry:catalog-api:http:POST:/catalog/:param/price/:param"
+        ]
+      },
+      "lists": [
+        "answers"
+      ],
+      "expect": {
+        "rowsSay": {
+          "answers": {
+            "entry:catalog-api:http:POST:/tg/:param": {
+              "verdict": "unknown"
+            },
+            "entry:catalog-api:http:POST:/catalog/:param/price/:param": {
+              "verdict": "dead"
+            }
+          }
+        }
+      },
+      "note": "P400: the webhook hands its request to the chat bot's code, so it is the bot's way in, reached from outside, as impact counts it; the price route nothing calls stays dead."
+    },
+    {
+      "id": "findings.setting-renamed",
+      "ask": "which settings does the ledger read that its deployment never sets",
+      "fixture": "findings-settings-guards-helper",
+      "tool": "findings",
+      "args": {
+        "kind": "config-not-set"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "config_key:ledger#CACHE_HOST",
+            "config_key:ledger#LEDGER_REGION"
+          ]
+        },
+        "notListed": {
+          "rows": [
+            "config_key:ledger#PAYMENT_PROVIDER",
+            "config_key:reports#REPORTS_BUCKET",
+            "config_key:mailer#SMTP_RELAY"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P401: before, a setting read in a module's own statements was no read at all, so the renamed LEDGER_REGION was never named; now it is, with LEDGER_ZONE as the setting likely renamed, and the services whose env file is not in the checkout or whose settings a secrets tool hands in are held back."
+    },
+    {
+      "id": "findings.open-write-among-guarded",
+      "ask": "which write route was left without the guard its siblings carry",
+      "fixture": "findings-settings-guards-helper",
+      "tool": "findings",
+      "args": {
+        "kind": "unguarded-among-guarded"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "entry:shipping:http:DELETE:/claims/:param",
+            "entry:shipping:http:DELETE:/pickups/:param"
+          ]
+        },
+        "notListed": {
+          "rows": [
+            "entry:shipping:http:GET:/claims",
+            "entry:shipping:http:DELETE:/claims/:param/refunds/:param",
+            "entry:shipping:http:POST:/parcels/:param/track",
+            "entry:shipping:http:POST:/depots",
+            "entry:shipping:http:DELETE:/depots/:param"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P401: none of these routes reaches stored data, so no unguarded row named them; the one open write among guarded ones is named on the deviance, never a read, a route marked public or a router with two open writes."
+    },
+    {
+      "id": "findings.missing-route-through-helper",
+      "ask": "which calls from the gateway go to a route the orders service does not serve",
+      "fixture": "findings-settings-guards-helper",
+      "tool": "findings",
+      "args": {
+        "kind": "call-to-missing-route"
+      },
+      "lists": [
+        "rows"
+      ],
+      "expect": {
+        "lists": {
+          "rows": [
+            "http_out:gateway#src/clients/notes.client.ts:35:12"
+          ]
+        },
+        "notListed": {
+          "rows": [
+            "http_out:gateway#src/clients/notes.client.ts:30:12",
+            "http_out:gateway#src/clients/notes.client.ts:40:12"
+          ]
+        },
+        "exact": [
+          "rows"
+        ]
+      },
+      "note": "P401: before, every caller of the helper took its first branch's GET, so the export, which the route answers under POST, was called missing; now only the archive, which nothing serves, and the call whose verb is not read joins nothing."
+    }
+  ],
+  "fixed": {
+    "instructions": 2367,
+    "instructionsDb": 2427,
+    "guideBlock": 1028,
+    "guideBlockClaude": 366,
+    "skillDescription": 298,
+    "listingCore": 5687,
+    "listingDefault": 10603,
+    "listingAll": 13733
+  },
+  "recorded": {
+    "impact.multi-repo": {
+      "chars": 2045,
+      "tokens": 512,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.calling-side": {
+      "chars": 1444,
+      "tokens": 361,
+      "rows": 4,
+      "complete": false,
+      "calls": 1
+    },
+    "impact.shared-client-items": {
+      "chars": 1254,
+      "tokens": 314,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.shared-client-desks": {
+      "chars": 841,
+      "tokens": 211,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.rendered-reach": {
+      "chars": 1288,
+      "tokens": 322,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "who_calls.multi-repo": {
+      "chars": 1799,
+      "tokens": 450,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.helpdesk": {
+      "chars": 918,
+      "tokens": 230,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.long-chain": {
+      "chars": 2662,
+      "tokens": 666,
+      "rows": 14,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.class-shared-callers": {
+      "chars": 2760,
+      "tokens": 690,
+      "rows": 13,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.several-symbols": {
+      "chars": 1420,
+      "tokens": 355,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.routes-several": {
+      "chars": 2293,
+      "tokens": 574,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.routes-depth": {
+      "chars": 2293,
+      "tokens": 574,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "get_flow.inline-type": {
+      "chars": 1729,
+      "tokens": 433,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.class-callers": {
+      "chars": 1254,
+      "tokens": 314,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.helpdesk-type": {
+      "chars": 567,
+      "tokens": 142,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.relayed-type": {
+      "chars": 792,
+      "tokens": 198,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.every-channel": {
+      "chars": 452,
+      "tokens": 113,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.type-name": {
+      "chars": 553,
+      "tokens": 139,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.type-name-screens": {
+      "chars": 674,
+      "tokens": 169,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.handler-reads": {
+      "chars": 551,
+      "tokens": 138,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.route-reads": {
+      "chars": 394,
+      "tokens": 99,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.missing-unused": {
+      "chars": 822,
+      "tokens": 206,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.components": {
+      "chars": 1812,
+      "tokens": 453,
+      "rows": 4,
+      "complete": null,
+      "calls": 1
+    },
+    "dead.handler-and-method": {
+      "chars": 812,
+      "tokens": 203,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "get_flow.route": {
+      "chars": 1848,
+      "tokens": 462,
+      "rows": 10,
+      "complete": true,
+      "calls": 1
+    },
+    "get_flow.route-detail-2": {
+      "chars": 2175,
+      "tokens": 544,
+      "rows": 10,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.several": {
+      "chars": 1380,
+      "tokens": 345,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.unreferenced": {
+      "chars": 922,
+      "tokens": 231,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.paged": {
+      "chars": 2797,
+      "tokens": 700,
+      "rows": 17,
+      "complete": true,
+      "calls": 6
+    },
+    "impact.handling-code": {
+      "chars": 1052,
+      "tokens": 263,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "fields.default-key": {
+      "chars": 422,
+      "tokens": 106,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.never-subscribed": {
+      "chars": 948,
+      "tokens": 237,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "search.every-channel-type": {
+      "chars": 649,
+      "tokens": 163,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.detail-2-lean": {
+      "chars": 1613,
+      "tokens": 404,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.reached-through-route": {
+      "chars": 1052,
+      "tokens": 263,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.class-routes": {
+      "chars": 1049,
+      "tokens": 263,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.class-uncalled": {
+      "chars": 532,
+      "tokens": 133,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.channels-once": {
+      "chars": 2437,
+      "tokens": 610,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.channels-counted": {
+      "chars": 1761,
+      "tokens": 441,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.across-consumer": {
+      "chars": 1359,
+      "tokens": 340,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "get_flow.short-name": {
+      "chars": 1605,
+      "tokens": 402,
+      "rows": 8,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.request-lands": {
+      "chars": 981,
+      "tokens": 246,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.request-lands": {
+      "chars": 536,
+      "tokens": 134,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.client-path": {
+      "chars": 427,
+      "tokens": 107,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "search.folder-name": {
+      "chars": 402,
+      "tokens": 101,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.service-picks": {
+      "chars": 1624,
+      "tokens": 406,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.own-service": {
+      "chars": 1839,
+      "tokens": 460,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.two-services": {
+      "chars": 3182,
+      "tokens": 796,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.ids": {
+      "chars": 2293,
+      "tokens": 574,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.through-dead": {
+      "chars": 872,
+      "tokens": 218,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "list_entries.uncalled": {
+      "chars": 583,
+      "tokens": 146,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.dead-not-whole": {
+      "chars": 469,
+      "tokens": 118,
+      "rows": 2,
+      "complete": false,
+      "calls": 1
+    },
+    "impact.by-kind": {
+      "chars": 1298,
+      "tokens": 325,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.symbols": {
+      "chars": 1577,
+      "tokens": 395,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.callers-in": {
+      "chars": 766,
+      "tokens": 192,
+      "rows": 1,
+      "complete": false,
+      "calls": 1
+    },
+    "check_contract.route-alias": {
+      "chars": 394,
+      "tokens": 99,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.type-on-two-channels": {
+      "chars": 1394,
+      "tokens": 349,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.type-as-channel": {
+      "chars": 652,
+      "tokens": 163,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "get_source.class-skeleton": {
+      "chars": 1322,
+      "tokens": 331,
+      "rows": 0,
+      "complete": null,
+      "calls": 1
+    },
+    "get_flow.detail-2-once": {
+      "chars": 5576,
+      "tokens": 1394,
+      "rows": 17,
+      "complete": true,
+      "calls": 1
+    },
+    "find_symbol.two-words": {
+      "chars": 915,
+      "tokens": 229,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "search.sentence": {
+      "chars": 887,
+      "tokens": 222,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "search.sentence-payments": {
+      "chars": 1524,
+      "tokens": 381,
+      "rows": 8,
+      "complete": false,
+      "calls": 1
+    },
+    "find_symbol.camel-words": {
+      "chars": 1164,
+      "tokens": 291,
+      "rows": 5,
+      "complete": false,
+      "calls": 1
+    },
+    "search.or": {
+      "chars": 1819,
+      "tokens": 455,
+      "rows": 10,
+      "complete": false,
+      "calls": 1
+    },
+    "findings.multi-repo": {
+      "chars": 3305,
+      "tokens": 827,
+      "rows": 7,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.fields-renamed": {
+      "chars": 761,
+      "tokens": 191,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.between-services": {
+      "chars": 5281,
+      "tokens": 1321,
+      "rows": 8,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.that-hold": {
+      "chars": 3912,
+      "tokens": 978,
+      "rows": 5,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.hub-screens-types": {
+      "chars": 424,
+      "tokens": 106,
+      "rows": 0,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.handler-types": {
+      "chars": 1504,
+      "tokens": 376,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.client-checks": {
+      "chars": 1920,
+      "tokens": 480,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "check_contract.gathered-answer": {
+      "chars": 1125,
+      "tokens": 282,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.shadowed-handler": {
+      "chars": 466,
+      "tokens": 117,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_calls.shadowing-handler": {
+      "chars": 1250,
+      "tokens": 313,
+      "rows": 6,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.shadowed": {
+      "chars": 1172,
+      "tokens": 293,
+      "rows": 3,
+      "complete": null,
+      "calls": 1
+    },
+    "find_symbol.request-lands-shadowed": {
+      "chars": 476,
+      "tokens": 119,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.route-order": {
+      "chars": 2702,
+      "tokens": 676,
+      "rows": 5,
+      "complete": null,
+      "calls": 1
+    },
+    "card.route-aloud": {
+      "chars": 967,
+      "tokens": 242,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.client-method": {
+      "chars": 803,
+      "tokens": 201,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.message-type": {
+      "chars": 1106,
+      "tokens": 277,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.handler-in-service": {
+      "chars": 1026,
+      "tokens": 257,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.service-unused": {
+      "chars": 640,
+      "tokens": 160,
+      "rows": 1,
+      "complete": null,
+      "calls": 0
+    },
+    "card.names-nothing": {
+      "chars": 0,
+      "tokens": 0,
+      "rows": 0,
+      "complete": null,
+      "calls": 0
+    },
+    "check_change.edited": {
+      "chars": 2548,
+      "tokens": 637,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "check_change.one-service": {
+      "chars": 748,
+      "tokens": 187,
+      "rows": 0,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.field-breaks": {
+      "chars": 728,
+      "tokens": 182,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.not-answered": {
+      "chars": 702,
+      "tokens": 176,
+      "rows": 4,
+      "complete": true,
+      "calls": 1
+    },
+    "answer.unused": {
+      "chars": 1516,
+      "tokens": 379,
+      "rows": 9,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.deployment-settings": {
+      "chars": 5512,
+      "tokens": 1378,
+      "rows": 12,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.boundary-mismatches": {
+      "chars": 8288,
+      "tokens": 2072,
+      "rows": 12,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.stream-never-heard": {
+      "chars": 1114,
+      "tokens": 279,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.dead-status-branch": {
+      "chars": 1119,
+      "tokens": 280,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.answer-never-returned": {
+      "chars": 1868,
+      "tokens": 467,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "who_consumes.type-as-channel": {
+      "chars": 830,
+      "tokens": 208,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.maybe-confirm": {
+      "chars": 1288,
+      "tokens": 322,
+      "rows": 3,
+      "complete": false,
+      "calls": 1
+    },
+    "impact.bot-webhook": {
+      "chars": 1386,
+      "tokens": 347,
+      "rows": 5,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.table-handler": {
+      "chars": 588,
+      "tokens": 147,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "who_calls.table-handler": {
+      "chars": 653,
+      "tokens": 164,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.table-api": {
+      "chars": 933,
+      "tokens": 234,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "dead.lifecycle-setup": {
+      "chars": 563,
+      "tokens": 141,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "impact.text-router": {
+      "chars": 432,
+      "tokens": 108,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.prefix-buttons": {
+      "chars": 825,
+      "tokens": 207,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    },
+    "who_calls.request-settled": {
+      "chars": 880,
+      "tokens": 220,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "impact.through-channel-settled": {
+      "chars": 1890,
+      "tokens": 473,
+      "rows": 3,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.selection-unread": {
+      "chars": 737,
+      "tokens": 185,
+      "rows": 0,
+      "complete": false,
+      "calls": 1
+    },
+    "who_consumes.name-sent-only": {
+      "chars": 413,
+      "tokens": 104,
+      "rows": 0,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.past-a-hand-off": {
+      "chars": 717,
+      "tokens": 180,
+      "rows": 0,
+      "complete": false,
+      "calls": 1
+    },
+    "who_consumes.case-handled-in-place": {
+      "chars": 374,
+      "tokens": 94,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.field-on-another-channel": {
+      "chars": 911,
+      "tokens": 228,
+      "rows": 1,
+      "complete": false,
+      "calls": 1
+    },
+    "get_flow.request-first": {
+      "chars": 2694,
+      "tokens": 674,
+      "rows": 1,
+      "complete": false,
+      "calls": 1
+    },
+    "who_consumes.field-on-the-fifth-channel": {
+      "chars": 704,
+      "tokens": 176,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "check_contract.dispatch-through-a-cast": {
+      "chars": 1061,
+      "tokens": 266,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.spread-set": {
+      "chars": 369,
+      "tokens": 93,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "list_entries.raw-path": {
+      "chars": 651,
+      "tokens": 163,
+      "rows": 2,
+      "complete": true,
+      "calls": 1
+    },
+    "who_consumes.reads-nothing": {
+      "chars": 790,
+      "tokens": 198,
+      "rows": 1,
+      "complete": true,
+      "calls": 1
+    },
+    "findings.that-agree": {
+      "chars": 2575,
+      "tokens": 644,
+      "rows": 3,
+      "complete": null,
+      "calls": 1
+    },
+    "check_contract.answer-wire": {
+      "chars": 1218,
+      "tokens": 305,
+      "rows": 8,
+      "complete": false,
+      "calls": 1
+    },
+    "dead.bot-webhook": {
+      "chars": 834,
+      "tokens": 209,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.setting-renamed": {
+      "chars": 1546,
+      "tokens": 387,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.open-write-among-guarded": {
+      "chars": 1668,
+      "tokens": 417,
+      "rows": 2,
+      "complete": null,
+      "calls": 1
+    },
+    "findings.missing-route-through-helper": {
+      "chars": 868,
+      "tokens": 217,
+      "rows": 1,
+      "complete": null,
+      "calls": 1
+    }
+  }
+}

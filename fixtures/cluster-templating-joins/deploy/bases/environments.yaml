@@ -1,0 +1,7 @@
+environments:
+  staging:
+    values:
+      - ../values/staging.yaml
+  production:
+    values:
+      - ../values/production.yaml

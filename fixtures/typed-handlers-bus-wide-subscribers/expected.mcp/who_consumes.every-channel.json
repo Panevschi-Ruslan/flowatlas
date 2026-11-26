@@ -1,0 +1,34 @@
+{
+  "channel": {
+    "id": "channel:desk_alerts",
+    "type": "channel",
+    "label": "desk_alerts",
+    "loc": "src/desk/desk-watcher.service.ts:23",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+      "type": "consumer",
+      "label": "NotifyService.pageStaff",
+      "loc": "src/notify/notify.service.ts:46",
+      "service": "shop",
+      "kind": "event",
+      "selectedIn": "NotifyService.onModuleInit",
+      "via": "switch",
+      "endLine": 49,
+      "reach": "dead",
+      "from": "POST /desks/:param/help",
+      "ways": 7,
+      "throughDead": true
+    }
+  ],
+  "total": 1,
+  "type": "HELP_REQUESTED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:desk_alerts\", type: \"HELP_REQUESTED\"})",
+    "impact({symbol: \"consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff\"})",
+    "get_source({symbol: \"consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff\"})"
+  ]
+}

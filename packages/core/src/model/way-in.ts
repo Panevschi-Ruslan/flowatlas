@@ -10,6 +10,14 @@ import type { GraphNode } from './nodes.js';
 export const SENDS_META = 'sends';
 
 /**
+ * The key of an entry's `meta` that names the package whose code answers it
+ * (P287): a gRPC health or reflection service a package implements and hands
+ * the server. The repository holds no code behind it by design, and what it
+ * does is the package's.
+ */
+export const IMPLEMENTED_BY_META = 'implementedBy';
+
+/**
  * Whether the code behind one way in was read.
  *
  * One definition for every reader of a graph that asks it, because three do and
@@ -30,7 +38,10 @@ export const SENDS_META = 'sends';
  * A way in that has no code behind it by design is read when the message it
  * sends is (`SENDS_META`): that message is everything that happens after the
  * request arrives, and counting it as a way in without a handler would size a
- * gap that is not there (R173).
+ * gap that is not there (R173). So is one a package implements
+ * (`IMPLEMENTED_BY_META`, P287): nothing of the repository runs behind it.
  */
 export const wayInBodyRead = (entry: GraphNode, handled: (id: string) => boolean): boolean =>
-  typeof entry.meta?.[SENDS_META] === 'string' || (handled(entry.id) && entry.meta?.['handlerBodyRead'] !== false);
+  typeof entry.meta?.[SENDS_META] === 'string' ||
+  typeof entry.meta?.[IMPLEMENTED_BY_META] === 'string' ||
+  (handled(entry.id) && entry.meta?.['handlerBodyRead'] !== false);

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { isBelowDir } from '../ids.js';
 import { extentDeclared, serviceExtent, workspaceMemberDirs, workspaceRootsAbove } from '../workspace.js';
 import { readPackageJson, type PackageJson } from '../package-json.js';
+import { readServiceManifest } from '../workspace-application.js';
 
 /**
  * Manifests, and the two different questions asked of them.
@@ -208,6 +209,9 @@ const manifestChain = (dir: string, sideways: boolean): readonly PackageJson[] =
  * A directory with no manifest of its own still returns nothing, rather than the
  * workspace's dependencies under no name: callers use that to mean there is no
  * package here, which is a different question and still has the same answer.
+ * The one exception is an application of a workspace that keeps one manifest
+ * for everything (`workspaceApplicationOf`, R180): there is a package here, and
+ * it is the root's, so the root's manifest is the one returned.
  *
  * `sideways: false` leaves out the members the service reaches, and answers
  * what the workspace above and below the directory declares and nothing more.
@@ -223,7 +227,8 @@ export const readResolvedPackageJson = (
   dir: string,
   { sideways = true }: { sideways?: boolean } = {},
 ): PackageJson | undefined => {
-  const own = readPackageJson(dir);
+  // An application of a one-manifest workspace is built with the root's (R180).
+  const own = readServiceManifest(dir);
   if (own === undefined) return undefined;
   const chain = manifestChain(dir, sideways);
   if (chain.length === 0) return own;

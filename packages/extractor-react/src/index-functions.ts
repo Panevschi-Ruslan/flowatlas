@@ -1,7 +1,8 @@
 import { builtExportFunctions } from '@flowatlas/adapters-entry';
-import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
-import type { Project, SourceFile } from 'ts-morph';
+import { componentWrittenIn, makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
+import type { Node as TsNode, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
+import { scriptMembers, scriptTop, type ScriptMember } from './script-members.js';
 
 /**
  * What a function is, as far as the graph is concerned.
@@ -70,6 +71,23 @@ const returnsMarkup = (fn: NamedFunction): boolean => {
   return found;
 };
 
+/**
+ * The pattern element a function's name is taken out of, when it is one of
+ * several names a call's value was destructured into (`export const [A, B] = f()`).
+ *
+ * Only an element of the declaration's own pattern, which is the only one
+ * `builtExportFunctions` reads as a function.
+ */
+const patternElementOf = (fn: NamedFunction): TsNode | undefined => {
+  if (!Node.isVariableDeclaration(fn.declaration)) return undefined;
+  const pattern = fn.declaration.getNameNode();
+  if (!Node.isObjectBindingPattern(pattern) && !Node.isArrayBindingPattern(pattern)) return undefined;
+  for (const element of pattern.getElements()) {
+    if (Node.isBindingElement(element) && element.getNameNode().getText() === fn.name) return element;
+  }
+  return undefined;
+};
+
 const roleOf = (fn: NamedFunction): ReactRole => {
   if (HOOK_NAME.test(fn.name)) return 'hook';
   if (COMPONENT_NAME.test(fn.name) && returnsMarkup(fn)) return 'component';
@@ -92,16 +110,44 @@ export interface ReactFunctionIndexOptions {
  * exception is a function a pass hands back afterwards, which `adopt` takes,
  * because a registration is the other way a function is reachable.
  *
- * Three questions are asked of it and each has its own map: a declaration, when
- * a walk is standing on one; an id, when an adapter named a function; and a
+ * Four questions are asked of it and each has its own map: a declaration, when
+ * a walk is standing on one; the function itself, when a pass already holds
+ * one this index handed it; an id, when an adapter named a function; and a
  * position, when what is in hand is a way in rather than a name.
+ *
+ * The function and the declaration are two questions because two functions can
+ * share a declaration. `export const [OrderProvider, useOrder] = createRequired(…)`
+ * is two exports a call built out of one `VariableDeclaration`, each with a name,
+ * an id and a node of its own. Keyed by the declaration alone, the second
+ * overwrote the first, and a pass that held the first asked for its node by its
+ * declaration, was given the second's, and drew an edge from an id nothing had
+ * written: the whole service was refused for it (R180). So a pass that holds a
+ * function asks for that function ({@link of}), the declaration keeps the first
+ * of the names it carries, and each name is also found by the pattern element
+ * that declares it, which is the declaration the checker hands a caller of that
+ * name.
  */
 export class ReactFunctionIndex {
-  readonly #byDeclaration = new Map<NamedFunction['declaration'], IndexedFunction>();
+  readonly #byDeclaration = new Map<TsNode, IndexedFunction>();
+  readonly #byFunction = new Map<NamedFunction, IndexedFunction>();
   readonly #byId = new Map<string, IndexedFunction>();
   readonly #byPosition = new Map<string, IndexedFunction>();
+  readonly #callersOnly = new Set<string>();
+  readonly #members = new Map<TsNode, Map<string, IndexedFunction>>();
+  readonly #memberOwners = new Map<string, readonly TsNode[]>();
+  readonly #memberDeclarations = new Set<TsNode>();
+  readonly #globals = new Map<string, IndexedFunction>();
+  readonly #globalConstructors = new Map<string, readonly TsNode[]>();
+  readonly #nested = new Map<string, Set<TsNode>>();
   readonly #repo: string;
   readonly #repoDir: string;
+  /**
+   * Whether this is a plain script's reading, whose members are functions
+   * (P310) and whose getters and setters run where a property is read
+   * (P311). Exports naming the functions they hold are read in every
+   * reading (P317).
+   */
+  readsMembers = false;
 
   constructor(options: ReactFunctionIndexOptions) {
     this.#repo = options.repo;
@@ -109,7 +155,10 @@ export class ReactFunctionIndex {
   }
 
   add(indexed: IndexedFunction): void {
-    this.#byDeclaration.set(indexed.fn.declaration, indexed);
+    if (!this.#byDeclaration.has(indexed.fn.declaration)) this.#byDeclaration.set(indexed.fn.declaration, indexed);
+    const element = patternElementOf(indexed.fn);
+    if (element !== undefined) this.#byDeclaration.set(element, indexed);
+    this.#byFunction.set(indexed.fn, indexed);
     this.#byId.set(indexed.id, indexed);
     // Where a declaration starts is the one thing an adapter and this index
     // compute the same way from the same node, which is what `at` leans on.
@@ -142,7 +191,7 @@ export class ReactFunctionIndex {
    * the pass build an id keeps one answer to what a function's id is.
    */
   adopt(fn: NamedFunction): IndexedFunction {
-    const existing = this.#byDeclaration.get(fn.declaration);
+    const existing = this.of(fn);
     if (existing !== undefined) return existing;
     const file = normalizeFilePath(fn.declaration.getSourceFile().getFilePath(), this.#repoDir);
     const indexed: IndexedFunction = {
@@ -157,20 +206,140 @@ export class ReactFunctionIndex {
     return indexed;
   }
 
-  get(declaration: NamedFunction['declaration']): IndexedFunction | undefined {
+  /**
+   * Indexes a method of a class where a pass meets it as the caller of a
+   * function it follows outward (P293): what a request or an operation its
+   * helper makes is drawn from, and followed on through. Only as a caller:
+   * {@link all} does not answer it, so no pass reads its body as it reads a
+   * function of the module, and a client class's wrapping methods are not
+   * read as requests of their own.
+   */
+  adoptCaller(fn: NamedFunction): IndexedFunction {
+    const existing = this.of(fn);
+    if (existing !== undefined) return existing;
+    const file = normalizeFilePath(fn.declaration.getSourceFile().getFilePath(), this.#repoDir);
+    // A method is neither a screen nor a hook, whatever it returns.
+    const indexed: IndexedFunction = { id: makeSymbolId(this.#repo, file, fn.name), name: fn.name, role: 'plain', file, line: fn.line, fn };
+    this.#callersOnly.add(indexed.id);
+    this.add(indexed);
+    return indexed;
+  }
+
+  /**
+   * Indexes a function a plain script writes as a member (P310): of an
+   * object written in place, or of a constructor's prototype, which a `new`
+   * of the constructor answers by its member's name ({@link member}).
+   */
+  addMember(member: ScriptMember, indexed: IndexedFunction): void {
+    this.add(indexed);
+    this.#memberDeclarations.add(member.fn.declaration);
+    for (const node of member.also) if (!this.#byDeclaration.has(node)) this.#byDeclaration.set(node, indexed);
+    for (const name of member.globals) if (!this.#globals.has(name)) this.#globals.set(name, indexed);
+    if (member.owners.length === 0) return;
+    this.#memberOwners.set(indexed.id, member.owners);
+    const name = indexed.name.slice(indexed.name.lastIndexOf('.') + 1);
+    for (const owner of member.owners) {
+      const members = this.#members.get(owner) ?? new Map<string, IndexedFunction>();
+      if (!members.has(name)) members.set(name, indexed);
+      this.#members.set(owner, members);
+    }
+  }
+
+  /**
+   * Records a function of this index written inside another one - inside a
+   * wrapper the page runs later (P317) - so a walk of the outer one leaves
+   * the inner one's body to it.
+   */
+  nest(outer: IndexedFunction, inner: IndexedFunction): void {
+    const bodies = this.#nested.get(outer.id) ?? new Set<TsNode>();
+    bodies.add(inner.fn.body);
+    this.#nested.set(outer.id, bodies);
+  }
+
+  /**
+   * The bodies of the functions of this index written inside a function,
+   * which a walk of its body leaves out because they are functions of their
+   * own (P317); nothing where it holds none.
+   */
+  nestedIn(indexed: IndexedFunction): ReadonlySet<TsNode> | undefined {
+    return this.#nested.get(indexed.id);
+  }
+
+  /** A constructor a script hands the page under a name (P311): `window.Store = Store` inside a wrapper. */
+  addGlobalConstructor(name: string, declarations: readonly TsNode[]): void {
+    if (!this.#globalConstructors.has(name)) this.#globalConstructors.set(name, declarations);
+  }
+
+  /**
+   * The member function a script hands the page under a name, which another
+   * script calls by that name with nothing declared (P311): `shop.load` for
+   * `window.shop = { load() {} }`.
+   */
+  global(name: string): IndexedFunction | undefined {
+    return this.#globals.get(name);
+  }
+
+  /** Whether any function or constructor is handed to the page by a name (P311). */
+  get hasGlobals(): boolean {
+    return this.#globals.size > 0 || this.#globalConstructors.size > 0;
+  }
+
+  /** The declarations of a constructor a script hands the page under `name` (P311). */
+  globalConstructor(name: string): readonly TsNode[] {
+    return this.#globalConstructors.get(name) ?? [];
+  }
+
+  /** Whether any function is a prototype's member, so a call on an instance is worth following to its constructor. */
+  get hasPrototypeMembers(): boolean {
+    return this.#members.size > 0;
+  }
+
+  /** The member `name` an instance of the constructor declared by `owner` has through its prototype (P310). */
+  member(owner: TsNode, name: string): IndexedFunction | undefined {
+    return this.#members.get(owner)?.get(name);
+  }
+
+  /** The constructor declarations whose prototype holds a function, where it is a prototype's member (P310). */
+  ownersOf(id: string): readonly TsNode[] {
+    return this.#memberOwners.get(id) ?? [];
+  }
+
+  /**
+   * The member function of a plain script a node declares - an object's
+   * method or property, or the function a prototype's member is assigned -
+   * which a walk up from a call stops at as it stops at a declaration (P310).
+   */
+  scriptMember(node: TsNode): IndexedFunction | undefined {
+    return this.#memberDeclarations.has(node) ? this.#byDeclaration.get(node) : undefined;
+  }
+
+  /**
+   * The function a declaration the checker handed back stands for: a declaration
+   * this index read, or the element of a pattern one of its names is taken out of.
+   */
+  get(declaration: TsNode): IndexedFunction | undefined {
     return this.#byDeclaration.get(declaration);
+  }
+
+  /**
+   * The entry for a function a pass already holds, which is that function's own
+   * even where another function shares its declaration; a function built anew
+   * from a declaration this index read is answered by the declaration.
+   */
+  of(fn: NamedFunction): IndexedFunction | undefined {
+    return this.#byFunction.get(fn) ?? this.#byDeclaration.get(fn.declaration);
   }
 
   byId(id: string): IndexedFunction | undefined {
     return this.#byId.get(id);
   }
 
-  all(): IterableIterator<IndexedFunction> {
-    return this.#byId.values();
+  *all(): IterableIterator<IndexedFunction> {
+    for (const indexed of this.#byId.values()) if (!this.#callersOnly.has(indexed.id)) yield indexed;
   }
 
   get size(): number {
-    return this.#byId.size;
+    return this.#byId.size - this.#callersOnly.size;
   }
 }
 
@@ -183,6 +352,10 @@ export interface BuildFunctionIndexOptions {
    * Every file when absent; see `extractReact` for the rule that fills it.
    */
   reads?: (file: string) => boolean;
+  /** Functions a reading wrote itself and indexes its own way: a component file's tail (P233). */
+  skip?: (fn: NamedFunction) => boolean;
+  /** Whether the members of objects written in place and of prototypes are functions of their own: plain scripts (P310). */
+  members?: boolean;
 }
 
 /**
@@ -246,20 +419,57 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
  * neither can claim a function the other does not have (R74).
  */
 
+/**
+ * The components a module keeps under a name it does not export, wrapped in
+ * a call (P349): `const Feed = memo(function Feed(props) {...})`. An export
+ * is read by {@link builtExportFunctions}; one the module keeps to itself is
+ * read here, as a component only - its name capitalised and the function it
+ * wraps handing back markup - so a memoised value or a configured client
+ * kept under a name is not made a function. The body is the whole call, as
+ * an export's is, so the component reaches what the function inside it does.
+ */
+const wrappedComponents = (sourceFile: SourceFile, known: ReadonlySet<TsNode>): NamedFunction[] => {
+  const found: NamedFunction[] = [];
+  for (const declaration of sourceFile.getVariableDeclarations()) {
+    if (known.has(declaration) || !Node.isIdentifier(declaration.getNameNode())) continue;
+    const name = declaration.getName();
+    const value = declaration.getInitializer();
+    if (!COMPONENT_NAME.test(name) || value === undefined || !Node.isCallExpression(value)) continue;
+    // The function written in place it wraps, among the arguments of each call, the options a wrapper takes first passed over (P349, P353).
+    const inner = componentWrittenIn(value);
+    if (inner === undefined || !(Node.isArrowFunction(inner) || Node.isFunctionExpression(inner))) continue;
+    const fn: NamedFunction = { name, declaration, body: value, line: startLineOf(declaration) };
+    if (returnsMarkup({ ...fn, body: inner.getBody() })) found.push(fn);
+  }
+  return found;
+};
+
+/** The member function of a plain script a declaration is written inside, where it is written inside one. */
+const enclosingMember = (index: ReactFunctionIndex, declaration: TsNode): IndexedFunction | undefined => {
+  for (let at = declaration.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
+    const found = index.scriptMember(at);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
+
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
 ): ReactFunctionIndex => {
-  const { project, repo, repoDir, reads = () => true } = options;
+  const { project, repo, repoDir, reads = () => true, skip = () => false, members = false } = options;
   const index = new ReactFunctionIndex({ repo, repoDir });
+  index.readsMembers = members;
 
   for (const sourceFile of project.getSourceFiles()) {
     if (!isRepoFile(sourceFile) || !reads(sourceFile.getFilePath())) continue;
     const file = normalizeFilePath(sourceFile.getFilePath(), repoDir);
     const found = [...moduleFunctions(sourceFile), ...builtExportFunctions(sourceFile)];
+    found.push(...wrappedComponents(sourceFile, new Set(found.map((fn) => fn.declaration))));
     const anonymous = defaultExportFunction(sourceFile, file);
     if (anonymous !== undefined) found.push(anonymous);
 
     for (const fn of found) {
+      if (skip(fn)) continue;
       index.add({
         id: makeSymbolId(repo, file, fn.name),
         name: fn.name,
@@ -268,6 +478,47 @@ export const buildReactFunctionIndex = (
         line: fn.line,
         fn,
       });
+    }
+    if (!members) continue;
+    const reading = scriptMembers(sourceFile);
+    for (const member of reading.members) {
+      const { fn } = member;
+      if (skip(fn) || index.get(fn.declaration) !== undefined) continue;
+      // Two wrappers of one script may each keep an `init` (P311): the
+      // second is told apart by the line it starts on.
+      const named = index.byId(makeSymbolId(repo, file, fn.name)) === undefined ? fn : { ...fn, name: `${fn.name}@${fn.line}` };
+      // A member is neither a screen nor a hook, whatever it is called.
+      index.addMember({ ...member, fn: named }, { id: makeSymbolId(repo, file, named.name), name: named.name, role: 'plain', file, line: named.line, fn: named });
+    }
+    // A function kept inside a wrapper the page runs later, itself a function (P317).
+    for (const member of reading.members) {
+      const inner = index.get(member.fn.declaration);
+      const outer = inner === undefined ? undefined : enclosingMember(index, member.fn.declaration);
+      if (inner !== undefined && outer !== undefined) index.nest(outer, inner);
+    }
+    for (const [name, declarations] of reading.constructors) index.addGlobalConstructor(name, declarations);
+    // The top of a script that writes a call outside every function it keeps,
+    // itself a function (P334): every function of the file not written inside
+    // another is left to itself, as a wrapper's are.
+    // A function written in place at the top that nothing keeps as its own -
+    // a handler handed to a constructor or kept in an object - is the top's (P341).
+    const keptNodes = new Set<TsNode>();
+    for (const fn of [...found, ...reading.members.map((member) => member.fn)]) keptNodes.add(fn.declaration).add(fn.body);
+    const kept = (node: TsNode): boolean =>
+      keptNodes.has(node) || index.get(node) !== undefined || (node.getParent() !== undefined && index.get(node.getParent() as TsNode) !== undefined) ||
+      ((Node.isFunctionExpression(node) || Node.isArrowFunction(node) || Node.isMethodDeclaration(node)) && keptNodes.has(node.getBody() as TsNode));
+    const top = scriptTop(sourceFile, kept);
+    if (top === undefined || skip(top) || index.byId(makeSymbolId(repo, file, top.name)) !== undefined) continue;
+    const topIndexed: IndexedFunction = { id: makeSymbolId(repo, file, top.name), name: top.name, role: 'plain', file, line: top.line, fn: top };
+    index.addMember({ fn: top, owners: [], also: [], globals: [] }, topIndexed);
+    for (const fn of [...found, ...reading.members.map((member) => member.fn)]) {
+      const indexed = index.get(fn.declaration);
+      if (indexed !== undefined && indexed !== topIndexed && enclosingMember(index, fn.declaration) === undefined) index.nest(topIndexed, indexed);
+    }
+    // A function the index leaves out (`skip`) still runs when it is called, not at the top.
+    for (const statement of sourceFile.getStatements()) {
+      const body = Node.isFunctionDeclaration(statement) ? statement.getBody() : undefined;
+      if (body !== undefined) index.nest(topIndexed, { ...topIndexed, fn: { ...top, body } });
     }
   }
   return index;

@@ -1,0 +1,9 @@
+{
+  "name": "catalog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A catalog that tells several queues of every change, each queue an element of a list or a value of a map.",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.700.0"
+  }
+}

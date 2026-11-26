@@ -1,0 +1,10 @@
+{
+  "services": [
+    { "name": "web", "repo": "./web", "type": "nextjs" },
+    { "name": "status", "repo": "./status", "type": "express", "baseUrlEnv": ["STATUS_API_URL"] },
+    { "name": "catalog", "repo": "./catalog", "type": "express" },
+    { "name": "orders", "repo": "./orders", "type": "express" },
+    { "name": "reviews", "repo": "./reviews", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

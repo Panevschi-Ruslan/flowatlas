@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "name": "market-api",
+      "repo": "./market-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["MARKET_API_URL"]
+    },
+    {
+      "name": "market-web",
+      "repo": "./market-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "market-api" }
+    },
+    {
+      "name": "kiosk-web",
+      "repo": "./kiosk-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "market-api" }
+    },
+    {
+      "name": "market-bot",
+      "repo": "./market-bot",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

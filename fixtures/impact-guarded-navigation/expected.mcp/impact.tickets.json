@@ -1,0 +1,77 @@
+{
+  "target": {
+    "id": "store-api#src/tickets.service.ts:TicketsService.acknowledge",
+    "type": "method",
+    "label": "TicketsService.acknowledge",
+    "loc": "src/tickets.service.ts:6",
+    "service": "store-api",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:store-api:http:POST:/api/hooks/chat",
+      "type": "entry",
+      "label": "POST /api/hooks/chat",
+      "loc": "src/hooks.controller.ts:9",
+      "service": "store-api",
+      "kind": "http",
+      "reach": "outside",
+      "by": "store-api#src/hooks.controller.ts:HooksController.chat"
+    },
+    {
+      "id": "entry:store-api:http:POST:/api/tickets/:param/ack",
+      "type": "entry",
+      "label": "POST /api/tickets/:param/ack",
+      "loc": "src/tickets.controller.ts:8",
+      "service": "store-api",
+      "kind": "http",
+      "reach": "alive",
+      "by": "store-api#src/tickets.controller.ts:TicketsController.ack",
+      "rowsVia": 1
+    },
+    {
+      "id": "entry:store-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "loc": "src/app/app.routes.ts:23",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "POST /api/tickets/:param/ack (store-api)",
+      "by": "store-web#src/app/ticket-board.component.ts:TicketBoardComponent"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "screens": {
+      "store-web": [
+        "src/app/ticket-board.component.ts"
+      ]
+    },
+    "webhooks": {
+      "store-api": [
+        "src/hooks.controller.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:store-api:http:POST:/api/tickets/:param/ack"
+  ],
+  "reached": 11,
+  "entriesByService": {
+    "store-api": 2,
+    "store-web": 1
+  },
+  "reachedByService": {
+    "store-api": 4,
+    "store-web": 7
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:store-api:http:POST:/api/hooks/chat\"})",
+    "describe_for_prompt({id: \"entry:store-api:http:POST:/api/hooks/chat\"})",
+    "impact({symbol: \"entry:store-api:http:POST:/api/hooks/chat\"})"
+  ]
+}

@@ -1,0 +1,453 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-24T20:25:34.860Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/accounts-api.service.ts:12:12",
+        "to": "entry:accounts-api:http:GET:/accounts/me",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/accounts-api.service.ts:12:12|hits|entry:accounts-api:http:GET:/accounts/me",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "accounts-api",
+        "typeId": "{name:string;session:string}",
+        "symbol": "accounts-api#src/accounts/accounts.controller.ts:AccountsController.me"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{name:string}",
+        "symbol": "web#src/app/accounts-api.service.ts:AccountsApiService.me"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:web#src/app/accounts-api.service.ts:12:12",
+            "to": "entry:accounts-api:http:GET:/accounts/me",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/app/accounts-api.service.ts:12:12|hits|entry:accounts-api:http:GET:/accounts/me",
+          "direction": "response",
+          "sender": {
+            "service": "accounts-api",
+            "typeId": "{name:string;session:string}",
+            "symbol": "accounts-api#src/accounts/accounts.controller.ts:AccountsController.me"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "{name:string}",
+            "symbol": "web#src/app/accounts-api.service.ts:AccountsApiService.me"
+          },
+          "typeId": "{name:string}",
+          "field": "session",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender accounts-api sends `session: string`; receiver web declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:13:12",
+        "to": "entry:orders-api:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:13:12|hits|entry:orders-api:http:GET:/orders",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders-api",
+        "typeId": "string[]",
+        "symbol": "orders-api#src/orders/orders.controller.ts:OrdersController.list"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "string[]",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.list"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:18:12|hits|entry:orders-api:http:POST:/orders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{item:string;quantity:number;giftNote:string}",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "giftNote",
+          "item",
+          "quantity"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#CreateOrderDto",
+        "symbol": "orders-api#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+            "to": "entry:orders-api:http:POST:/orders",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:18:12|hits|entry:orders-api:http:POST:/orders",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{item:string;quantity:number;giftNote:string}",
+            "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+            "writes": [
+              "giftNote",
+              "item",
+              "quantity"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "orders-api",
+            "typeId": "type:orders-api#CreateOrderDto",
+            "symbol": "orders-api#src/orders/orders.controller.ts:OrdersController.create"
+          },
+          "typeId": "type:orders-api#CreateOrderDto",
+          "field": "giftNote",
+          "expected": null,
+          "actual": "string",
+          "rule": "whitelist-reject",
+          "message": "sender web sends `giftNote: string`; receiver orders-api declares no such field; the receiver does not declare it, and its validation pipe forbids what it does not whitelist, so a request sending it is refused with 400",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:18:12|hits|entry:orders-api:http:POST:/orders",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders-api",
+        "typeId": "string",
+        "symbol": "orders-api#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "string",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:40:12",
+        "to": "entry:orders-api:http:PATCH:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:40:12|hits|entry:orders-api:http:PATCH:/orders/:param",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{title:string}",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.rename",
+        "writes": [
+          "title"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#RenameOrderDto",
+        "symbol": "orders-api#src/orders/orders.controller.ts:OrdersController.rename"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:web#src/app/accounts-api.service.ts:12:12",
+        "to": "entry:accounts-api:http:GET:/accounts/me",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/accounts-api.service.ts:12:12|hits|entry:accounts-api:http:GET:/accounts/me",
+      "direction": "response",
+      "sender": {
+        "service": "accounts-api",
+        "typeId": "{name:string;session:string}",
+        "symbol": "accounts-api#src/accounts/accounts.controller.ts:AccountsController.me"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{name:string}",
+        "symbol": "web#src/app/accounts-api.service.ts:AccountsApiService.me"
+      },
+      "typeId": "{name:string}",
+      "field": "session",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender accounts-api sends `session: string`; receiver web declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+        "to": "entry:orders-api:http:POST:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:18:12|hits|entry:orders-api:http:POST:/orders",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{item:string;quantity:number;giftNote:string}",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+        "writes": [
+          "giftNote",
+          "item",
+          "quantity"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders-api",
+        "typeId": "type:orders-api#CreateOrderDto",
+        "symbol": "orders-api#src/orders/orders.controller.ts:OrdersController.create"
+      },
+      "typeId": "type:orders-api#CreateOrderDto",
+      "field": "giftNote",
+      "expected": null,
+      "actual": "string",
+      "rule": "whitelist-reject",
+      "message": "sender web sends `giftNote: string`; receiver orders-api declares no such field; the receiver does not declare it, and its validation pipe forbids what it does not whitelist, so a request sending it is refused with 400",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/accounts-api.service.ts:12:12",
+        "to": "entry:accounts-api:http:GET:/accounts/me",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/accounts-api.service.ts:12:12|hits|entry:accounts-api:http:GET:/accounts/me",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/accounts-api.service.ts:AccountsApiService.me declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live.service.ts:11:20",
+        "to": "entry:orders-api:http:GET:/orders/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live.service.ts:11:20|hits|entry:orders-api:http:GET:/orders/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/live.service.ts:LiveService.watchReady declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live.service.ts:11:20",
+        "to": "entry:orders-api:http:GET:/orders/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live.service.ts:11:20|hits|entry:orders-api:http:GET:/orders/events",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/live.service.ts:LiveService.watchReady declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live.service.ts:17:20",
+        "to": "entry:orders-api:http:GET:/orders/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live.service.ts:17:20|hits|entry:orders-api:http:GET:/orders/feed",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/live.service.ts:LiveService.watchFeed declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live.service.ts:17:20",
+        "to": "entry:orders-api:http:GET:/orders/feed",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live.service.ts:17:20|hits|entry:orders-api:http:GET:/orders/feed",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/live.service.ts:LiveService.watchFeed declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live.service.ts:23:20",
+        "to": "entry:orders-api:http:GET:/orders/notices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live.service.ts:23:20|hits|entry:orders-api:http:GET:/orders/notices",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/live.service.ts:LiveService.watchNotices declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/live.service.ts:23:20",
+        "to": "entry:orders-api:http:GET:/orders/notices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/live.service.ts:23:20|hits|entry:orders-api:http:GET:/orders/notices",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/live.service.ts:LiveService.watchNotices declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:13:12",
+        "to": "entry:orders-api:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:13:12|hits|entry:orders-api:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+        "to": "entry:orders-api:http:POST:/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:23:12|hits|entry:orders-api:http:POST:/orders/:param/cancel",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.cancel declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+        "to": "entry:orders-api:http:POST:/orders/:param/cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:23:12|hits|entry:orders-api:http:POST:/orders/:param/cancel",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders-api#src/orders/orders.controller.ts:OrdersController.cancel declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:30:12",
+        "to": "entry:orders-api:http:POST:/orders/:param/refund",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:30:12|hits|entry:orders-api:http:POST:/orders/:param/refund",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.refund declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:30:12",
+        "to": "entry:orders-api:http:POST:/orders/:param/refund",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:30:12|hits|entry:orders-api:http:POST:/orders/:param/refund",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders-api#src/orders/orders.controller.ts:OrdersController.refund declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:40:12",
+        "to": "entry:orders-api:http:PATCH:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:40:12|hits|entry:orders-api:http:PATCH:/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders-api#src/orders/orders.controller.ts:OrdersController.rename declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:45:12",
+        "to": "entry:orders-api:http:DELETE:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:45:12|hits|entry:orders-api:http:DELETE:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.remove declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:45:12",
+        "to": "entry:orders-api:http:DELETE:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:45:12|hits|entry:orders-api:http:DELETE:/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders-api#src/orders/orders.controller.ts:OrdersController.remove declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 5,
+    "shared": 0,
+    "identical": 2,
+    "hash_differs": 3,
+    "unchecked": 15,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 1,
+    "ignored": 0
+  }
+}

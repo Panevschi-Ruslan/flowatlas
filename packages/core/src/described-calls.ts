@@ -22,12 +22,21 @@ const calleeOf = (call: CallExpression): string => {
 /** The key a call is remembered by: its file, its line and what it calls. */
 export const describedCallKey = (file: string, line: number, call: CallExpression): string => `${file}\0${line}\0${calleeOf(call)}`;
 
-/** Withdraws every `call-dynamic-receiver` row at a call a description matched. */
-export const withdrawDescribedCalls = (builder: GraphBuilder, described: ReadonlySet<string>): void => {
+/**
+ * Withdraws every `call-dynamic-receiver` row at a call a description matched,
+ * or every row of the reasons a reader names: one that follows a call through
+ * the value an injection token is provided with also answers the
+ * `call-through-token` row there (P247).
+ */
+export const withdrawDescribedCalls = (
+  builder: GraphBuilder,
+  described: ReadonlySet<string>,
+  reasons: readonly string[] = ['call-dynamic-receiver'],
+): void => {
   if (described.size === 0) return;
   builder.withdrawUnresolved(
     (row) =>
-      row.reason === 'call-dynamic-receiver' &&
+      reasons.includes(row.reason) &&
       row.symbol !== undefined &&
       described.has(`${row.file}\0${row.line}\0${row.symbol.slice(row.symbol.indexOf(' -> ') + ' -> '.length)}`),
   );

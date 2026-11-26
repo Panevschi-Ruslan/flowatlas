@@ -1,0 +1,16 @@
+{
+  "id": "angular-basic#src/app/settings.component.ts:SettingsComponent",
+  "type": "ui_component",
+  "kind": "standalone",
+  "line": 4,
+  "verdict": "alive",
+  "reason": "routed at /settings; 1 link read lands on it",
+  "evidence": {
+    "via": "entry:angular-basic:screen:/settings",
+    "routedAt": [
+      "/settings"
+    ],
+    "links": 1
+  },
+  "from": "screen /settings"
+}

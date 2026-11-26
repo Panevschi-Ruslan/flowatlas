@@ -1,0 +1,3 @@
+{
+  "context": "flowatlas: this edit took out `sku, sent on stock_events STOCK_LOW`, read by alerts-bot StockAlerts.onStock (src/stock.alerts.ts:16). Change them too; check_contract({channel: \"channel:stock_events#STOCK_LOW\", field: \"sku\"}) lists every use."
+}

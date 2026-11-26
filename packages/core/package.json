@@ -38,6 +38,10 @@
     "./prompt-text.js": {
       "types": "./dist/prompt-text.d.ts",
       "default": "./dist/prompt-text.js"
+    },
+    "./shortest-ways.js": {
+      "types": "./dist/shortest-ways.d.ts",
+      "default": "./dist/shortest-ways.js"
     }
   },
   "files": [
@@ -47,7 +51,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp src/prompt-text.js src/prompt-text.d.ts dist/",
+    "build": "tsc -p tsconfig.build.json && cp src/prompt-text.js src/prompt-text.d.ts src/shortest-ways.js src/shortest-ways.d.ts dist/",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests --testTimeout=60000"
   },

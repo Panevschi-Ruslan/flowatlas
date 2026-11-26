@@ -1,6 +1,6 @@
 import { Project, SyntaxKind } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { placedFunction, placeOf } from './functions.js';
+import { placedFunction, placeOf, propertyNamedFunction } from './functions.js';
 
 const firstFunctionIn = (text: string) => {
   const project = new Project({ useInMemoryFileSystem: true });
@@ -29,5 +29,17 @@ describe('placeOf', () => {
 
   it('says where it is when nothing names it', () => {
     expect(placeOf(firstFunctionIn('(async () => {})();'))).toBe('(module)');
+  });
+});
+
+describe('propertyNamedFunction (P317)', () => {
+  it('names the function a property of an object names by its name, and nothing for a property holding anything else', () => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { allowJs: true } });
+    const file = project.createSourceFile(
+      '/repo/src/orders.js',
+      'function list() {}\nconst remove = () => {};\nconst LIMIT = 10;\nmodule.exports = { list, drop: remove, limit: LIMIT, inline: () => {} };\n',
+    );
+    const literal = file.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
+    expect(literal?.getProperties().map((property) => propertyNamedFunction(property)?.name)).toEqual(['list', 'remove', undefined, undefined]);
   });
 });

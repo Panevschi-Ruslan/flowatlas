@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-broker-markers",
-  "generatedAt": "2026-10-07T18:29:14.650Z",
+  "generatedAt": "2026-11-25T12:54:04.659Z",
   "nodes": [
     {
       "id": "channel:order.archived",
@@ -323,7 +323,15 @@
             }
           ],
           "returns": "{accepted:true}"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-broker-markers#src/bus/event-bus.service.ts:EventBusService.publish",
+            "line": 19,
+            "why": "handed to listener"
+          }
+        ]
       }
     },
     {
@@ -669,6 +677,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -696,6 +708,12 @@
               "order.cancelled"
             ]
           }
+        ],
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 34
+          }
         ]
       }
     },
@@ -722,6 +740,12 @@
             "args": [
               "order.created"
             ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 27
           }
         ]
       }
@@ -984,7 +1008,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

@@ -1,0 +1,30 @@
+{
+  "settled": "1 consumer of ORDER_READY reads label, all listed",
+  "channel": {
+    "id": "channel:order_updates",
+    "loc": "src/orders/orders.service.ts:11",
+    "service": "shop-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+      "line": 16,
+      "kind": "event",
+      "selectedIn": "EventsController.receive",
+      "via": "switch",
+      "reach": "dead",
+      "from": "POST /events/orders",
+      "throughDead": true,
+      "readIn": [
+        {
+          "id": "ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+          "line": 17
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "type": "ORDER_READY",
+  "field": "label",
+  "complete": true
+}

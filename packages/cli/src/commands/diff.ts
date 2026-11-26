@@ -10,14 +10,21 @@
  * `--fail-on-contract-break` a pipeline blocks a merge on a boundary this branch
  * broke — and only on the ones it broke. `--fail-on-rule-break` does the same
  * for the architecture rules (P114): a violation this branch introduced.
+ * `--fail-on-broken-call` (P384) for a call between the services the branch
+ * breaks: a join the base side made that the head side loses, or a new request
+ * to a route nothing serves, as `check` counts them. `--fail-on-api-break`
+ * (P390) for an API or message change a consumer in the project feels: one
+ * that reads the removed or retyped field, sends one now invalid, omits one
+ * now required or calls a route that is gone (it compares the API documents,
+ * as `--spec` does).
  *
  * `--env <name>` puts what an environment runs in place of the base ref
  * (P193): each service at its pin, read the way `check --env` reads it, and
  * the same document `check` carries under its verdict, without the verdict.
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { loadConfig, ruleSetOf, SCHEMA_VERSION, type LoadedConfig } from '@flowatlas/core';
 import {
@@ -41,8 +48,14 @@ import { environmentNameOf, pinSourcesOf, readEnvironment, type EnvironmentSaid,
 import { isDirty } from '../git/worktree.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { environmentLead } from '../report/check-render.js';
+import { checkReasonsOf } from '../report/check-verdict.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, DIFF_SECTIONS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
+import { pulledSide } from '../team/pulled-side.js';
+import { COMMENT_FILE, commentFacts, commentMarker, renderDiffComment } from '../report/diff-comment.js';
+
+/** What a comment's marker and verdict take of `--max-chars`. */
+const COMMENT_HEADER_ROOM = 600;
 import { flowChanges } from '../report/flow-changes.js';
 import { staleDocsOf, type StaleDocs } from '../report/stale-docs.js';
 import { classifyRules, ruleBreaks } from '../report/rule-delta.js';
@@ -62,7 +75,8 @@ import {
 import { VERSION } from '../version.js';
 import { registerCache } from './cache.js';
 
-export const FORMATS = ['markdown', 'json', 'sarif'] as const;
+/** `comment` is the Markdown as a pull request's comment, with its verdict first and a marker to find it by (P231). */
+export const FORMATS = ['markdown', 'json', 'sarif', 'comment'] as const;
 export type DiffFormat = (typeof FORMATS)[number];
 
 /** The file every run leaves behind, whatever it printed. */
@@ -71,6 +85,8 @@ export const DIFF_FILE = 'diff.json';
 /** `--pin`, `--pins` and `FLOWATLAS_PIN_*` count only with `--env`, as in `check`. */
 export interface DiffOptions extends PinFlags {
   config?: string;
+  /** The base side is the team's pulled graph (P236): main as CI built it, read rather than built. */
+  pulled?: boolean;
   /**
    * Repositories to compare. Every other one is the same on both sides: its
    * head, or with `--env` what the environment runs.
@@ -84,6 +100,11 @@ export interface DiffOptions extends PinFlags {
    * With `--format sarif`, the log goes there instead of stdout (P115).
    */
   output?: string;
+  /**
+   * Keep the head side's graph at this file (P231), for a later `docs --check
+   * --db` or query to read the branch as `diff` read it, without a second build.
+   */
+  headDb?: string;
   /** With `--format sarif`: paths relative to this checkout. */
   sarifRoot?: string;
   /** With `--format sarif`: the least level written. */
@@ -91,6 +112,10 @@ export interface DiffOptions extends PinFlags {
   failOnContractBreak?: boolean;
   /** Exit 1 when this revision introduces a violation of an architecture rule at `error` (P114). */
   failOnRuleBreak?: boolean;
+  /** Exit 1 when this revision breaks a call between the services: a join lost, or a new request to no route (P384). */
+  failOnBrokenCall?: boolean;
+  /** Exit 1 when an API or message change is an error from use: a consumer in the project feels it (P390). Implies `spec`. */
+  failOnApiBreak?: boolean;
   maxEntries?: string;
   /** Most changed nodes to walk backwards from. The rest are counted (I9). */
   maxNodes?: string;
@@ -130,8 +155,8 @@ export interface DiffRun {
   unread?: string[];
   /** The head side's doc blocks the branch makes stale, and those stale already (P120). */
   docs: StaleDocs;
-  /** What a failing run failed on: a new contract error, a new rule violation, or both. */
-  failedOn?: Array<'contract' | 'rule'>;
+  /** What a failing run failed on: a new contract error, a new rule violation, a call it breaks. */
+  failedOn?: Array<'contract' | 'rule' | 'call' | 'api'>;
   /** With `--env`: what the environment runs and what moved, as `check` says it. */
   environment?: EnvironmentSaid;
 }
@@ -295,9 +320,11 @@ export const compareBuilt = (input: CompareInput): DiffReport => {
   // question is what this revision does to the rules the project has now.
   const ruleSet = ruleSetOf(loaded.config);
   const acceptedBeside = join(loaded.outputDir, 'graph.db');
-  const { impact, flows, rules } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
+  const { impact, flows, rules, spec } = withGraphs({ head: builtHead, base: builtBase }, (dbs) => {
     const rows = impactOf(dbs, diff, { maxEntries, maxNodes });
     return {
+      // Each API change with what it does to the code that uses it (P390), read off both sides' graphs.
+      spec: input.spec === true ? specBetween(loaded, builtBase.graph, builtHead.graph, { use: dbs }) : null,
       rules: classifyRules(ruleReportOf(dbs.base, ruleSet, acceptedBeside), ruleReportOf(dbs.head, ruleSet, acceptedBeside)),
       impact: rows,
       flows: flowChanges({ impact: rows.rows, nodes: diff.nodes, types: diff.types }, dbs, {
@@ -308,7 +335,6 @@ export const compareBuilt = (input: CompareInput): DiffReport => {
     };
   });
   const contracts = classifyContracts(checkContracts(builtBase.graph, check), checkContracts(builtHead.graph, check));
-  const spec = input.spec === true ? specBetween(loaded, builtBase.graph, builtHead.graph) : null;
   const diffMs = Date.now() - diffStarted;
 
   const warnings: DiffWarning[] = [...builtHead.warnings, ...builtBase.warnings, ...(input.warnings ?? [])];
@@ -429,14 +455,49 @@ const environmentSides = async (
   return { head: read.sides.candidate, base: read.sides.deployed, said };
 };
 
-/** What the base side is: a ref every repository is read at, or what an environment runs. */
-type BaseSide = { kind: 'ref'; ref: string } | { kind: 'environment'; environment: string };
+/**
+ * Both sides of `diff --pulled` (P236): the base is the team's pulled graph,
+ * read and not built; the head reads the repositories checked out here and
+ * takes every other one from it, as `build --on-pulled` does.
+ */
+const pulledSides = async (
+  loaded: LoadedConfig,
+  headRef: string | null,
+  shared: Omit<BuildAtRefOptions, 'side'>,
+): Promise<{ head: BuildAtRefResult; base: BuildAtRefResult }> => {
+  let base: BuildAtRefResult;
+  try {
+    base = pulledSide(loaded);
+  } catch (cause) {
+    throw cannotRun(cause instanceof Error ? cause.message : String(cause));
+  }
+  const here = loaded.config.services.filter((service) => existsSync(loaded.repoDir(service))).map((service) => service.name);
+  const head = await buildAtRef(loaded, headRef, {
+    ...shared,
+    side: 'head',
+    services: here,
+    inherit: Object.fromEntries(Object.entries(base.repoGraphs).filter(([name]) => !here.includes(name))),
+    inheritSources: Object.fromEntries(Object.entries(base.sources).filter(([name]) => !here.includes(name))),
+  });
+  return { head, base };
+};
+
+/** What the base side is: a ref every repository is read at, what an environment runs, or the team's pulled graph (P236). */
+type BaseSide = { kind: 'ref'; ref: string } | { kind: 'environment'; environment: string } | { kind: 'pulled' };
 
 /**
  * The base side the arguments name. `<base-ref>` and `--env` are exclusive;
  * the pins flags say what an environment runs, so they need one.
  */
 const baseSideOf = (baseRef: string | undefined, options: DiffOptions): BaseSide => {
+  if (options.pulled === true) {
+    if (baseRef !== undefined || options.env !== undefined) {
+      throw cannotRun('--pulled is the base side: the team\'s graph as CI built it, so it takes no base ref and no --env', [
+        'Name the head alone: flowatlas diff --pulled [head-ref].',
+      ]);
+    }
+    return { kind: 'pulled' };
+  }
   if (options.env !== undefined) {
     const environment = environmentNameOf(options.env);
     if (baseRef !== undefined) {
@@ -480,7 +541,7 @@ export const runDiff = async (
     diagrams: options.diagrams !== false,
   };
   const sections = (options.section ?? []).map((name) => oneOf(name, DIFF_SECTIONS, 'impact', '--section'));
-  if (sections.length > 0 && format !== 'markdown') {
+  if (sections.length > 0 && format !== 'markdown' && format !== 'comment') {
     throw cannotRun(`--section picks parts of the Markdown, and --format ${format} writes the whole report`, [
       'Leave out --format, or leave out --section.',
     ]);
@@ -502,7 +563,9 @@ export const runDiff = async (
 
   try {
     const sides =
-      against.kind === 'ref'
+      against.kind === 'pulled'
+        ? { ...(await pulledSides(loaded, head, shared)), said: undefined }
+        : against.kind === 'ref'
         ? { ...(await buildSides(loaded, against.ref, head, services, shared)), said: undefined }
         : await environmentSides(loaded, against.environment, head, (options.service ?? []).length > 0 ? services : undefined, options, shared);
     const { head: builtHead, base: builtBase, said } = sides;
@@ -514,14 +577,14 @@ export const runDiff = async (
       loaded,
       base: builtBase,
       head: builtHead,
-      baseRef: against.kind === 'ref' ? against.ref : against.environment,
+      baseRef: against.kind === 'ref' ? against.ref : against.kind === 'pulled' ? 'pulled' : against.environment,
       headRef: head,
       limits: { maxEntries, maxNodes, maxFlows },
       sequenceDetail,
       generatedAt: options.generatedAt ?? new Date().toISOString(),
       started,
       warnings: dirty,
-      ...(options.spec === true ? { spec: true } : {}),
+      ...(options.spec === true || options.failOnApiBreak === true ? { spec: true } : {}),
     });
     const { contracts, rules } = report;
     const ruleSet = ruleSetOf(loaded.config);
@@ -535,6 +598,13 @@ export const runDiff = async (
     const file = join(outputDir, DIFF_FILE);
     writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
+    // A comment's figures, written beside the report for a workflow to read (P231).
+    // Which configuration's comment: its file name and its services, so two projects in one repository
+    // keep two comments, and the same project gets the same marker wherever it is checked out.
+    const commentKey = `${basename(loaded.configPath)}:${loaded.config.services.map((service) => service.name).sort().join(',')}`;
+    const facts = format === 'comment' ? commentFacts(report, docs, ruleSet.failOnHeuristic) : undefined;
+    if (facts !== undefined) writeFileSync(join(outputDir, COMMENT_FILE), `${JSON.stringify({ marker: commentMarker(commentKey), ...facts }, null, 2)}\n`, 'utf8');
+
     // The new and fixed contract findings and rule violations (P115): a new
     // one placed on the head side, a fixed one where it was on the base side.
     const text =
@@ -544,6 +614,7 @@ export const runDiff = async (
               command: 'diff',
               version: VERSION,
               findings: diffFindings(report, { head: lookupOf(builtHead.graph), base: lookupOf(builtBase.graph) }),
+              ...(report.spec?.coverage === undefined ? {} : { notes: [{ level: 'note' as const, text: report.spec.coverage.said }] }),
               paths: sarifPathsOf({ config: loaded.configPath }, options.sarifRoot),
               maxResults: sarifBound(undefined),
               ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
@@ -554,7 +625,14 @@ export const runDiff = async (
           )
         : format === 'json'
           ? `${JSON.stringify(report, null, 2)}\n`
-          : renderDiffMarkdown(report, { file, ...markdown, docs, sections, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) });
+          : facts !== undefined
+            ? renderDiffComment(
+                commentKey,
+                facts,
+                // The header's room comes out of the comment's (D: one comment holds 65,536).
+                renderDiffMarkdown(report, { file, ...markdown, maxChars: Math.max(1000, markdown.maxChars - COMMENT_HEADER_ROOM), docs, sections, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) }),
+              )
+            : renderDiffMarkdown(report, { file, ...markdown, docs, sections, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) });
     if (format !== 'sarif') io.out(text);
     io.err(`${summariseDiff(report)}\n`);
     for (const note of said?.notes ?? []) io.err(`note: ${note}\n`);
@@ -566,6 +644,14 @@ export const runDiff = async (
       const target = isAbsolute(options.output) ? options.output : resolve(options.output);
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, text, 'utf8');
+    }
+
+    // The head graph outlives the run's temporary directory only when asked; every reader of it is closed by now.
+    if (options.headDb !== undefined) {
+      const target = resolve(options.headDb);
+      mkdirSync(dirname(target), { recursive: true });
+      for (const suffix of ['-wal', '-shm']) rmSync(`${target}${suffix}`, { force: true });
+      copyFileSync(builtHead.dbPath, target);
     }
 
     const breaks = contractBreaks(contracts);
@@ -588,15 +674,28 @@ export const runDiff = async (
     const ruleBroken = ruleBreaks(rules, ruleSet.failOnHeuristic);
     const refusedContracts = options.failOnContractBreak === true && (breaks.length > 0 || unread.size > 0);
     const refusedRules = options.failOnRuleBreak === true && (ruleBroken.length > 0 || unread.size > 0);
+    // The calls the branch breaks, counted as `check` counts them (P384).
+    const brokenCalls =
+      options.failOnBrokenCall === true
+        ? checkReasonsOf(report, { deployed: builtBase.graph, candidate: builtHead.graph }).reasons.filter((reason) => reason.kind === 'join')
+        : [];
+    for (const reason of brokenCalls) io.err(`broken call: ${reason.message}\n`);
+    const refusedCalls = options.failOnBrokenCall === true && (brokenCalls.length > 0 || unread.size > 0);
+    // The API changes a consumer in the project feels (P390): an error from use, never one by kind alone.
+    const apiBreaks = options.failOnApiBreak === true ? (report.spec?.changes ?? []).filter((change) => change.level === 'error') : [];
+    for (const change of apiBreaks) io.err(`api break: ${change.operation}${change.field === null ? '' : ` ${change.field}`}: ${change.use?.verdict ?? change.message}\n`);
+    const refusedApi = options.failOnApiBreak === true && (apiBreaks.length > 0 || unread.size > 0);
     const failedOn = [
       ...(refusedContracts && breaks.length > 0 ? ['contract' as const] : []),
       ...(refusedRules && ruleBroken.length > 0 ? ['rule' as const] : []),
+      ...(refusedCalls && brokenCalls.length > 0 ? ['call' as const] : []),
+      ...(refusedApi && apiBreaks.length > 0 ? ['api' as const] : []),
     ];
     return {
       report,
       text,
       file,
-      exitCode: refusedContracts || refusedRules ? EXIT.failed : EXIT.ok,
+      exitCode: refusedContracts || refusedRules || refusedCalls || refusedApi ? EXIT.failed : EXIT.ok,
       ...(unread.size === 0 ? {} : { unread: [...unread] }),
       docs,
       ...(failedOn.length === 0 ? {} : { failedOn }),
@@ -618,6 +717,7 @@ export const registerDiff = (program: Command): void => {
     .argument('[head-ref]', 'the ref to compare (default: the working tree)')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--env <name>', 'compare with what this environment runs, each service at its pin, in place of a base ref')
+    .option('--pulled', "compare with the team's pulled graph (flowatlas pull) in place of a base ref; nothing is built for it")
     .option('--pin <service=ref>', 'with --env: the ref a service runs, over the pins file, repeatable', collect, [])
     .option('--pins <path>', 'with --env: the pins file (default: deployed.file, or flowatlas.deployed.json beside the configuration)')
     .option('--service <name>', 'compare only this repository, repeatable (with --env: the ones that move)', collect, [])
@@ -626,6 +726,8 @@ export const registerDiff = (program: Command): void => {
     .option('--output <file>', 'write what was printed to this file as well; with --format sarif, the log goes there instead of stdout')
     .option('--fail-on-contract-break', 'exit 1 when this revision introduces a contract error')
     .option('--fail-on-rule-break', 'exit 1 when this revision introduces a violation of an architecture rule at error')
+    .option('--fail-on-broken-call', 'exit 1 when this revision breaks a call between the services: a join lost, or a new request to a route nothing serves')
+    .option('--fail-on-api-break', 'exit 1 when an API or message change breaks a consumer in the project: it reads the field, omits one now required, or calls a route that is gone (compares the API documents, as --spec)')
     .option('--max-entries <n>', 'most ways in to list per changed node')
     .option('--max-nodes <n>', 'most changed nodes to walk backwards from')
     .option('--max-flows <n>', `most ways in to walk for their flows (default ${DEFAULT_MAX_FLOWS})`)
@@ -637,6 +739,7 @@ export const registerDiff = (program: Command): void => {
     .option('--spec', 'compare the two sides\' OpenAPI and AsyncAPI documents too, under "API changes"')
     .option('--concurrency <n>', 'how many repositories to read at once')
     .option('--out <dir>', 'where to write diff.json (default: the configured output)')
+    .option('--head-db <file>', "keep the head side's graph at this file, for docs --check --db or a query to read")
     .option('--no-cache', 'read every commit again rather than believing the cache')
     .option('--keep-worktrees', 'leave the detached checkouts on disk, for debugging');
   withSarifOptions(command, { output: false }).action(async (first: string | undefined, second: string | undefined, options: DiffOptions) => {
@@ -649,7 +752,12 @@ export const registerDiff = (program: Command): void => {
       const [baseRef, headRef] = options.env === undefined ? [first, second] : [undefined, first];
       const { exitCode, unread, failedOn } = await runDiff(baseRef, headRef, options);
       if (exitCode !== EXIT.ok) {
-        const said = { contract: 'a contract error', rule: 'a violation of an architecture rule' } as const;
+        const said = {
+          contract: 'a contract error',
+          rule: 'a violation of an architecture rule',
+          call: 'a call between the services that lands nowhere',
+          api: 'an API change a consumer in the project feels',
+        } as const;
         throw new CliError(
           unread === undefined
             ? `this revision introduces ${(failedOn ?? ['contract']).map((what) => said[what]).join(' and ')}`

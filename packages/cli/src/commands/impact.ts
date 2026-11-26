@@ -1,57 +1,246 @@
+import type { DetailLevel, GraphNode } from '@flowatlas/core';
 import type { Command } from 'commander';
-import { openDbFromOptions, sourceRootsFor } from '../db.js';
+import {
+  compactAnswer,
+  impactOf,
+  projectDetail,
+  projectEdge,
+  settledAnswer,
+  staleFor,
+  throughByConsumer,
+  type FlowNode,
+  type ImpactOf,
+  type ThroughConsumer,
+} from '@flowatlas/mcp';
+import { handleFor, sourceRootsFor } from '../db.js';
+import { cannotRun } from '../exit.js';
 import { withQueryOptions, type QueryOptions } from '../options.js';
-import { present, processIo, settingsFor, type QueryIo } from '../query/answer.js';
-import { callersOf, groupEntries, reachableSummary } from '../query/callers.js';
+import { present, processIo, settingsFor, staleLine, type QueryIo } from '../query/answer.js';
+import { reachableSummary } from '../query/callers.js';
 import { resolveSymbol } from '../query/refs.js';
+import { askedCommand, noteAnswer } from '../query/asked.js';
 
 export interface ImpactOptions extends QueryOptions {
   entriesOnly?: boolean;
+  /** The row of the answer to start at, as the tool's `offset` (P370). */
+  offset?: string;
+  /** With `--format json`: the tool's answer whole, as `verbose: true` asks it (P370). */
+  verbose?: boolean;
+  /** A channel the answer says ways in lie beyond: list those instead, as the tool's `channel` (P372). */
+  channel?: string;
+  /** Keep only the ways in of this service, as the tool's `callersIn` (P381); `--service` picks the symbol. */
+  callersIn?: string;
 }
 
+/** A row of impact's answer as the footer reads it: the fields the tool says beside each way in. */
+interface AnswerRow {
+  id: string;
+  label?: string;
+  service?: string;
+  reach?: string;
+  via?: string;
+  from?: string;
+  gap?: string;
+  behind?: string;
+}
+
+/** The code that handles a way in, as the footer says it (P374): its name and where it is written. */
+const bySaid = (by: GraphNode): string =>
+  `by ${by.label}${by.file === undefined ? '' : ` ${by.file}${by.line === undefined ? '' : `:${by.line}`}`}`;
+
+/** One row of the footer: the way in, its service, whether it runs, the crossing it came through, and the code that handles it. */
+const rowLine = (row: AnswerRow, by: GraphNode | undefined): string => {
+  const name = `${row.label ?? row.id}${row.service === undefined || row.service === '' ? '' : ` (${row.service})`}`;
+  const said = [
+    row.reach,
+    row.via === undefined ? undefined : `via ${row.via}`,
+    by === undefined ? undefined : bySaid(by),
+    row.gap === undefined ? undefined : `gap ${row.gap}`,
+    row.behind === undefined ? undefined : `behind ${row.behind}`,
+  ].filter((part): part is string => part !== undefined);
+  return `  ${name}${said.length === 0 ? '' : `  ${said.join(', ')}`}`;
+};
+
 /**
- * What would have to be retested if a symbol changed.
- *
- * The tree grows the other way from `flow`: the root is the thing being
- * changed and every child is something that reaches it, so the leaves are the
- * ways in that a change is visible from.
+ * How many ways in the channels the walk did not cross lead to, the nearest
+ * few named, and the consumer taking their messages (P372): one line per
+ * consumer, its channels together, each way in counted once (P378).
  */
-export const runImpact = (
-  symbol: string,
-  options: ImpactOptions,
-  io: QueryIo = processIo,
-): void => {
+const throughLine = (through: ThroughConsumer): string => {
+  const named = through.ways
+    .slice(0, 3)
+    .map((way) => `${way.node.label}${way.node.repo === '' ? '' : ` (${way.node.repo})`}${way.by === undefined ? '' : ` ${bySaid(way.by)}`}`);
+  const more = through.ways.length > named.length ? ', ...' : '';
+  const count = `${through.cut ? 'at least ' : ''}${through.ways.length} way${through.ways.length === 1 ? '' : 's'} in`;
+  const channels = through.channels.map((said) => `${said.channel}${said.type === undefined ? '' : ` ${said.type}`}`).join(', ');
+  return `  ${channels}  ${count}, taken by ${through.consumer.label} (${through.consumer.repo}): ${named.join(', ')}${more}`;
+};
+
+/** The heading over the rows: what could break, or what lies beyond the channel or the consumer's channels asked. */
+const acrossSaid = (answer: { acrossChannel?: string; acrossConsumer?: string }, of: ImpactOf): string => {
+  if (answer.acrossChannel !== undefined) return `Beyond channel ${answer.acrossChannel}, calling none of it:`;
+  if (answer.acrossConsumer === undefined) return 'Could break:';
+  const channels = [...new Set((of.throughChannels ?? []).map((through) => through.channel))].join(', ');
+  const consumer = of.throughChannels?.[0]?.consumer.label ?? answer.acrossConsumer;
+  return `Beyond the channels ${consumer} takes messages from (${channels}), calling none of it:`;
+};
+
+/**
+ * The lines under the tree: the ways in grouped as the report words them,
+ * then each row of the answer with whether it runs and the crossing it came
+ * through, the maybe rows apart, and what the answer says it left (P370).
+ */
+const footerOf = (of: ImpactOf): string[] => {
+  const answer = of.answer as {
+    entries?: AnswerRow[];
+    entriesNone?: string;
+    left?: string[];
+    unreached?: number;
+    components?: Record<string, string[]>;
+    acrossChannel?: string;
+    acrossConsumer?: string;
+  };
+  const unreached = answer.unreached ?? 0;
+  const rows = answer.entries ?? [];
+  const maybeIds = new Set((of.maybes ?? []).map((way) => way.node.id));
+  const ways = rows.filter((row) => !maybeIds.has(row.id));
+  const maybes = rows.filter((row) => maybeIds.has(row.id));
+  const handlers = new Map((of.listed ?? []).flatMap((way) => (way.by === undefined ? [] : [[way.node.id, way.by] as const])));
+  const line = (row: AnswerRow): string => rowLine(row, handlers.get(row.id));
+  return [
+    reachableSummary(
+      (of.ways ?? []).map((way) => way.node),
+      of.servicesWithoutEntry ?? [],
+    ),
+    ...(ways.length === 0 ? [] : [acrossSaid(answer, of), ...ways.map(line)]),
+    ...(maybes.length === 0 ? [] : ['Maybe, behind a call the reading could not follow:', ...maybes.map(line)]),
+    ...(unreached === 0
+      ? []
+      : [`Unreached: ${unreached} chain${unreached === 1 ? ' ends' : 's end'} at code whose name its repository writes nowhere else, so nothing could break through ${unreached === 1 ? 'it' : 'them'}`]),
+    ...(answer.acrossChannel !== undefined || answer.acrossConsumer !== undefined || (of.throughChannels ?? []).length === 0
+      ? []
+      : ['Only beyond a channel, calling none of it (--channel <name> lists them):', ...throughByConsumer(of.throughChannels ?? []).map(throughLine)]),
+    // The component files on the way no row names (P406), by repository.
+    ...(answer.components === undefined
+      ? []
+      : ['Components on the way:', ...Object.entries(answer.components).flatMap(([repo, files]) => files.map((file) => `  ${repo}  ${file}`))]),
+    ...(answer.entriesNone === undefined ? [] : [answer.entriesNone]),
+    ...(answer.left ?? []).map((left) => `Left: ${left}`),
+  ];
+};
+
+/**
+ * The walk drawn as a tree (P370): the target at the root and, under it, the
+ * chain back to each row of the answer, the same walk the tool reads its rows
+ * from (`waysIn`). A node on several chains is drawn once, where the walk met
+ * it first; `--depth` draws the chains that many hops back, the rows past it
+ * still listed under the tree.
+ */
+const treeOf = (of: ImpactOf, detail: DetailLevel, depth: number | undefined, entriesOnly: boolean): { root: FlowNode; cut: number } => {
+  const target = of.target as GraphNode;
+  const root: FlowNode = { node: projectDetail(target, detail), children: [] };
+  const listed = of.listed ?? [];
+  if (entriesOnly) {
+    root.children = listed.map((way) => ({ node: projectDetail(way.node, detail), children: [] }));
+    return { root, cut: 0 };
+  }
+  const walked = of.walked;
+  if (walked === undefined) return { root, cut: 0 };
+  const starts = new Set((of.starts ?? []).map((start) => start.id));
+  // Every node on a chain from a listed row back to a start.
+  const drawn = new Set<string>();
+  for (const way of listed) {
+    for (let at: string | undefined = way.node.id; at !== undefined && !starts.has(at) && !drawn.has(at); at = walked.parents.get(at)?.from) {
+      drawn.add(at);
+    }
+  }
+  const flows = new Map<string, { flow: FlowNode; depth: number }>([[target.id, { flow: root, depth: 0 }]]);
+  // The methods a class answers for hang under it, the class being the root.
+  for (const start of of.starts ?? []) {
+    if (start.id === target.id) continue;
+    const flow: FlowNode = { node: projectDetail(start, detail), children: [] };
+    root.children.push(flow);
+    flows.set(start.id, { flow, depth: 1 });
+  }
+  let cut = 0;
+  // Breadth first, as the walk met them, so a parent is placed before its children.
+  for (const node of walked.met) {
+    if (!drawn.has(node.id)) continue;
+    const step = walked.parents.get(node.id);
+    const parent = step === undefined ? undefined : flows.get(step.from);
+    if (parent === undefined) continue;
+    if (depth !== undefined && parent.depth + 1 > depth) {
+      cut += 1;
+      continue;
+    }
+    const flow: FlowNode = {
+      node: projectDetail(node, detail),
+      ...(step?.edge === undefined ? {} : { edge: projectEdge(step.edge, detail) }),
+      children: [],
+    };
+    parent.flow.children.push(flow);
+    flows.set(node.id, { flow, depth: parent.depth + 1 });
+  }
+  return { root, cut };
+};
+
+const whole = (value: string | undefined, flag: string): number | undefined => {
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) throw cannotRun(`${flag} must be a whole number of at least 0, not ${JSON.stringify(value)}`);
+  return parsed;
+};
+
+/**
+ * Every way in that could break if a symbol changes, and what lies between.
+ *
+ * The answer is the graph server's `impact` (P370): one walk back past every
+ * way in to the callers beyond it, each row with whether it runs and the
+ * crossing it came through, and the chains an unread call stops as maybe
+ * rows. `--format json` prints that answer, compact as the tool hands it, or
+ * whole with `--verbose`; the tree draws the walk's chain to each row, with
+ * the rows under it.
+ */
+const answerImpact = (symbol: string, options: ImpactOptions, io: QueryIo): void => {
   const settings = settingsFor(options, io);
-  const db = openDbFromOptions(settings);
+  const handle = handleFor(settings);
+  const opened = handle.open();
+  if ('error' in opened) throw cannotRun(opened.error);
+  const db = opened.db;
   // Closed when the answer is out (P199): on Windows an open database can
   // be neither replaced by the next build nor removed with its directory.
   try {
     const target = resolveSymbol(db, symbol, settings.service);
-
-    const callers = callersOf(db, target, {
-      // Without `--depth` the walk goes as far back as the workflows it climbs
-      // through need, the way `flow` goes as far down (`walkBack`).
-      ...(options.depth === undefined ? {} : { depth: settings.depth }),
-      maxNodes: settings.maxNodes,
+    const offset = whole(options.offset, '--offset');
+    const of = impactOf(db, handle, {
+      symbol: target.id,
+      ...(settings.service === undefined ? {} : { service: settings.service }),
       detail: settings.detail,
-      ...(options.entriesOnly === true ? { entriesOnly: true } : {}),
+      maxNodes: settings.maxNodes,
+      ...(offset === undefined ? {} : { offset }),
+      ...(options.channel === undefined ? {} : { channel: options.channel }),
+      ...(options.callersIn === undefined ? {} : { callersIn: options.callersIn }),
     });
 
+    if (settings.format === 'json') {
+      // What an agent is handed, compact as the tool's (P365) and settled where it is whole (P403); `--verbose` prints it whole.
+      const stale = staleFor(handle.path, of.answer);
+      if (stale !== undefined) io.err(`${staleLine(stale)}\n`);
+      const said = stale === undefined ? of.answer : { ...of.answer, stale };
+      const text = `${options.verbose === true ? JSON.stringify(said, null, 2) : JSON.stringify(settledAnswer('impact', compactAnswer(said, { tool: 'impact' })))}\n`;
+      io.out(text);
+      noteAnswer(said, text.length);
+      return;
+    }
+
+    const { root, cut } = treeOf(of, settings.detail, options.depth === undefined ? undefined : settings.depth, options.entriesOnly === true);
     present(
       db,
       settings,
       {
-        tree: callers.root,
-        footer: [reachableSummary(callers.entries, callers.withoutEntry)],
-        extra: {
-          target: target.id,
-          reached: callers.reached,
-          reachable: groupEntries(callers.entries),
-          entries: callers.entries.map((entry) => entry.id),
-          services: callers.services,
-          servicesWithoutEntry: callers.withoutEntry,
-        },
-        ...(callers.truncated === undefined ? {} : { truncated: callers.truncated }),
+        tree: root,
+        footer: footerOf(of),
+        ...(cut === 0 ? {} : { truncated: `${cut} more nodes past depth ${settings.depth}` }),
       },
       io,
       settings.detail >= 3 ? sourceRootsFor(settings) : undefined,
@@ -61,14 +250,22 @@ export const runImpact = (
   }
 };
 
+/** impact, logged when the question log is on (P235). */
+export const runImpact = (symbol: string, options: ImpactOptions, io: QueryIo = processIo): void =>
+  askedCommand('impact', { symbol, service: options.service }, options, () => answerImpact(symbol, options, io));
+
 export const registerImpact = (program: Command): void => {
   withQueryOptions(
     program
       .command('impact')
       .argument('<symbol>', 'a node id, or a unique Class.method')
-      .description('every entry point that reaches a symbol, and what lies between'),
+      .description('every way in that could break if a symbol changes, in any service, and what lies between'),
   )
-    .option('--entries-only', 'list the entry points instead of the whole chain')
+    .option('--entries-only', 'list the ways in under the target instead of the chains to them')
+    .option('--offset <n>', 'the row to start the list at, as the answer\'s nextOffset says')
+    .option('--verbose', 'with --format json, the whole answer, pretty-printed, instead of the compact one')
+    .option('--channel <name>', 'list the ways in beyond a channel the answer counts under throughChannels, or beyond every channel of a consumer it names')
+    .option('--callers-in <service>', 'keep only the ways in of this service (--service picks the symbol)')
     .action((symbol: string, options: ImpactOptions) => {
       runImpact(symbol, options);
     });

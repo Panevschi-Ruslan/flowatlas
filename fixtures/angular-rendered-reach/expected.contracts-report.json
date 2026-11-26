@@ -1,0 +1,124 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T14:32:14.729Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:catalog-web#src/app/items-api.service.ts:18:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:catalog-web#src/app/items-api.service.ts:18:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "{id:string;title:string}",
+        "symbol": "catalog-api#src/items.controller.ts:ItemsController.findOne"
+      },
+      "receiver": {
+        "service": "catalog-web",
+        "typeId": "{id:string;title:string}",
+        "symbol": "catalog-web#src/app/items-api.service.ts:ItemsApiService.one"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:catalog-web#src/app/items-api.service.ts:22:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:catalog-web#src/app/items-api.service.ts:22:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "{id:string;title:string}",
+        "symbol": "catalog-api#src/items.controller.ts:ItemsController.findOne"
+      },
+      "receiver": {
+        "service": "catalog-web",
+        "typeId": "{id:string;title:string}",
+        "symbol": "catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:catalog-web#src/app/items-lookup.service.ts:22:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:catalog-web#src/app/items-lookup.service.ts:22:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog-api",
+        "typeId": "{id:string;title:string}",
+        "symbol": "catalog-api#src/items.controller.ts:ItemsController.findOne"
+      },
+      "receiver": {
+        "service": "catalog-web",
+        "typeId": "{id:string;title:string}",
+        "symbol": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:catalog-web#src/app/items-api.service.ts:18:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:catalog-web#src/app/items-api.service.ts:18:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "catalog-web#src/app/items-api.service.ts:ItemsApiService.one declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:catalog-web#src/app/items-api.service.ts:22:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:catalog-web#src/app/items-api.service.ts:22:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "catalog-web#src/app/items-api.service.ts:ItemsApiService.oneLegacy declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:catalog-web#src/app/items-lookup.service.ts:22:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:catalog-web#src/app/items-lookup.service.ts:22:12|hits|entry:catalog-api:http:GET:/items/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "catalog-web#src/app/items-lookup.service.ts:ItemsLookupService.byKey declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 3,
+    "hash_differs": 0,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

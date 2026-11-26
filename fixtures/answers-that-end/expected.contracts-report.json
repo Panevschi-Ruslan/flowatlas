@@ -1,0 +1,547 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-25T12:50:36.353Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:20:5",
+        "to": "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:20:5|emits|consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent",
+        "symbol": "packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:20:5",
+        "to": "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:20:5|emits|consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/courier-pager.service.ts",
+        "symbol": "packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:20:5",
+        "to": "consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:20:5|emits|consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/pack-board.service.ts",
+        "symbol": "packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:20:5",
+        "to": "consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:20:5|emits|consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.markReady"
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#PackingEvent",
+        "symbol": "shop-api#src/orders/receipts.service.ts:Receipts.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent",
+        "symbol": "packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+            "to": "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "{type:string;orderId:string;minutes:number}",
+            "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+          },
+          "receiver": {
+            "service": "packing-worker",
+            "typeId": "type:packing-worker#PackingEvent",
+            "symbol": "packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent"
+          },
+          "typeId": "type:packing-worker#PackingEvent",
+          "field": "minutes",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender shop-api sends `minutes: number`; receiver packing-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/courier-pager.service.ts",
+        "symbol": "packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+            "to": "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "{type:string;orderId:string;minutes:number}",
+            "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+          },
+          "receiver": {
+            "service": "packing-worker",
+            "typeId": "type:packing-worker#PackingEvent@src/packing/courier-pager.service.ts",
+            "symbol": "packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent"
+          },
+          "typeId": "type:packing-worker#PackingEvent@src/packing/courier-pager.service.ts",
+          "field": "minutes",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender shop-api sends `minutes: number`; receiver packing-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/pack-board.service.ts",
+        "symbol": "packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+            "to": "consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "{type:string;orderId:string;minutes:number}",
+            "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+          },
+          "receiver": {
+            "service": "packing-worker",
+            "typeId": "type:packing-worker#PackingEvent@src/packing/pack-board.service.ts",
+            "symbol": "packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent"
+          },
+          "typeId": "type:packing-worker#PackingEvent@src/packing/pack-board.service.ts",
+          "field": "minutes",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender shop-api sends `minutes: number`; receiver packing-worker declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#PackingEvent",
+        "symbol": "shop-api#src/orders/receipts.service.ts:Receipts.onEvent"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+            "to": "consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+            "type": "emits"
+          },
+          "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+          "direction": "payload",
+          "sender": {
+            "service": "shop-api",
+            "typeId": "{type:string;orderId:string;minutes:number}",
+            "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+          },
+          "receiver": {
+            "service": "shop-api",
+            "typeId": "type:shop-api#PackingEvent",
+            "symbol": "shop-api#src/orders/receipts.service.ts:Receipts.onEvent"
+          },
+          "typeId": "type:shop-api#PackingEvent",
+          "field": "minutes",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender shop-api sends `minutes: number`; receiver shop-api declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:29:5",
+        "to": "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:29:5|emits|consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent",
+        "symbol": "packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:29:5",
+        "to": "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:29:5|emits|consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/courier-pager.service.ts",
+        "symbol": "packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:29:5",
+        "to": "consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:29:5|emits|consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/pack-board.service.ts",
+        "symbol": "packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:29:5",
+        "to": "consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:29:5|emits|consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.cancel"
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#PackingEvent",
+        "symbol": "shop-api#src/orders/receipts.service.ts:Receipts.onEvent"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent",
+        "symbol": "packing-worker#src/packing/audit-feed.service.ts:AuditFeed.onEvent"
+      },
+      "typeId": "type:packing-worker#PackingEvent",
+      "field": "minutes",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender shop-api sends `minutes: number`; receiver packing-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/courier-pager.service.ts",
+        "symbol": "packing-worker#src/packing/courier-pager.service.ts:CourierPager.onEvent"
+      },
+      "typeId": "type:packing-worker#PackingEvent@src/packing/courier-pager.service.ts",
+      "field": "minutes",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender shop-api sends `minutes: number`; receiver packing-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "packing-worker",
+        "typeId": "type:packing-worker#PackingEvent@src/packing/pack-board.service.ts",
+        "symbol": "packing-worker#src/packing/pack-board.service.ts:PackBoard.onEvent"
+      },
+      "typeId": "type:packing-worker#PackingEvent@src/packing/pack-board.service.ts",
+      "field": "minutes",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender shop-api sends `minutes: number`; receiver packing-worker declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:shop-api#src/orders/orders.service.ts:25:5",
+        "to": "consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop-api#src/orders/orders.service.ts:25:5|emits|consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+      "direction": "payload",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{type:string;orderId:string;minutes:number}",
+        "symbol": "shop-api#src/orders/orders.service.ts:OrdersService.delay"
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "type:shop-api#PackingEvent",
+        "symbol": "shop-api#src/orders/receipts.service.ts:Receipts.onEvent"
+      },
+      "typeId": "type:shop-api#PackingEvent",
+      "field": "minutes",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender shop-api sends `minutes: number`; receiver shop-api declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders-api.ts:10:26",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders-api.ts:10:26|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/api/orders-api.ts:fetchOrder declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/api/orders-api.ts:10:26",
+        "to": "entry:shop-api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/api/orders-api.ts:10:26|hits|entry:shop-api:http:GET:/api/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/api/orders-api.ts:fetchOrder declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 12,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 12,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 4,
+    "ignored": 0
+  }
+}

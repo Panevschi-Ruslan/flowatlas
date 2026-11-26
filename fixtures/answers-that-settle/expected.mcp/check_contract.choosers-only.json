@@ -1,0 +1,51 @@
+{
+  "channel": "channel:venue_events",
+  "type": "CALL_STAFF",
+  "producers": [
+    {
+      "id": "producer:rooms-api#src/rooms/rooms.service.ts:21:5",
+      "type": "producer",
+      "label": "event venue_events",
+      "loc": "src/rooms/rooms.service.ts:21",
+      "service": "rooms-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /api/admin/:param/rooms/:param/call",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "venueId",
+        "roomId",
+        "note"
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": "consumer:notify-worker#src/push/push.service.ts:PushService.dispatch",
+      "type": "consumer",
+      "label": "PushService.dispatch",
+      "loc": "src/push/push.service.ts:31",
+      "service": "notify-worker",
+      "kind": "event",
+      "endLine": 35,
+      "reach": "alive",
+      "from": "event venue_events",
+      "reads": [
+        "note",
+        "roomId",
+        "type"
+      ]
+    }
+  ],
+  "takeEveryType": 3,
+  "missing": [],
+  "unused": [],
+  "complete": false,
+  "left": [
+    "unsure: FeedGateway.fanOut: handed to this.sent.push, line 17"
+  ],
+  "next": [
+    "who_consumes({channel: \"channel:venue_events\", type: \"CALL_STAFF\"})"
+  ]
+}

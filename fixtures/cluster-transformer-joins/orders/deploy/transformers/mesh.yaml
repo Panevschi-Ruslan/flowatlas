@@ -1,0 +1,6 @@
+apiVersion: mesh.example.test/v1
+kind: SidecarInjector
+metadata:
+  name: mesh
+spec:
+  proxy: envoy

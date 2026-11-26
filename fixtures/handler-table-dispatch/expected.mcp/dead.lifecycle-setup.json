@@ -1,0 +1,13 @@
+{
+  "id": "staff-bot#src/staff-bot.ts:StaffBot.setup",
+  "type": "method",
+  "service": "staff-bot",
+  "loc": "src/staff-bot.ts:42",
+  "verdict": "alive",
+  "reason": "called",
+  "evidence": {
+    "callers": 1,
+    "caller": "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit"
+  },
+  "from": "startup (onModuleInit)"
+}

@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:22:24.032Z",
+  "configHash": "8256fc8fbd0c",
+  "services": [
+    {
+      "name": "checkout",
+      "repo": "./checkout",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 1699,
+      "packages": {
+        "name": "locale-links-registries-sdk-grpc-checkout",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@grpc/proto-loader",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 15,
+      "edges": 8,
+      "types": 1,
+      "unresolved": 6,
+      "durationMs": 1658,
+      "packages": {
+        "name": "locale-links-registries-sdk-grpc-console",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "apollo-angular",
+          "rxjs"
+        ],
+        "dev": [
+          "@graphql-codegen/cli",
+          "@graphql-codegen/typescript-apollo-angular"
+        ]
+      }
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 6,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 1617,
+      "packages": {
+        "name": "locale-links-registries-sdk-grpc-portal",
+        "runtime": [
+          "next",
+          "next-intl",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 9,
+      "durationMs": 1760,
+      "packages": {
+        "name": "locale-links-registries-sdk-grpc-site",
+        "runtime": [
+          "@linaria/react",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1679,
+      "packages": {
+        "name": "locale-links-registries-sdk-grpc-stock",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@grpc/proto-loader"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "wiki",
+      "repo": "./wiki",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 27,
+      "edges": 18,
+      "types": 1,
+      "unresolved": 12,
+      "durationMs": 1843,
+      "packages": {
+        "name": "locale-links-registries-sdk-grpc-wiki",
+        "runtime": [
+          "lodash",
+          "react",
+          "react-dom",
+          "react-router-dom",
+          "remeda"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 8,
+    "resolved": 0,
+    "unresolved": 8,
+    "byReason": {
+      "target-route-not-found": 8
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:checkout:http:GET:/level/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 14,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:14:12"
+    },
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 18,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:18:12"
+    },
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 22,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:22:12"
+    },
+    {
+      "service": "console",
+      "file": "src/app/editor.component.ts",
+      "line": 27,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:console#src/app/editor.component.ts:27:12"
+    },
+    {
+      "service": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/teams",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/teams */.",
+      "symbol": "ui_api_call:wiki#src/components/Header.tsx:11:10@2:41"
+    },
+    {
+      "service": "wiki",
+      "file": "src/components/Header.tsx",
+      "line": 12,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/members",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/members */.",
+      "symbol": "ui_api_call:wiki#src/components/Header.tsx:12:10@2:41"
+    },
+    {
+      "service": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 13,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/activity",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/activity */.",
+      "symbol": "ui_api_call:wiki#src/stores/ActivityStore.ts:13:23"
+    },
+    {
+      "service": "wiki",
+      "file": "src/stores/ActivityStore.ts",
+      "line": 19,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves DELETE /api/activity/:param",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /api/activity/:param */.",
+      "symbol": "ui_api_call:wiki#src/stores/ActivityStore.ts:19:11"
+    }
+  ],
+  "totals": {
+    "nodes": 69,
+    "edges": 46,
+    "types": 7,
+    "missed": 38,
+    "sites": 38,
+    "notes": 2,
+    "findings": 2,
+    "unresolved": 38
+  }
+}

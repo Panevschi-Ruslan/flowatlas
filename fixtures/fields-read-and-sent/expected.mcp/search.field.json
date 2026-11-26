@@ -1,0 +1,36 @@
+{
+  "query": "label",
+  "counts": {
+    "fields": 3
+  },
+  "results": {
+    "fields": [
+      {
+        "id": "channel:order_updates#ORDER_READY",
+        "type": "field",
+        "label": "label",
+        "read": 1,
+        "sent": 1
+      },
+      {
+        "id": "entry:ops-bot:http:POST:/events/orders",
+        "type": "field",
+        "label": "label",
+        "read": 1,
+        "sent": 0
+      },
+      {
+        "id": "entry:shop-api:http:POST:/api/orders/:param/ready",
+        "type": "field",
+        "label": "label",
+        "read": 1,
+        "sent": 0
+      }
+    ]
+  },
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:order_updates\", type: \"ORDER_READY\", field: \"label\"})",
+    "check_contract({channel: \"channel:order_updates\", type: \"ORDER_READY\", field: \"label\"})"
+  ]
+}

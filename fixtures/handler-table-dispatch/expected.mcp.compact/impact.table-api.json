@@ -1,0 +1,54 @@
+{
+  "settled": "3 ways in break, all listed",
+  "target": {
+    "id": "shop-api#src/orders.service.ts:OrdersService.listActive",
+    "line": 8,
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:shop-api:http:GET:/api/orders/active",
+      "line": 8,
+      "reach": "alive",
+      "by": "shop-api#src/orders.controller.ts:OrdersController.active",
+      "rowsVia": 2
+    },
+    {
+      "id": "entry:staff-bot:bot_callback:view_order_*",
+      "line": 28,
+      "reach": "outside",
+      "via": "GET /api/orders/active (shop-api)",
+      "by": "staff-bot#src/staff-bot.ts:StaffBot.showOrder"
+    },
+    {
+      "id": "entry:staff-bot:bot_command:orders",
+      "line": 50,
+      "reach": "outside",
+      "via": "GET /api/orders/active (shop-api)",
+      "by": "staff-bot#src/staff-bot.ts:StaffBot.listOrders"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "bots": {
+      "staff-bot": [
+        "src/staff-bot.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:GET:/api/orders/active"
+  ],
+  "reached": 9,
+  "entriesByService": {
+    "shop-api": 1,
+    "staff-bot": 2
+  },
+  "reachedByService": {
+    "shop-api": 2,
+    "staff-bot": 7
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true
+}

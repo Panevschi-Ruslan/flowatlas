@@ -1,0 +1,41 @@
+{
+  "services": [
+    { "name": "shop-api", "repo": "./shop-api", "type": "nestjs" },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "shop-api" }
+    }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "shop-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["EventsService"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 2,
+              "kind": "event"
+            }
+          ],
+          "subscribers": [
+            {
+              "receiverType": ["EventsService"],
+              "method": "subscribe",
+              "channelArg": 0,
+              "handlerArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

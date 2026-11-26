@@ -1,0 +1,118 @@
+{
+  "target": {
+    "id": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+    "type": "method",
+    "label": "OrdersController.findOne",
+    "loc": "src/orders/orders.controller.ts:14",
+    "service": "shop-api",
+    "reach": "alive",
+    "from": "GET /orders/:param"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "entry:shop-api:http:GET:/orders/:param",
+        "type": "entry",
+        "label": "GET /orders/:param",
+        "loc": "src/orders/orders.controller.ts:14",
+        "kind": "http",
+        "reach": "alive"
+      },
+      "edge": {
+        "type": "handles",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "type:shop-api#Order"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:24:12",
+            "type": "ui_api_call",
+            "label": "GET /orders/latest",
+            "loc": "src/app/orders-api.service.ts:24",
+            "service": "shop-web",
+            "kind": "http",
+            "reach": "alive",
+            "from": "screen /dashboard"
+          },
+          "edge": {
+            "type": "hits",
+            "confidence": "static",
+            "returns": "type:shop-web#Order"
+          },
+          "children": []
+        },
+        {
+          "node": {
+            "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:28:12",
+            "type": "ui_api_call",
+            "label": "GET /orders/:param",
+            "loc": "src/app/orders-api.service.ts:28",
+            "service": "shop-web",
+            "kind": "http",
+            "reach": "unreached",
+            "from": "none"
+          },
+          "edge": {
+            "type": "hits",
+            "confidence": "static",
+            "returns": "type:shop-web#Order"
+          },
+          "children": []
+        },
+        {
+          "node": {
+            "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12",
+            "type": "ui_api_call",
+            "label": "GET /orders/export",
+            "loc": "src/app/orders-api.service.ts:33",
+            "service": "shop-web",
+            "kind": "http",
+            "reach": "alive",
+            "from": "screen /dashboard"
+          },
+          "edge": {
+            "type": "hits",
+            "confidence": "static",
+            "returns": "string"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:shop-api:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:14",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 1,
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:shop-web:screen:/dashboard",
+      "type": "entry",
+      "label": "/dashboard",
+      "loc": "src/app/app.routes.ts:5",
+      "service": "shop-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 6,
+      "by": "shop-web#src/app/dashboard.component.ts:DashboardComponent"
+    }
+  ],
+  "unreached": 1,
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:shop-api:http:GET:/orders/:param\"})"
+  ]
+}

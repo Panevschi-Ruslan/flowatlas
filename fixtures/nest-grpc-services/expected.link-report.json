@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:25:13.359Z",
+  "configHash": "96461efb3e91",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 15,
+      "edges": 9,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 4640,
+      "packages": {
+        "name": "nest-grpc-services-gateway",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 3,
+      "types": 6,
+      "unresolved": 1,
+      "durationMs": 4707,
+      "packages": {
+        "name": "nest-grpc-services-orders",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:gateway:http:GET:/orders",
+      "entry:gateway:http:GET:/orders/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 26,
+    "edges": 14,
+    "types": 7,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

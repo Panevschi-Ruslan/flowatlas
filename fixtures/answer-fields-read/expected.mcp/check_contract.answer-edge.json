@@ -1,0 +1,51 @@
+{
+  "edge": {
+    "from": "ui_api_call:shop-app#src/api.ts:23:26",
+    "to": "entry:shop-api:http:GET:/api/profile",
+    "type": "hits",
+    "confidence": "static"
+  },
+  "status": "unchecked",
+  "request": {
+    "status": "unchecked",
+    "note": "the sending side declares no named type"
+  },
+  "response": {
+    "status": "unchecked",
+    "right": "type:shop-api#Profile",
+    "note": "the sending side declares no named type"
+  },
+  "findings": [],
+  "answer": {
+    "type": "type:shop-api#Profile",
+    "reads": [
+      {
+        "field": "avatarUrl",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 15
+      },
+      {
+        "field": "name",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 16
+      },
+      {
+        "field": "nickname",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 17
+      }
+    ],
+    "missing": [
+      {
+        "field": "nickname",
+        "id": "shop-app#src/ProfileCard.tsx:ProfileCard",
+        "line": 17
+      }
+    ],
+    "unused": []
+  },
+  "complete": true,
+  "next": [
+    "get_type({type: \"type:shop-api#Profile\"})"
+  ]
+}

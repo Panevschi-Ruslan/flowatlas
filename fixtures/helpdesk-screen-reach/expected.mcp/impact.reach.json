@@ -1,0 +1,46 @@
+{
+  "target": {
+    "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.close",
+    "type": "method",
+    "label": "TicketsService.close",
+    "loc": "src/tickets/tickets.service.ts:18",
+    "service": "desk-api",
+    "reach": "dead",
+    "throughDead": true
+  },
+  "entries": [
+    {
+      "id": "entry:desk-api:http:POST:/desks/:param/tickets/:param/close",
+      "type": "entry",
+      "label": "POST /desks/:param/tickets/:param/close",
+      "loc": "src/tickets/tickets.controller.ts:13",
+      "service": "desk-api",
+      "kind": "http",
+      "reach": "dead",
+      "by": "desk-api#src/tickets/tickets.controller.ts:TicketsController.close"
+    }
+  ],
+  "total": 1,
+  "byKind": {
+    "routes": {
+      "desk-api": [
+        "src/tickets/tickets.controller.ts"
+      ]
+    }
+  },
+  "reached": 2,
+  "entriesByService": {
+    "desk-api": 1
+  },
+  "reachedByService": {
+    "desk-api": 2
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/close\"})",
+    "describe_for_prompt({id: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/close\"})",
+    "impact({symbol: \"entry:desk-api:http:POST:/desks/:param/tickets/:param/close\"})"
+  ]
+}

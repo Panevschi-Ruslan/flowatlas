@@ -6,6 +6,7 @@
   "loc": "src/invoices/invoices.controller.ts:26",
   "verdict": "dead",
   "reason": "no http_calls/hits from any repo (may be a public API)",
+  "callers": 0,
   "class": "actionable",
   "evidence": {},
   "next": [

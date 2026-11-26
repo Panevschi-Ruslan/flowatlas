@@ -1,0 +1,27 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"])
+
+type Query {
+  orders: [Order!]!
+  regions: [String!]! @shareable
+}
+
+type Mutation {
+  placeOrder(input: PlaceOrderInput!): Order!
+}
+
+type Order @key(fields: "id") {
+  id: ID!
+  total: Float!
+  customer: Customer!
+}
+
+type Customer @key(fields: "id") {
+  id: ID!
+  orders: [Order!]!
+}
+
+input PlaceOrderInput {
+  customerId: ID!
+  total: Float!
+}

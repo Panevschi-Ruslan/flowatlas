@@ -1,0 +1,23 @@
+{
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["SHOP_API_URL"]
+    },
+    {
+      "name": "backoffice-web",
+      "repo": "./backoffice-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "shop-api" }
+    },
+    {
+      "name": "courier-bot",
+      "repo": "./courier-bot",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

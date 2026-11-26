@@ -1,8 +1,10 @@
-import type { DeclaredStream, DeliverySource } from '@flowatlas/core';
+import type { DeclaredStream, DeliverySource, DeployedKind } from '@flowatlas/core';
+import { importedName } from '@flowatlas/core';
 import { asText, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, blockOrArgument, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
-import { deployedAt, deployedInText, deployedOf, deployedOfValue, isBecause, targetOf, type Deployed } from './deployed.js';
+import { alternativesAt, deliverAt, deployedAt, deployedInText, deployedOf, deployedOfValue, importAt, isBecause, targetOf, type Deployed } from './deployed.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
+import { mappingBatch, readQueueSettings } from './settings.js';
 
 /**
  * Queues, topics and streams, and what reads each.
@@ -59,8 +61,36 @@ export const filtersIn = (criteria: Value | undefined): string[] => {
   });
 };
 
+/**
+ * A mapping that reads a parameter another deployment writes (P253): a
+ * queue where it takes no starting position, else a stream or a table's
+ * changes, read as both under an address each, of which the linker keeps one.
+ */
+const readImportedMapping = (mapping: Instance, key: string, reading: ResourceReading): void => {
+  const starts = argument(mapping, 'starting_position');
+  const kinds: readonly DeployedKind[] = starts === undefined || starts.kind === 'null' ? ['queue'] : ['stream', 'table'];
+  const to = targetOf(functionAt(mapping, 'function_name', reading), mapping, `the function ${mapping.address} hands its batches to`, reading);
+  const enabled = argument(mapping, 'enabled');
+  for (const alternative of alternativesAt(reading, mapping, key, kinds, `what ${mapping.address} reads`)) {
+    const from: DeliverySource = alternative.kind === 'queue' ? { kind: 'queue', name: alternative.name } : { kind: 'changes', of: alternative.kind === 'stream' ? 'stream' : 'table', name: alternative.name };
+    reading.deliveries.push({
+      ...siteOf(mapping),
+      address: alternative.address,
+      by: 'mapping',
+      from,
+      ...(to === undefined ? {} : { to }),
+      ...(alternative.kind === 'queue' ? { batch: mappingBatch(mapping) } : {}),
+      meta: enabled?.kind === 'bool' && !enabled.value ? { disabled: true } : {},
+    });
+  }
+};
+
 const readMapping = (mapping: Instance, reading: ResourceReading): void => {
   const found = deployedAt(mapping, 'event_source_arn', reading);
+  if (found !== undefined && isBecause(found) && found.imported !== undefined) {
+    readImportedMapping(mapping, found.imported, reading);
+    return;
+  }
   if (found === undefined) {
     reading.rows.push(
       unreadRow(mapping, 'subscription-source-unread', `what ${mapping.address} reads`, { reason: 'unplaced', text: 'it reads a source other than a queue or a stream' }, 'info'),
@@ -81,6 +111,7 @@ const readMapping = (mapping: Instance, reading: ResourceReading): void => {
     by: 'mapping',
     from,
     ...(to === undefined ? {} : { to }),
+    ...(from.kind === 'queue' ? { batch: mappingBatch(mapping) } : {}),
     meta: {
       ...(enabled?.kind === 'bool' && !enabled.value ? { disabled: true } : {}),
       ...(filters.length === 0 ? {} : { unmatched: { filter: filters } }),
@@ -88,11 +119,18 @@ const readMapping = (mapping: Instance, reading: ResourceReading): void => {
   });
 };
 
-/** Protocols a subscription delivers to something this reading follows. */
-const FOLLOWED_PROTOCOLS = new Set(['lambda', 'sqs']);
+/** What a subscription delivers to by its protocol. */
+const SUBSCRIBED: ReadonlyMap<string, DeployedKind> = new Map([
+  ['lambda', 'function'],
+  ['sqs', 'queue'],
+]);
 
 const readSubscription = (subscription: Instance, reading: ResourceReading): void => {
-  const topic = deployedAt(subscription, 'topic_arn', reading);
+  const written = deployedAt(subscription, 'topic_arn', reading);
+  // A topic another deployment writes to a parameter of the account (P253).
+  const imported = written !== undefined && isBecause(written) ? written.imported : undefined;
+  if (imported !== undefined) importAt(reading, subscription, imported, `the topic ${subscription.address} subscribes to`, ['topic']);
+  const topic = imported === undefined ? written : { kind: 'topic' as const, name: importedName(imported) };
   if (topic === undefined || isBecause(topic) || topic.kind !== 'topic') {
     const because = topic === undefined ? whyNot(undefined, 'topic_arn') : isBecause(topic) ? topic : { reason: 'unplaced', text: `topic_arn names a ${topic.kind}` };
     reading.rows.push(unreadRow(subscription, 'subscription-source-unread', `the topic ${subscription.address} subscribes to`, because));
@@ -100,29 +138,34 @@ const readSubscription = (subscription: Instance, reading: ResourceReading): voi
   }
   const protocol = textOf(argument(subscription, 'protocol'));
   const what = `what ${subscription.address} delivers to`;
-  const to =
-    protocol !== undefined && FOLLOWED_PROTOCOLS.has(protocol)
-      ? targetOf(protocol === 'lambda' ? functionAt(subscription, 'endpoint', reading) : deployedAt(subscription, 'endpoint', reading), subscription, what, reading)
-      : targetOf(
-          { reason: 'unplaced', text: `it delivers by ${protocol ?? 'a protocol not read'}, which nothing here follows` },
-          subscription,
-          what,
-          reading,
-        );
+  const kind = protocol === undefined ? undefined : SUBSCRIBED.get(protocol);
+  const endpoint =
+    kind === undefined
+      ? { reason: 'unplaced', text: `it delivers by ${protocol ?? 'a protocol not read'}, which nothing here follows` }
+      : kind === 'function'
+        ? functionAt(subscription, 'endpoint', reading)
+        : deployedAt(subscription, 'endpoint', reading);
   const policy = textOf(argument(subscription, 'filter_policy'));
   const raw = argument(subscription, 'raw_message_delivery');
-  reading.deliveries.push({
-    ...siteOf(subscription),
-    address: subscription.address,
-    by: 'subscription',
-    from: { kind: 'topic', name: topic.name },
-    ...(to === undefined ? {} : { to }),
-    meta: {
-      ...(protocol === undefined ? {} : { protocol }),
-      ...(policy === undefined ? {} : { unmatched: { filter_policy: policy } }),
-      ...(raw?.kind === 'bool' && raw.value ? { raw: true } : {}),
+  // An endpoint another deployment writes to a parameter is what the protocol says it is (P259).
+  deliverAt(
+    reading,
+    subscription,
+    {
+      ...siteOf(subscription),
+      address: subscription.address,
+      by: 'subscription',
+      from: { kind: 'topic', name: topic.name },
+      meta: {
+        ...(protocol === undefined ? {} : { protocol }),
+        ...(policy === undefined ? {} : { unmatched: { filter_policy: policy } }),
+        ...(raw?.kind === 'bool' && raw.value ? { raw: true } : {}),
+      },
     },
-  });
+    endpoint,
+    kind === undefined ? [] : [kind],
+    what,
+  );
 };
 
 /**
@@ -159,21 +202,46 @@ const pushRedrive = (owner: Instance, queue: Deployed | Because | undefined, pol
     reading.rows.push(unreadRow(owner, 'subscription-source-unread', `the queue ${owner.address} redrives`, because));
     return;
   }
-  const to = targetOf(deadLetter, owner, `the dead-letter queue of ${owner.address}`, reading);
-  const count = policy?.kind === 'unknown' && policy.partial?.kind === 'object' ? policy.partial.entries.get('maxReceiveCount') : undefined;
-  const receives = count?.kind === 'number' ? count.value : undefined;
-  reading.deliveries.push({
-    ...siteOf(owner),
-    address: owner.address,
-    by: 'redrive',
-    from: { kind: 'queue', name: queue.name },
-    ...(to === undefined ? {} : { to }),
-    ...(receives === undefined ? {} : { meta: { maxReceiveCount: receives } }),
-  });
+  const receives = receivesOf(policy);
+  deliverAt(
+    reading,
+    owner,
+    {
+      ...siteOf(owner),
+      address: owner.address,
+      by: 'redrive',
+      from: { kind: 'queue', name: queue.name },
+      ...(receives === undefined ? {} : { meta: { maxReceiveCount: receives } }),
+    },
+    deadLetter,
+    ['queue'],
+    `the dead-letter queue of ${owner.address}`,
+  );
 };
 
-const readQueue = (queue: Instance, reading: ResourceReading): void =>
+/**
+ * How many receives a redrive policy allows before handing a message on: from
+ * the JSON text it evaluates to, or the object it is built from where a
+ * reference keeps the text from being finished (P389).
+ */
+const receivesOf = (policy: Value | undefined): number | undefined => {
+  if (policy?.kind === 'string') {
+    try {
+      const count = (JSON.parse(policy.value) as Record<string, unknown>)['maxReceiveCount'];
+      if (typeof count === 'number') return count;
+      return typeof count === 'string' && /^\d+$/.test(count) ? Number(count) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  const count = policy?.kind === 'unknown' && policy.partial?.kind === 'object' ? policy.partial.entries.get('maxReceiveCount') : undefined;
+  return count?.kind === 'number' ? count.value : count?.kind === 'string' && /^\d+$/.test(count.value) ? Number(count.value) : undefined;
+};
+
+const readQueue = (queue: Instance, reading: ResourceReading): void => {
+  readQueueSettings(queue, reading);
   pushRedrive(queue, deployedOf({ kind: 'instance', instance: queue }, reading), argument(queue, 'redrive_policy'), reading);
+};
 
 const readRedrivePolicy = (policy: Instance, reading: ResourceReading): void =>
   pushRedrive(policy, deployedAt(policy, 'queue_url', reading), argument(policy, 'redrive_policy'), reading);

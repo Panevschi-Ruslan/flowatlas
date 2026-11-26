@@ -90,12 +90,14 @@ const SQS: InfraModuleDescription = {
     create_dlq: 'false',
     dlq_name: 'null',
     redrive_policy: '{}',
+    visibility_timeout_seconds: 'null',
   },
   resources: {
     'aws_sqs_queue.this': {
       count: 'var.create ? 1 : 0',
       name: 'var.use_name_prefix ? null : var.fifo_queue ? "${trimsuffix(var.name, ".fifo")}.fifo" : var.name',
       redrive_policy: 'var.create_dlq || length(var.redrive_policy) == 0 ? null : jsonencode(var.redrive_policy)',
+      visibility_timeout_seconds: 'var.visibility_timeout_seconds',
     },
     'aws_sqs_queue.dlq': {
       count: 'var.create && var.create_dlq ? 1 : 0',

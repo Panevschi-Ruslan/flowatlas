@@ -1,0 +1,19 @@
+{
+  "name": "graphql-codegen-helpers-web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "gql-codegen": "graphql-codegen --config gql-codegen.yml",
+    "postinstall": "pnpm run gql-codegen"
+  },
+  "dependencies": {
+    "@urql/core": "^5.0.0",
+    "graphql": "^16.9.0",
+    "react": "^19.0.0",
+    "urql": "^4.1.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typed-document-node": "^5.0.0"
+  }
+}

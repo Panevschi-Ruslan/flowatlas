@@ -1,0 +1,14 @@
+{
+  "services": [
+    { "name": "orders", "repo": "./orders", "type": "express" },
+    { "name": "stock", "repo": "./stock", "type": "express" },
+    { "name": "catalog", "repo": "./catalog", "type": "express" },
+    { "name": "ledger", "repo": "./ledger", "type": "nestjs" },
+    { "name": "audit", "repo": "./audit", "type": "express" },
+    { "name": "storefront", "repo": "./storefront", "type": "nuxt" },
+    { "name": "admin", "repo": "./admin", "type": "nextjs" },
+    { "name": "web", "repo": "./web", "type": "react" },
+    { "name": "jobs", "repo": "./jobs", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

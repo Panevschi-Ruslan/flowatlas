@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17"
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices/:param",
+      "label": "GET /invoices/:id",
+      "loc": "src/invoices/invoices.controller.ts:26"
+    }
+  ],
+  "total": 17,
+  "nextOffset": 3,
+  "complete": false,
+  "left": [
+    "page: 14 more rows from offset 3"
+  ],
+  "next": [
+    "list_entries({maxNodes: 3, offset: 3})"
+  ]
+}

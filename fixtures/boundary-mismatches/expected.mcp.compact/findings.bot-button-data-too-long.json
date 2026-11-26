@@ -1,0 +1,36 @@
+{
+  "kind": "bot-button-data-too-long",
+  "rows": [
+    {
+      "kind": "bot-button-data-too-long",
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.showOrder",
+      "line": 29,
+      "message": "ShopBot.showOrder builds a button whose callback data \"order:details:with-the-full-delivery-address-and-the-courier-notes\" is 66 bytes, over the 64 the bot platform takes: the message carrying it is refused",
+      "precision": "high",
+      "evidence": "the bot platform's API takes callback_data of 1-64 bytes; the data is written out",
+      "fix": "send a short key (an id, a code) and look the rest up when it comes back",
+      "seenBy": [
+        "bot_command order (shop-bot)"
+      ],
+      "rank": 1,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "get_source({symbol: \"shop-bot#src/shop-bot.ts:ShopBot.showOrder\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "the configuration module in src/app.module.ts validates the settings with a schema, which may give it a default"
+    },
+    "status-never-answered": {
+      "count": 1,
+      "why": "POST /orders/:param/refund throws HttpException, whose status is not read"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"shop-bot#src/shop-bot.ts:ShopBot.showOrder\"})"
+  ]
+}

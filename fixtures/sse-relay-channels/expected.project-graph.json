@@ -1,0 +1,2393 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T15:58:48.507Z",
+  "services": [
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "edge",
+      "repo": "./edge",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cache_op:edge#src/bus.ts:10:9",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "edge",
+      "file": "src/bus.ts",
+      "line": 10,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "connect"
+      }
+    },
+    {
+      "id": "cache_op:edge#src/bus.ts:11:9",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "edge",
+      "file": "src/bus.ts",
+      "line": 11,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:shipping#src/live/live.controller.ts:22:12",
+      "type": "cache_op",
+      "label": "other workspace:*:events",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "meta": {
+        "op": "other",
+        "keyPattern": "workspace:*:events",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:shipping#src/live/live.controller.ts:25:25",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 25,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "unsubscribe"
+      }
+    },
+    {
+      "id": "cache_op:shipping#src/live/relay.service.ts:17:12",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "shipping",
+      "file": "src/live/relay.service.ts",
+      "line": 17,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:shipping#src/live/relay.service.ts:18:25",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "shipping",
+      "file": "src/live/relay.service.ts",
+      "line": 18,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "unsubscribe"
+      }
+    },
+    {
+      "id": "cache_op:shipping#src/parcels/parcels.service.ts:15:11",
+      "type": "cache_op",
+      "label": "other workspace:*:events",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "other",
+        "keyPattern": "workspace:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:shipping#src/parcels/parcels.service.ts:19:11",
+      "type": "cache_op",
+      "label": "other workspace:*:events",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "meta": {
+        "op": "other",
+        "keyPattern": "workspace:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:shipping#src/parcels/parcels.service.ts:23:11",
+      "type": "cache_op",
+      "label": "other warehouse:*:parcels",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 23,
+      "meta": {
+        "op": "other",
+        "keyPattern": "warehouse:*:parcels",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "channel:warehouse:*:parcels",
+      "type": "channel",
+      "label": "warehouse:*:parcels",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:workspace:*:events",
+      "type": "channel",
+      "label": "workspace:*:events",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 2,
+        "consumers": 5
+      }
+    },
+    {
+      "id": "channel:workspace:*:events#COURIER_ASSIGNED",
+      "type": "channel",
+      "label": "workspace:*:events#COURIER_ASSIGNED",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:workspace:*:events",
+        "messageType": "COURIER_ASSIGNED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shipping",
+              "loc": "src/parcels/parcels.service.ts:19",
+              "text": "type: 'COURIER_ASSIGNED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "portal",
+              "loc": "src/screens/ParcelBoard.tsx:18",
+              "text": "event.type === 'COURIER_ASSIGNED'",
+              "why": "COURIER_ASSIGNED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:workspace:*:events#PARCEL_PACKED",
+      "type": "channel",
+      "label": "workspace:*:events#PARCEL_PACKED",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:workspace:*:events",
+        "messageType": "PARCEL_PACKED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shipping",
+              "loc": "src/parcels/parcels.service.ts:15",
+              "text": "type: 'PARCEL_PACKED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:edge#ROOMS",
+      "type": "config_key",
+      "label": "ROOMS",
+      "repo": "edge",
+      "file": "src/worker.ts",
+      "line": 26,
+      "meta": {
+        "key": "ROOMS",
+        "source": "binding"
+      }
+    },
+    {
+      "id": "consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
+      "type": "consumer",
+      "label": "GET /live/:workspaceId@15",
+      "repo": "edge",
+      "file": "src/worker.ts",
+      "line": 15,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "redis-pubsub",
+        "relay": "entry:edge:http:GET:/live/:param",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:portal#src/live/ticker.ts:onRoomMessage",
+      "type": "consumer",
+      "label": "onRoomMessage",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 24,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:portal#src/live/ticker.ts:onTick",
+      "type": "consumer",
+      "label": "onTick",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 17,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "routes": [
+          "entry:edge:http:GET:/live/:param"
+        ]
+      }
+    },
+    {
+      "id": "consumer:portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "type": "consumer",
+      "label": "PackingScreen",
+      "repo": "portal",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 10,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 10,
+            "column": 40,
+            "through": "EventSource.message"
+          }
+        ],
+        "routes": [
+          "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing"
+        ]
+      }
+    },
+    {
+      "id": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "type": "consumer",
+      "label": "CourierPanel",
+      "repo": "portal",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "routes": [
+          "entry:shipping:http:GET:/workspaces/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "type": "consumer",
+      "label": "handleParcelEvent",
+      "repo": "portal",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "PARCEL_PACKED",
+            "consumer": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+            "via": "if",
+            "line": 6,
+            "file": "src/screens/ParcelBoard.tsx"
+          }
+        ],
+        "routes": [
+          "entry:shipping:http:GET:/workspaces/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:shipping#src/live/live.controller.ts:LiveController.events",
+      "type": "consumer",
+      "label": "LiveController.events",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "relay": "entry:shipping:http:GET:/workspaces/:param/events",
+        "entryId": "entry:shipping:event:workspace:*:events",
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 22,
+            "column": 66,
+            "through": "listener.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:shipping#src/live/live.controller.ts:LiveController.packing",
+      "type": "consumer",
+      "label": "LiveController.packing",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 29,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "adapter": "redis-pubsub",
+        "relay": "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:shipping#src/live/relay.service.ts:RelayService.frames",
+      "type": "consumer",
+      "label": "RelayService.frames",
+      "repo": "shipping",
+      "file": "src/live/relay.service.ts",
+      "line": 17,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "decorator": "subscribe",
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 17,
+            "column": 40,
+            "through": "listener.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "edge#src/bus.ts:listen",
+      "type": "function",
+      "label": "listen",
+      "repo": "edge",
+      "file": "src/bus.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "onMessage",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "edge#src/worker.ts:GET /live/:workspaceId@15",
+      "type": "function",
+      "label": "GET /live/:workspaceId@15",
+      "repo": "edge",
+      "file": "src/worker.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:{ROOMS:type:edge#RoomObjects}}>"
+            }
+          ],
+          "returns": "Response"
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 16,
+            "why": "handed to streamSSE"
+          }
+        ]
+      }
+    },
+    {
+      "id": "edge#src/worker.ts:GET /rooms/:roomId/stream@25",
+      "type": "function",
+      "label": "GET /rooms/:roomId/stream@25",
+      "repo": "edge",
+      "file": "src/worker.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<{Bindings:{ROOMS:type:edge#RoomObjects}}>"
+            }
+          ],
+          "returns": "Response"
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 27,
+            "why": "handed to c.env.ROOMS.get(id).fetch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:edge:http:GET:/live/:param",
+      "type": "entry",
+      "label": "GET /live/:param",
+      "repo": "edge",
+      "file": "src/worker.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/live/:param",
+        "rawPath": "/live/:workspaceId",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "stream": "sse",
+        "streamFrom": "helper",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:workspace:*:events"
+        ]
+      }
+    },
+    {
+      "id": "entry:edge:http:GET:/rooms/:param/stream",
+      "type": "entry",
+      "label": "GET /rooms/:param/stream",
+      "repo": "edge",
+      "file": "src/worker.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/rooms/:param/stream",
+        "rawPath": "/rooms/:roomId/stream",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "handedTo": [
+          {
+            "binding": "ROOMS",
+            "method": "fetch",
+            "why": "no worker configuration of this repository binds ROOMS under durable_objects, and the namespace's type names no class",
+            "hint": "Declare ROOMS under durable_objects.bindings in the worker's wrangler file with its class_name, or type the namespace as DurableObjectNamespace<Class>.",
+            "file": "src/worker.ts",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:event:workspace:*:events",
+      "type": "entry",
+      "label": "event workspace:*:events",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "pattern": "workspace:*:events",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:shipping:http:GET:/workspaces/:param/audit",
+      "type": "entry",
+      "label": "GET /workspaces/:param/audit",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 34,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/workspaces/:param/audit",
+        "rawPath": "/workspaces/:workspaceId/audit",
+        "controller": "LiveController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "audit"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [],
+        "streamEventsUnread": true
+      }
+    },
+    {
+      "id": "entry:shipping:http:GET:/workspaces/:param/events",
+      "type": "entry",
+      "label": "GET /workspaces/:param/events",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/workspaces/:param/events",
+        "rawPath": "/workspaces/:workspaceId/events",
+        "controller": "LiveController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "events"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:workspace:*:events"
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+      "type": "entry",
+      "label": "GET /workspaces/:param/warehouses/:param/packing",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/workspaces/:param/warehouses/:param/packing",
+        "rawPath": "/workspaces/:workspaceId/warehouses/:warehouseId/packing",
+        "controller": "LiveController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "warehouses/:warehouseId/packing"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:warehouse:*:parcels"
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/workspaces/:param/parcels/:param/courier",
+      "type": "entry",
+      "label": "POST /workspaces/:param/parcels/:param/courier",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/workspaces/:param/parcels/:param/courier",
+        "rawPath": "/workspaces/:workspaceId/parcels/:parcelId/courier",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/workspaces/:param/parcels/:param/packed",
+      "type": "entry",
+      "label": "POST /workspaces/:param/parcels/:param/packed",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/workspaces/:param/parcels/:param/packed",
+        "rawPath": "/workspaces/:workspaceId/parcels/:parcelId/packed",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/workspaces/:param/parcels/:param/queue/:param",
+      "type": "entry",
+      "label": "POST /workspaces/:param/parcels/:param/queue/:param",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/workspaces/:param/parcels/:param/queue/:param",
+        "rawPath": "/workspaces/:workspaceId/parcels/:parcelId/queue/:warehouseId",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "portal#src/live/ticker.ts:joinRoom",
+      "type": "function",
+      "label": "joinRoom",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "roomId",
+              "type": "string"
+            }
+          ],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "portal#src/live/ticker.ts:onRoomMessage",
+      "type": "function",
+      "label": "onRoomMessage",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "portal#src/live/ticker.ts:onTick",
+      "type": "function",
+      "label": "onTick",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "portal#src/live/ticker.ts:startTicker",
+      "type": "function",
+      "label": "startTicker",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "workspaceId",
+              "type": "string"
+            }
+          ],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "portal#src/live/ticker.ts:watchNotices",
+      "type": "function",
+      "label": "watchNotices",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "EventSource"
+        }
+      }
+    },
+    {
+      "id": "portal#src/live/useWorkspaceEvents.ts:useWorkspaceEvents",
+      "type": "function",
+      "label": "useWorkspaceEvents",
+      "repo": "portal",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 13,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "workspaceId",
+              "type": "string"
+            },
+            {
+              "name": "onEvent",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "type": "ui_component",
+      "label": "PackingScreen",
+      "repo": "portal",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ workspaceId, warehouseId }",
+              "type": "{workspaceId:string;warehouseId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "type": "ui_component",
+      "label": "CourierPanel",
+      "repo": "portal",
+      "file": "src/screens/ParcelBoard.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ workspaceId }",
+              "type": "{workspaceId:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "portal#src/screens/ParcelBoard.tsx:ParcelBoard",
+      "type": "ui_component",
+      "label": "ParcelBoard",
+      "repo": "portal",
+      "file": "src/screens/ParcelBoard.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ workspaceId }",
+              "type": "{workspaceId:string}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "type": "function",
+      "label": "handleParcelEvent",
+      "repo": "portal",
+      "file": "src/screens/ParcelBoard.tsx",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:portal#WorkspaceEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+      "type": "producer",
+      "label": "message workspace:*:events",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "PARCEL_PACKED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "type": "producer",
+      "label": "message workspace:*:events",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "COURIER_ASSIGNED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shipping#src/parcels/parcels.service.ts:23:11",
+      "type": "producer",
+      "label": "message warehouse:*:parcels",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 23,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "repo:edge",
+      "type": "repo",
+      "label": "edge",
+      "repo": "edge",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "hono": 3,
+            "redis": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "hono-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:portal",
+      "type": "repo",
+      "label": "portal",
+      "repo": "portal",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 10,
+          "components": 3,
+          "hooks": 1,
+          "skippedExternalCalls": {
+            "react": 4
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:shipping",
+      "type": "repo",
+      "label": "shipping",
+      "repo": "shipping",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "redis": 7,
+            "rxjs": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "shipping#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shipping",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ParcelsController",
+          "LiveController"
+        ],
+        "providers": [
+          "ParcelsService",
+          "RelayService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shipping#src/live/live.controller.ts:LiveController",
+      "type": "provider",
+      "label": "LiveController",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 14,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/live/live.controller.ts:LiveController.audit",
+      "type": "method",
+      "label": "LiveController.audit",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/live/live.controller.ts:LiveController.events",
+      "type": "method",
+      "label": "LiveController.events",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "workspaceId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/live/live.controller.ts:LiveController.packing",
+      "type": "method",
+      "label": "LiveController.packing",
+      "repo": "shipping",
+      "file": "src/live/live.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "warehouseId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/live/relay.service.ts:RelayService",
+      "type": "provider",
+      "label": "RelayService",
+      "repo": "shipping",
+      "file": "src/live/relay.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/live/relay.service.ts:RelayService.frames",
+      "type": "method",
+      "label": "RelayService.frames",
+      "repo": "shipping",
+      "file": "src/live/relay.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 17,
+            "why": "handed to listener.subscribe"
+          },
+          {
+            "line": 18,
+            "why": "handed to listener.unsubscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController",
+      "type": "provider",
+      "label": "ParcelsController",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController.courier",
+      "type": "method",
+      "label": "ParcelsController.courier",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "workspaceId",
+              "type": "string"
+            },
+            {
+              "name": "parcelId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{courierId:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "courierId",
+            "line": 19
+          }
+        ]
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController.packed",
+      "type": "method",
+      "label": "ParcelsController.packed",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "workspaceId",
+              "type": "string"
+            },
+            {
+              "name": "parcelId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController.queue",
+      "type": "method",
+      "label": "ParcelsController.queue",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "warehouseId",
+              "type": "string"
+            },
+            {
+              "name": "parcelId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.service.ts:ParcelsService",
+      "type": "provider",
+      "label": "ParcelsService",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.service.ts:ParcelsService.assignCourier",
+      "type": "method",
+      "label": "ParcelsService.assignCourier",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "workspaceId",
+              "type": "string"
+            },
+            {
+              "name": "parcelId",
+              "type": "string"
+            },
+            {
+              "name": "courierId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.service.ts:ParcelsService.markPacked",
+      "type": "method",
+      "label": "ParcelsService.markPacked",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "workspaceId",
+              "type": "string"
+            },
+            {
+              "name": "parcelId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.service.ts:ParcelsService.queueForPacking",
+      "type": "method",
+      "label": "ParcelsService.queueForPacking",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "warehouseId",
+              "type": "string"
+            },
+            {
+              "name": "parcelId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:portal#src/live/ticker.ts:16:18",
+      "type": "ui_api_call",
+      "label": "GET /live/:param",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_EDGE_URL}/live/:param",
+        "path": "/live/:param",
+        "baseUrlEnv": "VITE_EDGE_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "edge"
+      }
+    },
+    {
+      "id": "ui_api_call:portal#src/live/ticker.ts:23:18",
+      "type": "ui_api_call",
+      "label": "GET /rooms/:param/stream",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 23,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_EDGE_URL}/rooms/:param/stream",
+        "path": "/rooms/:param/stream",
+        "baseUrlEnv": "VITE_EDGE_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "edge"
+      }
+    },
+    {
+      "id": "ui_api_call:portal#src/live/ticker.ts:30:18",
+      "type": "ui_api_call",
+      "label": "GET /notices/stream",
+      "repo": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 30,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHIPPING_URL}/notices/stream",
+        "path": "/notices/stream",
+        "baseUrlEnv": "VITE_SHIPPING_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env"
+      }
+    },
+    {
+      "id": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20",
+      "type": "ui_api_call",
+      "label": "GET /workspaces/:param/events",
+      "repo": "portal",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 15,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHIPPING_URL}/workspaces/:param/events",
+        "path": "/workspaces/:param/events",
+        "baseUrlEnv": "VITE_SHIPPING_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "shipping"
+      }
+    },
+    {
+      "id": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20",
+      "type": "ui_api_call",
+      "label": "GET /workspaces/:param/warehouses/:param/packing",
+      "repo": "portal",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 7,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHIPPING_URL}/workspaces/:param/warehouses/:param/packing",
+        "path": "/workspaces/:param/warehouses/:param/packing",
+        "baseUrlEnv": "VITE_SHIPPING_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "shipping"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:warehouse:*:parcels",
+      "to": "consumer:portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 10,
+      "meta": {
+        "via": "sse",
+        "route": "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+        "call": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20"
+      }
+    },
+    {
+      "from": "channel:warehouse:*:parcels",
+      "to": "consumer:shipping#src/live/live.controller.ts:LiveController.packing",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/relay.service.ts",
+      "line": 17
+    },
+    {
+      "from": "channel:workspace:*:events",
+      "to": "consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/bus.ts",
+      "line": 11
+    },
+    {
+      "from": "channel:workspace:*:events",
+      "to": "consumer:portal#src/live/ticker.ts:onTick",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 17,
+      "meta": {
+        "via": "sse",
+        "route": "entry:edge:http:GET:/live/:param",
+        "call": "ui_api_call:portal#src/live/ticker.ts:16:18"
+      }
+    },
+    {
+      "from": "channel:workspace:*:events",
+      "to": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:shipping:http:GET:/workspaces/:param/events",
+        "call": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20"
+      }
+    },
+    {
+      "from": "channel:workspace:*:events",
+      "to": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:shipping:http:GET:/workspaces/:param/events",
+        "call": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20"
+      }
+    },
+    {
+      "from": "channel:workspace:*:events",
+      "to": "consumer:shipping#src/live/live.controller.ts:LiveController.events",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "channel:workspace:*:events#PARCEL_PACKED",
+      "to": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/ParcelBoard.tsx",
+      "line": 6,
+      "meta": {
+        "selectedBy": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+        "via": "if"
+      }
+    },
+    {
+      "from": "consumer:edge#src/worker.ts:GET /live/:workspaceId@15",
+      "to": "edge#src/worker.ts:GET /live/:workspaceId@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 15
+    },
+    {
+      "from": "consumer:portal#src/live/ticker.ts:onRoomMessage",
+      "to": "portal#src/live/ticker.ts:onRoomMessage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 24
+    },
+    {
+      "from": "consumer:portal#src/live/ticker.ts:onTick",
+      "to": "portal#src/live/ticker.ts:onTick",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 17
+    },
+    {
+      "from": "consumer:portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "to": "portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 10
+    },
+    {
+      "from": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "to": "portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "to": "portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:shipping#src/live/live.controller.ts:LiveController.events",
+      "to": "shipping#src/live/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{workspaceId:string}"
+      }
+    },
+    {
+      "from": "consumer:shipping#src/live/live.controller.ts:LiveController.packing",
+      "to": "shipping#src/live/live.controller.ts:LiveController.packing",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 29,
+      "meta": {
+        "params": "{warehouseId:string}"
+      }
+    },
+    {
+      "from": "consumer:shipping#src/live/relay.service.ts:RelayService.frames",
+      "to": "shipping#src/live/relay.service.ts:RelayService.frames",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/relay.service.ts",
+      "line": 17
+    },
+    {
+      "from": "edge#src/bus.ts:listen",
+      "to": "cache_op:edge#src/bus.ts:10:9",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/bus.ts",
+      "line": 10
+    },
+    {
+      "from": "edge#src/bus.ts:listen",
+      "to": "cache_op:edge#src/bus.ts:11:9",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/bus.ts",
+      "line": 11
+    },
+    {
+      "from": "edge#src/worker.ts:GET /live/:workspaceId@15",
+      "to": "edge#src/bus.ts:listen",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/worker.ts",
+      "line": 17
+    },
+    {
+      "from": "edge#src/worker.ts:GET /rooms/:roomId/stream@25",
+      "to": "config_key:edge#ROOMS",
+      "type": "reads_config",
+      "confidence": "heuristic",
+      "file": "src/worker.ts",
+      "line": 26
+    },
+    {
+      "from": "entry:edge:http:GET:/live/:param",
+      "to": "edge#src/worker.ts:GET /live/:workspaceId@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 15,
+      "meta": {
+        "requestRead": true,
+        "params": "{workspaceId:string}"
+      }
+    },
+    {
+      "from": "entry:edge:http:GET:/rooms/:param/stream",
+      "to": "edge#src/worker.ts:GET /rooms/:roomId/stream@25",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/worker.ts",
+      "line": 25,
+      "meta": {
+        "requestRead": true,
+        "params": "{roomId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:event:workspace:*:events",
+      "to": "shipping#src/live/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{workspaceId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:GET:/workspaces/:param/audit",
+      "to": "shipping#src/live/live.controller.ts:LiveController.audit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 34
+    },
+    {
+      "from": "entry:shipping:http:GET:/workspaces/:param/events",
+      "to": "shipping#src/live/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{workspaceId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+      "to": "shipping#src/live/live.controller.ts:LiveController.packing",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 29,
+      "meta": {
+        "params": "{warehouseId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/workspaces/:param/parcels/:param/courier",
+      "to": "shipping#src/parcels/parcels.controller.ts:ParcelsController.courier",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{courierId:string}"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{workspaceId:string;parcelId:string}",
+        "body": "{courierId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/workspaces/:param/parcels/:param/packed",
+      "to": "shipping#src/parcels/parcels.controller.ts:ParcelsController.packed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{workspaceId:string;parcelId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/workspaces/:param/parcels/:param/queue/:param",
+      "to": "shipping#src/parcels/parcels.controller.ts:ParcelsController.queue",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{warehouseId:string;parcelId:string}"
+      }
+    },
+    {
+      "from": "portal#src/live/ticker.ts:joinRoom",
+      "to": "ui_api_call:portal#src/live/ticker.ts:23:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 23
+    },
+    {
+      "from": "portal#src/live/ticker.ts:startTicker",
+      "to": "ui_api_call:portal#src/live/ticker.ts:16:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 16
+    },
+    {
+      "from": "portal#src/live/ticker.ts:watchNotices",
+      "to": "portal#src/live/ticker.ts:onTick",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "MessageEvent<any>"
+      ],
+      "returns": "void",
+      "file": "src/live/ticker.ts",
+      "line": 31
+    },
+    {
+      "from": "portal#src/live/ticker.ts:watchNotices",
+      "to": "ui_api_call:portal#src/live/ticker.ts:30:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 30
+    },
+    {
+      "from": "portal#src/live/useWorkspaceEvents.ts:useWorkspaceEvents",
+      "to": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 15
+    },
+    {
+      "from": "portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "to": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 7
+    },
+    {
+      "from": "portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "to": "portal#src/live/useWorkspaceEvents.ts:useWorkspaceEvents",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/screens/ParcelBoard.tsx",
+      "line": 17
+    },
+    {
+      "from": "portal#src/screens/ParcelBoard.tsx:ParcelBoard",
+      "to": "portal#src/live/useWorkspaceEvents.ts:useWorkspaceEvents",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/screens/ParcelBoard.tsx",
+      "line": 10
+    },
+    {
+      "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+      "to": "channel:workspace:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+      "to": "channel:workspace:*:events#PARCEL_PACKED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "to": "channel:workspace:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "to": "channel:workspace:*:events#COURIER_ASSIGNED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:shipping#src/parcels/parcels.service.ts:23:11",
+      "to": "channel:warehouse:*:parcels",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/parcels/parcels.service.ts",
+      "line": 23
+    },
+    {
+      "from": "shipping#src/live/live.controller.ts:LiveController",
+      "to": "shipping#src/live/relay.service.ts:RelayService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "shipping#src/live/live.controller.ts:LiveController.events",
+      "to": "cache_op:shipping#src/live/live.controller.ts:22:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "shipping#src/live/live.controller.ts:LiveController.events",
+      "to": "cache_op:shipping#src/live/live.controller.ts:25:25",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live/live.controller.ts",
+      "line": 25
+    },
+    {
+      "from": "shipping#src/live/live.controller.ts:LiveController.packing",
+      "to": "shipping#src/live/relay.service.ts:RelayService.frames",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 31
+    },
+    {
+      "from": "shipping#src/live/relay.service.ts:RelayService.frames",
+      "to": "cache_op:shipping#src/live/relay.service.ts:17:12",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live/relay.service.ts",
+      "line": 17
+    },
+    {
+      "from": "shipping#src/live/relay.service.ts:RelayService.frames",
+      "to": "cache_op:shipping#src/live/relay.service.ts:18:25",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live/relay.service.ts",
+      "line": 18
+    },
+    {
+      "from": "shipping#src/parcels/parcels.controller.ts:ParcelsController",
+      "to": "shipping#src/parcels/parcels.service.ts:ParcelsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shipping#src/parcels/parcels.controller.ts:ParcelsController.courier",
+      "to": "shipping#src/parcels/parcels.service.ts:ParcelsService.assignCourier",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "shipping#src/parcels/parcels.controller.ts:ParcelsController.packed",
+      "to": "shipping#src/parcels/parcels.service.ts:ParcelsService.markPacked",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shipping#src/parcels/parcels.controller.ts:ParcelsController.queue",
+      "to": "shipping#src/parcels/parcels.service.ts:ParcelsService.queueForPacking",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "shipping#src/parcels/parcels.service.ts:ParcelsService.assignCourier",
+      "to": "cache_op:shipping#src/parcels/parcels.service.ts:19:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19
+    },
+    {
+      "from": "shipping#src/parcels/parcels.service.ts:ParcelsService.assignCourier",
+      "to": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19
+    },
+    {
+      "from": "shipping#src/parcels/parcels.service.ts:ParcelsService.markPacked",
+      "to": "cache_op:shipping#src/parcels/parcels.service.ts:15:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15
+    },
+    {
+      "from": "shipping#src/parcels/parcels.service.ts:ParcelsService.markPacked",
+      "to": "producer:shipping#src/parcels/parcels.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 15
+    },
+    {
+      "from": "shipping#src/parcels/parcels.service.ts:ParcelsService.queueForPacking",
+      "to": "cache_op:shipping#src/parcels/parcels.service.ts:23:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 23
+    },
+    {
+      "from": "shipping#src/parcels/parcels.service.ts:ParcelsService.queueForPacking",
+      "to": "producer:shipping#src/parcels/parcels.service.ts:23:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/parcels/parcels.service.ts",
+      "line": 23
+    },
+    {
+      "from": "ui_api_call:portal#src/live/ticker.ts:16:18",
+      "to": "consumer:portal#src/live/ticker.ts:onTick",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 17
+    },
+    {
+      "from": "ui_api_call:portal#src/live/ticker.ts:16:18",
+      "to": "entry:edge:http:GET:/live/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "edge"
+      }
+    },
+    {
+      "from": "ui_api_call:portal#src/live/ticker.ts:23:18",
+      "to": "consumer:portal#src/live/ticker.ts:onRoomMessage",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 24
+    },
+    {
+      "from": "ui_api_call:portal#src/live/ticker.ts:23:18",
+      "to": "entry:edge:http:GET:/rooms/:param/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 23,
+      "meta": {
+        "via": "api-target",
+        "targetService": "edge"
+      }
+    },
+    {
+      "from": "ui_api_call:portal#src/live/ticker.ts:30:18",
+      "to": "consumer:portal#src/live/ticker.ts:onTick",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/ticker.ts",
+      "line": 31
+    },
+    {
+      "from": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20",
+      "to": "consumer:portal#src/screens/ParcelBoard.tsx:CourierPanel",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20",
+      "to": "consumer:portal#src/screens/ParcelBoard.tsx:handleParcelEvent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:portal#src/live/useWorkspaceEvents.ts:15:20",
+      "to": "entry:shipping:http:GET:/workspaces/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/useWorkspaceEvents.ts",
+      "line": 15,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shipping"
+      }
+    },
+    {
+      "from": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20",
+      "to": "consumer:portal#src/screens/PackingScreen.tsx:PackingScreen",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 10
+    },
+    {
+      "from": "ui_api_call:portal#src/screens/PackingScreen.tsx:7:20",
+      "to": "entry:shipping:http:GET:/workspaces/:param/warehouses/:param/packing",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/screens/PackingScreen.tsx",
+      "line": 7,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shipping"
+      }
+    }
+  ],
+  "types": {
+    "type:edge#RoomObjects": {
+      "name": "RoomObjects",
+      "kind": "object",
+      "declaredIn": "edge#src/worker.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:hono#Context<{Bindings:{ROOMS:type:edge#RoomObjects}}>": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "hono",
+      "structuralHash": "9245dcdd5ac0d844",
+      "meta": {
+        "declKind": "external",
+        "package": "hono"
+      }
+    },
+    "type:portal#WorkspaceEvent": {
+      "name": "WorkspaceEvent",
+      "kind": "object",
+      "declaredIn": "portal#src/live/useWorkspaceEvents.ts",
+      "structuralHash": "d03261d1f3070d8b",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parcelId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "courierId",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus.ts",
+      "line": 10,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "client.connect",
+      "service": "edge"
+    },
+    {
+      "file": "src/bus.ts",
+      "line": 11,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "client.subscribe",
+      "service": "edge"
+    },
+    {
+      "service": "edge",
+      "file": "src/worker.ts",
+      "line": 25,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "A browser holds this route open as a stream of server-sent events, and the route hands its request to a per-scope object whose class is not read: no worker configuration of this repository binds ROOMS under durable_objects, and the namespace's type names no class.",
+      "hint": "Declare ROOMS under durable_objects.bindings in the worker's wrangler file with its class_name, or type the namespace as DurableObjectNamespace<Class>.",
+      "symbol": "GET /rooms/:param/stream"
+    },
+    {
+      "file": "src/worker.ts",
+      "line": 26,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 3,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /rooms/:roomId/stream@25 -> c.env.ROOMS.idFromName",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/worker.ts",
+                "line": 26,
+                "symbol": "GET /rooms/:roomId/stream@25 -> c.env.ROOMS.idFromName"
+              },
+              {
+                "file": "src/worker.ts",
+                "line": 27,
+                "symbol": "GET /rooms/:roomId/stream@25 -> c.env.ROOMS.get(id).fetch"
+              },
+              {
+                "file": "src/worker.ts",
+                "line": 27,
+                "symbol": "GET /rooms/:roomId/stream@25 -> c.env.ROOMS.get"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "edge"
+    },
+    {
+      "service": "portal",
+      "file": "src/live/ticker.ts",
+      "line": 30,
+      "reason": "target-route-not-found",
+      "message": "target service shipping has no route GET /notices/stream",
+      "hint": "Route renamed? Check shipping's controllers, or annotate the method with /** @flowatlas-calls GET /notices/stream */.",
+      "symbol": "ui_api_call:portal#src/live/ticker.ts:30:18"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "LiveController.events",
+      "service": "shipping"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 25,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.unsubscribe",
+      "service": "shipping"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 34,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "This route streams server-sent events, and no subscription to a channel was found in the code behind it.",
+      "hint": "What reaches the stream is decided by code not read as a subscription (a pipeline over a subject, a request handed to an object of its own). Annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /workspaces/:param/audit",
+      "service": "shipping"
+    },
+    {
+      "file": "src/live/relay.service.ts",
+      "line": 17,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate RelayService.frames with the channel it uses.",
+      "symbol": "RelayService.frames -> channel",
+      "service": "shipping"
+    },
+    {
+      "file": "src/live/relay.service.ts",
+      "line": 17,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "RelayService.frames",
+      "service": "shipping"
+    },
+    {
+      "file": "src/live/relay.service.ts",
+      "line": 17,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.subscribe",
+      "service": "shipping"
+    },
+    {
+      "file": "src/live/relay.service.ts",
+      "line": 18,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.unsubscribe",
+      "service": "shipping"
+    },
+    {
+      "file": "src/parcels/parcels.service.ts",
+      "line": 19,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects COURIER_ASSIGNED on workspace:*:events: 1 consumer chooses other types; 1 consumer takes every type and hands it on; 2 places may still choose it: src/live/useWorkspaceEvents.ts:16 (its handler is not code this reads), and 1 more",
+      "symbol": "producer:shipping#src/parcels/parcels.service.ts:19:11",
+      "service": "shipping",
+      "meta": {
+        "type": "channel:workspace:*:events#COURIER_ASSIGNED",
+        "channel": "channel:workspace:*:events",
+        "messageType": "COURIER_ASSIGNED",
+        "sureness": "unsure"
+      }
+    }
+  ]
+}

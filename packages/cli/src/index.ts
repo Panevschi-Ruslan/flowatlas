@@ -9,19 +9,27 @@ import { registerContracts } from './commands/contracts.js';
 import { registerRules } from './commands/rules.js';
 import { registerCycles } from './commands/cycles.js';
 import { registerDead } from './commands/dead.js';
+import { registerFindings } from './commands/findings.js';
 import { registerDeployed } from './commands/deployed.js';
 import { registerDiff } from './commands/diff.js';
+import { registerCheckChange } from './commands/check-change.js';
 import { registerDocs } from './commands/docs.js';
 import { registerDoctor } from './commands/doctor.js';
+import { registerExplain } from './commands/explain.js';
 import { registerExport } from './commands/export.js';
 import { registerExtract } from './commands/extract.js';
 import { registerFlow } from './commands/flow.js';
 import { registerHotspots } from './commands/hotspots.js';
+import { registerAgents } from './commands/agents.js';
+import { registerReport } from './commands/report.js';
+import { registerTeam } from './commands/team.js';
+import { registerHook } from './commands/hook.js';
 import { registerImpact } from './commands/impact.js';
 import { registerInit } from './commands/init.js';
 import { registerLink } from './commands/link.js';
 import { registerMcp } from './commands/mcp.js';
 import { registerObserve } from './commands/observe.js';
+import { registerPath } from './commands/path.js';
 import { registerShapes } from './commands/shapes.js';
 import { registerPatterns } from './commands/patterns.js';
 import { registerSpec } from './commands/spec.js';
@@ -43,15 +51,22 @@ export const createProgram = (): Command => {
   registerExtract(program);
   registerBuild(program);
   registerMcp(program);
+  registerHook(program);
+  registerAgents(program);
   registerFlow(program);
   registerImpact(program);
   registerChannel(program);
+  registerPath(program);
+  registerExplain(program);
+  registerReport(program);
+  registerTeam(program);
   registerTypes(program);
   registerContracts(program);
   registerRules(program);
   registerStats(program);
   registerCycles(program);
   registerDead(program);
+  registerFindings(program);
   registerDoctor(program);
   registerDocs(program);
   registerShapes(program);
@@ -60,6 +75,7 @@ export const createProgram = (): Command => {
   registerHotspots(program);
   registerVisualise(program);
   registerDiff(program);
+  registerCheckChange(program);
   registerCheck(program);
   registerSpec(program);
   registerExport(program);
@@ -179,6 +195,38 @@ export {
 export { runFlow, sequenceDetailOf } from './commands/flow.js';
 export type { FlowOptions } from './commands/flow.js';
 export { runImpact } from './commands/impact.js';
+export { runPath } from './commands/path.js';
+export { runReport, REPORT_FILE, REPORT_FORMATS, sectionsOf } from './commands/report.js';
+export { runPublish, runPull } from './commands/team.js';
+export type { PublishOptions, PullOptions, PullRun } from './commands/team.js';
+export type { ReportOptions, ReportRun } from './commands/report.js';
+export { overviewOf, overviewFingerprint, OVERVIEW_SECTIONS, DEFAULT_OVERVIEW_TOP } from './overview/overview.js';
+export type { Overview, OverviewSection } from './overview/overview.js';
+export { renderOverview } from './overview/render.js';
+export {
+  agentsStatus,
+  installAgents,
+  promptHookCommand,
+  removeAgents,
+  searchHookCommand,
+  withPromptHook,
+  withoutPromptHook,
+  withSearchHook,
+  withoutSearchHook,
+} from './commands/agents.js';
+export { CARD_NAMES_FILE, cardNamesOf, readCardNamesAt } from './agents/card-names.js';
+export type { CardIndex, CardKind, CardName } from './agents/card-names.js';
+export { MAX_CARD_CHARS, MAX_NAMES, planCards, promptCard } from './agents/prompt-hook.js';
+export type { PromptCard } from './agents/prompt-hook.js';
+export type { AgentFileChange, AgentFileState, AgentsOptions, AgentsRun } from './commands/agents.js';
+// What the answer budget measures as the guide's share of every turn (P373).
+export { CORE_TOOLS, guideBody, guideDescription, sharedBlock } from './agents/template.js';
+export type { AgentGuide } from './agents/template.js';
+export { hookBlock, hookStatus, installHooks, removeHooks, withBlock, withoutBlock, HOOK_EVENTS, DEFAULT_HOOK_EVENTS } from './commands/hook.js';
+export type { HookChange, HookEvent, HookOptions, HookRun } from './commands/hook.js';
+export type { PathOptions, PathRun } from './commands/path.js';
+export { runExplain, EXPLAIN_FORMATS } from './commands/explain.js';
+export type { ExplainOptions } from './commands/explain.js';
 export { runStats, collectStats, summariseStats } from './commands/stats.js';
 export type { Stats } from './commands/stats.js';
 export { runTypes, driftOf, globToRegExp, DRIFT_NOTE } from './commands/types.js';
@@ -206,8 +254,8 @@ export type { Format, QueryOptions, QuerySettings } from './options.js';
 export { present, processIo } from './query/answer.js';
 export type { Answer, QueryIo } from './query/answer.js';
 export { collectSource, collectTypes } from './query/detail.js';
-export { callersOf, groupEntries, reachableSummary } from './query/callers.js';
-export type { Callers, ReachableGroup } from './query/callers.js';
+export { groupEntries, reachableSummary } from './query/callers.js';
+export type { ReachableGroup } from './query/callers.js';
 export { channelIdOf, resolveChannel, resolveEntry, resolveSymbol } from './query/refs.js';
 export {
   CONFIDENCE_MARK,
@@ -326,6 +374,10 @@ export { runConfig, SelectorError } from './commands/config.js';
 export { runHotspots } from './commands/hotspots.js';
 export { HOTSPOT_EDGES } from './analysis/hotspots.js';
 export { runDiff, registerDiff, DIFF_FILE, DEFAULT_MAX_FLOWS } from './commands/diff.js';
+export { builtSide, changeCheckerFor, changedSinceBuild, checkWorkingTree, runCheckChange, BUILT_SIDE } from './commands/check-change.js';
+export { editContextFor, editHookOutput, replacementsOf, runEditHook } from './agents/edit-hook.js';
+export { declarationAt, editIndexOf, writeEditIndex } from './agents/edit-index.js';
+export { countIn, EDITS_FILE, EDITS_FORMAT_VERSION, fileKey } from './agents/edit-match.js';
 export { DEFAULT_DOC_GLOB, DOCS_FORMATS, docFiles, docsIn, registerDocs, runDocs } from './commands/docs.js';
 export type { DocResult, DocsFormat, DocsOptions, DocsProblem, DocsRun } from './commands/docs.js';
 export { DOC_VIEW_RENDERERS, renderDocView } from './docs/views.js';

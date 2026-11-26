@@ -1,0 +1,20 @@
+{
+  "channel": {
+    "id": "channel:venue_events",
+    "loc": "src/orders/orders.service.ts:12",
+    "service": "rooms-api"
+  },
+  "consumers": [],
+  "total": 0,
+  "type": "TABLE_FREED",
+  "unselected": "no code that runs selects TABLE_FREED on venue_events: 1 consumer chooses other types; 3 consumers take every type and hand it on; 1 place may still choose it: src/feed/room-board.service.ts:9 (TABLE_FREED is written here; the graph read no choice of it: evt.type === 'TABLE_FREED')",
+  "sureness": "unsure",
+  "complete": false,
+  "left": [
+    "unsure: 1 place may still choose TABLE_FREED, the first src/feed/room-board.service.ts:9"
+  ],
+  "next": [
+    "who_emits({channel: \"channel:venue_events\", type: \"TABLE_FREED\"})",
+    "who_consumes({channel: \"channel:venue_events\"})"
+  ]
+}

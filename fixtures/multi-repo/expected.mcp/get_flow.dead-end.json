@@ -1,4 +1,9 @@
 {
+  "requests": [
+    {
+      "unjoined": "POST ${ORDERS_URL}/orders/${…}/cancel"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:gateway:http:POST:/orders/:param/cancel",
@@ -9,10 +14,7 @@
       "kind": "http",
       "meta": {
         "method": "POST",
-        "path": "/orders/:param/cancel",
-        "rawPath": "/orders/:id/cancel",
-        "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "path": "/orders/:param/cancel"
       }
     },
     "children": [
@@ -22,6 +24,7 @@
           "type": "method",
           "label": "OrdersController.cancel",
           "loc": "src/orders/orders.controller.ts:35",
+          "endLine": 38,
           "meta": {
             "signature": {
               "params": [
@@ -31,16 +34,13 @@
                 }
               ],
               "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-            }
+            },
+            "fieldsRead": []
           }
         },
         "edge": {
           "type": "handles",
-          "confidence": "static",
-          "params": [
-            "string"
-          ],
-          "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+          "confidence": "static"
         },
         "children": [
           {
@@ -49,6 +49,7 @@
               "type": "method",
               "label": "OrdersClient.cancel",
               "loc": "src/clients/orders.client.ts:43",
+              "endLine": 47,
               "meta": {
                 "signature": {
                   "params": [
@@ -63,11 +64,7 @@
             },
             "edge": {
               "type": "calls",
-              "confidence": "static",
-              "params": [
-                "string"
-              ],
-              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+              "confidence": "static"
             },
             "children": [
               {
@@ -77,8 +74,7 @@
                   "label": "ORDERS_URL",
                   "loc": "src/clients/orders.client.ts:33",
                   "meta": {
-                    "key": "ORDERS_URL",
-                    "source": "config.get"
+                    "key": "ORDERS_URL"
                   }
                 },
                 "edge": {
@@ -120,6 +116,10 @@
     ]
   },
   "unresolvedOnPath": 1,
+  "complete": false,
+  "left": [
+    "unread: 1 step on the path could not be followed: POST /orders/:param/cancel (target-route-not-found), on a request's way"
+  ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
     "impact({symbol: \"entry:gateway:http:POST:/orders/:param/cancel\"})",

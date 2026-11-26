@@ -1,0 +1,137 @@
+{
+  "kind": "contract-break",
+  "rows": [
+    {
+      "kind": "contract-break",
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "service": "back-office",
+      "loc": "src/stores.client.ts:28",
+      "message": "`address` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "severity": "warning",
+      "precision": "medium",
+      "rank": 2,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+    },
+    {
+      "kind": "contract-break",
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "service": "back-office",
+      "loc": "src/stores.client.ts:28",
+      "message": "`city` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "severity": "warning",
+      "precision": "medium",
+      "rank": 3,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+    },
+    {
+      "kind": "contract-break",
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "service": "back-office",
+      "loc": "src/stores.client.ts:28",
+      "message": "`email` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "severity": "warning",
+      "precision": "medium",
+      "rank": 4,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+    },
+    {
+      "kind": "contract-break",
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "service": "back-office",
+      "loc": "src/stores.client.ts:28",
+      "message": "`name` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "severity": "warning",
+      "precision": "medium",
+      "rank": 5,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+    },
+    {
+      "kind": "contract-break",
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "service": "back-office",
+      "loc": "src/stores.client.ts:28",
+      "message": "`openingHours` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "severity": "warning",
+      "precision": "medium",
+      "rank": 6,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+    },
+    {
+      "kind": "contract-break",
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "service": "back-office",
+      "loc": "src/stores.client.ts:28",
+      "message": "`phone` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "severity": "warning",
+      "precision": "medium",
+      "rank": 7,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+    },
+    {
+      "kind": "contract-break",
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "service": "back-office",
+      "loc": "src/stores.client.ts:28",
+      "message": "`postcode` may be left out by sender back-office and is required by receiver stores-api; the sender marks it optional by question",
+      "severity": "warning",
+      "precision": "medium",
+      "rank": 8,
+      "reach": {
+        "callers": 1
+      },
+      "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+    }
+  ],
+  "total": 7,
+  "heldBack": {
+    "message-type-unselected": {
+      "count": 1,
+      "why": "handleFeed chooses ALERT_RAISED, and 1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+    },
+    "type-never-published": {
+      "count": 1,
+      "why": "1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+    },
+    "config-not-set": {
+      "count": 1,
+      "why": "no deployment file of back-office was read: its settings may be set where the reading does not look"
+    },
+    "field-never-sent": {
+      "count": 1,
+      "why": "`attempt` is compared under a type said two ways (BuildBot.handleBuildRetry: its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED)"
+    },
+    "answer-field-never-returned": {
+      "count": 3,
+      "why": "1: what GET /categories/tree answers is not a shape read, so the fields its clients read were not compared; 2: `changesFromPrevious` is read behind a check that it is there (changeSummary, line 27): the client handles its absence"
+    }
+  },
+  "next": [
+    "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})",
+    "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+  ]
+}

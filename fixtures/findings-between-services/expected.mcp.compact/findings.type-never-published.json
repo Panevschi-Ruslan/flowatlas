@@ -1,0 +1,44 @@
+{
+  "kind": "type-never-published",
+  "rows": [
+    {
+      "kind": "type-never-published",
+      "id": "channel:catalog_events#LISTING_CANCELED",
+      "to": "channel:catalog_events",
+      "service": "storefront",
+      "loc": "src/catalog-events.service.ts:25",
+      "message": "CatalogEventsService.onCatalogEvent handles LISTING_CANCELED on catalog_events, which nothing publishes; its 2 publish(es) send LISTING_CANCELLED, PRODUCT_CREATED",
+      "precision": "high",
+      "evidence": "every publish on catalog_events says the type it sends",
+      "fix": "likely renamed: LISTING_CANCELLED is published, LISTING_CANCELED is handled",
+      "seenBy": [
+        "DELETE /products/:param (catalog-api)",
+        "POST /products (catalog-api)",
+        "POST /shop/products (storefront)"
+      ],
+      "rank": 1,
+      "reach": {
+        "waysIn": 3
+      },
+      "next": "who_emits({channel: \"channel:catalog_events\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "call-to-missing-route": {
+      "count": 1,
+      "why": "some routes of legacy-api were not read (route-path-dynamic)"
+    },
+    "type-never-published": {
+      "count": 1,
+      "why": "1 publish(es) on stock_events send a type not read"
+    },
+    "config-not-set": {
+      "count": 2,
+      "why": "no deployment file of storefront was read: its settings may be set where the reading does not look"
+    }
+  },
+  "next": [
+    "who_emits({channel: \"channel:catalog_events\"})"
+  ]
+}

@@ -5,7 +5,8 @@ import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readGraphFile, resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
-import { createFlowatlasServer } from '../server.js';
+import { createFlowatlasServer, INSTRUCTIONS, INSTRUCTIONS_MAX } from '../server.js';
+import { UPFRONT_DESCRIPTION_MAX } from '../upfront.js';
 import type { FlowNode } from '../query/types.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
@@ -29,7 +30,7 @@ const requestIn = (method: string): string =>
 let client: Client;
 
 const call = async (name: string, args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name, arguments: args })) as {
+  const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as {
     content: Array<{ text: string }>;
   };
   return JSON.parse(response.content[0]!.text);
@@ -55,10 +56,11 @@ const flatten = (node: FlowNode): FlowNode[] => [
 ];
 
 describe('the tools a session is offered', () => {
-  it('are exactly the twenty-three the project promises', async () => {
+  it('are exactly the twenty-seven the project promises', async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'cant_follow',
+      'check_change',
       'check_contract',
       'check_rules',
       'dead',
@@ -204,12 +206,200 @@ describe('the tools a session is offered', () => {
    * and 32,652, the read ceiling holds and the full one moves to the next 50
    * above. What a project without an observed file or rules is offered is
    * measured below.
+   *
+   * P229 gave `get_flow` its `to` (the shortest ways to a node, instead of a
+   * path tool of its own): one clause on the description and the input, its
+   * meaning said once in the instructions. 13,192 read and 32,711 in all (19
+   * tools: 10,140 and 28,602), and the ceilings move
+   * to the next 50 above, here and below.
+   *
+   * P230 and P236 gave `start_here`'s output schema `moved` (a checkout on
+   * another commit than the graph) and `pulled` (the graph is the team's): one
+   * line each, which a client checks answers against and no model reads.
+   * 13,192 read as before; 32,764 and 28,655 in all, the full ceilings to the
+   * next 50.
+   *
+   * P360 gave the output schemas of `who_emits`, `who_consumes` and `dead`
+   * `channelUsed` (the channel a name written with placeholders denotes), one
+   * field each that a client checks answers against and no model reads; what
+   * a channel argument accepts is said once in the instructions. 13,192 read
+   * as before; 32,867 and 28,758 in all, the full ceilings to the next 50.
+   *
+   * P358 gave `who_emits` and `who_consumes` a `type` (one type of message on
+   * the channel) and `search` the kind `messages`, what each takes said once
+   * in the instructions; their output schemas gained the type asked, the
+   * types a channel carries, `unselected` with its `sureness`, the publishes
+   * whose type was not read, and on each handler where and how it chose the
+   * type. 13,344 read and 33,964 in all (19 tools: 10,292 and 29,855), the
+   * ceilings to the next 50, here and below.
+   *
+   * Lowered by P366, which lists the shared inputs (`detail`, `maxNodes`,
+   * `offset`, `service`) with their type alone, their meaning and defaults
+   * said once in the instructions, and drops the `$schema` header the SDK
+   * writes on each input schema; the descriptions took what the instructions
+   * no longer say about one tool. 11,296 read and 31,916 in all, from 13,344
+   * and 33,964; the ceilings at the next 50 above.
+   *
+   * Then P365 gave every tool but `get_source` `verbose` (28 characters a tool),
+   * and listed output schemas that require no field, since a compact answer
+   * may leave any out: 12,021 read and 31,642 in all after both; the ceilings just above.
+   *
+   * And P364 let `dead`, `find_symbol`, `search`, `get_type` and `who_calls`
+   * take several inputs at once (`ids`, `queries`, `types`, `symbols`, each
+   * an undescribed list of at most 20, said once in the instructions),
+   * and gave the output schemas `reach`, `from`, `ways` and `walkCut` on the
+   * rows of code, `complete` and `left` on the lists and `answers` for
+   * several: measured after all three, the ceilings just above, here and below.
+   *
+   * Then P367 said in impact's description what it lists now (the ways in
+   * on the calling side with `via`, the `maybe` rows) and that detail 1 is
+   * enough, and gave the rows of code `gap` and `behind` and the five words of
+   * `reach` in the output schemas: 12,443 read and 34,470 in all, 30,734 for
+   * the nineteen tools below; the ceilings moved to them, rounded up to the
+   * next 50.
+   *
+   * Then P368 gave `who_emits` and `who_consumes` a `field`, `check_contract`
+   * a `channel`, a `type`, a `field` and a description of what it answers on
+   * a route and on a channel, `search` the kind `fields`, and the output
+   * schemas `field`, `readIn`, `reads` and `sends`: 12,855 read and 35,179 in
+   * all, 31,443 for the nineteen tools below; the ceilings moved by that, to
+   * the next 50.
+   *
+   * And P372 gave `impact` its `channel` input and said `throughChannels` in its
+   * description: 12,555 read, 34,582 in all, 30,846 for the nineteen tools; the ceilings
+   * moved to them, rounded up to the next 50 (the second with room for the
+   * next). Measured with both: 12,967 read, 35,291 in all, 31,555 for the
+   * nineteen tools; the ceilings just above.
+   *
+   * P375 gave `list_entries` `in` (a class, a method or a file: its own ways in)
+   * and `reach` (one verdict), and said in the descriptions of `impact`, `dead`
+   * and `list_entries` what `by` and `rowsVia` are, that `dead` on a class or a
+   * file judges each way in it declares, and that `in` lists a class's own:
+   * 13,312 read, 36,070 in all, 32,334 for the nineteen tools; the ceilings moved to them,
+   * rounded up to the next 50.
+   *
+   * P378 let `impact`'s `channel` name a consumer of `throughChannels` too, for
+   * all of its channels, and said so on the input: 13,344 read, 36,102 in all,
+   * 32,366 for the nineteen tools; the last two ceilings moved to the next 50.
+   * P377 said in the output schemas of `find_symbol` and `get_source` where a
+   * method's requests land (`requests`, `requestsUnjoined`, `requestsMore`),
+   * and in `get_flow`'s `entry` that it takes any name: 13,314 read, 36,564 in
+   * all, 32,828 for the nineteen tools. Together with P378, 32,852 for the
+   * nineteen, the ceiling moved to the next 50.
+   *
+   * P380 marks the nine core tools to load upfront (`_meta`, 30 characters
+   * each, not read by the model), lists no lower bound that says nothing
+   * (`minItems: 1`, `minLength: 1`, `minimum: 0` or `1`) and shortens the
+   * descriptions of `search`, `list_entries`, `who_consumes`,
+   * `check_contract` and `dead`: 12,904 read, 36,488 in all (36,146 without
+   * the marks), 32,848 for the nineteen; the ceilings moved to the next 50
+   * above.
+   *
+   * P387 added one tool, `check_change`, listed only where the command line
+   * hands the server its checker (never upfront): one sentence, two inputs
+   * undescribed beside the shared bounds, and the output schema it shares
+   * with `what_changed`: 13,451 read, 37,176 in all; both ceilings moved to
+   * the next 50 above.
+   */
+  /**
+   * The instructions are re-sent on every turn (P366): 6,435 characters
+   * before, 2,131 after, with room under the ceiling for a line or two that
+   * describes a field every answer carries. P380 left out what the core
+   * tools, loaded upfront beside them, say themselves: 2,493 to 2,384.
+   *
+   * P382 says each question with its one call, where chains began by looking
+   * the id up, and checks every variant a server starts in: started on a
+   * database alone, with no code to serve and its own last line, it sent
+   * 2,535 characters, past the ceiling no test measured it against. Now
+   * 2,341 from a configuration (2,368 with the pattern tester, 2,384 before), 2,428 from a database alone, 2,455 from a
+   * database with the pattern tester. The line every answer needs (`reach`,
+   * `complete`, the plural keys) is in the first 2,048 characters, all a
+   * client before Claude Code v2.1.296 kept.
+   */
+  it('come with instructions that fit their ceiling in every variant, a call for each question, and no lookup first (P382)', async () => {
+    expect(INSTRUCTIONS.length).toBeLessThanOrEqual(INSTRUCTIONS_MAX);
+    expect(INSTRUCTIONS_MAX).toBeLessThan(UPFRONT_DESCRIPTION_MAX);
+    expect(client.getInstructions()).toBe(INSTRUCTIONS);
+    for (const said of ['who calls this: who_calls({symbol})', 'does each side send what the other reads: check_contract', 'a route said aloud', 'impact first', 'loads by ToolSearch', 'Only the tools this project can answer', '`detail` 0', 'start_here a project you do not know'])
+      expect(INSTRUCTIONS).toContain(said);
+    for (const gone of ['find_symbol -> who_calls', 'list_entries -> get_flow', 'Begin with']) expect(INSTRUCTIONS).not.toContain(gone);
+    expect(INSTRUCTIONS.indexOf('`complete: true` is the whole answer')).toBeLessThan(2048 - 200);
+    expect(INSTRUCTIONS.indexOf('get_type `types`')).toBeLessThan(2048);
+    const db = join(FIXTURE, '.flowatlas', 'graph.db');
+    const variants: Array<[string, Parameters<typeof createFlowatlasServer>[0]]> = [
+      ['a configuration with the tester', { configPath: CONFIG, patternTester: async () => ({ rules: [] }) }],
+      ['a database alone', { dbPath: db }],
+      ['a database alone with the tester', { dbPath: db, patternTester: async () => ({ rules: [] }) }],
+    ];
+    for (const [name, options] of variants) {
+      const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+      await createFlowatlasServer({ toolsPollMs: 0, ...options }).connect(serverSide);
+      const other = new Client({ name: 'test', version: '0' });
+      await other.connect(clientSide);
+      try {
+        const said = other.getInstructions() ?? '';
+        expect(said.length, name).toBeLessThanOrEqual(INSTRUCTIONS_MAX);
+        if (name.startsWith('a database')) {
+          expect(said, name).toContain('This server serves no code');
+          expect(said, name).not.toContain('get_source');
+        }
+      } finally {
+        await other.close();
+      }
+    }
+  });
+
+  /**
+   * P381 grew them by the inputs that say several or filter (impact's
+   * `symbols`, who_calls' and impact's `callersIn`, who_consumes' and
+   * who_emits' `channels`, list_entries' `called`) and by the output schemas
+   * that answer several channels and say `callers` and `throughDead`, the core
+   * descriptions trimmed so the upfront listing stays under its ceiling.
+   *
+   * What a model reads of the listing is each tool's name, description and
+   * input schema; an output schema never reaches it (Claude Code hands it
+   * the structured content, not the schema it fits), so the ceilings measure
+   * what is read, and the output schemas have a ceiling of their own for the
+   * client. P382 gave get_source `whole` and `verbose` and dropped its output
+   * schema, and named a route and a type alone on check_contract: 13,011
+   * read (12,904 before) and 18,896 of output schemas, each ceiling the next
+   * 50 above.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(13150);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(32700);
+    // P381 to P391 together (check_change, impact's symbols and callersIn, list_entries' called, answer fields): 13,626 read.
+    // P395 gives findings `severity`, its contract warnings counted unless asked: 13,731.
+    expect(read.length).toBeLessThan(13750);
+    const output = JSON.stringify(tools.map(({ name, outputSchema }) => ({ name, outputSchema })));
+    // P384 findings, P387 check_change and P391 answer fields: 20,225 of output schemas, which the model never reads.
+    // P393 says where a row's code ends (`endLine`), how to confirm a maybe (`confirm`, in every reached row) and one
+    // `requests` list: 21,457, which the model never reads either. P395's findings `warnings`: 21,561.
+    // P403 declares on every output schema what the boundary may add (a size cut's `complete`, `left`, `next`,
+    // `nextOffset`, and `settled` on who_consumes and who_emits) and who_consumes' `selectionUnread`: 22,409.
+    // P404 gives who_consumes and who_emits `alsoOn` (the other channels a type is sent on) and `selectionUnread` a
+    // place's `service`, `in` and `handedBy`: 22,975, which the model never reads.
+    // P405 names each `alsoOn` reader with its line (`senders` in who_emits), counts the rest in `alsoOnRest`, and adds
+    // `readsNothing` to who_consumes and its rows and `rawPath` to list_entries' rows: 23,551, which the model never reads.
+    // P406 says on a row the tables its method writes (`writes`) and on a dead route its declared path: 23,657.
+    expect(output.length).toBeLessThan(23700);
+  });
+
+  /**
+   * What every tool shares is said once (P366): a shared input keeps only its
+   * type, and only where its bounds are the shared ones; a tool whose bound
+   * differs says what differs. The full schema still checks every call.
+   */
+  it('list the shared inputs by type alone, and what differs from them', async () => {
+    const { tools } = await client.listTools();
+    const input = (name: string) => tools.find((tool) => tool.name === name)?.inputSchema as { $schema?: string; properties: Record<string, unknown> };
+    for (const tool of tools) expect((tool.inputSchema as { $schema?: string }).$schema).toBeUndefined();
+    expect(input('list_entries').properties).toMatchObject({ detail: { type: 'integer' }, maxNodes: { type: 'integer' }, offset: { type: 'integer' }, service: { type: 'string' } });
+    expect(input('list_entries').properties['detail']).toEqual({ type: 'integer' });
+    expect(input('get_flow').properties['maxNodes']).toEqual({ default: 60, type: 'integer' });
+    expect(input('trace_for').properties['maxNodes']).toEqual({ default: 60, type: 'integer', maximum: 200 });
+    const refused = await client.callTool({ name: 'list_entries', arguments: { detail: 9 } });
+    expect(refused.isError).toBe(true);
   });
 
   /**
@@ -229,8 +419,9 @@ describe('the tools a session is offered', () => {
       const { tools } = await plain.listTools();
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-      expect(read.length).toBeLessThan(10100);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(28550);
+      // What the model reads of the nineteen (P382): 10,428, where this measured the output schemas too.
+      // With P381 to P391: 10,496 read; with findings' `severity` (P395), 10,601.
+      expect(read.length).toBeLessThan(10650);
     } finally {
       await plain.close();
     }
@@ -243,7 +434,6 @@ describe('the tools a session is offered', () => {
       'dead',
       'find_symbol',
       'findings',
-      'get_source',
       'get_type',
       'list_entries',
       'search',
@@ -277,7 +467,7 @@ describe('the tools a session is offered', () => {
   });
 
   it('carry the answer as structuredContent too, the same document as the text', async () => {
-    const reply = (await client.callTool({ name: 'list_entries', arguments: { maxNodes: 2 } })) as {
+    const reply = (await client.callTool({ name: 'list_entries', arguments: { verbose: true, maxNodes: 2 } })) as {
       content: Array<{ text: string }>;
       structuredContent?: unknown;
     };
@@ -314,8 +504,10 @@ describe('reading a list a page at a time', () => {
     expect((await call('find_symbol', { query: 'orders', maxNodes: 1, offset: 1 })).matches[0].id).not.toBe(found.matches[0].id);
     const symbol = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
     const impact = await call('impact', { symbol, maxNodes: 1 });
-    // Billing's call reaches it too (P209): its three ways in, and the two that reach billing.
-    expect(impact).toMatchObject({ total: 7, nextOffset: 1 });
+    // Billing's call reaches it too (P209): its three ways in, and the two that reach billing. The web's
+    // chain ends are written nowhere else in it (P370): counted as unreached, not listed. `POST /orders`, which
+    // reaches billing only through `order.created`, is counted under throughChannels (P372).
+    expect(impact).toMatchObject({ total: 6, nextOffset: 1 });
     expect(impact.next[0]).toBe(`impact({symbol: ${JSON.stringify(symbol)}, maxNodes: 1, offset: 1})`);
     const emits = await call('who_emits', { channel: 'order.created', offset: 1 });
     expect(emits).toMatchObject({ producers: [], total: 1 });
@@ -416,8 +608,10 @@ describe('following an entry across services', () => {
 
   it('suggests something when nothing matches', async () => {
     const flow = await call('get_flow', { entry: 'GET /nowhere' });
-    expect(flow.error).toContain('no entry matches');
-    expect(Array.isArray(flow.suggestions)).toBe(true);
+    expect(flow.error).toBe('nothing matches "GET /nowhere"');
+    // Nothing near: the routes searched by path, never an empty list of suggestions (P377).
+    expect(flow.suggestions).toBeUndefined();
+    expect(flow.next).toEqual(['search({query: "GET /nowhere", kinds: ["routes"]})']);
   });
 
   it('stays within the node budget and says what it cut', async () => {
@@ -473,6 +667,41 @@ describe('following an entry across services', () => {
   });
 });
 
+describe('the shortest ways from one node to another (P229)', () => {
+  it('keeps only the steps on a shortest path, across the services, from a way in to a table', async () => {
+    const path = await call('get_flow', { entry: 'entry:gateway:http:GET:/orders/:param', to: 'table:orders#orders' });
+    const ids = flatten(path.root).map((item) => item.node.id);
+    expect(ids[0]).toBe('entry:gateway:http:GET:/orders/:param');
+    expect(ids.at(-1)).toBe('table:orders#orders');
+    expect(ids).toContain('entry:orders:http:GET:/orders/:param');
+    expect(path).toMatchObject({ to: 'table:orders#orders', pathsFound: 1, unresolvedOnPath: 0 });
+    expect(path.length).toBe(ids.length - 1);
+    expect(path.none).toBeUndefined();
+    expect(path.next[0]).toBe('describe_for_prompt({id: "table:orders#orders"})');
+  });
+
+  it('starts anywhere, not only at a way in', async () => {
+    const path = await call('get_flow', { entry: 'OrdersService.findOne', to: 'table:orders#orders' });
+    expect(flatten(path.root).map((item) => item.node.label)).toEqual(['OrdersService.findOne', 'read orders', 'orders']);
+  });
+
+  it('says how far it looked and that the other way round holds, when asked the wrong way', async () => {
+    const path = await call('get_flow', { entry: 'table:orders#orders', to: 'entry:gateway:http:GET:/orders/:param' });
+    expect(path.pathsFound).toBe(0);
+    expect(path.length).toBeNull();
+    expect(path.none).toMatch(/^no path within 24 steps; searched \d+ nodes$/);
+    expect(path.reverse).toMatchObject({ paths: 1 });
+    expect(path.next).toEqual(['get_flow({entry: "entry:gateway:http:GET:/orders/:param", to: "table:orders#orders"})']);
+  });
+
+  it('names the candidates of an end that means two nodes, as the call that takes each', async () => {
+    const path = await call('get_flow', { entry: 'GET /orders/1', to: 'table:orders#orders' });
+    expect(path.entry).toBe('GET /orders/1');
+    expect(path.candidates.map((item: { service: string }) => item.service)).toEqual(['gateway', 'orders']);
+    expect(path.next[0]).toBe('get_flow({to: "table:orders#orders", entry: "entry:gateway:http:GET:/orders/:param"})');
+  });
+});
+
 describe('working backwards', () => {
   it('finds the caller in another repository', async () => {
     const answer = await call('who_calls', {
@@ -499,16 +728,32 @@ describe('working backwards', () => {
     });
     // Billing reads the order it invoices (P209), so every way into billing that writes an invoice
     // reaches it, and the gateway's and orders' ways in that reach billing do too.
-    expect(answer.entries.map((entry: { id: string }) => entry.id).sort()).toEqual([
+    const ways = answer.entries.filter((entry: { reach: string }) => entry.reach !== 'maybe');
+    expect(ways.map((entry: { id: string }) => entry.id).sort()).toEqual([
       'entry:billing:event:invoice.requested',
       'entry:billing:event:order.created',
       'entry:billing:http:POST:/invoices',
       'entry:gateway:http:GET:/orders/:param',
       'entry:gateway:http:POST:/orders/:param/invoice',
       'entry:orders:http:GET:/orders/:param',
-      'entry:orders:http:POST:/orders',
     ]);
-    expect(answer.entriesByService).toEqual({ billing: 3, gateway: 2, orders: 2 });
+    expect(answer.entriesByService).toEqual({ billing: 3, gateway: 2, orders: 1 });
+    // `POST /orders` publishes `order.created`, which billing's consumer takes before it reads the order back: it
+    // calls none of the code, so it is counted beyond the channel, one call listing it (P372).
+    expect(answer.throughChannels).toEqual([
+      { consumer: 'consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated', channels: ['order.created'], ways: 1, sample: [{ id: 'entry:orders:http:POST:/orders', by: 'orders#src/orders/orders.controller.ts:OrdersController.create' }] },
+    ]);
+    const across = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', channel: 'order.created' });
+    expect(across.entries.map((entry: { id: string; via?: string }) => [entry.id, entry.via])).toEqual([['entry:orders:http:POST:/orders', 'channel order.created']]);
+    // The ways in on the calling side say the crossing they come through; the target's own route says none (P367).
+    expect(ways.find((entry: { id: string }) => entry.id === 'entry:gateway:http:GET:/orders/:param').via).toBe('GET /orders/:param (orders)');
+    expect(ways.find((entry: { id: string }) => entry.id === 'entry:orders:http:GET:/orders/:param').via).toBeUndefined();
+    // The web's chains end at a component no route shows and client methods nothing calls, whose names the web
+    // writes nowhere else, in files with no step the reading could not follow: unreached, counted apart (P370).
+    const maybes = answer.entries.filter((entry: { reach: string }) => entry.reach === 'maybe');
+    expect(maybes).toEqual([]);
+    expect(answer.unreached).toBe(5);
+    expect(answer.maybe).toBeUndefined();
     // Every service the chain runs into, whether or not a way in was found
     // above it, because a change is visible in all of them (R03).
     expect(Object.keys(answer.reachedByService).sort()).toEqual(['billing', 'gateway', 'orders', 'web']);
@@ -545,13 +790,14 @@ describe('working backwards', () => {
     expect(impact.next.every((hint: string) => hint.startsWith('impact('))).toBe(true);
   });
 
-  it('counts the callers it left past its depth, and names the rows to ask on from (P94)', async () => {
+  it('draws the tree to its depth and lists the ways in past it, never a cut to ask on from (P94, P376, P379)', async () => {
     const answer = await call('who_calls', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', depth: 2 });
-    // The route's two callers past the cut: the gateway's call and billing's (P209).
-    expect(answer.truncated).toBe('2 more nodes past depth 2; raise depth');
-    expect(answer.stoppedBy).toEqual(['depth']);
-    expect(answer.frontier).toEqual(['entry:orders:http:GET:/orders/:param']);
-    expect(answer.next[0]).toBe('who_calls({symbol: "orders#src/orders/orders.service.ts:OrdersService.findOne", depth: 4})');
+    // The route's two callers past the tree, the gateway's call and billing's (P209), are reached by the walk.
+    expect(answer.truncated).toBeUndefined();
+    expect(answer.frontier).toBeUndefined();
+    expect(answer.waysIn.map((row: { id: string }) => row.id)).toContain('entry:gateway:http:GET:/orders/:param');
+    expect(answer.complete).toBe(true);
+    expect(answer.next.some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
   it('says nothing was cut when the walk ran out of callers', async () => {
@@ -560,12 +806,16 @@ describe('working backwards', () => {
     expect(answer.stoppedBy).toBeUndefined();
   });
 
-  it('takes a route said with a real value, and gives the two services that serve it as candidates (P94)', async () => {
+  it('takes a route said with a real value, and answers each of the two services that serve it (P94, P381)', async () => {
     const answer = await call('who_calls', { symbol: 'GET /orders/123' });
-    expect(answer.candidates.map((candidate: { id: string }) => candidate.id)).toEqual([
+    expect(answer.ambiguous).toContain('names 2 symbols');
+    expect(answer.answers.map((one: { asked: string }) => one.asked).sort()).toEqual([
       'entry:gateway:http:GET:/orders/:param',
       'entry:orders:http:GET:/orders/:param',
     ]);
+    // The service picks one (P381).
+    const picked = await call('who_calls', { symbol: 'GET /orders/123', service: 'orders' });
+    expect(picked.target.id).toBe('entry:orders:http:GET:/orders/:param');
   });
 
   it('takes a literal route, and names the routes that answer it less specifically (P94)', async () => {
@@ -659,7 +909,7 @@ describe('whether two services still agree', () => {
 
   it('says so when there is no such edge', async () => {
     const answer = await call('check_contract', { from: 'a', to: 'b' });
-    expect(answer.error).toContain('no edge');
+    expect(answer.error).toContain('no call');
   });
 
   it('lists every crossing between two services, each with the call that checks it (P94)', async () => {
@@ -735,7 +985,7 @@ describe('an answer that could not be given (P94)', () => {
       ['search', { query: 'zzzz-nothing-zzzz' }],
     ];
     for (const [name, args] of failing) {
-      const reply = (await client.callTool({ name, arguments: args })) as { isError?: boolean; structuredContent?: unknown; content: Array<{ text: string }> };
+      const reply = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { isError?: boolean; structuredContent?: unknown; content: Array<{ text: string }> };
       expect(reply.isError, name).toBe(true);
       expect(reply.structuredContent, name).toBeUndefined();
       expect(JSON.parse(reply.content[0]!.text).error, name).toEqual(expect.any(String));
@@ -815,9 +1065,14 @@ describe('answers that hand on the id the next question needs', () => {
     };
     walk(callers.callers, callers.target.service);
     expect([...services]).toEqual(['gateway']);
-    const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', service: 'orders' });
-    // `POST /orders` reaches it through billing, which takes `order.created` and reads the order back (P209).
-    expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param', 'entry:orders:http:POST:/orders']);
+    // `service` picks the symbol (P381): one in the service asked keeps every caller; `callersIn` cuts them.
+    const impact = await call('impact', { symbol: 'orders#src/orders/orders.service.ts:OrdersService.findOne', callersIn: 'orders' });
+    // `POST /orders` reaches it only through billing, which takes `order.created` and reads the order back (P209):
+    // counted beyond the channel, in the service asked for (P372).
+    expect(impact.entries.map((entry: { id: string }) => entry.id)).toEqual(['entry:orders:http:GET:/orders/:param']);
+    expect(impact.complete).toBe(false);
+    expect(impact.left[0]).toMatch(/^filter: \d+ ways in in other services left out \(callersIn: orders\)$/);
+    expect(impact.throughChannels.map((row: { sample: Array<{ id: string }> }) => row.sample.map((way) => way.id))).toEqual([['entry:orders:http:POST:/orders']]);
     expect((await call('who_emits', { channel: 'order.created', service: 'billing' })).producers).toEqual([]);
   });
 
@@ -844,8 +1099,16 @@ describe('answers that hand on the id the next question needs', () => {
     const answer = await call('describe_for_prompt', { id });
     expect(answer.id).toBe(id);
     expect(answer.markdown).toMatch(/^# Check: api-path-dynamic/);
-    expect(answer.markdown).toContain('## Where · 3');
-    expect(answer.next).toEqual(['search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})']);
+    // Four rows since P279 says the address built in part that joins nothing; the
+    // request it is on is something to ask about, so the next questions start there.
+    expect(answer.markdown).toContain('## Where · 4');
+    const site = 'ui_api_call:web#src/app/orders-api.service.ts:48:12';
+    expect(answer.next).toEqual([
+      `who_calls({symbol: "${site}"})`,
+      `impact({symbol: "${site}"})`,
+      `get_source({symbol: "${site}"})`,
+      'search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})',
+    ]);
     expect((await call('describe_for_prompt', { id: 'gap:web|src/nowhere.ts|api-path-dynamic' })).error).toMatch(/no rows answer to/);
   });
 
@@ -902,10 +1165,11 @@ describe('dead, findings, type_usage and scoped prompts', () => {
 
   it('says likely-dead with the call that could hit it, and unknown with the call one segment off', async () => {
     const likely = await call('dead', { id: 'entry:orders:http:GET:/orders/latest' });
-    expect(likely.verdict).toBe('likely-dead');
+    // P396: said maybe, the word every row's reach says for it.
+    expect(likely.verdict).toBe('maybe');
     expect(likely.evidence.couldHit[0].call).toBe(requestIn('gateway#src/clients/orders.client.ts:OrdersClient.variant'));
     const off = await call('dead', { id: 'entry:orders:http:POST:/orders/:param/archive' });
-    expect(off.verdict).toBe('unknown');
+    expect(off.verdict).toBe('maybe');
     expect(off.evidence.oneOff[0]).toMatchObject({ asks: 'POST /orders/:param/cancel', differs: 'cancel for archive' });
     expect(off.next[0]).toBe(`get_source({symbol: ${JSON.stringify(off.evidence.oneOff[0].call)}})`);
   });
@@ -929,7 +1193,19 @@ describe('dead, findings, type_usage and scoped prompts', () => {
 
   it('counts every kind of finding with its top rows, each with the call that shows it', async () => {
     const answer = await call('findings');
-    expect(answer.counts).toEqual({ unguarded: 4, 'one-ended-channel': 2 });
+    // What looks broken between the services comes first (P384): the two calls to routes that do not exist.
+    expect(answer.counts).toEqual({ 'call-to-missing-route': 2, unguarded: 4, 'one-ended-channel': 2 });
+    expect(Object.keys(answer.counts)[0]).toBe('call-to-missing-route');
+    expect(answer.top['call-to-missing-route'][0]).toMatchObject({
+      id: 'http_out:gateway#src/clients/orders.client.ts:44:12',
+      precision: 'high',
+      fix: 'the nearest route: POST /orders/:param/archive (one segment off: cancel for archive)',
+    });
+    expect(answer.heldBack).toEqual({
+      'call-to-missing-route': { count: 1, why: 'the service it is sent to is not named' },
+      // P388: the fixture has no deployment file, so a setting read with no default is not said to be set nowhere.
+      'config-not-set': { count: 3, why: 'no deployment file of billing was read: its settings may be set where the reading does not look' },
+    });
     const [first] = answer.top.unguarded;
     expect(first).toMatchObject({ id: 'entry:orders:http:POST:/orders', rank: 1, reach: { writes: 1 } });
     expect(first.next).toBe('get_flow({entry: "entry:orders:http:POST:/orders"})');
@@ -939,7 +1215,7 @@ describe('dead, findings, type_usage and scoped prompts', () => {
     ]);
     const none = await call('findings', { kind: 'n-plus-one' });
     expect(none).toMatchObject({ rows: [], total: 0 });
-    expect(none.note).toContain('the kinds found are unguarded, one-ended-channel');
+    expect(none.note).toContain('the kinds found are call-to-missing-route, one-ended-channel, unguarded');
   });
 
   it('lists the ways in and the crossing that carry a shared type, and the types that hold one', async () => {
@@ -983,7 +1259,7 @@ describe('dead, findings, type_usage and scoped prompts', () => {
     await server.connect(serverSide);
     const own = new Client({ name: 'scope', version: '0' });
     await own.connect(clientSide);
-    const response = (await own.callTool({ name: 'describe_for_prompt', arguments: { id: 'POST /orders', scope: 'class' } })) as {
+    const response = (await own.callTool({ name: 'describe_for_prompt', arguments: { verbose: true, id: 'POST /orders', scope: 'class' } })) as {
       isError?: boolean;
       content: Array<{ text: string }>;
     };
@@ -996,7 +1272,8 @@ describe('dead, findings, type_usage and scoped prompts', () => {
     const holder = 'orders#src/orders/orders.service.ts:OrdersService';
     const callers = await call('who_calls', { symbol: holder, depth: 1 });
     expect(callers.callers.length).toBeGreaterThan(0);
-    expect(callers.callers.every((row: { calls?: string }) => row.calls?.startsWith(`${holder}.`))).toBe(true);
+    // Each caller names the method it calls by its own name, as `reaches` on the ways in does (P376).
+    expect(callers.callers.every((row: { calls?: string }) => typeof row.calls === 'string' && !row.calls.includes('.'))).toBe(true);
     const impact = await call('impact', { symbol: holder });
     expect(impact.forMethods).toBe(4);
     expect(impact.entries.map((entry: { id: string }) => entry.id)).toContain('entry:gateway:http:GET:/orders/:param');

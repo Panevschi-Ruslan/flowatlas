@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,8 +8,11 @@ import { testPatternText } from '../patterns/test.js';
 import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { KNOWN_REASONS, kindHint } from '../doctor/hints.js';
+import { overviewOf } from '../overview/overview.js';
+import { renderOverview } from '../overview/render.js';
 import { ownBin } from '../own-path.js';
 import { VERSION } from '../version.js';
+import { changeCheckerFor } from './check-change.js';
 
 export const MCP_FILE = '.mcp.json';
 
@@ -223,6 +226,8 @@ export const registerMcp = (program: Command): void => {
     .option('--repo <name>', 'with --install, only this service')
     .option('--dry-run', 'with --install, say what would change and write nothing')
     .option('--all-tools', 'list every tool, not only those the project can answer')
+    .option('--no-always-load', 'list no tool to load upfront: Claude Code defers every tool, the core ones too')
+    .option('--upfront <tools>', 'only these core tools load upfront, comma-separated (who_calls,impact,search,get_flow); the rest load by ToolSearch')
     .action(
       async (options: {
         config?: string;
@@ -231,6 +236,8 @@ export const registerMcp = (program: Command): void => {
         repo?: string;
         dryRun?: boolean;
         allTools?: boolean;
+        alwaysLoad?: boolean;
+        upfront?: string;
       }) => {
         if (options.install === true) {
           installMcp({
@@ -241,6 +248,9 @@ export const registerMcp = (program: Command): void => {
           return;
         }
 
+        // The team's graph first, when the configuration asks (P236): a failed pull
+        // never stops the server, which answers from what it has and says why.
+        await pullOnStart(options.config);
         const { DbHandle, startStdioServer } = await import('@flowatlas/mcp');
         // Loaded here, not at the top: the finder reaches `init`, which reaches this file.
         const { missingCandidatesFor } = await import('../doctor/missing.js');
@@ -260,6 +270,8 @@ export const registerMcp = (program: Command): void => {
           // installed, not the private package the server is compiled from (P86 D3).
           version: VERSION,
           reasonCatalog: reasonCatalog(),
+          // The project's overview for flowatlas://overview (P228): the model is the command line's.
+          overview: (db, at) => renderOverview(overviewOf(db, at)),
           contractChecker: contractsHook(() => {
             const opened = handle.open();
             return 'error' in opened ? undefined : opened.db;
@@ -269,9 +281,48 @@ export const registerMcp = (program: Command): void => {
             return 'error' in opened ? undefined : opened.db;
           }),
           patternTester: patternTesterFor(options.config),
+          // A background build, for `mcp.rebuild: on-change` (P230); the server decides when.
+          rebuild: () => {
+            const configPath = handle.configPath;
+            if (configPath === undefined) return;
+            spawn(process.execPath, [binPath(), 'build', '--background', '--config', configPath], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+          },
+          // The working tree against the built graph, for check_change (P387): built by this command, in a process of its own.
+          changeChecker: changeCheckerFor(() => handle.configPath),
           ...missingCandidatesFor(options.config),
           ...(options.allTools === true ? { allTools: true } : {}),
+          // Commander reads `--no-always-load` as `alwaysLoad: false`, and true otherwise.
+          ...(options.alwaysLoad === false ? { alwaysLoad: false } : {}),
+          ...(options.upfront === undefined ? {} : { upfront: upfrontList(options.upfront) }),
         });
       },
     );
+};
+
+/** `--upfront who_calls,impact`: the names, as the server checks them (P392). */
+export const upfrontList = (text: string): string[] =>
+  text
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => name !== '');
+
+/**
+ * `mcp.pull: on-start` (P236): the team's graph, pulled before the server
+ * starts, a conditional request when nothing is new. What it says goes to
+ * stderr, which a client keeps as the server's log; stdout is the protocol's.
+ */
+const pullOnStart = async (config: string | undefined): Promise<void> => {
+  let loaded: LoadedConfig;
+  try {
+    loaded = loadConfig(config ?? process.cwd());
+  } catch {
+    return;
+  }
+  if (loaded.config.mcp?.pull !== 'on-start' || loaded.config.remote === undefined) return;
+  const { runPull } = await import('./team.js');
+  try {
+    await runPull(undefined, { config: loaded.configPath }, { out: () => {}, err: (text) => void process.stderr.write(text) });
+  } catch (cause) {
+    process.stderr.write(`flowatlas: could not pull the team's graph: ${cause instanceof Error ? cause.message : String(cause)}\n`);
+  }
 };

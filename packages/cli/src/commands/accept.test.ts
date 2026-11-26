@@ -286,7 +286,7 @@ describe('one route rule, one answer on every surface (P80)', () => {
     const client = new Client({ name: 'test', version: '0' });
     await client.connect(clientSide);
     try {
-      const response = (await client.callTool({ name: 'cant_follow', arguments: {} })) as { content: Array<{ text: string }> };
+      const response = (await client.callTool({ name: 'cant_follow', arguments: { verbose: true } })) as { content: Array<{ text: string }> };
       const mcp = (JSON.parse(response.content[0]!.text) as { accepted?: { rows: number } }).accepted?.rows ?? 0;
       return { doctor, unresolved, page, mcp };
     } finally {

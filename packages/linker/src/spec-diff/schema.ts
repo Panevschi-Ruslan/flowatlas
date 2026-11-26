@@ -7,7 +7,15 @@ import { CONFIDENCE_LEVELS } from '@flowatlas/core';
 import { z } from 'zod';
 import { SPEC_KINDS } from '../document/written.js';
 import { SPEC_AGAINST_FORMAT_VERSION, type SpecAgainstReport } from './against.js';
-import { SPEC_CHANGE_KIND_NAMES, SPEC_CHANGE_LEVELS, SPEC_DIFF_FORMAT_VERSION, type SpecDiffReport } from './types.js';
+import {
+  SPEC_CHANGE_DIRECTIONS,
+  SPEC_CHANGE_KIND_NAMES,
+  SPEC_CHANGE_LEVELS,
+  SPEC_DIFF_FORMAT_VERSION,
+  SPEC_FLOW_STEPS,
+  SPEC_USE_HOWS,
+  type SpecDiffReport,
+} from './types.js';
 
 const count = z.number().int().min(0);
 
@@ -18,6 +26,49 @@ export const specCallerSchema = z.strictObject({
   line: z.number().int().min(0).optional(),
   confidence: z.enum(CONFIDENCE_LEVELS),
   via: z.string().min(1),
+});
+
+const line = z.number().int().min(0);
+
+/** What a change does to the code that uses it (P390). */
+export const specChangeUseSchema = z.strictObject({
+  direction: z.enum(SPEC_CHANGE_DIRECTIONS),
+  why: z.string().min(1),
+  level: z.enum(SPEC_CHANGE_LEVELS),
+  verdict: z.string().min(1),
+  among: count,
+  readers: z.array(
+    z.strictObject({
+      id: z.string().min(1),
+      service: z.string(),
+      file: z.string().optional(),
+      line: line.optional(),
+      how: z.enum(SPEC_USE_HOWS),
+      said: z.string().min(1),
+      level: z.enum(SPEC_CHANGE_LEVELS),
+    }),
+  ),
+  flows: z.array(
+    z.array(
+      z.strictObject({
+        id: z.string().min(1),
+        step: z.enum(SPEC_FLOW_STEPS),
+        label: z.string().min(1),
+        service: z.string(),
+        file: z.string().optional(),
+        line: line.optional(),
+      }),
+    ),
+  ),
+  deployOrder: z.strictObject({ first: z.enum(['consumers', 'producers', 'callers', 'server']), said: z.string().min(1) }).optional(),
+  anchor: z
+    .strictObject({
+      how: z.enum(['same', 'nearest', 'summary']),
+      file: z.string().min(1).optional(),
+      line: line.optional(),
+      from: z.strictObject({ file: z.string().min(1), line: line.optional() }).optional(),
+    })
+    .optional(),
 });
 
 export const specChangeSchema = z.strictObject({
@@ -39,13 +90,16 @@ export const specChangeSchema = z.strictObject({
   note: z.string().nullable(),
   confidence: z.enum(CONFIDENCE_LEVELS),
   key: z.string().min(1),
+  use: specChangeUseSchema.optional(),
 });
 
 export const specDiffReportSchema = z.strictObject({
-  specDiffFormatVersion: z.literal(SPEC_DIFF_FORMAT_VERSION),
+  // Format 1 is still read: it predates `use` and `coverage` (P390).
+  specDiffFormatVersion: z.union([z.literal(1), z.literal(SPEC_DIFF_FORMAT_VERSION)]),
   documents: z.strictObject({ base: count, head: count }),
   changes: z.array(specChangeSchema),
   summary: z.strictObject({ errors: count, warnings: count, infos: count, breaking: count, uncalled: count }),
+  coverage: z.strictObject({ consumers: count, repositories: count, said: z.string().min(1) }).optional(),
 });
 
 /** Reads a spec diff, refusing one a newer flowatlas wrote by name. */

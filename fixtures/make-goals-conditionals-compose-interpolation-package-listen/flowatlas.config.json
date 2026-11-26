@@ -1,0 +1,55 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express"
+    },
+    {
+      "name": "pricing",
+      "repo": "./pricing",
+      "type": "express"
+    },
+    {
+      "name": "tickets",
+      "repo": "./tickets",
+      "type": "express"
+    },
+    {
+      "name": "alerts",
+      "repo": "./alerts",
+      "type": "express"
+    },
+    {
+      "name": "notices",
+      "repo": "./notices",
+      "type": "express"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

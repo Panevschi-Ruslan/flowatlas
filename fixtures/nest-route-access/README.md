@@ -13,7 +13,7 @@ route and where it was put (P76).
 | `catalog` | `@Strict()`, a flag the guard reads that holds a request to more | `POST /products/import`: not an opt-out, the guard stays on; no row |
 | `ledger` | `app.useGlobalGuards(new ApiKeyGuard(...))` in `main.ts` | `where: global`, `via: useGlobalGuards in src/main.ts` |
 | `ledger` | `@SkipApiKey()`, a flag `ApiKeyGuard` reads that does not say "public" | `POST /entries/webhook`: `route-guard-skipped`, at `info` |
-| `ledger` | `providers: [...LEDGER_PROVIDERS, ...extraProviders()]` | the array is followed; the call is a `module-providers-unread` row |
+| `ledger` | `providers: [...LEDGER_PROVIDERS, ...extraProviders()]` | the array is followed; the call, whose function answers with a list it builds at run time, is a `module-providers-unread` row (a function answering with a list written out is read, P349) |
 | `inventory` | `@UseGuards(SessionGuard)` on the controller | `where: controller`, `via: @UseGuards on StockController`; no row |
 | `inventory` | a handler that throws `UnauthorizedException` itself | `POST /receipts`: `route-checked-in-body`, at `info`, naming the throw |
 | `inventory` | nothing at all | `GET /levels/summary` and `GET /levels/low`: `route-unguarded` |

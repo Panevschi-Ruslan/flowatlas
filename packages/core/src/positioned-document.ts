@@ -192,7 +192,8 @@ export const readJson = (text: string): PositionedDocument => {
  */
 export const readYaml = (text: string): PositionedDocument => {
   const lineCounter = new LineCounter();
-  const document = parseDocument(text, { lineCounter, prettyErrors: false });
+  // A merge key (`<<: *defaults`) brings the mapping it names in under the one written (P289), as the tools these files are written for read it.
+  const document = parseDocument(text, { lineCounter, prettyErrors: false, merge: true });
   const error = document.errors[0];
   if (error !== undefined) {
     const { line, col } = lineCounter.linePos(error.pos[0]);

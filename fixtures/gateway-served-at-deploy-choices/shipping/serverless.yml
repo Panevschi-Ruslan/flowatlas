@@ -1,0 +1,16 @@
+service: shipping
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  # The region deployed to where `--region` names none.
+  region: ${opt:region, 'eu-central-1'}
+
+functions:
+  quoteRates:
+    handler: src/quote-rates.handler
+    events:
+      - http:
+          path: rates
+          method: GET

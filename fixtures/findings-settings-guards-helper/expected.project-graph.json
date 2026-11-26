@@ -1,0 +1,2874 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:18:28.850Z",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "mailer",
+      "repo": "./mailer",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:gateway#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 21,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:ledger#CACHE_HOST",
+      "type": "config_key",
+      "label": "CACHE_HOST",
+      "repo": "ledger",
+      "file": "src/settings.ts",
+      "line": 8,
+      "meta": {
+        "key": "CACHE_HOST",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:ledger#LEDGER_REGION",
+      "type": "config_key",
+      "label": "LEDGER_REGION",
+      "repo": "ledger",
+      "file": "src/settings.ts",
+      "line": 4,
+      "meta": {
+        "key": "LEDGER_REGION",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:ledger#PAYMENT_PROVIDER",
+      "type": "config_key",
+      "label": "PAYMENT_PROVIDER",
+      "repo": "ledger",
+      "file": "src/settings.ts",
+      "line": 6,
+      "meta": {
+        "key": "PAYMENT_PROVIDER",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:ledger#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "ledger",
+      "file": "src/settings.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:mailer#SMTP_RELAY",
+      "type": "config_key",
+      "label": "SMTP_RELAY",
+      "repo": "mailer",
+      "file": "src/app.ts",
+      "line": 4,
+      "meta": {
+        "key": "SMTP_RELAY",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:reports#REPORTS_BUCKET",
+      "type": "config_key",
+      "label": "REPORTS_BUCKET",
+      "repo": "reports",
+      "file": "src/settings.ts",
+      "line": 2,
+      "meta": {
+        "key": "REPORTS_BUCKET",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "entry:gateway:http:DELETE:/api/notes/:param",
+      "type": "entry",
+      "label": "DELETE /api/notes/:param",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/notes/:param",
+        "rawPath": "/api/notes/:id",
+        "controller": "NotesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/api/notes",
+      "type": "entry",
+      "label": "GET /api/notes",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/notes",
+        "rawPath": "/api/notes",
+        "controller": "NotesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/api/notes/:param/archive",
+      "type": "entry",
+      "label": "POST /api/notes/:param/archive",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/notes/:param/archive",
+        "rawPath": "/api/notes/:id/archive",
+        "controller": "NotesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/api/notes/:param/export",
+      "type": "entry",
+      "label": "POST /api/notes/:param/export",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/notes/:param/export",
+        "rawPath": "/api/notes/:id/export",
+        "controller": "NotesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:ledger:http:GET:/entries",
+      "type": "entry",
+      "label": "GET /entries",
+      "repo": "ledger",
+      "file": "src/app.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/entries",
+        "rawPath": "/entries",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:mailer:http:GET:/relay",
+      "type": "entry",
+      "label": "GET /relay",
+      "repo": "mailer",
+      "file": "src/app.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/relay",
+        "rawPath": "/relay",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:DELETE:/notes/:param",
+      "type": "entry",
+      "label": "DELETE /notes/:param",
+      "repo": "orders",
+      "file": "src/notes/notes.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/notes/:param",
+        "rawPath": "/notes/:id",
+        "controller": "NotesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/notes",
+      "type": "entry",
+      "label": "GET /notes",
+      "repo": "orders",
+      "file": "src/notes/notes.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/notes",
+        "rawPath": "/notes",
+        "controller": "NotesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/notes/:param/export",
+      "type": "entry",
+      "label": "POST /notes/:param/export",
+      "repo": "orders",
+      "file": "src/notes/notes.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/notes/:param/export",
+        "rawPath": "/notes/:id/export",
+        "controller": "NotesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:reports:http:GET:/reports/today",
+      "type": "entry",
+      "label": "GET /reports/today",
+      "repo": "reports",
+      "file": "src/reports.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports/today",
+        "rawPath": "/reports/today",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shipping:http:DELETE:/claims/:param",
+      "type": "entry",
+      "label": "DELETE /claims/:param",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/claims/:param",
+        "rawPath": "/claims/:id",
+        "controller": "ClaimsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shipping:http:DELETE:/claims/:param/refunds/:param",
+      "type": "entry",
+      "label": "DELETE /claims/:param/refunds/:param",
+      "repo": "shipping",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/claims/:param/refunds/:param",
+        "rawPath": "/claims/:claimId/refunds/:id",
+        "controller": "ClaimRefundsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on ClaimRefundsController",
+              "file": "src/claims/claim-refunds.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/claims/claim-refunds.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:DELETE:/depots/:param",
+      "type": "entry",
+      "label": "DELETE /depots/:param",
+      "repo": "shipping",
+      "file": "src/depots/depots.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/depots/:param",
+        "rawPath": "/depots/:id",
+        "controller": "DepotsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shipping:http:DELETE:/pickups/:param",
+      "type": "entry",
+      "label": "DELETE /pickups/:param",
+      "repo": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/pickups/:param",
+        "rawPath": "/pickups/:id",
+        "controller": "PickupsController",
+        "decorators": [
+          {
+            "name": "SkipStaffCheck",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on PickupsController",
+              "file": "src/pickups/pickups.controller.ts",
+              "line": 6
+            }
+          ],
+          "optOuts": [
+            {
+              "decorator": "SkipStaffCheck",
+              "key": "skipStaffCheck",
+              "public": false,
+              "skips": [],
+              "where": "route",
+              "file": "src/pickups/pickups.controller.ts",
+              "line": 23
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/pickups/pickups.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:GET:/claims",
+      "type": "entry",
+      "label": "GET /claims",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/claims",
+        "rawPath": "/claims",
+        "controller": "ClaimsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shipping:http:GET:/claims/:param/refunds",
+      "type": "entry",
+      "label": "GET /claims/:param/refunds",
+      "repo": "shipping",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/claims/:param/refunds",
+        "rawPath": "/claims/:claimId/refunds",
+        "controller": "ClaimRefundsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on ClaimRefundsController",
+              "file": "src/claims/claim-refunds.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/claims/claim-refunds.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:PATCH:/depots/:param",
+      "type": "entry",
+      "label": "PATCH /depots/:param",
+      "repo": "shipping",
+      "file": "src/depots/depots.controller.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/depots/:param",
+        "rawPath": "/depots/:id",
+        "controller": "DepotsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on DepotsController.rename",
+              "file": "src/depots/depots.controller.ts",
+              "line": 22
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/depots/depots.controller.ts",
+            "line": 22,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:PATCH:/parcels/:param",
+      "type": "entry",
+      "label": "PATCH /parcels/:param",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/parcels/:param",
+        "rawPath": "/parcels/:id",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on ParcelsController.update",
+              "file": "src/parcels/parcels.controller.ts",
+              "line": 16
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/parcels/parcels.controller.ts",
+            "line": 16,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/claims",
+      "type": "entry",
+      "label": "POST /claims",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/claims",
+        "rawPath": "/claims",
+        "controller": "ClaimsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on ClaimsController.create",
+              "file": "src/claims/claims.controller.ts",
+              "line": 23
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/claims/claims.controller.ts",
+            "line": 23,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/claims/:param/notes",
+      "type": "entry",
+      "label": "POST /claims/:param/notes",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/claims/:param/notes",
+        "rawPath": "/claims/:id/notes",
+        "controller": "ClaimsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on ClaimsController.addNote",
+              "file": "src/claims/claims.controller.ts",
+              "line": 31
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/claims/claims.controller.ts",
+            "line": 31,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/claims/:param/refunds",
+      "type": "entry",
+      "label": "POST /claims/:param/refunds",
+      "repo": "shipping",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/claims/:param/refunds",
+        "rawPath": "/claims/:claimId/refunds",
+        "controller": "ClaimRefundsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on ClaimRefundsController",
+              "file": "src/claims/claim-refunds.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/claims/claim-refunds.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/depots",
+      "type": "entry",
+      "label": "POST /depots",
+      "repo": "shipping",
+      "file": "src/depots/depots.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/depots",
+        "rawPath": "/depots",
+        "controller": "DepotsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/parcels",
+      "type": "entry",
+      "label": "POST /parcels",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/parcels",
+        "rawPath": "/parcels",
+        "controller": "ParcelsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "route",
+              "via": "@UseGuards on ParcelsController.create",
+              "file": "src/parcels/parcels.controller.ts",
+              "line": 10
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/parcels/parcels.controller.ts",
+            "line": 10,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/parcels/:param/track",
+      "type": "entry",
+      "label": "POST /parcels/:param/track",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/parcels/:param/track",
+        "rawPath": "/parcels/:id/track",
+        "controller": "ParcelsController",
+        "decorators": [
+          {
+            "name": "Public",
+            "args": []
+          }
+        ],
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [],
+          "optOuts": [
+            {
+              "decorator": "Public",
+              "key": "isPublic",
+              "public": true,
+              "skips": [],
+              "where": "route",
+              "file": "src/parcels/parcels.controller.ts",
+              "line": 23
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:shipping:http:POST:/pickups",
+      "type": "entry",
+      "label": "POST /pickups",
+      "repo": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/pickups",
+        "rawPath": "/pickups",
+        "controller": "PickupsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on PickupsController",
+              "file": "src/pickups/pickups.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/pickups/pickups.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shipping:http:PUT:/pickups/:param",
+      "type": "entry",
+      "label": "PUT /pickups/:param",
+      "repo": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/pickups/:param",
+        "rawPath": "/pickups/:id",
+        "controller": "PickupsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+              "name": "StaffGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on PickupsController",
+              "file": "src/pickups/pickups.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "shipping#src/auth/staff.guard.ts:StaffGuard",
+            "file": "src/pickups/pickups.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "gateway",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "gateway",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "gateway#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "gateway",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "NotesController"
+        ],
+        "providers": [
+          "NotesClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "gateway#src/clients/notes.client.ts:NotesClient",
+      "type": "provider",
+      "label": "NotesClient",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/clients/notes.client.ts:NotesClient.archive",
+      "type": "method",
+      "label": "NotesClient.archive",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note>"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/clients/notes.client.ts:NotesClient.export",
+      "type": "method",
+      "label": "NotesClient.export",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note>"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/clients/notes.client.ts:NotesClient.list",
+      "type": "method",
+      "label": "NotesClient.list",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note[]>"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/clients/notes.client.ts:NotesClient.remove",
+      "type": "method",
+      "label": "NotesClient.remove",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note>"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/clients/notes.client.ts:NotesClient.send",
+      "type": "method",
+      "label": "NotesClient.send",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "verb",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note>"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/notes/notes.controller.ts:NotesController",
+      "type": "provider",
+      "label": "NotesController",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "gateway#src/notes/notes.controller.ts:NotesController.archive",
+      "type": "method",
+      "label": "NotesController.archive",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "gateway#src/notes/notes.controller.ts:NotesController.export",
+      "type": "method",
+      "label": "NotesController.export",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "gateway#src/notes/notes.controller.ts:NotesController.list",
+      "type": "method",
+      "label": "NotesController.list",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note[]>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "gateway#src/notes/notes.controller.ts:NotesController.remove",
+      "type": "method",
+      "label": "NotesController.remove",
+      "repo": "gateway",
+      "file": "src/notes/notes.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:gateway#Note>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/notes.client.ts:21:12",
+      "type": "http_out",
+      "label": "GET /notes",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 21,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_URL}/notes",
+        "path": "/notes",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#Note[]",
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/notes.client.ts:25:12",
+      "type": "http_out",
+      "label": "DELETE /notes/:param",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 25,
+      "meta": {
+        "method": "DELETE",
+        "url": "${ORDERS_URL}/notes/:param",
+        "path": "/notes/:param",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#Note",
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/notes.client.ts:30:12",
+      "type": "http_out",
+      "label": "POST /notes/:param/export",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 30,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/notes/:param/export",
+        "path": "/notes/:param/export",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#Note",
+        "bodyType": "string",
+        "bodyFrom": "type",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/notes.client.ts:35:12",
+      "type": "http_out",
+      "label": "POST /notes/:param/archive",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 35,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/notes/:param/archive",
+        "path": "/notes/:param/archive",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#Note",
+        "bodyType": "string",
+        "bodyFrom": "type",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:gateway#src/clients/notes.client.ts:40:12",
+      "type": "http_out",
+      "label": "? /notes/:param/flag",
+      "repo": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 40,
+      "meta": {
+        "method": null,
+        "url": "${ORDERS_URL}/notes/:param/flag",
+        "path": "/notes/:param/flag",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": "type:gateway#Note",
+        "bodyType": null,
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ledger#src/app.ts:GET /entries@7",
+      "type": "function",
+      "label": "GET /entries@7",
+      "repo": "ledger",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "mailer#src/app.ts:GET /relay@8",
+      "type": "function",
+      "label": "GET /relay@8",
+      "repo": "mailer",
+      "file": "src/app.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<object,unknown,unknown>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "NotesController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/notes/notes.controller.ts:NotesController",
+      "type": "provider",
+      "label": "NotesController",
+      "repo": "orders",
+      "file": "src/notes/notes.controller.ts",
+      "line": 10,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/notes/notes.controller.ts:NotesController.export",
+      "type": "method",
+      "label": "NotesController.export",
+      "repo": "orders",
+      "file": "src/notes/notes.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#Note"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders#src/notes/notes.controller.ts:NotesController.list",
+      "type": "method",
+      "label": "NotesController.list",
+      "repo": "orders",
+      "file": "src/notes/notes.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:orders#Note[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders#src/notes/notes.controller.ts:NotesController.remove",
+      "type": "method",
+      "label": "NotesController.remove",
+      "repo": "orders",
+      "file": "src/notes/notes.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/config": 5
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:mailer",
+      "type": "repo",
+      "label": "mailer",
+      "repo": "mailer",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:reports",
+      "type": "repo",
+      "label": "reports",
+      "repo": "reports",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shipping",
+      "type": "repo",
+      "label": "shipping",
+      "repo": "shipping",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "skippedExternalCalls": {
+            "@nestjs/common": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "reports",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ReportsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "reports#src/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "reports",
+      "file": "src/reports.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "reports#src/reports.controller.ts:ReportsController.today",
+      "type": "method",
+      "label": "ReportsController.today",
+      "repo": "reports",
+      "file": "src/reports.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{bucket:string}"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shipping",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ClaimsController",
+          "ClaimRefundsController",
+          "ParcelsController",
+          "PickupsController",
+          "DepotsController"
+        ],
+        "providers": [
+          "StaffGuard"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guard",
+      "label": "StaffGuard",
+      "repo": "shipping",
+      "file": "src/auth/staff.guard.ts",
+      "line": 4,
+      "meta": {
+        "module": "AppModule",
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/auth/staff.guard.ts:StaffGuard.canActivate",
+      "type": "method",
+      "label": "StaffGuard.canActivate",
+      "repo": "shipping",
+      "file": "src/auth/staff.guard.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "shipping#src/claims/claim-refunds.controller.ts:ClaimRefundsController",
+      "type": "provider",
+      "label": "ClaimRefundsController",
+      "repo": "shipping",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/claims/claim-refunds.controller.ts:ClaimRefundsController.cancel",
+      "type": "method",
+      "label": "ClaimRefundsController.cancel",
+      "repo": "shipping",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "claimId",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/claims/claim-refunds.controller.ts:ClaimRefundsController.issue",
+      "type": "method",
+      "label": "ClaimRefundsController.issue",
+      "repo": "shipping",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "claimId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/claims/claim-refunds.controller.ts:ClaimRefundsController.list",
+      "type": "method",
+      "label": "ClaimRefundsController.list",
+      "repo": "shipping",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "claimId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/claims/claims.controller.ts:ClaimsController",
+      "type": "provider",
+      "label": "ClaimsController",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 13,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/claims/claims.controller.ts:ClaimsController.addNote",
+      "type": "method",
+      "label": "ClaimsController.addNote",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{text:string}"
+            }
+          ],
+          "returns": "type:shipping#Claim"
+        },
+        "fieldsRead": [
+          {
+            "field": "text",
+            "line": 35
+          }
+        ]
+      }
+    },
+    {
+      "id": "shipping#src/claims/claims.controller.ts:ClaimsController.create",
+      "type": "method",
+      "label": "ClaimsController.create",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{parcelId:string;reason:string}"
+            }
+          ],
+          "returns": "type:shipping#Claim"
+        },
+        "fieldsRead": [
+          {
+            "field": "parcelId",
+            "line": 26
+          },
+          {
+            "field": "reason",
+            "line": 26
+          }
+        ]
+      }
+    },
+    {
+      "id": "shipping#src/claims/claims.controller.ts:ClaimsController.list",
+      "type": "method",
+      "label": "ClaimsController.list",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shipping#Claim[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/claims/claims.controller.ts:ClaimsController.remove",
+      "type": "method",
+      "label": "ClaimsController.remove",
+      "repo": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/depots/depots.controller.ts:DepotsController",
+      "type": "provider",
+      "label": "DepotsController",
+      "repo": "shipping",
+      "file": "src/depots/depots.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/depots/depots.controller.ts:DepotsController.close",
+      "type": "method",
+      "label": "DepotsController.close",
+      "repo": "shipping",
+      "file": "src/depots/depots.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/depots/depots.controller.ts:DepotsController.open",
+      "type": "method",
+      "label": "DepotsController.open",
+      "repo": "shipping",
+      "file": "src/depots/depots.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/depots/depots.controller.ts:DepotsController.rename",
+      "type": "method",
+      "label": "DepotsController.rename",
+      "repo": "shipping",
+      "file": "src/depots/depots.controller.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController",
+      "type": "provider",
+      "label": "ParcelsController",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController.create",
+      "type": "method",
+      "label": "ParcelsController.create",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{weight:number}"
+            }
+          ],
+          "returns": "{weight:number}"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController.track",
+      "type": "method",
+      "label": "ParcelsController.track",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/parcels/parcels.controller.ts:ParcelsController.update",
+      "type": "method",
+      "label": "ParcelsController.update",
+      "repo": "shipping",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{weight:number}"
+            }
+          ],
+          "returns": "{id:string;weight:number}"
+        },
+        "fieldsRead": [
+          {
+            "field": "weight",
+            "line": 19
+          }
+        ]
+      }
+    },
+    {
+      "id": "shipping#src/pickups/pickups.controller.ts:PickupsController",
+      "type": "provider",
+      "label": "PickupsController",
+      "repo": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shipping#src/pickups/pickups.controller.ts:PickupsController.book",
+      "type": "method",
+      "label": "PickupsController.book",
+      "repo": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/pickups/pickups.controller.ts:PickupsController.cancel",
+      "type": "method",
+      "label": "PickupsController.cancel",
+      "repo": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shipping#src/pickups/pickups.controller.ts:PickupsController.move",
+      "type": "method",
+      "label": "PickupsController.move",
+      "repo": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:gateway:http:DELETE:/api/notes/:param",
+      "to": "gateway#src/notes/notes.controller.ts:NotesController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 15,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/api/notes",
+      "to": "gateway#src/notes/notes.controller.ts:NotesController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note[]>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:gateway:http:POST:/api/notes/:param/archive",
+      "to": "gateway#src/notes/notes.controller.ts:NotesController.archive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 25,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/api/notes/:param/export",
+      "to": "gateway#src/notes/notes.controller.ts:NotesController.export",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 20,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:ledger:http:GET:/entries",
+      "to": "ledger#src/app.ts:GET /entries@7",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{region:string;provider:string;cache:string}",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:mailer:http:GET:/relay",
+      "to": "mailer#src/app.ts:GET /relay@8",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{relay:string}",
+      "file": "src/app.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:DELETE:/notes/:param",
+      "to": "orders#src/notes/notes.controller.ts:NotesController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/notes/notes.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/notes",
+      "to": "orders#src/notes/notes.controller.ts:NotesController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:orders#Note[]",
+      "file": "src/notes/notes.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:orders:http:POST:/notes/:param/export",
+      "to": "orders#src/notes/notes.controller.ts:NotesController.export",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#Note",
+      "file": "src/notes/notes.controller.ts",
+      "line": 24,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:reports:http:GET:/reports/today",
+      "to": "reports#src/reports.controller.ts:ReportsController.today",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{bucket:string}",
+      "file": "src/reports.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:shipping:http:DELETE:/claims/:param",
+      "to": "shipping#src/claims/claims.controller.ts:ClaimsController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/claims/claims.controller.ts",
+      "line": 40,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:DELETE:/claims/:param/refunds/:param",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:DELETE:/claims/:param/refunds/:param",
+      "to": "shipping#src/claims/claim-refunds.controller.ts:ClaimRefundsController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 24,
+      "meta": {
+        "params": "{claimId:string;id:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:DELETE:/depots/:param",
+      "to": "shipping#src/depots/depots.controller.ts:DepotsController.close",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/depots/depots.controller.ts",
+      "line": 17,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:DELETE:/pickups/:param",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:DELETE:/pickups/:param",
+      "to": "shipping#src/pickups/pickups.controller.ts:PickupsController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 23,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:GET:/claims",
+      "to": "shipping#src/claims/claims.controller.ts:ClaimsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shipping#Claim[]",
+      "file": "src/claims/claims.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:shipping:http:GET:/claims/:param/refunds",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:GET:/claims/:param/refunds",
+      "to": "shipping#src/claims/claim-refunds.controller.ts:ClaimRefundsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 11,
+      "meta": {
+        "params": "{claimId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:PATCH:/depots/:param",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/depots/depots.controller.ts",
+      "line": 22,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:PATCH:/depots/:param",
+      "to": "shipping#src/depots/depots.controller.ts:DepotsController.rename",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/depots/depots.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:PATCH:/parcels/:param",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 16,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:PATCH:/parcels/:param",
+      "to": "shipping#src/parcels/parcels.controller.ts:ParcelsController.update",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{weight:number}"
+      ],
+      "returns": "{id:string;weight:number}",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 16,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{weight:number}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/claims",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/claims/claims.controller.ts",
+      "line": 23,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/claims",
+      "to": "shipping#src/claims/claims.controller.ts:ClaimsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{parcelId:string;reason:string}"
+      ],
+      "returns": "type:shipping#Claim",
+      "file": "src/claims/claims.controller.ts",
+      "line": 23,
+      "meta": {
+        "body": "{parcelId:string;reason:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/claims/:param/notes",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/claims/claims.controller.ts",
+      "line": 31,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/claims/:param/notes",
+      "to": "shipping#src/claims/claims.controller.ts:ClaimsController.addNote",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{text:string}"
+      ],
+      "returns": "type:shipping#Claim",
+      "file": "src/claims/claims.controller.ts",
+      "line": 31,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{text:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/claims/:param/refunds",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/claims/:param/refunds",
+      "to": "shipping#src/claims/claim-refunds.controller.ts:ClaimRefundsController.issue",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/claims/claim-refunds.controller.ts",
+      "line": 16,
+      "meta": {
+        "params": "{claimId:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/depots",
+      "to": "shipping#src/depots/depots.controller.ts:DepotsController.open",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/depots/depots.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:shipping:http:POST:/parcels",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "method",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/parcels",
+      "to": "shipping#src/parcels/parcels.controller.ts:ParcelsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{weight:number}"
+      ],
+      "returns": "{weight:number}",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 10,
+      "meta": {
+        "body": "{weight:number}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/parcels/:param/track",
+      "to": "shipping#src/parcels/parcels.controller.ts:ParcelsController.track",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/parcels/parcels.controller.ts",
+      "line": 23,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/pickups",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:POST:/pickups",
+      "to": "shipping#src/pickups/pickups.controller.ts:PickupsController.book",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:shipping:http:PUT:/pickups/:param",
+      "to": "shipping#src/auth/staff.guard.ts:StaffGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:shipping:http:PUT:/pickups/:param",
+      "to": "shipping#src/pickups/pickups.controller.ts:PickupsController.move",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient",
+      "to": "gateway#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 16
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient",
+      "to": "gateway#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 17
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.archive",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 35
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.archive",
+      "to": "http_out:gateway#src/clients/notes.client.ts:35:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 35
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.export",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 30
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.export",
+      "to": "http_out:gateway#src/clients/notes.client.ts:30:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 30
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.list",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 21
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.list",
+      "to": "http_out:gateway#src/clients/notes.client.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 21
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.remove",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 25
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.remove",
+      "to": "http_out:gateway#src/clients/notes.client.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 25
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.send",
+      "to": "config_key:gateway#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 40
+    },
+    {
+      "from": "gateway#src/clients/notes.client.ts:NotesClient.send",
+      "to": "http_out:gateway#src/clients/notes.client.ts:40:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/clients/notes.client.ts",
+      "line": 40
+    },
+    {
+      "from": "gateway#src/notes/notes.controller.ts:NotesController",
+      "to": "gateway#src/clients/notes.client.ts:NotesClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/notes/notes.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "gateway#src/notes/notes.controller.ts:NotesController.archive",
+      "to": "gateway#src/clients/notes.client.ts:NotesClient.archive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 27
+    },
+    {
+      "from": "gateway#src/notes/notes.controller.ts:NotesController.export",
+      "to": "gateway#src/clients/notes.client.ts:NotesClient.export",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "gateway#src/notes/notes.controller.ts:NotesController.list",
+      "to": "gateway#src/clients/notes.client.ts:NotesClient.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note[]>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "gateway#src/notes/notes.controller.ts:NotesController.remove",
+      "to": "gateway#src/clients/notes.client.ts:NotesClient.remove",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:axios#AxiosResponse<type:gateway#Note>",
+      "file": "src/notes/notes.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "http_out:gateway#src/clients/notes.client.ts:21:12",
+      "to": "entry:orders:http:GET:/notes",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 21,
+      "returns": "type:gateway#Note[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/notes.client.ts:25:12",
+      "to": "entry:orders:http:DELETE:/notes/:param",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 25,
+      "returns": "type:gateway#Note",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "http_out:gateway#src/clients/notes.client.ts:30:12",
+      "to": "entry:orders:http:POST:/notes/:param/export",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/clients/notes.client.ts",
+      "line": 30,
+      "params": [
+        "string"
+      ],
+      "returns": "type:gateway#Note",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#Note>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:axios#AxiosResponse<type:gateway#Note[]>": {
+      "name": "AxiosResponse",
+      "kind": "external",
+      "declaredIn": "axios",
+      "structuralHash": "35a86165238cd5ec",
+      "meta": {
+        "declKind": "external",
+        "package": "axios"
+      }
+    },
+    "type:express#Request<object,unknown,unknown>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:gateway#Note": {
+      "name": "Note",
+      "kind": "object",
+      "declaredIn": "gateway#src/clients/notes.client.ts",
+      "structuralHash": "9f2440570a2bbc3c",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#Note": {
+      "name": "Note",
+      "kind": "object",
+      "declaredIn": "orders#src/notes/notes.controller.ts",
+      "structuralHash": "02605cc1a8ceba86",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "exported",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shipping#Claim": {
+      "name": "Claim",
+      "kind": "object",
+      "declaredIn": "shipping#src/claims/claims.controller.ts",
+      "structuralHash": "200d407a2df31dea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parcelId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "notes",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports HttpModule",
+      "service": "gateway"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports ConfigModule",
+      "service": "gateway"
+    },
+    {
+      "service": "gateway",
+      "file": "src/clients/notes.client.ts",
+      "line": 35,
+      "reason": "target-route-not-found",
+      "message": "target service orders has no route POST /notes/:param/archive",
+      "hint": "Route renamed? Check orders's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:gateway#src/clients/notes.client.ts:35:12"
+    },
+    {
+      "file": "src/clients/notes.client.ts",
+      "line": 40,
+      "reason": "api-method-dynamic",
+      "hint": "The verb is handed in by the caller and is not a literal, a const or an enum member here. Write it as one, or annotate the call with @CallsService.",
+      "symbol": "forward<Note>(this.http, verb, `${this.config.get('ORDERS_URL')}/notes/${id}/fla",
+      "service": "gateway"
+    },
+    {
+      "service": "ledger",
+      "file": "docker-compose.yml",
+      "line": 5,
+      "reason": "container-image-unread",
+      "level": "info",
+      "message": "docker-compose.yml runs ledger (ledger) from the image ledger; the Dockerfile compose builds it from is not found, so the environment the image gives is not read: it may set PORT (src/app.ts:9), which ledger's code reads its port from; the port there is taken as 3000, where nothing read gives the setting",
+      "hint": "Build the image in the project (docker build -t, a compose build:, a Skaffold artifact) so its Dockerfile is read, or give the setting in the container's own environment.",
+      "symbol": "ledger:ledger",
+      "meta": {
+        "image": "ledger",
+        "settings": [
+          "PORT"
+        ]
+      }
+    },
+    {
+      "service": "shipping",
+      "file": "src/claims/claims.controller.ts",
+      "line": 40,
+      "reason": "route-unguarded-among-guarded",
+      "message": "DELETE /claims/:param has no guard in front of it, while the 2 other writes of ClaimsController have StaffGuard in front.",
+      "hint": "Put StaffGuard in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).",
+      "symbol": "DELETE /claims/:param"
+    },
+    {
+      "service": "shipping",
+      "file": "src/pickups/pickups.controller.ts",
+      "line": 23,
+      "reason": "route-unguarded-among-guarded",
+      "message": "DELETE /pickups/:param has no guard in front of it, because StaffGuard (skipped by @SkipStaffCheck), while the 2 other writes of PickupsController have StaffGuard in front.",
+      "hint": "Put StaffGuard in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).",
+      "symbol": "DELETE /pickups/:param"
+    }
+  ]
+}

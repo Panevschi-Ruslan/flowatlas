@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "lambda"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda"
+    }
+  ],
+  "output": ".flowatlas"
+}

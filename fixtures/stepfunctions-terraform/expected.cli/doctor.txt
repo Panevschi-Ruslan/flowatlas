@@ -1,9 +1,26 @@
-unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=12 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 1 to act on · missed: 1 · notes: 0 · findings: 0
+unresolved: 12 to act on · missed: 1 · notes: 0 · findings: 12
+  12 findings: 9 function tasks retrying no transient error, 2 waiting tasks with no timeout, 1 callback with no heartbeat
+  workflow-function-unretried (finding): 9 rows
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      lending infra/workflows.tf:62  lending-overdue-sweep: SendReminder invokes a function and retries none of the platform's transient errors, so one fails the execution
+      lending infra/workflows.tf:91  lending-hold-expiry: ReleaseHold invokes a function and retries none of the platform's transient errors, so one fails the execution
+      lending statemachine/loan-approval.asl.json:126  lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
+      lending statemachine/loan-approval.asl.json:137  lending-loan-approval: NotifyBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution
+      lending statemachine/loan-renewal.asl.json:5  lending-loan-renewal: CheckBorrowerStanding invokes a function and retries none of the platform's transient errors, so one fails the execution
+      lending statemachine/loan-renewal.asl.json:36  lending-loan-renewal: AssessLateFee invokes a function and retries none of the platform's transient errors, so one fails the execution
+  … 3 more rows; the whole list is in <root>/fixtures/stepfunctions-terraform/.flowatlas/doctor.json
+  workflow-task-untimed (finding): 2 rows
+    Give the task a TimeoutSeconds, or the state machine one.
+      lending statemachine/loan-approval.asl.json:80  lending-loan-approval: AwaitLibrarianApproval waits on a task token handed back (.waitForTaskToken) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit
+      lending statemachine/loan-renewal.asl.json:132  lending-loan-renewal: ReapproveFlaggedLoans waits on the states job it starts (.sync) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit
   workflow-template-unbound: 1 row
     Whatever deploys this definition fills the placeholder in first. Read the definition from the file that deploys it, so its values are known, or write the name in place.
       lending statemachine/loan-renewal.asl.json:66  ApplyBranchPolicy invokes a function named by ${branch_policy_arn}, and nothing here says what ${branch_policy_arn} stands for
+  workflow-callback-no-heartbeat (finding): 1 row
+    Give the task a HeartbeatSeconds below its timeout, and have the worker send heartbeats.
+      lending statemachine/loan-renewal.asl.json:46  lending-loan-renewal: AwaitFeePayment waits for a task token with no HeartbeatSeconds, so a worker that died is noticed only when the task times out
 
 markers: none
   note: no annotation is recorded on any symbol in this graph, so nothing was checked
@@ -12,8 +29,21 @@ desync: none
 
 contracts: no errors, 0 excused, 1 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 1 now, +1)
+baseline: missing (0 accepted, 12 now, +12)
   no baseline at <root>/fixtures/stepfunctions-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  workflow-function-unretried: 0 → 9 (+9)
+  workflow-task-untimed: 0 → 2 (+2)
   workflow-template-unbound: 0 → 1 (+1)
-  new (1):
+  new (12):
+    lending|infra/workflows.tf|lending#infra/workflows.tf:lending-hold-expiry/ReleaseHold|workflow-function-unretried
+    lending|infra/workflows.tf|lending#infra/workflows.tf:lending-overdue-sweep/SendReminder|workflow-function-unretried
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/AwaitLibrarianApproval|workflow-task-untimed
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/NotifyBorrower|workflow-function-unretried
+    lending|statemachine/loan-approval.asl.json|lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy|workflow-function-unretried
     lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ApplyBranchPolicy|workflow-template-unbound
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AssessLateFee|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/AwaitFeePayment|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/CheckBorrowerStanding|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/NotifyRenewal|workflow-function-unretried
+    lending|statemachine/loan-renewal.asl.json|lending#statemachine/loan-renewal.asl.json:lending-loan-renewal/ReapproveFlaggedLoans|workflow-task-untimed

@@ -3,7 +3,20 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { withNext } from '../query/next.js';
-import { bound, commonInput, nextOutput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import {
+  answerEach,
+  answersOutput,
+  askedOf,
+  bound,
+  commonInput,
+  completeOf,
+  completeOutput,
+  nextOutput,
+  READ_ONLY,
+  severalInput,
+  withDb,
+  type ToolContext,
+} from './common.js';
 
 /** The type ids a written type names: `type:a#B` and, in `type:x#Page<type:a#B>`, both. */
 export const typeIdsIn = (written: string): string[] => [...written.matchAll(/type:[^\s,;()[\]{}<>|&]+/g)].map((match) => match[0]);
@@ -145,6 +158,8 @@ export const getTypeOutput = {
   cut: z.string().optional(),
   candidates: z.array(z.string()).optional(),
   note: z.string().optional(),
+  answers: answersOutput,
+  ...completeOutput,
   next: nextOutput,
 };
 
@@ -161,7 +176,8 @@ export const registerTypes = (server: McpServer, ctx: ToolContext): void => {
       title: 'Read a type',
       description: 'A type by id or name, with the types it refers to.',
       inputSchema: {
-        type: z.string().describe('type id or name'),
+        type: z.string().optional().describe('type id or name'),
+        types: severalInput(),
         depth: z.number().int().min(0).max(6).default(3).describe('nesting to expand'),
         ...commonInput,
       },
@@ -170,37 +186,54 @@ export const registerTypes = (server: McpServer, ctx: ToolContext): void => {
     },
     (input) =>
       withDb(ctx.handle, (db) => {
-        const { detail, maxNodes, note } = bound(input);
-        const resolved = resolveTypeRef(db, input.type);
-        if ('error' in resolved) return resolved;
-        if ('candidates' in resolved) {
-          return withNext(
-            { candidates: resolved.candidates },
-            resolved.candidates.slice(0, 2).map((candidate) => `get_type({type: ${JSON.stringify(candidate)}})`),
-          );
-        }
-        const id = resolved.id;
-        const entry = db.type(id)!;
-        // At 0 the names are the answer; what they refer to is the next question.
-        const expanded = detail === 0 ? { nested: {}, cut: 0 } : expandType(db, id, input.depth, maxNodes);
-        // A nested type at 1 is its name and its fields' names, enough to decide
-        // whether to ask for it; at 2 it is the whole declaration.
-        const nestedLevel: DetailLevel = detail >= 2 ? 2 : 0;
-        const nested = Object.fromEntries(
-          Object.entries(expanded.nested).map(([key, found]) => [key, withoutId(projectType(found, nestedLevel))]),
-        );
-        return withNext(
-          {
-            type: projectType({ ...entry, id }, detail),
-            ...(detail === 0 ? {} : { nested }),
-            ...(expanded.cut === 0
-              ? {}
-              : { cut: `${expanded.cut} more referenced type(s); raise maxNodes` }),
-            ...(note === undefined ? {} : { note }),
-          },
-          // Who uses it first (P95): `find_symbol` searches names, not uses.
-          [`type_usage({type: ${JSON.stringify(id)}})`, `find_symbol({query: ${JSON.stringify(entry.name)}})`],
-        );
+        const asked = askedOf(input.type, input.types);
+        if (asked.length === 0) return { error: 'ask with type or types' };
+        if (asked.length === 1) return typeOne(db, input, asked[0]!);
+        return answerEach('type', asked, (type) => typeOne(db, input, type));
       }),
   );
 };
+
+/** What get_type was asked, less the type, which each answer of several takes in turn. */
+interface TypeAsked {
+  depth: number;
+  detail: number;
+  maxNodes: number;
+}
+
+/** One type and what it refers to. */
+const typeOne = (db: GraphDb, input: TypeAsked, asked: string): object => {
+  const { detail, maxNodes, note } = bound(input);
+  const resolved = resolveTypeRef(db, asked);
+  if ('error' in resolved) return resolved;
+  if ('candidates' in resolved) {
+    return withNext(
+      { candidates: resolved.candidates },
+      resolved.candidates.slice(0, 2).map((candidate) => `get_type({type: ${JSON.stringify(candidate)}})`),
+    );
+  }
+  const id = resolved.id;
+  const entry = db.type(id)!;
+  // At 0 the names are the answer; what they refer to is the next question.
+  const expanded = detail === 0 ? { nested: {}, cut: 0 } : expandType(db, id, input.depth, maxNodes);
+  // A nested type at 1 is its name and its fields' names, enough to decide
+  // whether to ask for it; at 2 it is the whole declaration.
+  const nestedLevel: DetailLevel = detail >= 2 ? 2 : 0;
+  const nested = Object.fromEntries(
+    Object.entries(expanded.nested).map(([key, found]) => [key, withoutId(projectType(found, nestedLevel))]),
+  );
+  return withNext(
+    {
+      type: projectType({ ...entry, id }, detail),
+      ...(detail === 0 ? {} : { nested }),
+      ...(expanded.cut === 0
+        ? {}
+        : { cut: `${expanded.cut} more referenced type(s); raise maxNodes` }),
+      ...completeOf([expanded.cut > 0 && `maxNodes: ${expanded.cut} more referenced type(s)`]),
+      ...(note === undefined ? {} : { note }),
+    },
+    // Who uses it first (P95): `find_symbol` searches names, not uses.
+    [`type_usage({type: ${JSON.stringify(id)}})`, `find_symbol({query: ${JSON.stringify(entry.name)}})`],
+  );
+};
+

@@ -1,0 +1,1431 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T15:52:37.581Z",
+  "services": [
+    {
+      "name": "desk-api",
+      "repo": "./desk-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cache_op:desk-api#src/live/live.controller.ts:13:12",
+      "type": "cache_op",
+      "label": "other desk:*:events",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 13,
+      "meta": {
+        "op": "other",
+        "keyPattern": "desk:*:events",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:desk-api#src/live/live.controller.ts:16:25",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 16,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "unsubscribe"
+      }
+    },
+    {
+      "id": "cache_op:desk-api#src/tickets/tickets.service.ts:15:11",
+      "type": "cache_op",
+      "label": "other desk:*:events",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "other",
+        "keyPattern": "desk:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:desk-api#src/tickets/tickets.service.ts:19:11",
+      "type": "cache_op",
+      "label": "other desk:*:events",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 19,
+      "meta": {
+        "op": "other",
+        "keyPattern": "desk:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:desk-api#src/tickets/tickets.service.ts:23:11",
+      "type": "cache_op",
+      "label": "other desk:*:events",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 23,
+      "meta": {
+        "op": "other",
+        "keyPattern": "desk:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "channel:desk:*:events",
+      "type": "channel",
+      "label": "desk:*:events",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 13,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 3,
+        "consumers": 4
+      }
+    },
+    {
+      "id": "channel:desk:*:events#TICKET_ASSIGNED",
+      "type": "channel",
+      "label": "desk:*:events#TICKET_ASSIGNED",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:desk:*:events",
+        "messageType": "TICKET_ASSIGNED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/tickets/tickets.service.ts:15",
+              "text": "type: 'TICKET_ASSIGNED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:desk:*:events#TICKET_CLOSED",
+      "type": "channel",
+      "label": "desk:*:events#TICKET_CLOSED",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 19,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:desk:*:events",
+        "messageType": "TICKET_CLOSED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/tickets/tickets.service.ts:19",
+              "text": "type: 'TICKET_CLOSED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:desk:*:events#TICKET_REOPENED",
+      "type": "channel",
+      "label": "desk:*:events#TICKET_REOPENED",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 23,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:desk:*:events",
+        "messageType": "TICKET_REOPENED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "desk-api",
+              "loc": "src/tickets/tickets.service.ts:23",
+              "text": "type: 'TICKET_REOPENED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "console#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/live/useDeskEvents.ts:useDeskEvents",
+      "type": "function",
+      "label": "useDeskEvents",
+      "repo": "console",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 13,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "onEvent",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/screens/ArchivePanel.tsx:ArchivePanel",
+      "type": "ui_component",
+      "label": "ArchivePanel",
+      "repo": "console",
+      "file": "src/screens/ArchivePanel.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "type": "function",
+      "label": "onArchiveEvent",
+      "repo": "console",
+      "file": "src/screens/ArchivePanel.tsx",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:console#DeskEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/screens/QueueScreen.tsx:QueueScreen",
+      "type": "ui_component",
+      "label": "QueueScreen",
+      "repo": "console",
+      "file": "src/screens/QueueScreen.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/queue"
+      }
+    },
+    {
+      "id": "console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "function",
+      "label": "onQueueEvent",
+      "repo": "console",
+      "file": "src/screens/QueueScreen.tsx",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:console#DeskEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/screens/TicketScreen.tsx:TicketScreen",
+      "type": "ui_component",
+      "label": "TicketScreen",
+      "repo": "console",
+      "file": "src/screens/TicketScreen.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tickets/:param"
+      }
+    },
+    {
+      "id": "console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "function",
+      "label": "onTicketEvent",
+      "repo": "console",
+      "file": "src/screens/TicketScreen.tsx",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:console#DeskEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "type": "consumer",
+      "label": "onArchiveEvent",
+      "repo": "console",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "TICKET_REOPENED",
+            "consumer": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+            "via": "if",
+            "line": 8,
+            "file": "src/screens/ArchivePanel.tsx"
+          }
+        ],
+        "routes": [
+          "entry:desk-api:http:GET:/desks/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "consumer",
+      "label": "onQueueEvent",
+      "repo": "console",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "TICKET_ASSIGNED",
+            "consumer": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+            "via": "if",
+            "line": 8,
+            "file": "src/screens/QueueScreen.tsx"
+          }
+        ],
+        "routes": [
+          "entry:desk-api:http:GET:/desks/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "consumer",
+      "label": "onTicketEvent",
+      "repo": "console",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "TICKET_ASSIGNED",
+            "consumer": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+            "via": "if",
+            "line": 8,
+            "file": "src/screens/TicketScreen.tsx"
+          },
+          {
+            "type": "TICKET_CLOSED",
+            "consumer": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+            "via": "if",
+            "line": 9,
+            "file": "src/screens/TicketScreen.tsx"
+          }
+        ],
+        "routes": [
+          "entry:desk-api:http:GET:/desks/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+      "type": "consumer",
+      "label": "LiveController.events",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 13,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "relay": "entry:desk-api:http:GET:/desks/:param/events",
+        "entryId": "entry:desk-api:event:desk:*:events",
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 13,
+            "column": 56,
+            "through": "listener.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "desk-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "desk-api",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "TicketsController",
+          "LiveController"
+        ],
+        "providers": [
+          "TicketsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "desk-api#src/live/live.controller.ts:LiveController",
+      "type": "provider",
+      "label": "LiveController",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-api#src/live/live.controller.ts:LiveController.events",
+      "type": "method",
+      "label": "LiveController.events",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/tickets/tickets.controller.ts:TicketsController",
+      "type": "provider",
+      "label": "TicketsController",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-api#src/tickets/tickets.controller.ts:TicketsController.assign",
+      "type": "method",
+      "label": "TicketsController.assign",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "ticketId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{agentId:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "agentId",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "desk-api#src/tickets/tickets.controller.ts:TicketsController.close",
+      "type": "method",
+      "label": "TicketsController.close",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "ticketId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "desk-api#src/tickets/tickets.service.ts:TicketsService",
+      "type": "provider",
+      "label": "TicketsService",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign",
+      "type": "method",
+      "label": "TicketsService.assign",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "ticketId",
+              "type": "string"
+            },
+            {
+              "name": "agentId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.close",
+      "type": "method",
+      "label": "TicketsService.close",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "ticketId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+      "type": "method",
+      "label": "TicketsService.reopen",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "ticketId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:console:screen:/queue",
+      "type": "entry",
+      "label": "/queue",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/queue",
+        "by": "route-table",
+        "screens": [
+          "QueueScreen"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/tickets/:param",
+      "type": "entry",
+      "label": "/tickets/:param",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 11,
+      "kind": "screen",
+      "meta": {
+        "path": "/tickets/:param",
+        "by": "route-table",
+        "screens": [
+          "TicketScreen"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk-api:event:desk:*:events",
+      "type": "entry",
+      "label": "event desk:*:events",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "pattern": "desk:*:events",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:GET:/desks/:param/events",
+      "type": "entry",
+      "label": "GET /desks/:param/events",
+      "repo": "desk-api",
+      "file": "src/live/live.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/desks/:param/events",
+        "rawPath": "/desks/:deskId/events",
+        "controller": "LiveController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "events"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:desk:*:events"
+        ]
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/desks/:param/tickets/:param/assign",
+      "type": "entry",
+      "label": "POST /desks/:param/tickets/:param/assign",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/desks/:param/tickets/:param/assign",
+        "rawPath": "/desks/:deskId/tickets/:ticketId/assign",
+        "controller": "TicketsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:desk-api:http:POST:/desks/:param/tickets/:param/close",
+      "type": "entry",
+      "label": "POST /desks/:param/tickets/:param/close",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/desks/:param/tickets/:param/close",
+        "rawPath": "/desks/:deskId/tickets/:ticketId/close",
+        "controller": "TicketsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+      "type": "producer",
+      "label": "message desk:*:events",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "TICKET_ASSIGNED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+      "type": "producer",
+      "label": "message desk:*:events",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "TICKET_CLOSED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+      "type": "producer",
+      "label": "message desk:*:events",
+      "repo": "desk-api",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 23,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "TICKET_REOPENED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "functions": 8,
+          "components": 4,
+          "hooks": 1,
+          "skippedExternalCalls": {
+            "react": 4
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:desk-api",
+      "type": "repo",
+      "label": "desk-api",
+      "repo": "desk-api",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {
+            "redis": 5,
+            "rxjs": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+      "type": "ui_api_call",
+      "label": "GET /desks/:param/events",
+      "repo": "console",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 15,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_DESK_URL}/desks/:param/events",
+        "path": "/desks/:param/events",
+        "baseUrlEnv": "VITE_DESK_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "desk-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:desk:*:events",
+      "to": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:desk-api:http:GET:/desks/:param/events",
+        "call": "ui_api_call:console#src/live/useDeskEvents.ts:15:20"
+      }
+    },
+    {
+      "from": "channel:desk:*:events",
+      "to": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:desk-api:http:GET:/desks/:param/events",
+        "call": "ui_api_call:console#src/live/useDeskEvents.ts:15:20"
+      }
+    },
+    {
+      "from": "channel:desk:*:events",
+      "to": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16,
+      "meta": {
+        "via": "sse",
+        "route": "entry:desk-api:http:GET:/desks/:param/events",
+        "call": "ui_api_call:console#src/live/useDeskEvents.ts:15:20"
+      }
+    },
+    {
+      "from": "channel:desk:*:events",
+      "to": "consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:desk:*:events#TICKET_ASSIGNED",
+      "to": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/QueueScreen.tsx",
+      "line": 8,
+      "meta": {
+        "selectedBy": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:desk:*:events#TICKET_ASSIGNED",
+      "to": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/TicketScreen.tsx",
+      "line": 8,
+      "meta": {
+        "selectedBy": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:desk:*:events#TICKET_CLOSED",
+      "to": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/TicketScreen.tsx",
+      "line": 9,
+      "meta": {
+        "selectedBy": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:desk:*:events#TICKET_REOPENED",
+      "to": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/ArchivePanel.tsx",
+      "line": 8,
+      "meta": {
+        "selectedBy": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+        "via": "if"
+      }
+    },
+    {
+      "from": "console#src/live/useDeskEvents.ts:useDeskEvents",
+      "to": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 15
+    },
+    {
+      "from": "console#src/screens/ArchivePanel.tsx:ArchivePanel",
+      "to": "console#src/live/useDeskEvents.ts:useDeskEvents",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/screens/ArchivePanel.tsx",
+      "line": 14
+    },
+    {
+      "from": "console#src/screens/QueueScreen.tsx:QueueScreen",
+      "to": "console#src/live/useDeskEvents.ts:useDeskEvents",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/screens/QueueScreen.tsx",
+      "line": 14
+    },
+    {
+      "from": "console#src/screens/TicketScreen.tsx:TicketScreen",
+      "to": "console#src/live/useDeskEvents.ts:useDeskEvents",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/screens/TicketScreen.tsx",
+      "line": 15
+    },
+    {
+      "from": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "to": "console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "to": "console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "to": "console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+      "to": "desk-api#src/live/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{deskId:string}"
+      }
+    },
+    {
+      "from": "desk-api#src/live/live.controller.ts:LiveController.events",
+      "to": "cache_op:desk-api#src/live/live.controller.ts:13:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "desk-api#src/live/live.controller.ts:LiveController.events",
+      "to": "cache_op:desk-api#src/live/live.controller.ts:16:25",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live/live.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.controller.ts:TicketsController",
+      "to": "desk-api#src/tickets/tickets.service.ts:TicketsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.controller.ts:TicketsController.assign",
+      "to": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.controller.ts:TicketsController.close",
+      "to": "desk-api#src/tickets/tickets.service.ts:TicketsService.close",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign",
+      "to": "cache_op:desk-api#src/tickets/tickets.service.ts:15:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 15
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign",
+      "to": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 15
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.service.ts:TicketsService.close",
+      "to": "cache_op:desk-api#src/tickets/tickets.service.ts:19:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 19
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.service.ts:TicketsService.close",
+      "to": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 19
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+      "to": "cache_op:desk-api#src/tickets/tickets.service.ts:23:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 23
+    },
+    {
+      "from": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen",
+      "to": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:console:screen:/queue",
+      "to": "console#src/screens/QueueScreen.tsx:QueueScreen",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/queue"
+      }
+    },
+    {
+      "from": "entry:console:screen:/tickets/:param",
+      "to": "console#src/screens/TicketScreen.tsx:TicketScreen",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 11,
+      "meta": {
+        "route": "/tickets/:param"
+      }
+    },
+    {
+      "from": "entry:desk-api:event:desk:*:events",
+      "to": "desk-api#src/live/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{deskId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:GET:/desks/:param/events",
+      "to": "desk-api#src/live/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{deskId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/desks/:param/tickets/:param/assign",
+      "to": "desk-api#src/tickets/tickets.controller.ts:TicketsController.assign",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{agentId:string}"
+      ],
+      "returns": "void",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{deskId:string;ticketId:string}",
+        "body": "{agentId:string}"
+      }
+    },
+    {
+      "from": "entry:desk-api:http:POST:/desks/:param/tickets/:param/close",
+      "to": "desk-api#src/tickets/tickets.controller.ts:TicketsController.close",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/tickets/tickets.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{deskId:string;ticketId:string}"
+      }
+    },
+    {
+      "from": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+      "to": "channel:desk:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/tickets/tickets.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+      "to": "channel:desk:*:events#TICKET_ASSIGNED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+      "to": "channel:desk:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/tickets/tickets.service.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+      "to": "channel:desk:*:events#TICKET_CLOSED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+      "to": "channel:desk:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/tickets/tickets.service.ts",
+      "line": 23
+    },
+    {
+      "from": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+      "to": "channel:desk:*:events#TICKET_REOPENED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/tickets/tickets.service.ts",
+      "line": 23,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+      "to": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+      "to": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+      "to": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+      "to": "entry:desk-api:http:GET:/desks/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/useDeskEvents.ts",
+      "line": 15,
+      "meta": {
+        "via": "api-target",
+        "targetService": "desk-api"
+      }
+    }
+  ],
+  "types": {
+    "type:console#DeskEvent": {
+      "name": "DeskEvent",
+      "kind": "object",
+      "declaredIn": "console#src/live/useDeskEvents.ts",
+      "structuralHash": "e99ff974f5100bc8",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "ticketId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "agentId",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 13,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "LiveController.events",
+      "service": "desk-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 16,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.unsubscribe",
+      "service": "desk-api"
+    }
+  ]
+}

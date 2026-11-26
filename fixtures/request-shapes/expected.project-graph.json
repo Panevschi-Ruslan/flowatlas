@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:06:20.228Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:22:28.538Z",
   "services": [
     {
       "name": "orders-api",
@@ -143,7 +143,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-admin"
+        "selector": "app-admin",
+        "unreferenced": true
       }
     },
     {
@@ -218,7 +219,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -237,7 +239,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -256,7 +259,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -279,7 +283,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -298,7 +303,8 @@
             }
           ],
           "returns": "type:catalog-api#Item"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -321,7 +327,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "price",
+            "line": 19
+          },
+          {
+            "field": "sku",
+            "line": 19
+          }
+        ]
       }
     },
     {
@@ -639,7 +655,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -662,7 +679,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -685,7 +703,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -708,7 +727,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -731,7 +751,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 31,
+            "why": "handed to UpdateOrder.parse"
+          }
+        ]
       }
     },
     {
@@ -754,7 +781,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 53,
+            "why": "handed to RefundRequest.safeParse"
+          }
+        ]
       }
     },
     {
@@ -777,7 +811,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 9
+          },
+          {
+            "field": "total",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -800,7 +844,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "count",
+            "line": 39
+          }
+        ]
       }
     },
     {
@@ -919,7 +969,14 @@
           "entry": [
             "koa-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/server.ts",
+            "line": 48
+          }
+        ]
       }
     },
     {
@@ -941,7 +998,14 @@
           "entry": [
             "fastify-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/server.ts",
+            "line": 34
+          }
+        ]
       }
     },
     {
@@ -964,7 +1028,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9
+          }
+        ]
       }
     },
     {
@@ -992,7 +1063,17 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
       }
     },
     {
@@ -1011,7 +1092,17 @@
             }
           ],
           "returns": "type:next#NextResponse"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "line": 19
+          },
+          {
+            "field": "customerId",
+            "line": 22
+          }
+        ]
       }
     },
     {
@@ -1034,7 +1125,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1116,8 +1208,10 @@
         "bodyKeys": [
           "total"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "orders-api"
       }
     },
@@ -1140,8 +1234,10 @@
         "bodyKeys": [
           "source"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "orders-api"
       }
     },
@@ -1160,6 +1256,7 @@
         "baseUrlEnv": "ordersUrl",
         "responseType": "type:admin#OrderRow[]",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "orders-api"
@@ -1180,6 +1277,7 @@
         "baseUrlEnv": "catalogUrl",
         "responseType": "type:admin#CatalogItem",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "catalog-api"

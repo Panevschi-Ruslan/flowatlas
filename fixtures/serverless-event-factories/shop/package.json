@@ -1,0 +1,9 @@
+{
+  "name": "shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A small shop as Lambda functions joined by an event bus, every event built by one helper from a record of factories.",
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.700.0"
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "counts": {
+    "call-to-missing-route": 1,
+    "unguarded-among-guarded": 2,
+    "config-not-set": 2,
+    "config-never-read": 3
+  },
+  "top": {
+    "call-to-missing-route": [
+      {
+        "kind": "call-to-missing-route",
+        "id": "http_out:gateway#src/clients/notes.client.ts:35:12",
+        "to": "orders",
+        "message": "NotesClient.archive sends POST /notes/:param/archive to orders, which serves no such route",
+        "precision": "high",
+        "evidence": "every route of the service it is sent to was read: no address left partly unread, no catch-all",
+        "fix": "the nearest route: POST /notes/:param/export (one segment off: archive for export)",
+        "seenBy": [
+          "POST /api/notes/:param/archive (gateway)"
+        ],
+        "rank": 1,
+        "reach": {
+          "waysIn": 1
+        },
+        "next": "get_source({symbol: \"http_out:gateway#src/clients/notes.client.ts:35:12\"})"
+      }
+    ],
+    "unguarded-among-guarded": [
+      {
+        "kind": "unguarded-among-guarded",
+        "id": "entry:shipping:http:DELETE:/claims/:param",
+        "method": "shipping#src/claims/claims.controller.ts:ClaimsController.remove",
+        "loc": "src/claims/claims.controller.ts:40",
+        "message": "DELETE /claims/:param has no guard in front of it, while the 2 other writes of ClaimsController have StaffGuard in front.",
+        "precision": "high",
+        "evidence": "every other write of its router is guarded and the routes of src/claims/claims.controller.ts were read whole; no public marker is on it",
+        "rank": 1,
+        "reach": {
+          "guardedSiblings": 2,
+          "writes": 0,
+          "reads": 0
+        },
+        "next": "get_flow({entry: \"entry:shipping:http:DELETE:/claims/:param\"})"
+      },
+      {
+        "kind": "unguarded-among-guarded",
+        "id": "entry:shipping:http:DELETE:/pickups/:param",
+        "method": "shipping#src/pickups/pickups.controller.ts:PickupsController.cancel",
+        "loc": "src/pickups/pickups.controller.ts:23",
+        "message": "DELETE /pickups/:param has no guard in front of it, because StaffGuard (skipped by @SkipStaffCheck), while the 2 other writes of PickupsController have StaffGuard in front.",
+        "precision": "high",
+        "evidence": "every other write of its router is guarded and the routes of src/pickups/pickups.controller.ts were read whole; no public marker is on it",
+        "rank": 2,
+        "reach": {
+          "guardedSiblings": 2,
+          "writes": 0,
+          "reads": 0
+        },
+        "next": "get_flow({entry: \"entry:shipping:http:DELETE:/pickups/:param\"})"
+      }
+    ],
+    "config-not-set": [
+      {
+        "kind": "config-not-set",
+        "id": "config_key:ledger#CACHE_HOST",
+        "loc": "src/settings.ts:8",
+        "message": "CACHE_HOST is read with no default, and none of ledger's deployment files sets it (docker-compose.yml)",
+        "precision": "medium",
+        "evidence": "every deployment file of the service was read for the names it sets; a value given outside the files (a secret store, a console, the shell) is what would make this wrong",
+        "fix": "set CACHE_HOST where ledger is deployed, or give the read a default",
+        "rank": 1,
+        "next": "get_source({symbol: \"config_key:ledger#CACHE_HOST\"})"
+      },
+      {
+        "kind": "config-not-set",
+        "id": "config_key:ledger#LEDGER_REGION",
+        "loc": "src/settings.ts:4",
+        "message": "LEDGER_REGION is read with no default, and none of ledger's deployment files sets it (docker-compose.yml); LEDGER_ZONE, set in docker-compose.yml and read nowhere, is likely the same setting renamed",
+        "precision": "medium",
+        "evidence": "every deployment file of the service was read for the names it sets; a value given outside the files (a secret store, a console, the shell) is what would make this wrong",
+        "fix": "one setting renamed on one side: read LEDGER_ZONE, or set LEDGER_REGION where LEDGER_ZONE is set",
+        "rank": 2,
+        "next": "get_source({symbol: \"config_key:ledger#LEDGER_REGION\"})"
+      }
+    ],
+    "config-never-read": [
+      {
+        "kind": "config-never-read",
+        "id": "config_key:ledger#CACHE_PASSWORD",
+        "loc": "docker-compose.yml",
+        "message": "CACHE_PASSWORD is set in docker-compose.yml and no code of ledger reads it",
+        "precision": "low",
+        "evidence": "every read of a setting in the service names its key; a library reading it by itself is what would make this wrong",
+        "fix": "drop CACHE_PASSWORD, or read it",
+        "rank": 1,
+        "next": "search({query: \"CACHE_PASSWORD\"})"
+      },
+      {
+        "kind": "config-never-read",
+        "id": "config_key:mailer#MAIL_FROM",
+        "loc": "Dockerfile",
+        "message": "MAIL_FROM is set in Dockerfile and no code of mailer reads it",
+        "precision": "low",
+        "evidence": "every read of a setting in the service names its key; a library reading it by itself is what would make this wrong",
+        "fix": "drop MAIL_FROM, or read it",
+        "rank": 2,
+        "next": "search({query: \"MAIL_FROM\"})"
+      },
+      {
+        "kind": "config-never-read",
+        "id": "config_key:reports#REPORTS_FORMAT",
+        "loc": "docker-compose.yml",
+        "message": "REPORTS_FORMAT is set in docker-compose.yml and no code of reports reads it",
+        "precision": "low",
+        "evidence": "every read of a setting in the service names its key; a library reading it by itself is what would make this wrong",
+        "fix": "drop REPORTS_FORMAT, or read it",
+        "rank": 3,
+        "next": "search({query: \"REPORTS_FORMAT\"})"
+      }
+    ]
+  },
+  "heldBack": {
+    "config-not-set": {
+      "count": 2,
+      "why": "doppler run in Dockerfile hands settings in when it runs, which no file read names"
+    }
+  }
+}

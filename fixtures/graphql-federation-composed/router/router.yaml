@@ -1,0 +1,5 @@
+supergraph:
+  listen: 0.0.0.0:4000
+  path: /graphql
+override_subgraph_url:
+  orders: http://orders:4001/graphql

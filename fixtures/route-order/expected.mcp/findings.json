@@ -1,0 +1,72 @@
+{
+  "counts": {
+    "route-shadowed-by-earlier": 3,
+    "contract-break": 2
+  },
+  "top": {
+    "route-shadowed-by-earlier": [
+      {
+        "kind": "route-shadowed-by-earlier",
+        "id": "GET /items/featured",
+        "service": "catalog-api",
+        "loc": "src/items.routes.ts:16",
+        "message": "GET /items/featured (src/items.routes.ts:16) is never reached: GET /items/:param (src/items.routes.ts:13), registered before it on itemsRouter, answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /items/:param: CatalogApi.featured.",
+        "precision": "high",
+        "rank": 1,
+        "next": "get_source({symbol: \"GET /items/featured\"})"
+      },
+      {
+        "kind": "route-shadowed-by-earlier",
+        "id": "GET /orders/export",
+        "service": "shop-api",
+        "loc": "src/orders/order-exports.controller.ts:9",
+        "message": "GET /orders/export (src/orders/order-exports.controller.ts:9) is never reached: GET /orders/:param (src/orders/orders.controller.ts:14), registered before it (OrdersController is registered before OrderExportsController), answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /orders/:param: OrdersApi.exportAll.",
+        "precision": "high",
+        "rank": 2,
+        "next": "get_source({symbol: \"GET /orders/export\"})"
+      },
+      {
+        "kind": "route-shadowed-by-earlier",
+        "id": "GET /orders/latest",
+        "service": "shop-api",
+        "loc": "src/orders/orders.controller.ts:20",
+        "message": "GET /orders/latest (src/orders/orders.controller.ts:20) is never reached: GET /orders/:param (src/orders/orders.controller.ts:14), registered before it on OrdersController, answers every request for it, and the router tries routes in the order they are registered. 1 caller asking for it lands on GET /orders/:param: OrdersApi.latest.",
+        "precision": "high",
+        "rank": 3,
+        "next": "get_source({symbol: \"GET /orders/latest\"})"
+      }
+    ],
+    "contract-break": [
+      {
+        "kind": "contract-break",
+        "id": "ui_api_call:shop-web#src/app/catalog-api.service.ts:14:12",
+        "to": "entry:catalog-api:http:GET:/items/:param",
+        "service": "shop-web",
+        "loc": "src/app/catalog-api.service.ts:14",
+        "message": "sender catalog-api sends `{id:string}` where receiver shop-web expects `unknown[]`",
+        "severity": "error",
+        "precision": "high",
+        "rank": 1,
+        "reach": {
+          "callers": 0
+        },
+        "next": "check_contract({from: \"ui_api_call:shop-web#src/app/catalog-api.service.ts:14:12\", to: \"entry:catalog-api:http:GET:/items/:param\"})"
+      },
+      {
+        "kind": "contract-break",
+        "id": "ui_api_call:shop-web#src/app/orders-api.service.ts:33:12",
+        "to": "entry:shop-api:http:GET:/orders/:param",
+        "service": "shop-web",
+        "loc": "src/app/orders-api.service.ts:33",
+        "message": "sender shop-api sends `type:shop-api#Order` where receiver shop-web expects `string`",
+        "severity": "error",
+        "precision": "high",
+        "rank": 2,
+        "reach": {
+          "callers": 0
+        },
+        "next": "check_contract({from: \"ui_api_call:shop-web#src/app/orders-api.service.ts:33:12\", to: \"entry:shop-api:http:GET:/orders/:param\"})"
+      }
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-basic",
-  "generatedAt": "2026-10-16T15:11:31.352Z",
+  "generatedAt": "2026-11-23T14:41:30.661Z",
   "nodes": [
     {
       "id": "entry:nest-basic:http:DELETE:/api/orders/:param",
@@ -142,7 +142,13 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "userId",
+            "line": 25
+          }
+        ]
       }
     },
     {
@@ -156,7 +162,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -189,7 +196,8 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -208,7 +216,8 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -383,7 +392,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -472,7 +482,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 8
+          }
+        ]
       }
     }
   ],

@@ -1,0 +1,90 @@
+{
+  "settled": "3 ways in break, all listed",
+  "target": {
+    "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+    "line": 17,
+    "meta": {
+      "signature": {
+        "params": [
+          {
+            "name": "orderId",
+            "type": "string"
+          },
+          {
+            "name": "by",
+            "type": "string"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:shop-api:http:PATCH:/api/orders/:param/cancel",
+      "line": 21,
+      "meta": {
+        "rawPath": "/api/orders/:id/cancel",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      },
+      "reach": "alive",
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "rowsVia": 1
+    },
+    {
+      "id": "entry:shop-api:http:POST:/bot/staff/webhook",
+      "loc": "src/worker.ts:16",
+      "meta": {
+        "adapter": "hono-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      },
+      "reach": "outside",
+      "by": "shop-api#src/bot/staff-bot.service.ts:StaffBot.handleCallbackQuery"
+    },
+    {
+      "id": "entry:shop-web:screen:/orders/:param",
+      "meta": {
+        "by": "angular-routes",
+        "screens": [
+          "OrderDetailComponent"
+        ]
+      },
+      "reach": "outside",
+      "via": "PATCH /api/orders/:param/cancel (shop-api)",
+      "by": "shop-web#src/app/order-detail.component.ts:OrderDetailComponent"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "screens": {
+      "shop-web": [
+        "src/app/order-detail.component.ts"
+      ]
+    },
+    "webhooks": {
+      "shop-api": [
+        "src/bot/staff-bot.service.ts"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:PATCH:/api/orders/:param/cancel"
+  ],
+  "reached": 11,
+  "entriesByService": {
+    "shop-api": 2,
+    "shop-web": 1
+  },
+  "reachedByService": {
+    "shop-api": 5,
+    "shop-web": 6
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "note": "rows of a list leave out their structured facts (access, fails): get_flow({entry: id}) or impact({symbol: id}) at detail 2 gives one node's, verbose: true every row's"
+}

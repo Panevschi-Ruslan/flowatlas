@@ -23,6 +23,7 @@ import {
   SPEC_DIFF_FORMAT_VERSION,
   type SpecChange,
   type SpecChangeKind,
+  type SpecChangeUse,
   type SpecDiffReport,
 } from './types.js';
 
@@ -35,6 +36,20 @@ export interface SpecDiffOptions {
   callers?: (operation: SpecOperation) => SpecCaller[];
   /** How far into nested shapes fields are compared. */
   depth?: number;
+  /**
+   * What each change does to the code that uses it (P390), read off the
+   * graphs by a caller that holds them; its level becomes the change's.
+   */
+  useOf?: (change: SpecChange, at: SpecUseContext) => SpecChangeUse | undefined;
+}
+
+/** What `useOf` is told beside the change: the operation on each side it is about. */
+export interface SpecUseContext {
+  /** The base side's operation, or the head side's for an added one. */
+  operation: SpecOperation;
+  /** The head side's operation, for a pair. */
+  head?: SpecOperation;
+  side: 'base' | 'head';
 }
 
 type Part = 'request' | 'response' | 'message';
@@ -105,6 +120,7 @@ interface Context {
   callers: SpecCaller[];
   /** Which side `operation` is on: the base side, but for an added one. */
   side?: 'base' | 'head';
+  useOf?: SpecDiffOptions['useOf'];
 }
 
 const make = (
@@ -117,7 +133,7 @@ const make = (
   const catalogued = SPEC_CHANGE_KINDS[kind].level;
   const uncalled = catalogued === 'error' && context.callers.length === 0 && context.operation.public === undefined;
   const levels: Confidence[] = [context.operation.confidence, ...(context.head === undefined ? [] : [context.head.confidence])];
-  return {
+  const change: SpecChange = {
     kind,
     level: uncalled ? 'warning' : catalogued,
     document: context.spec.name,
@@ -138,6 +154,12 @@ const make = (
     confidence: weakest(levels),
     key: `${kind}|${context.spec.name}|${context.operation.key}|${field ?? ''}`,
   };
+  const use = context.useOf?.(change, {
+    operation: context.operation,
+    ...(context.head === undefined ? {} : { head: context.head }),
+    side: context.side ?? 'base',
+  });
+  return use === undefined ? change : { ...change, level: use.level, use };
 };
 
 const fieldChanges = (context: Context, part: Part, changes: readonly TypeFieldChange[]): SpecChange[] =>
@@ -298,6 +320,7 @@ const LEVEL_RANK = new Map(SPEC_CHANGE_LEVELS.map((level, rank) => [level, rank]
 export const diffSpecs = (base: readonly WrittenSpec[], head: readonly WrittenSpec[], options: SpecDiffOptions = {}): SpecDiffReport => {
   const callersOf = options.callers ?? ((operation: SpecOperation) => operation.callers);
   const depth = options.depth ?? 8;
+  const useOf = options.useOf === undefined ? {} : { useOf: options.useOf };
   const identity = (spec: WrittenSpec): string => `${spec.kind}|${spec.name}`;
   const heads = new Map(head.map((spec) => [identity(spec), spec]));
   const changes: SpecChange[] = [];
@@ -308,13 +331,13 @@ export const diffSpecs = (base: readonly WrittenSpec[], head: readonly WrittenSp
     const { pairs, removed, added } = pairOperations(spec, other);
     for (const operation of removed) {
       const kind = removedKind(operation, other);
-      changes.push(make({ spec, operation, callers: callersOf(operation) }, kind, null, { base: operation.key, head: null }, REMOVED_SAID[kind] ?? 'removed'));
+      changes.push(make({ spec, operation, callers: callersOf(operation), ...useOf }, kind, null, { base: operation.key, head: null }, REMOVED_SAID[kind] ?? 'removed'));
     }
     for (const operation of added) {
-      changes.push(make({ spec: other as WrittenSpec, operation, callers: [], side: 'head' }, 'endpoint-added', null, { base: null, head: operation.key }, 'added on the head side'));
+      changes.push(make({ spec: other as WrittenSpec, operation, callers: [], side: 'head', ...useOf }, 'endpoint-added', null, { base: null, head: operation.key }, 'added on the head side'));
     }
     for (const [was, now] of pairs) {
-      const context: Context = { spec, operation: was, head: now, callers: callersOf(was) };
+      const context: Context = { spec, operation: was, head: now, callers: callersOf(was), ...useOf };
       if (was.route !== undefined && now.route !== undefined && was.route !== now.route) {
         changes.push(make(context, 'path-param-added', null, { base: was.key, head: now.key }, `the path is now ${now.key.slice(now.key.indexOf(' ') + 1)}`));
         continue;
@@ -324,7 +347,7 @@ export const diffSpecs = (base: readonly WrittenSpec[], head: readonly WrittenSp
   }
   for (const spec of heads.values()) {
     for (const operation of spec.operations) {
-      changes.push(make({ spec, operation, callers: [], side: 'head' }, 'endpoint-added', null, { base: null, head: operation.key }, 'added on the head side'));
+      changes.push(make({ spec, operation, callers: [], side: 'head', ...useOf }, 'endpoint-added', null, { base: null, head: operation.key }, 'added on the head side'));
     }
   }
 

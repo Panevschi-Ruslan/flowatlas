@@ -1,0 +1,1812 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:10:46.721Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /latest/:count@13",
+      "type": "function",
+      "label": "GET /latest/:count@13",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/index.ts:GET /latest@9",
+      "type": "function",
+      "label": "GET /latest@9",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/latest",
+      "type": "entry",
+      "label": "GET /latest",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/latest",
+        "rawPath": "/latest",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/latest/:param",
+      "type": "entry",
+      "label": "GET /latest/:param",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/latest/:param",
+        "rawPath": "/latest/:count",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/sync",
+      "type": "entry",
+      "label": "POST /sync",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/sync",
+        "rawPath": "/sync",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/levels",
+      "type": "entry",
+      "label": "GET /levels",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels",
+        "rawPath": "/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "external_api:localhost4600",
+      "type": "external_api",
+      "label": "localhost4600",
+      "repo": "web",
+      "meta": {
+        "host": "localhost4600"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:22:34",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4700",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:24:36",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 24,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:26:41",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 26,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:30:21",
+      "type": "http_out",
+      "label": "GET /levels",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 30,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4700",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/index.ts:40:35",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 40,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost4600"
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:POST /sync@42",
+      "type": "function",
+      "label": "POST /sync@42",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:catalogHealth",
+      "type": "function",
+      "label": "catalogHealth",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:catalogHealthAgain",
+      "type": "function",
+      "label": "catalogHealthAgain",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:probe",
+      "type": "function",
+      "label": "probe",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "port",
+              "type": "number"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:probeCatalog",
+      "type": "function",
+      "label": "probeCatalog",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:readHealth",
+      "type": "function",
+      "label": "readHealth",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "port",
+              "type": "number"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:stockHealth",
+      "type": "function",
+      "label": "stockHealth",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/index.ts:stockLevels",
+      "type": "function",
+      "label": "stockLevels",
+      "repo": "jobs",
+      "file": "src/index.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4600,
+            "file": "src/index.ts",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4800,
+            "file": "src/index.ts",
+            "line": 52
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4700,
+            "file": "src/index.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 15,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /health@5",
+      "type": "function",
+      "label": "GET /health@5",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stock#src/index.ts:GET /levels@9",
+      "type": "function",
+      "label": "GET /levels@9",
+      "repo": "stock",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/kept.js:17:10@13:10",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "health",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/kept.js:21:10@13:10",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "health",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/kept.js:25:10@13:10",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "health",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/kept.js:30:10",
+      "type": "ui_api_call",
+      "label": "GET /levels",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4700",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/kept.js:39:10",
+      "type": "ui_api_call",
+      "label": "GET /latest/:param",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 39,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/latest/:param",
+        "path": "/latest/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4600",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/malformed.js:12:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/malformed.js",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "probe",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/malformed.js:7:10@3:10",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "js/malformed.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost4600/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost4600",
+        "portWithoutColon": {
+          "number": "4600",
+          "host": "localhost"
+        },
+        "through": "probe"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/readers.js:16:10@8:12",
+      "type": "ui_api_call",
+      "label": "GET /latest",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/latest",
+        "path": "/latest",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "Reader.read",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/readers.js:21:10@8:12",
+      "type": "ui_api_call",
+      "label": "GET /levels",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "Reader.read",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/readers.js:30:10@26:10",
+      "type": "ui_api_call",
+      "label": "GET /latest",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4600/latest",
+        "path": "/latest",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4600",
+        "through": "readOn",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/readers.js:35:10@26:10",
+      "type": "ui_api_call",
+      "label": "GET /levels",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "localhost:4700",
+        "through": "readOn",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "web#js/kept.js:Ports.catalog",
+      "type": "function",
+      "label": "Ports.catalog",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 5
+    },
+    {
+      "id": "web#js/kept.js:catalogHealth",
+      "type": "function",
+      "label": "catalogHealth",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/kept.js:catalogHealthAgain",
+      "type": "function",
+      "label": "catalogHealthAgain",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/kept.js:health",
+      "type": "function",
+      "label": "health",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "port",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/kept.js:latestPage",
+      "type": "function",
+      "label": "latestPage",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/kept.js:stockHealth",
+      "type": "function",
+      "label": "stockHealth",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/kept.js:stockLevels",
+      "type": "function",
+      "label": "stockLevels",
+      "repo": "web",
+      "file": "js/kept.js",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/malformed.js:probe",
+      "type": "function",
+      "label": "probe",
+      "repo": "web",
+      "file": "js/malformed.js",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "port",
+              "type": "any"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/malformed.js:probeCatalog",
+      "type": "function",
+      "label": "probeCatalog",
+      "repo": "web",
+      "file": "js/malformed.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/malformed.js:probeStock",
+      "type": "function",
+      "label": "probeStock",
+      "repo": "web",
+      "file": "js/malformed.js",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#js/readers.js:Reader.constructor",
+      "type": "function",
+      "label": "Reader.constructor",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 3
+    },
+    {
+      "id": "web#js/readers.js:Reader.read",
+      "type": "function",
+      "label": "Reader.read",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 7
+    },
+    {
+      "id": "web#js/readers.js:latestOn",
+      "type": "function",
+      "label": "latestOn",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/readers.js:latestProducts",
+      "type": "function",
+      "label": "latestProducts",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/readers.js:levelsOn",
+      "type": "function",
+      "label": "levelsOn",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/readers.js:readOn",
+      "type": "function",
+      "label": "readOn",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "any"
+            },
+            {
+              "name": "path",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/readers.js:stockLevelsRead",
+      "type": "function",
+      "label": "stockLevelsRead",
+      "repo": "web",
+      "file": "js/readers.js",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/health",
+      "to": "catalog#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/latest",
+      "to": "catalog#src/index.ts:GET /latest@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/latest/:param",
+      "to": "catalog#src/index.ts:GET /latest/:count@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/sync",
+      "to": "jobs#src/index.ts:POST /sync@42",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{stock:any;catalog:any;again:any;levels:any;probe:boolean}",
+      "file": "src/index.ts",
+      "line": 42,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/health",
+      "to": "stock#src/index.ts:GET /health@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/levels",
+      "to": "stock#src/index.ts:GET /levels@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:22:34",
+      "to": "entry:stock:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 22,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:24:36",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 24,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:26:41",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 26,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:30:21",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/index.ts:40:35",
+      "to": "external_api:localhost4600",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 40
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@42",
+      "to": "jobs#src/index.ts:catalogHealth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 45
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@42",
+      "to": "jobs#src/index.ts:catalogHealthAgain",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 46
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@42",
+      "to": "jobs#src/index.ts:probeCatalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "boolean",
+      "file": "src/index.ts",
+      "line": 48
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@42",
+      "to": "jobs#src/index.ts:stockHealth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 44
+    },
+    {
+      "from": "jobs#src/index.ts:POST /sync@42",
+      "to": "jobs#src/index.ts:stockLevels",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 47
+    },
+    {
+      "from": "jobs#src/index.ts:catalogHealth",
+      "to": "http_out:jobs#src/index.ts:24:36",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 24
+    },
+    {
+      "from": "jobs#src/index.ts:catalogHealth",
+      "to": "jobs#src/index.ts:readHealth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 24
+    },
+    {
+      "from": "jobs#src/index.ts:catalogHealthAgain",
+      "to": "http_out:jobs#src/index.ts:26:41",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 26
+    },
+    {
+      "from": "jobs#src/index.ts:catalogHealthAgain",
+      "to": "jobs#src/index.ts:readHealth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 26
+    },
+    {
+      "from": "jobs#src/index.ts:probeCatalog",
+      "to": "http_out:jobs#src/index.ts:40:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 40
+    },
+    {
+      "from": "jobs#src/index.ts:probeCatalog",
+      "to": "jobs#src/index.ts:probe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "boolean",
+      "file": "src/index.ts",
+      "line": 40
+    },
+    {
+      "from": "jobs#src/index.ts:stockHealth",
+      "to": "http_out:jobs#src/index.ts:22:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 22
+    },
+    {
+      "from": "jobs#src/index.ts:stockHealth",
+      "to": "jobs#src/index.ts:readHealth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "any",
+      "file": "src/index.ts",
+      "line": 22
+    },
+    {
+      "from": "jobs#src/index.ts:stockLevels",
+      "to": "http_out:jobs#src/index.ts:30:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30
+    },
+    {
+      "from": "ui_api_call:web#js/kept.js:17:10@13:10",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 17,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/kept.js:21:10@13:10",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 21,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/kept.js:25:10@13:10",
+      "to": "entry:catalog:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 25,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/kept.js:30:10",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 30,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/kept.js:39:10",
+      "to": "entry:catalog:http:GET:/latest/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 39,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/malformed.js:12:10@3:10",
+      "to": "entry:stock:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/malformed.js",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/malformed.js:7:10@3:10",
+      "to": "external_api:localhost4600",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/malformed.js",
+      "line": 7
+    },
+    {
+      "from": "ui_api_call:web#js/readers.js:16:10@8:12",
+      "to": "entry:catalog:http:GET:/latest",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 16,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/readers.js:21:10@8:12",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 21,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/readers.js:30:10@26:10",
+      "to": "entry:catalog:http:GET:/latest",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 30,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/index.ts:17"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/readers.js:35:10@26:10",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 35,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/index.ts:13"
+      }
+    },
+    {
+      "from": "web#js/kept.js:catalogHealth",
+      "to": "ui_api_call:web#js/kept.js:21:10@13:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 21
+    },
+    {
+      "from": "web#js/kept.js:catalogHealth",
+      "to": "web#js/kept.js:Ports.catalog",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 21
+    },
+    {
+      "from": "web#js/kept.js:catalogHealth",
+      "to": "web#js/kept.js:health",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/kept.js",
+      "line": 21
+    },
+    {
+      "from": "web#js/kept.js:catalogHealthAgain",
+      "to": "ui_api_call:web#js/kept.js:25:10@13:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 25
+    },
+    {
+      "from": "web#js/kept.js:catalogHealthAgain",
+      "to": "web#js/kept.js:health",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/kept.js",
+      "line": 25
+    },
+    {
+      "from": "web#js/kept.js:latestPage",
+      "to": "ui_api_call:web#js/kept.js:39:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 39
+    },
+    {
+      "from": "web#js/kept.js:stockHealth",
+      "to": "ui_api_call:web#js/kept.js:17:10@13:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 17
+    },
+    {
+      "from": "web#js/kept.js:stockHealth",
+      "to": "web#js/kept.js:health",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/kept.js",
+      "line": 17
+    },
+    {
+      "from": "web#js/kept.js:stockLevels",
+      "to": "ui_api_call:web#js/kept.js:30:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kept.js",
+      "line": 30
+    },
+    {
+      "from": "web#js/malformed.js:probeCatalog",
+      "to": "ui_api_call:web#js/malformed.js:7:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/malformed.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/malformed.js:probeCatalog",
+      "to": "web#js/malformed.js:probe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/malformed.js",
+      "line": 7
+    },
+    {
+      "from": "web#js/malformed.js:probeStock",
+      "to": "ui_api_call:web#js/malformed.js:12:10@3:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/malformed.js",
+      "line": 12
+    },
+    {
+      "from": "web#js/malformed.js:probeStock",
+      "to": "web#js/malformed.js:probe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "Response",
+      "file": "js/malformed.js",
+      "line": 12
+    },
+    {
+      "from": "web#js/readers.js:latestOn",
+      "to": "ui_api_call:web#js/readers.js:30:10@26:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 30
+    },
+    {
+      "from": "web#js/readers.js:latestOn",
+      "to": "web#js/readers.js:readOn",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/readers.js",
+      "line": 30
+    },
+    {
+      "from": "web#js/readers.js:latestProducts",
+      "to": "ui_api_call:web#js/readers.js:16:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 16
+    },
+    {
+      "from": "web#js/readers.js:latestProducts",
+      "to": "web#js/readers.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 16
+    },
+    {
+      "from": "web#js/readers.js:levelsOn",
+      "to": "ui_api_call:web#js/readers.js:35:10@26:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 35
+    },
+    {
+      "from": "web#js/readers.js:levelsOn",
+      "to": "web#js/readers.js:readOn",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/readers.js",
+      "line": 35
+    },
+    {
+      "from": "web#js/readers.js:stockLevelsRead",
+      "to": "ui_api_call:web#js/readers.js:21:10@8:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 21
+    },
+    {
+      "from": "web#js/readers.js:stockLevelsRead",
+      "to": "web#js/readers.js:Reader.constructor",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/readers.js",
+      "line": 20
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 3,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /latest@9 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 14,
+                "symbol": "GET /latest/:count@13 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 40,
+      "reason": "address-port-without-colon",
+      "message": "The address writes 4600 straight after the host localhost with no colon before it: it is read as spelled, the host localhost4600, which is no port.",
+      "hint": "Write a colon before the port, localhost:4600, or hand the port with its colon (':4600'). If localhost4600 is the host's name, nothing is wrong.",
+      "symbol": "probe(4600)",
+      "meta": {
+        "number": "4600",
+        "host": "localhost"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 43,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /sync@42 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/index.ts",
+                "line": 6,
+                "symbol": "GET /health@5 -> res.json"
+              },
+              {
+                "file": "src/index.ts",
+                "line": 10,
+                "symbol": "GET /levels@9 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "stock"
+    },
+    {
+      "file": "js/malformed.js",
+      "line": 7,
+      "reason": "address-port-without-colon",
+      "message": "The address writes 4600 straight after the host localhost with no colon before it: it is read as spelled, the host localhost4600, which is no port.",
+      "hint": "Write a colon before the port, localhost:4600, or hand the port with its colon (':4600'). If localhost4600 is the host's name, nothing is wrong.",
+      "symbol": "fetch(`http://localhost${port}/health`)",
+      "meta": {
+        "number": "4600",
+        "host": "localhost"
+      },
+      "service": "web"
+    }
+  ]
+}

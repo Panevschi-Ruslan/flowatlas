@@ -1,0 +1,13 @@
+{
+  "name": "@shop/clients",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.0.1",
+    "@shop/router": "workspace:*",
+    "@trpc/client": "^11.0.0"
+  }
+}

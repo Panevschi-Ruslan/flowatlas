@@ -1,0 +1,20 @@
+{
+  "settled": "1 producer, all listed",
+  "channel": {
+    "id": "channel:order.created",
+    "loc": "src/orders/orders.service.ts:49",
+    "service": "orders"
+  },
+  "producers": [
+    {
+      "id": "producer:orders#src/orders/orders.service.ts:49:5",
+      "label": "event order.created",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /orders",
+      "throughDead": true
+    }
+  ],
+  "total": 1,
+  "complete": true
+}

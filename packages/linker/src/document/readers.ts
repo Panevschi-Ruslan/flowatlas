@@ -13,7 +13,9 @@
  * misspelled one.
  */
 import { readAsyncapiDocument } from '../asyncapi/read.js';
+import { readGraphqlDocument } from '../graphql/read.js';
 import { readOpenapiDocument } from '../openapi/read.js';
+import { readProtobufDocument } from '../protobuf/read.js';
 import { DocumentError, type DocumentReader } from './declared.js';
 
 /**
@@ -24,6 +26,10 @@ import { DocumentError, type DocumentReader } from './declared.js';
 export const DOCUMENT_READERS: ReadonlyMap<string, DocumentReader> = new Map([
   ['openapi', readOpenapiDocument],
   ['asyncapi', readAsyncapiDocument],
+  // SDL, or an introspection result (P232).
+  ['graphql', readGraphqlDocument],
+  // A gRPC contract, `.proto` text, narrowed to the services named (P274).
+  ['protobuf', readProtobufDocument],
 ]);
 
 /** The kinds a document may be, which is exactly the readers there are. */

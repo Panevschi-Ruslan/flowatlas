@@ -10,6 +10,9 @@ import {
   makeHttpEntryKey,
   makeSymbolId,
   normalizePath,
+  CONTROLLER_ORDER_META,
+  ROUTE_ORDER_META,
+  shadowsByPath,
   stringListArg,
   UNREAD_SPAN,
   startLineOf,
@@ -24,6 +27,7 @@ import {
   repoClasses,
   type ForeignDecorator,
 } from './shared.js';
+import { listensByCall } from './listen-ports.js';
 
 /**
  * The package the decorators read here come from, matched as a package.
@@ -104,6 +108,16 @@ const ROUTE_DECORATORS: ReadonlyMap<string, string> = new Map([
   ['Head', 'HEAD'],
   ['All', 'ALL'],
 ]);
+
+/**
+ * Nest's decorator for a stream of server-sent events, which declares a `GET`
+ * route of its own (P359): `@Sse('events')`. Beside another route decorator it
+ * declares nothing more - the framework applies decorators from the bottom up,
+ * so `@Get('events') @Sse()` is one route at `events` - and only marks the
+ * answer as a stream. Left out of the framework's list below on purpose: it
+ * stays in the route's `decorators`, which is where a stream is read from.
+ */
+const STREAM_DECORATOR = 'Sse';
 
 const FRAMEWORK_DECORATORS = new Set([
   ...ROUTE_DECORATORS.keys(),
@@ -288,6 +302,8 @@ const servedAt = (
 export const nestjsHttpAdapter: EntryAdapter = {
   name: 'nestjs-http',
   detect: (pkg) => hasAnyDependency(pkg, ['@nestjs/common']),
+  // `await app.listen(process.env.PORT ?? 3000)` where the bootstrap starts it (P250).
+  listens: listensByCall,
   extractEntries: (ctx) => {
     const entries: EntryNode[] = [];
     const globalPrefix =
@@ -362,14 +378,16 @@ export const nestjsHttpAdapter: EntryAdapter = {
           line: startLineOf(method),
           symbol: `${controllerName}.${method.getName()}`,
         });
-        for (const decorator of routes.matched) {
+        // A stream's decorator alone is the route; beside another it is not a second one.
+        const streams = routes.matched.length === 0 ? nestDecorators(method, [STREAM_DECORATOR]).matched.slice(0, 1) : [];
+        for (const decorator of [...routes.matched, ...streams]) {
           // Both spellings, because `import { Get as HttpGet }` is still a GET
           // and the table is keyed by the names Nest exports. A decorator that
           // matched by name and answers to neither is not a thing that exists
           // today; it gets a row rather than a `continue`, because the one thing
           // this reader may not do is drop a route it recognised (R84).
           const httpMethod = decoratorNames(decorator)
-            .map((name) => ROUTE_DECORATORS.get(name))
+            .map((name) => (name === STREAM_DECORATOR ? 'GET' : ROUTE_DECORATORS.get(name)))
             .find((verb) => verb !== undefined);
           if (httpMethod === undefined) {
             ctx.builder.addUnresolved({
@@ -478,8 +496,87 @@ export const nestjsHttpAdapter: EntryAdapter = {
         }
       }
     }
-    return entries;
+    return orderedEntries(entries, ctx.meta, ctx.repo);
   },
+};
+
+/** One application's registration as the reader of modules left it (P385). */
+interface RootRegistration {
+  name: string;
+  routeOrder?: string;
+  controllers: string[];
+}
+
+const registrationRoots = (meta: Record<string, unknown> | undefined): RootRegistration[] => {
+  const value = meta?.['routeRegistration'];
+  if (typeof value !== 'object' || value === null) return [];
+  const roots = (value as { roots?: unknown }).roots;
+  return Array.isArray(roots) ? (roots as RootRegistration[]) : [];
+};
+
+/**
+ * Each route with what decides which of two routes its router tries first
+ * (P385).
+ *
+ * The application's choice of order, where it is not the default - Fastify,
+ * or `routeResolutionStrategy: 'specificity'`, or neither readable - goes on
+ * every route of it. The place its controller is registered at goes only on a
+ * route another controller's route of the same application may shadow or be
+ * shadowed by, since only there does it decide anything; within one
+ * controller the order is the order of its methods, which the line says.
+ */
+const orderedEntries = (entries: EntryNode[], meta: Record<string, unknown> | undefined, repo: string): EntryNode[] => {
+  const roots = registrationRoots(meta);
+  if (roots.length === 0) return entries;
+  const rootOf = (entry: EntryNode): RootRegistration | undefined => {
+    const application = entry.meta?.['application'];
+    if (typeof application === 'string') return roots.find((root) => root.name === application);
+    return roots.length === 1 ? roots[0] : undefined;
+  };
+  const controllerId = (entry: EntryNode): string | undefined => {
+    const controller = entry.meta?.['controller'];
+    return typeof controller === 'string' && entry.file !== undefined ? makeSymbolId(repo, entry.file, controller) : undefined;
+  };
+  // Only routes of one verb and one length can shadow each other, so they are
+  // compared within those groups: a service of a thousand routes is not a
+  // million comparisons.
+  const groups = new Map<string, EntryNode[]>();
+  for (const entry of entries) {
+    const segments = normalizePath(String(entry.meta?.['path'] ?? '')).split('/').length;
+    const key = `${String(entry.meta?.['method'] ?? '')} ${segments}`;
+    const group = groups.get(key);
+    if (group === undefined) groups.set(key, [entry]);
+    else group.push(entry);
+  }
+  const overlapping = new Set<EntryNode>();
+  for (const group of groups.values()) {
+    for (const [index, first] of group.entries()) {
+      for (const second of group.slice(index + 1)) {
+        if (first.meta?.['controller'] === second.meta?.['controller'] && first.file === second.file) continue;
+        if (first.meta?.['application'] !== second.meta?.['application']) continue;
+        if (shadowsByPath(first, second) || shadowsByPath(second, first)) {
+          overlapping.add(first);
+          overlapping.add(second);
+        }
+      }
+    }
+  }
+  return entries.map((entry) => {
+    const root = rootOf(entry);
+    if (root === undefined) return entry;
+    const id = overlapping.has(entry) ? controllerId(entry) : undefined;
+    const rank = id === undefined ? -1 : root.controllers.indexOf(id);
+    const order = root.routeOrder === 'specificity' || root.routeOrder === 'unread' ? root.routeOrder : undefined;
+    if (order === undefined && rank < 0) return entry;
+    return {
+      ...entry,
+      meta: {
+        ...entry.meta,
+        ...(order === undefined ? {} : { [ROUTE_ORDER_META]: order }),
+        ...(rank < 0 ? {} : { [CONTROLLER_ORDER_META]: rank }),
+      },
+    };
+  });
 };
 
 /**

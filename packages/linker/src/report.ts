@@ -83,6 +83,12 @@ export interface LinkReport {
     linked: number;
     noConsumers: string[];
     noProducers: string[];
+    /**
+     * Types of message published on a channel whose consumers choose by
+     * type, chosen by no live code (P358), by type node id. Absent when there
+     * are none. Type nodes are counted in none of the figures above.
+     */
+    unselectedTypes?: string[];
   };
   routes: {
     total: number;

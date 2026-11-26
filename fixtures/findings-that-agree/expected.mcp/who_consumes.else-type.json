@@ -1,0 +1,32 @@
+{
+  "channel": {
+    "id": "channel:catalog_events",
+    "type": "channel",
+    "label": "catalog_events",
+    "loc": "src/events/catalog.service.ts:10",
+    "service": "catalog-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent",
+      "type": "consumer",
+      "label": "CatalogHandlers.onCatalogEvent",
+      "loc": "src/catalog/catalog-handlers.ts:15",
+      "service": "back-office",
+      "kind": "event",
+      "via": "else",
+      "endLine": 18,
+      "reach": "dead",
+      "from": "POST /events/catalog",
+      "throughDead": true
+    }
+  ],
+  "total": 1,
+  "type": "STOCK_LOW",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:catalog_events\", type: \"STOCK_LOW\"})",
+    "impact({symbol: \"consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent\"})",
+    "get_source({symbol: \"consumer:back-office#src/catalog/catalog-handlers.ts:CatalogHandlers.onCatalogEvent\"})"
+  ]
+}

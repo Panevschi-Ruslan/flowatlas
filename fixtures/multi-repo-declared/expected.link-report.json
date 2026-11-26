@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:33.617Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:39:54.140Z",
   "configHash": "14afc89d6d8c",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 8,
       "types": 5,
       "unresolved": 2,
-      "durationMs": 723,
+      "durationMs": 6570,
       "packages": {
         "name": "declared-api",
         "runtime": [
@@ -35,7 +35,7 @@
       "edges": 4,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 4
+      "durationMs": 7
     }
   ],
   "httpOut": {

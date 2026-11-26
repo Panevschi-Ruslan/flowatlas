@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:07:42.589Z",
+  "configHash": "be3baa0fbc4f",
+  "services": [
+    {
+      "name": "mailer",
+      "repo": "./mailer",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 18,
+      "edges": 13,
+      "types": 1,
+      "unresolved": 2,
+      "durationMs": 6451,
+      "packages": {
+        "name": "mailer",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 13,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 15,
+      "edges": 11,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "shop-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock-api",
+      "repo": "./stock",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "stock-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 3,
+    "uncalled": [
+      "entry:shop-api:http:GET:/api/reports/daily"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 57,
+    "edges": 43,
+    "types": 4,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

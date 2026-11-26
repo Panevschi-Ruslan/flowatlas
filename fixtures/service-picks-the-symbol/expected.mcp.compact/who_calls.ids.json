@@ -1,0 +1,85 @@
+{
+  "settled": "3 ways in reach it, all listed",
+  "answers": [
+    {
+      "asked": "entry:lending-api:http:GET:/books/:param",
+      "target": {
+        "id": "entry:lending-api:http:GET:/books/:param",
+        "loc": "src/books.controller.ts:23",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:reader-web#src/app/books.client.ts:21:12",
+          "label": "GET /books/:param",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /book/:param",
+          "edge": {
+            "type": "hits",
+            "returns": "string"
+          }
+        },
+        {
+          "id": "http_out:lending-gateway#src/books.client.ts:15:43",
+          "label": "GET /books/:param",
+          "reach": "alive",
+          "from": "GET /books/:param",
+          "edge": {
+            "type": "http_calls",
+            "returns": "string"
+          }
+        }
+      ]
+    },
+    {
+      "asked": "entry:lending-gateway:http:GET:/books/:param",
+      "target": {
+        "id": "entry:lending-gateway:http:GET:/books/:param",
+        "loc": "src/books.controller.ts:9",
+        "reach": "alive"
+      },
+      "callers": [
+        {
+          "id": "http_out:desk-bot#src/desk-bot.ts:19:21",
+          "label": "GET /books/first",
+          "reach": "alive",
+          "from": "bot_command book",
+          "edge": "http_calls"
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:desk-bot:bot_command:book",
+      "line": 14,
+      "reach": "outside",
+      "hops": 3,
+      "by": "desk-bot#src/desk-bot.ts:DeskBot.showBook",
+      "reaches": [
+        "GET /books/:param"
+      ]
+    },
+    {
+      "id": "entry:lending-gateway:http:GET:/books/:param",
+      "line": 9,
+      "reach": "alive",
+      "hops": 4,
+      "by": "lending-gateway#src/books.controller.ts:BooksController.findOne",
+      "reaches": [
+        "GET /books/:param"
+      ]
+    },
+    {
+      "id": "entry:reader-web:screen:/book/:param",
+      "reach": "outside",
+      "hops": 5,
+      "by": "reader-web#src/app/book-page.component.ts:BookPageComponent",
+      "reaches": [
+        "GET /books/:param"
+      ]
+    }
+  ],
+  "complete": true
+}

@@ -1,0 +1,8 @@
+{
+  "services": [
+    { "name": "wiki", "repo": "./wiki", "type": "react" },
+    { "name": "site", "repo": "./site", "type": "nextjs" },
+    { "name": "console", "repo": "./console", "type": "angular" }
+  ],
+  "output": ".flowatlas"
+}

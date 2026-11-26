@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-entries",
-  "generatedAt": "2026-10-07T18:29:20.163Z",
+  "generatedAt": "2026-11-23T14:42:01.367Z",
   "nodes": [
     {
       "id": "channel:order.created",
@@ -264,7 +264,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -278,7 +279,8 @@
         "signature": {
           "params": [],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -292,7 +294,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -323,7 +326,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 8
+          }
+        ]
       }
     },
     {
@@ -342,7 +351,8 @@
             }
           ],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -433,7 +443,14 @@
             "nestjs-microservice",
             "nestjs-schedule"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     }
   ],

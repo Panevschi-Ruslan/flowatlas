@@ -1,6 +1,16 @@
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 0 to act on · missed: 0 · notes: 1 · findings: 0
+unresolved: 5 to act on · missed: 0 · notes: 1 · findings: 5
+  5 findings: 4 function tasks retrying no transient error, 1 queue read with no redrive
+  workflow-function-unretried (finding): 4 rows
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      catalogue/workflows/reshelve-returns.asl.json:14  reshelve-returns: Reshelve invokes a function and retries none of the platform's transient errors, so one fails the execution
+      circulation/statemachine/checkout.asl.json:5  circulation-checkout: CheckStanding invokes a function and retries none of the platform's transient errors, so one fails the execution
+      circulation/statemachine/checkout.asl.json:31  circulation-checkout: ReserveCopy invokes a function and retries none of the platform's transient errors, so one fails the execution
+      members/statemachine/borrower-notices.json:5  members-borrower-notices: SendNotice invokes a function and retries none of the platform's transient errors, so one fails the execution
+  queue-redrive-missing (finding): 1 row
+    Give aws_sqs_queue.copy_pulls a dead-letter queue, with a maxReceiveCount of at least 5.
+      catalogue/infra/main.tf:37  catalogue-copy-pulls is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
   workflow-named-by-file (note): 1 row
     A definition read on its own carries no deployed name, so anything joined to it by that name is drawn as heuristic. Read it from the file that deploys it to make the name certain.
       catalogue/workflows/reshelve-returns.asl.json:1  the workflow in workflows/reshelve-returns.asl.json is named reshelve-returns after its file; nothing here says the name it is deployed under
@@ -12,5 +22,13 @@ desync: none
 
 contracts: no errors, 0 excused, 4 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 0 now, +0)
+baseline: missing (0 accepted, 5 now, +5)
   no baseline at <root>/fixtures/multi-repo-stepfunctions/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  queue-redrive-missing: 0 → 1 (+1)
+  workflow-function-unretried: 0 → 4 (+4)
+  new (5):
+    catalogue|infra/main.tf|channel:sqs/catalogue-copy-pulls|queue-redrive-missing
+    catalogue|workflows/reshelve-returns.asl.json|catalogue#workflows/reshelve-returns.asl.json:reshelve-returns/Reshelve|workflow-function-unretried
+    circulation|statemachine/checkout.asl.json|circulation#statemachine/checkout.asl.json:circulation-checkout/CheckStanding|workflow-function-unretried
+    circulation|statemachine/checkout.asl.json|circulation#statemachine/checkout.asl.json:circulation-checkout/ReserveCopy|workflow-function-unretried
+    members|statemachine/borrower-notices.json|members#statemachine/borrower-notices.json:members-borrower-notices/SendNotice|workflow-function-unretried

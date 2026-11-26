@@ -96,6 +96,7 @@ const ROLE_WORDS: Readonly<Record<InfrastructureRole, [string, string]>> = {
   callback: ['callback', 'callbacks'],
   discovery: ['well-known address', 'well-known addresses'],
   configured: ['named in the configuration', 'named in the configuration'],
+  bot: ["bot's webhook", "bots' webhooks"],
 };
 
 const counted = (count: number, [one, many]: readonly [string, string]): string =>

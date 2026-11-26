@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:billing:http:POST:/invoices",
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:gateway:http:POST:/orders/:param/invoice",
@@ -14,7 +20,8 @@
           "id": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
           "type": "method",
           "label": "OrdersController.invoice",
-          "loc": "src/orders/orders.controller.ts:33"
+          "loc": "src/orders/orders.controller.ts:33",
+          "endLine": 38
         },
         "edge": {
           "type": "handles",
@@ -31,7 +38,8 @@
               "id": "gateway#src/common/app-logger.ts:AppLogger.log",
               "type": "method",
               "label": "AppLogger.log",
-              "loc": "src/common/app-logger.ts:12"
+              "loc": "src/common/app-logger.ts:12",
+              "endLine": 14
             },
             "edge": {
               "type": "calls",
@@ -49,7 +57,8 @@
               "id": "gateway#src/common/metrics.ts:Metrics.count",
               "type": "method",
               "label": "Metrics.count",
-              "loc": "src/common/metrics.ts:12"
+              "loc": "src/common/metrics.ts:12",
+              "endLine": 14
             },
             "edge": {
               "type": "calls",
@@ -66,7 +75,8 @@
               "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
               "type": "method",
               "label": "BillingClient.requestInvoice",
-              "loc": "src/clients/billing.client.ts:18"
+              "loc": "src/clients/billing.client.ts:18",
+              "endLine": 22
             },
             "edge": {
               "type": "calls",
@@ -155,6 +165,10 @@
       "type": "http_calls",
       "service": "billing"
     }
+  ],
+  "complete": false,
+  "left": [
+    "maxChars: 21 more nodes past about 3000 characters; raise maxChars or ask get_flow on a child id"
   ],
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/invoice\"})",

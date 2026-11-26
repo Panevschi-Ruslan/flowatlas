@@ -91,6 +91,8 @@ const KIND_ORDER: ReadonlyMap<string, number> = new Map([
   ['workflow', 3],
   ['invoke', 4],
   ['cron', 5],
+  ['task', 6],
+  ['screen', 7],
 ]);
 
 const kindRank = (node: GraphNode): number => KIND_ORDER.get(node.kind ?? '') ?? KIND_ORDER.size;

@@ -7,6 +7,7 @@
  */
 export { configHashOf, linkGraphs } from './link.js';
 export type { LinkOptions, LinkResult } from './link.js';
+export type { TypeNameSources } from './type-names.js';
 export { mergeGraphs } from './merge.js';
 export type { Merged, TypeVersion } from './merge.js';
 export { findingFor, resolveCall } from './http-link.js';
@@ -67,9 +68,11 @@ export { findOperations, specFragment } from './document/fragment.js';
 export { routeInventory } from './document/inventory.js';
 export type { InventoryRow } from './document/inventory.js';
 export * from './spec-diff/index.js';
+export { botCodeBehind, botFileKey, botFilesOf, isBotKind } from './analysis/bots.js';
 export { surveyChannels, surveyRoutes } from './survey.js';
 export type { ChannelSurvey, RouteSurvey } from './survey.js';
 export { matchesRoutePattern } from './route-audit.js';
+export { registeredFirst, routeOrderOf, routerOf } from './route-order.js';
 export { answeringAt, couldReach, isMatch, matchRoute, oneSegmentOff, pathAnswers } from './route-match.js';
 export type { RouteMatch, RouteMiss, RouteResult } from './route-match.js';
 export { missedOf } from './report.js';
@@ -105,6 +108,7 @@ export type {
 export type { LinkReport, LinkTotals, ServicePackages, ServiceReport } from './report.js';
 export { replaceService, writeGraphDb } from './db/writer.js';
 export { GRAPH_DB_FORMAT_VERSION } from './db/schema.js';
+export { queryWordsOf, STOP_WORDS, wordsOf, type WordHit } from './db/words.js';
 export type { WriteOptions } from './db/writer.js';
 export { blastRadius, BLAST_EDGES, DEFAULT_BLAST_DEPTH, PROVIDER_EDGES } from './diff/blast-radius.js';
 export { compareDeclarations } from './diff/compare-declarations.js';
@@ -275,8 +279,10 @@ export {
   deadEntries,
   deadMethods,
   deadProviders,
+  deadJudge,
   deadVerdict,
   ENTRY_CLASS_NAMES,
+  JUDGED_TYPES,
   EXTERNALLY_TRIGGERED,
   routeFactsOf,
   unresolvedInjectCount,
@@ -317,7 +323,12 @@ export type {
   ObservedInput,
   TrafficOverlay,
 } from './analysis/never-seen.js';
-export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, rankFindings } from './analysis/findings.js';
+export { collectFindings, compareFindingKinds, FINDING_KINDS, findingKindOf, precisionOf, rankFindings } from './analysis/findings.js';
+export { identifierWords, likelyRenamed, nearestRoutes, promoteGap, routesReadOf, typesNeverPublished, waysInReaching } from './analysis/boundary.js';
+export type { BoundaryFinding, HeldBack, Promoted, RoutesRead } from './analysis/boundary.js';
+export { messageTypeFacts, messageTypesOn, unreachedHandler, unselectedSaid, type UnselectedOpen } from './analysis/message-types.js';
+export type { ChannelReceiver, MessageTypeFacts, MessageTypeLookup, TypeSelector, Unselected } from './analysis/message-types.js';
+export { joinMessageTypes } from './message-types.js';
 export type {
   CollectedFindings,
   ContractBreak,
@@ -333,12 +344,15 @@ export {
   DOC_KINDS,
   DOC_STATES,
   DOC_VIEWS,
+  OVERVIEW_ID,
   DOCS_FILE,
   DOCS_FORMAT_VERSION,
   docsEntrySchema,
   docsIndexSchema,
   encodeAttribute,
   FINGERPRINT_LENGTH,
+  MIN_MENTION,
+  mentionsOf,
   fingerprintRows,
   flowFingerprint,
   NOTE_SLOT,
@@ -360,9 +374,12 @@ export type {
   DocOptions,
   DocProblem,
   DocRewrite,
+  DocsDeadMention,
   DocsEntry,
   DocsIndex,
+  DocsMention,
   DocState,
+  Mention,
   DocView,
   FingerprintTree,
   ParsedDocs,
@@ -426,3 +443,8 @@ export { catalogName, dslIdentifier, MAX_CATALOG_NAME, nameBook } from './export
 export { yamlDocument, yamlDocuments, yamlScalar } from './export/yaml.js';
 export type { YamlValue } from './export/yaml.js';
 export { catalogEntityProblems, catalogProblems, dslProblems } from './export/checks.js';
+export { atLevel, GRAPH_FORMATS, GRAPH_LEVELS, graphFiles, toCsv, toCypher, toDot, toGraphML } from './export/graph-formats.js';
+export type { GraphFormat, GraphLevel, SelectedGraph, WalkLeft } from './export/graph-formats.js';
+export { PUBLISHED_SCHEMAS } from './json-schemas.js';
+export type { PublishedSchema } from './json-schemas.js';
+export { boundaryMismatches, botButtonMismatches, CALLBACK_DATA_MAX_BYTES, configMismatches, corsMismatches, MISMATCH_KINDS, statusMismatches, streamEventMismatches } from './analysis/mismatches.js';

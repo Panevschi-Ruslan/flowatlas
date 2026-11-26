@@ -1,0 +1,42 @@
+{
+  "kind": "call-to-missing-route",
+  "rows": [
+    {
+      "kind": "call-to-missing-route",
+      "id": "http_out:storefront#src/catalog.client.ts:25:26",
+      "to": "catalog-api",
+      "service": "storefront",
+      "loc": "src/catalog.client.ts:25",
+      "message": "CatalogClient.release sends POST /products/:param/release to catalog-api, which serves no such route",
+      "precision": "high",
+      "evidence": "every route of the service it is sent to was read: no address left partly unread, no catch-all",
+      "fix": "the nearest route: POST /products/:param/publish (one segment off: release for publish)",
+      "seenBy": [
+        "POST /shop/products/:param/release (storefront)"
+      ],
+      "rank": 1,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "get_source({symbol: \"http_out:storefront#src/catalog.client.ts:25:26\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "call-to-missing-route": {
+      "count": 1,
+      "why": "some routes of legacy-api were not read (route-path-dynamic)"
+    },
+    "type-never-published": {
+      "count": 1,
+      "why": "1 publish(es) on stock_events send a type not read"
+    },
+    "config-not-set": {
+      "count": 2,
+      "why": "no deployment file of storefront was read: its settings may be set where the reading does not look"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"http_out:storefront#src/catalog.client.ts:25:26\"})"
+  ]
+}

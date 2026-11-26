@@ -1,0 +1,1166 @@
+{
+  "specDiffFormatVersion": 2,
+  "documents": {
+    "base": 2,
+    "head": 2
+  },
+  "changes": [
+    {
+      "kind": "method-removed",
+      "level": "error",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "DELETE /items/{id}",
+      "field": null,
+      "base": "DELETE /items/{id}",
+      "head": null,
+      "message": "DELETE /items/{id}: the path no longer answers this verb",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 19
+      },
+      "callers": [
+        {
+          "id": "http_out:storefront#src/catalog.client.ts:31:26",
+          "service": "storefront",
+          "file": "src/catalog.client.ts",
+          "line": 31,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "method-removed|catalog|DELETE /items/{id}|",
+      "use": {
+        "direction": "breaking",
+        "why": "the path no longer answers this verb",
+        "level": "error",
+        "verdict": "1 of 1 caller: requests it",
+        "among": 1,
+        "readers": [
+          {
+            "id": "http_out:storefront#src/catalog.client.ts:31:26",
+            "service": "storefront",
+            "file": "src/catalog.client.ts",
+            "line": 31,
+            "how": "joined",
+            "said": "requests it",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:storefront:http:DELETE:/shop/items/:param",
+              "step": "way in",
+              "label": "DELETE /shop/items/:param",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 23
+            },
+            {
+              "id": "storefront#src/shop.controller.ts:ShopController.drop",
+              "step": "handler",
+              "label": "ShopController.drop",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 23
+            },
+            {
+              "id": "storefront#src/catalog.client.ts:CatalogClient.removeItem",
+              "step": "code",
+              "label": "CatalogClient.removeItem",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 30
+            },
+            {
+              "id": "http_out:storefront#src/catalog.client.ts:31:26",
+              "step": "request",
+              "label": "DELETE /items/:param",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 31
+            },
+            {
+              "id": "entry:catalog:http:DELETE:/items/:param",
+              "step": "route",
+              "label": "DELETE /items/:param",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 19
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.remove",
+              "step": "handler",
+              "label": "ItemsController.remove",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 19
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: move them off it, then catalog"
+        },
+        "anchor": {
+          "how": "nearest",
+          "file": "src/items/items.controller.ts",
+          "line": 19,
+          "from": {
+            "file": "src/items/items.controller.ts",
+            "line": 19
+          }
+        }
+      }
+    },
+    {
+      "kind": "response-property-removed",
+      "level": "error",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items/{id}",
+      "field": "response.price",
+      "base": "number",
+      "head": null,
+      "message": "GET /items/{id}: base had `response.price` as `number`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 14
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:20:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 20,
+          "confidence": "static",
+          "via": "hits"
+        },
+        {
+          "id": "http_out:storefront#src/catalog.client.ts:35:41",
+          "service": "storefront",
+          "file": "src/catalog.client.ts",
+          "line": 35,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-removed|catalog|GET /items/{id}|response.price",
+      "use": {
+        "direction": "breaking",
+        "why": "the answer no longer holds it",
+        "level": "error",
+        "verdict": "1 of 2 callers: reads `price` in ItemPage, line 13",
+        "among": 2,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:20:26",
+            "service": "dashboard",
+            "file": "src/ItemPage.tsx",
+            "line": 13,
+            "how": "reads",
+            "said": "reads `price` in ItemPage, line 13",
+            "level": "error"
+          },
+          {
+            "id": "http_out:storefront#src/catalog.client.ts:35:41",
+            "service": "storefront",
+            "file": "src/catalog.client.ts",
+            "line": 35,
+            "how": "unknown",
+            "said": "which fields of the answer its client reads was not read, so whether it reads `price` is not known",
+            "level": "warning"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:dashboard:screen:/items/current",
+              "step": "way in",
+              "label": "/items/current",
+              "service": "dashboard",
+              "file": "src/App.tsx",
+              "line": 11
+            },
+            {
+              "id": "dashboard#src/ItemPage.tsx:ItemPage",
+              "step": "handler",
+              "label": "ItemPage",
+              "service": "dashboard",
+              "file": "src/ItemPage.tsx",
+              "line": 5
+            },
+            {
+              "id": "dashboard#src/api.ts:fetchItem",
+              "step": "code",
+              "label": "fetchItem",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 19
+            },
+            {
+              "id": "ui_api_call:dashboard#src/api.ts:20:26",
+              "step": "code",
+              "label": "GET /items/:param",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 20
+            },
+            {
+              "id": "entry:catalog:http:GET:/items/:param",
+              "step": "route",
+              "label": "GET /items/:param",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.find",
+              "step": "handler",
+              "label": "ItemsController.find",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            }
+          ],
+          [
+            {
+              "id": "entry:storefront:http:GET:/shop/items/:param",
+              "step": "way in",
+              "label": "GET /shop/items/:param",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 28
+            },
+            {
+              "id": "storefront#src/shop.controller.ts:ShopController.show",
+              "step": "handler",
+              "label": "ShopController.show",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 28
+            },
+            {
+              "id": "storefront#src/catalog.client.ts:CatalogClient.getItem",
+              "step": "code",
+              "label": "CatalogClient.getItem",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 34
+            },
+            {
+              "id": "http_out:storefront#src/catalog.client.ts:35:41",
+              "step": "request",
+              "label": "GET /items/:param",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 35
+            },
+            {
+              "id": "entry:catalog:http:GET:/items/:param",
+              "step": "route",
+              "label": "GET /items/:param",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.find",
+              "step": "handler",
+              "label": "ItemsController.find",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: stop relying on `price`, then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 14
+        }
+      }
+    },
+    {
+      "kind": "request-property-added-required",
+      "level": "error",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "POST /items",
+      "field": "body.currency",
+      "base": null,
+      "head": "string",
+      "message": "POST /items: head has `body.currency` as `string` and requires it; base did not",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 9
+      },
+      "callers": [
+        {
+          "id": "http_out:storefront#src/catalog.client.ts:22:26",
+          "service": "storefront",
+          "file": "src/catalog.client.ts",
+          "line": 22,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "request-property-added-required|catalog|POST /items|body.currency",
+      "use": {
+        "direction": "breaking",
+        "why": "narrows the request: a caller must now send it",
+        "level": "error",
+        "verdict": "1 of 1 caller: sends name, price; no `currency`",
+        "among": 1,
+        "readers": [
+          {
+            "id": "http_out:storefront#src/catalog.client.ts:22:26",
+            "service": "storefront",
+            "file": "src/catalog.client.ts",
+            "line": 22,
+            "how": "omits",
+            "said": "sends name, price; no `currency`",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:storefront:http:POST:/shop/items",
+              "step": "way in",
+              "label": "POST /shop/items",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 13
+            },
+            {
+              "id": "storefront#src/shop.controller.ts:ShopController.add",
+              "step": "handler",
+              "label": "ShopController.add",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 13
+            },
+            {
+              "id": "storefront#src/catalog.client.ts:CatalogClient.createItem",
+              "step": "code",
+              "label": "CatalogClient.createItem",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 21
+            },
+            {
+              "id": "http_out:storefront#src/catalog.client.ts:22:26",
+              "step": "request",
+              "label": "POST /items",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 22
+            },
+            {
+              "id": "entry:catalog:http:POST:/items",
+              "step": "route",
+              "label": "POST /items",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.create",
+              "step": "handler",
+              "label": "ItemsController.create",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: send `currency`, then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 9
+        }
+      }
+    },
+    {
+      "kind": "message-property-removed",
+      "level": "error",
+      "document": "catalog",
+      "format": "asyncapi",
+      "service": "catalog",
+      "operation": "send item.changed",
+      "field": "payload.label",
+      "base": "string",
+      "head": null,
+      "message": "send item.changed: base had `payload.label` as `string`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.service.ts",
+        "line": 12
+      },
+      "callers": [
+        {
+          "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+          "service": "notifier",
+          "file": "src/notify.service.ts",
+          "line": 14,
+          "confidence": "marker",
+          "via": "consumes"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "message-property-removed|catalog|send item.changed|payload.label",
+      "use": {
+        "direction": "breaking",
+        "why": "the message no longer carries it",
+        "level": "error",
+        "verdict": "1 of 1 consumer: reads `label`, line 16",
+        "among": 1,
+        "readers": [
+          {
+            "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+            "service": "notifier",
+            "file": "src/notify.service.ts",
+            "line": 16,
+            "how": "reads",
+            "said": "reads `label`, line 16",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:storefront:http:POST:/shop/items",
+              "step": "way in",
+              "label": "POST /shop/items",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 13
+            },
+            {
+              "id": "storefront#src/shop.controller.ts:ShopController.add",
+              "step": "handler",
+              "label": "ShopController.add",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 13
+            },
+            {
+              "id": "storefront#src/catalog.client.ts:CatalogClient.createItem",
+              "step": "code",
+              "label": "CatalogClient.createItem",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 21
+            },
+            {
+              "id": "http_out:storefront#src/catalog.client.ts:22:26",
+              "step": "request",
+              "label": "POST /items",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 22
+            },
+            {
+              "id": "entry:catalog:http:POST:/items",
+              "step": "route",
+              "label": "POST /items",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.create",
+              "step": "handler",
+              "label": "ItemsController.create",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.service.ts:ItemsService.create",
+              "step": "code",
+              "label": "ItemsService.create",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 9
+            },
+            {
+              "id": "producer:catalog#src/items/items.service.ts:12:11",
+              "step": "publish",
+              "label": "event item.changed",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 12
+            },
+            {
+              "id": "channel:item.changed",
+              "step": "channel",
+              "label": "item.changed",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 12
+            },
+            {
+              "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+              "step": "consumer",
+              "label": "NotifyService.onItemChanged",
+              "service": "notifier",
+              "file": "src/notify.service.ts",
+              "line": 14
+            },
+            {
+              "id": "notifier#src/notify.service.ts:NotifyService.onItemChanged",
+              "step": "handler",
+              "label": "NotifyService.onItemChanged",
+              "service": "notifier",
+              "file": "src/notify.service.ts",
+              "line": 14
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "consumers",
+          "said": "consumers first: stop reading `label` (or cope without it), then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.service.ts",
+          "line": 12
+        }
+      }
+    },
+    {
+      "kind": "response-property-became-optional",
+      "level": "warning",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items",
+      "field": "response[].stock",
+      "base": "number",
+      "head": "number",
+      "message": "GET /items: `response[].stock` was required in base and may be left out in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 29
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:25:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 25,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-became-optional|catalog|GET /items|response[].stock",
+      "use": {
+        "direction": "breaking",
+        "why": "widens the response: it may now be absent",
+        "level": "warning",
+        "verdict": "1 of 1 caller: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:25:26",
+            "service": "dashboard",
+            "file": "src/ItemsList.tsx",
+            "line": 10,
+            "how": "reads",
+            "said": "reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there",
+            "level": "warning"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:dashboard:screen:/items",
+              "step": "way in",
+              "label": "/items",
+              "service": "dashboard",
+              "file": "src/App.tsx",
+              "line": 10
+            },
+            {
+              "id": "dashboard#src/ItemsList.tsx:ItemsList",
+              "step": "handler",
+              "label": "ItemsList",
+              "service": "dashboard",
+              "file": "src/ItemsList.tsx",
+              "line": 5
+            },
+            {
+              "id": "dashboard#src/api.ts:fetchItems",
+              "step": "code",
+              "label": "fetchItems",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 24
+            },
+            {
+              "id": "ui_api_call:dashboard#src/api.ts:25:26",
+              "step": "code",
+              "label": "GET /items",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 25
+            },
+            {
+              "id": "entry:catalog:http:GET:/items",
+              "step": "route",
+              "label": "GET /items",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 24
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.list",
+              "step": "handler",
+              "label": "ItemsController.list",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 24
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: stop relying on `stock`, then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 24
+        }
+      }
+    },
+    {
+      "kind": "response-property-removed",
+      "level": "warning",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "POST /items",
+      "field": "response.price",
+      "base": "number",
+      "head": null,
+      "message": "POST /items: base had `response.price` as `number`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 9
+      },
+      "callers": [
+        {
+          "id": "http_out:storefront#src/catalog.client.ts:22:26",
+          "service": "storefront",
+          "file": "src/catalog.client.ts",
+          "line": 22,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-removed|catalog|POST /items|response.price",
+      "use": {
+        "direction": "breaking",
+        "why": "the answer no longer holds it",
+        "level": "warning",
+        "verdict": "1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known",
+        "among": 1,
+        "readers": [
+          {
+            "id": "http_out:storefront#src/catalog.client.ts:22:26",
+            "service": "storefront",
+            "file": "src/catalog.client.ts",
+            "line": 22,
+            "how": "unknown",
+            "said": "which fields of the answer its client reads was not read, so whether it reads `price` is not known",
+            "level": "warning"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:storefront:http:POST:/shop/items",
+              "step": "way in",
+              "label": "POST /shop/items",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 13
+            },
+            {
+              "id": "storefront#src/shop.controller.ts:ShopController.add",
+              "step": "handler",
+              "label": "ShopController.add",
+              "service": "storefront",
+              "file": "src/shop.controller.ts",
+              "line": 13
+            },
+            {
+              "id": "storefront#src/catalog.client.ts:CatalogClient.createItem",
+              "step": "code",
+              "label": "CatalogClient.createItem",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 21
+            },
+            {
+              "id": "http_out:storefront#src/catalog.client.ts:22:26",
+              "step": "request",
+              "label": "POST /items",
+              "service": "storefront",
+              "file": "src/catalog.client.ts",
+              "line": 22
+            },
+            {
+              "id": "entry:catalog:http:POST:/items",
+              "step": "route",
+              "label": "POST /items",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.create",
+              "step": "handler",
+              "label": "ItemsController.create",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: stop relying on `price`, then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 9
+        }
+      }
+    },
+    {
+      "kind": "message-property-removed",
+      "level": "warning",
+      "document": "catalog",
+      "format": "asyncapi",
+      "service": "catalog",
+      "operation": "send stock.changed",
+      "field": "payload.warehouse",
+      "base": "string",
+      "head": null,
+      "message": "send stock.changed: base had `payload.warehouse` as `string`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/stock/stock.service.ts",
+        "line": 17
+      },
+      "callers": [
+        {
+          "id": "consumer:notifier#src/audit.service.ts:AuditService.onStockChanged",
+          "service": "notifier",
+          "file": "src/audit.service.ts",
+          "line": 15,
+          "confidence": "marker",
+          "via": "consumes"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "message-property-removed|catalog|send stock.changed|payload.warehouse",
+      "use": {
+        "direction": "breaking",
+        "why": "the message no longer carries it",
+        "level": "warning",
+        "verdict": "1 of 1 consumer: takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known",
+        "among": 1,
+        "readers": [
+          {
+            "id": "consumer:notifier#src/audit.service.ts:AuditService.onStockChanged",
+            "service": "notifier",
+            "file": "src/audit.service.ts",
+            "line": 17,
+            "how": "opaque",
+            "said": "takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known",
+            "level": "warning"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:catalog:http:POST:/stock/:param/recount",
+              "step": "way in",
+              "label": "POST /stock/:param/recount",
+              "service": "catalog",
+              "file": "src/stock/stock.controller.ts",
+              "line": 8
+            },
+            {
+              "id": "catalog#src/stock/stock.controller.ts:StockController.recount",
+              "step": "handler",
+              "label": "StockController.recount",
+              "service": "catalog",
+              "file": "src/stock/stock.controller.ts",
+              "line": 8
+            },
+            {
+              "id": "catalog#src/stock/stock.service.ts:StockService.recount",
+              "step": "code",
+              "label": "StockService.recount",
+              "service": "catalog",
+              "file": "src/stock/stock.service.ts",
+              "line": 14
+            },
+            {
+              "id": "producer:catalog#src/stock/stock.service.ts:17:11",
+              "step": "publish",
+              "label": "event stock.changed",
+              "service": "catalog",
+              "file": "src/stock/stock.service.ts",
+              "line": 17
+            },
+            {
+              "id": "channel:stock.changed",
+              "step": "channel",
+              "label": "stock.changed",
+              "service": "catalog",
+              "file": "src/stock/stock.service.ts",
+              "line": 16
+            },
+            {
+              "id": "consumer:notifier#src/audit.service.ts:AuditService.onStockChanged",
+              "step": "consumer",
+              "label": "AuditService.onStockChanged",
+              "service": "notifier",
+              "file": "src/audit.service.ts",
+              "line": 15
+            },
+            {
+              "id": "notifier#src/audit.service.ts:AuditService.onStockChanged",
+              "step": "handler",
+              "label": "AuditService.onStockChanged",
+              "service": "notifier",
+              "file": "src/audit.service.ts",
+              "line": 15
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "consumers",
+          "said": "consumers first: stop reading `warehouse` (or cope without it), then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/stock/stock.service.ts",
+          "line": 16
+        }
+      }
+    },
+    {
+      "kind": "response-property-became-optional",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items",
+      "field": "response[].badge",
+      "base": "string",
+      "head": "string",
+      "message": "GET /items: `response[].badge` was required in base and may be left out in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 29
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:25:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 25,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-became-optional|catalog|GET /items|response[].badge",
+      "use": {
+        "direction": "breaking",
+        "why": "widens the response: it may now be absent",
+        "level": "info",
+        "verdict": "every caller that reads `badge` checks it is there first, among 1",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:25:26",
+            "service": "dashboard",
+            "file": "src/ItemsList.tsx",
+            "line": 10,
+            "how": "reads",
+            "said": "reads `badge` only behind a check that it is there in ItemsList, line 10: it copes without it",
+            "level": "info"
+          }
+        ],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 24
+        }
+      }
+    },
+    {
+      "kind": "response-property-removed",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items",
+      "field": "response[].thumbnail",
+      "base": "string",
+      "head": null,
+      "message": "GET /items: base had `response[].thumbnail` as `string`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 29
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:25:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 25,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-removed|catalog|GET /items|response[].thumbnail",
+      "use": {
+        "direction": "breaking",
+        "why": "the answer no longer holds it",
+        "level": "info",
+        "verdict": "no caller reads `thumbnail`, among 1",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:25:26",
+            "service": "dashboard",
+            "file": "src/api.ts",
+            "line": 25,
+            "how": "ignores",
+            "said": "does not read `thumbnail`",
+            "level": "info"
+          }
+        ],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 24
+        }
+      }
+    },
+    {
+      "kind": "response-property-removed",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items/{id}/archive",
+      "field": "response.reason",
+      "base": "string",
+      "head": null,
+      "message": "GET /items/{id}/archive: base had `response.reason` as `string`; head has no such field (no caller in this project)",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 24
+      },
+      "callers": [],
+      "public": null,
+      "note": "no caller in this project",
+      "confidence": "static",
+      "key": "response-property-removed|catalog|GET /items/{id}/archive|response.reason",
+      "use": {
+        "direction": "breaking",
+        "why": "the answer no longer holds it",
+        "level": "info",
+        "verdict": "nothing in the 4 repositories read calls it",
+        "among": 0,
+        "readers": [],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 19
+        }
+      }
+    },
+    {
+      "kind": "request-property-became-required",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "POST /drafts",
+      "field": "body.title",
+      "base": "string",
+      "head": "string",
+      "message": "POST /drafts: `body.title` could be left out in base and is required in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/drafts.controller.ts",
+        "line": 6
+      },
+      "callers": [
+        {
+          "id": "http_out:storefront#src/catalog.client.ts:27:26",
+          "service": "storefront",
+          "file": "src/catalog.client.ts",
+          "line": 27,
+          "confidence": "static",
+          "via": "http_calls"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "request-property-became-required|catalog|POST /drafts|body.title",
+      "use": {
+        "direction": "breaking",
+        "why": "narrows the request: a caller must now send it",
+        "level": "info",
+        "verdict": "every caller sends `title`, among 1",
+        "among": 1,
+        "readers": [
+          {
+            "id": "http_out:storefront#src/catalog.client.ts:27:26",
+            "service": "storefront",
+            "file": "src/catalog.client.ts",
+            "line": 27,
+            "how": "sends",
+            "said": "sends `title`",
+            "level": "info"
+          }
+        ],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/drafts.controller.ts",
+          "line": 6
+        }
+      }
+    },
+    {
+      "kind": "message-property-removed",
+      "level": "info",
+      "document": "catalog",
+      "format": "asyncapi",
+      "service": "catalog",
+      "operation": "send item.changed",
+      "field": "payload.legacyCode",
+      "base": "string",
+      "head": null,
+      "message": "send item.changed: base had `payload.legacyCode` as `string`; head has no such field",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.service.ts",
+        "line": 12
+      },
+      "callers": [
+        {
+          "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+          "service": "notifier",
+          "file": "src/notify.service.ts",
+          "line": 14,
+          "confidence": "marker",
+          "via": "consumes"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "message-property-removed|catalog|send item.changed|payload.legacyCode",
+      "use": {
+        "direction": "breaking",
+        "why": "the message no longer carries it",
+        "level": "info",
+        "verdict": "no consumer reads `legacyCode`, among 1",
+        "among": 1,
+        "readers": [
+          {
+            "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+            "service": "notifier",
+            "file": "src/notify.service.ts",
+            "line": 14,
+            "how": "ignores",
+            "said": "does not read `legacyCode`",
+            "level": "info"
+          }
+        ],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.service.ts",
+          "line": 12
+        }
+      }
+    }
+  ],
+  "summary": {
+    "errors": 4,
+    "warnings": 3,
+    "infos": 5,
+    "breaking": 12,
+    "uncalled": 1
+  },
+  "coverage": {
+    "consumers": 8,
+    "repositories": 4,
+    "said": "8 consumers in 4 repositories; consumers outside them unknown"
+  }
+}

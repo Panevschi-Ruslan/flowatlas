@@ -1,0 +1,7 @@
+apiVersion: builtin
+kind: PrefixSuffixTransformer
+metadata:
+  name: prefix
+prefix: shop-
+fieldSpecs:
+  - path: metadata/name

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:56.604Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:43:52.797Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 685,
+      "durationMs": 3602,
       "packages": {
         "name": "@member-angular/api",
         "runtime": [

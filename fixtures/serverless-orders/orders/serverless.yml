@@ -1,0 +1,198 @@
+service: orders
+frameworkVersion: '3'
+
+plugins:
+  - serverless-esbuild
+  - serverless-step-functions
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    ORDERS_TABLE: !Ref OrdersTable
+
+custom:
+  prefix: ${self:service}-${sls:stage}
+
+functions:
+  place-order:
+    handler: src/orders/place-order.handler
+    environment:
+      ORDERS_QUEUE_URL: !Ref PlacedQueue
+      ORDERS_BUS_NAME: !Ref OrdersBus
+    events:
+      - http:
+          method: post
+          path: orders
+
+  get-order:
+    handler: src/orders/get-order.handler
+    events:
+      - http: GET orders/{id}
+
+  cancel-order:
+    handler: src/orders/cancel-order.handler
+    environment:
+      ORDERS_TABLE: ${self:custom.prefix}-orders
+      ORDERS_BUS_NAME: !Ref OrdersBus
+    events:
+      - http:
+          method: delete
+          path: orders/{id}
+
+  list-orders:
+    handler: src/orders/list-orders.handler
+    events:
+      - httpApi: GET /orders
+
+  receipt:
+    handler: src/orders/receipt.handler
+    url: true
+
+  order-changed:
+    handler: src/orders/order-changed.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn: !GetAtt OrdersTable.StreamArn
+          startingPosition: LATEST
+
+  ship-order:
+    handler: src/shipping/ship-order.handler
+    environment:
+      INVOICES_BUCKET: !Ref InvoicesBucket
+      SHIPPED_TOPIC_ARN: !Ref ShippedTopic
+    events:
+      - sqs:
+          arn: !GetAtt PlacedQueue.Arn
+          batchSize: 10
+
+  reserve-stock:
+    handler: src/shipping/reserve-stock.handler
+
+  charge-payment:
+    handler: src/shipping/charge-payment.handler
+
+  notify-customer:
+    handler: src/notices/notify-customer.handler
+    events:
+      - sns:
+          arn: !Ref ShippedTopic
+          topicName: ${self:custom.prefix}-shipped
+
+  refund-order:
+    handler: src/refunds/refund-order.handler
+    events:
+      - eventBridge:
+          eventBus: !GetAtt OrdersBus.Arn
+          pattern:
+            source:
+              - orders.service
+            detail-type:
+              - OrderCancelled
+
+  nightly-report:
+    handler: src/reports/nightly-report.handler
+    events:
+      - schedule:
+          name: ${self:custom.prefix}-nightly-report
+          rate: cron(0 2 * * ? *)
+
+  index-invoice:
+    handler: src/invoices/index-invoice.handler
+    events:
+      - s3:
+          bucket: ${self:custom.prefix}-invoices
+          event: s3:ObjectCreated:*
+          existing: true
+          rules:
+            - prefix: invoices/
+            - suffix: .pdf
+
+  live-socket:
+    handler: src/live/live-socket.handler
+    events:
+      - websocket:
+          route: $connect
+      - websocket: subscribe
+
+stepFunctions:
+  stateMachines:
+    shipping:
+      name: ${self:custom.prefix}-shipping
+      events:
+        - eventBridge:
+            eventBusName: ${self:custom.prefix}
+            event:
+              source:
+                - orders.service
+              detail-type:
+                - OrderPlaced
+      definition:
+        Comment: Reserves the stock of a placed order, then charges for it.
+        StartAt: ReserveStock
+        States:
+          ReserveStock:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: !GetAtt reserve-stock.Arn
+              Payload.$: $
+            OutputPath: $.Payload
+            Next: ChargePayment
+          ChargePayment:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: !GetAtt ChargeDashpaymentLambdaFunction.Arn
+              Payload.$: $
+            OutputPath: $.Payload
+            Next: Done
+          Done:
+            Type: Succeed
+
+resources:
+  Resources:
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.prefix}-orders
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: orderId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: orderId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+
+    PlacedDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.prefix}-placed-dlq
+
+    PlacedQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.prefix}-placed
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt PlacedDeadLetterQueue.Arn
+          maxReceiveCount: 3
+
+    ShippedTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:custom.prefix}-shipped
+
+    OrdersBus:
+      Type: AWS::Events::EventBus
+      Properties:
+        Name: ${self:custom.prefix}
+
+    InvoicesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.prefix}-invoices

@@ -1,0 +1,3230 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:13:13.267Z",
+  "services": [
+    {
+      "name": "orders-api",
+      "repo": "./orders-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "accounts-api",
+      "repo": "./accounts-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "shop-bot",
+      "repo": "./shop-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "accounts-api#node_modules/@nestjs/config:ConfigModule",
+      "type": "module",
+      "label": "ConfigModule",
+      "repo": "accounts-api",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "accounts-api#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "accounts-api",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "accounts-api#src/accounts/accounts.controller.ts:AccountsController",
+      "type": "provider",
+      "label": "AccountsController",
+      "repo": "accounts-api",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "accounts-api#src/accounts/accounts.controller.ts:AccountsController.me",
+      "type": "method",
+      "label": "AccountsController.me",
+      "repo": "accounts-api",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{name:string;session:string}"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "accounts-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "accounts-api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "AccountsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "config_key:accounts-api#SESSION_SECRET",
+      "type": "config_key",
+      "label": "SESSION_SECRET",
+      "repo": "accounts-api",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 11,
+      "meta": {
+        "key": "SESSION_SECRET",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:orders-api#LOG_LEVEL",
+      "type": "config_key",
+      "label": "LOG_LEVEL",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "meta": {
+        "key": "LOG_LEVEL",
+        "source": "config.get",
+        "defaultValue": "info"
+      }
+    },
+    {
+      "id": "config_key:orders-api#ORDER_MODE",
+      "type": "config_key",
+      "label": "ORDER_MODE",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 27,
+      "meta": {
+        "key": "ORDER_MODE",
+        "source": "process.env",
+        "fallback": true
+      }
+    },
+    {
+      "id": "config_key:orders-api#PAYMENT_API_KEY",
+      "type": "config_key",
+      "label": "PAYMENT_API_KEY",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "key": "PAYMENT_API_KEY",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:orders-api#REDIS_URL",
+      "type": "config_key",
+      "label": "REDIS_URL",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 23,
+      "meta": {
+        "key": "REDIS_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:orders-api#SMTP_HOST",
+      "type": "config_key",
+      "label": "SMTP_HOST",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "meta": {
+        "key": "SMTP_HOST",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:web#src/app/live.service.ts:LiveService.onFeed",
+      "type": "consumer",
+      "label": "LiveService.onFeed",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 18,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:web#src/app/live.service.ts:LiveService.onNotice",
+      "type": "consumer",
+      "label": "LiveService.onNotice",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 24,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "notice"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:web#src/app/live.service.ts:LiveService.onReady",
+      "type": "consumer",
+      "label": "LiveService.onReady",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 12,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null
+      }
+    },
+    {
+      "id": "entry:accounts-api:http:GET:/accounts/me",
+      "type": "entry",
+      "label": "GET /accounts/me",
+      "repo": "accounts-api",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/accounts/me",
+        "rawPath": "/accounts/me",
+        "controller": "AccountsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:DELETE:/orders/:param",
+      "type": "entry",
+      "label": "DELETE /orders/:param",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 38,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders-api:http:GET:/orders/events",
+      "type": "entry",
+      "label": "GET /orders/events",
+      "repo": "orders-api",
+      "file": "src/orders/streams.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/events",
+        "rawPath": "/orders/events",
+        "controller": "StreamsController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "events"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "order-ready"
+        ]
+      }
+    },
+    {
+      "id": "entry:orders-api:http:GET:/orders/feed",
+      "type": "entry",
+      "label": "GET /orders/feed",
+      "repo": "orders-api",
+      "file": "src/orders/streams.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/feed",
+        "rawPath": "/orders/feed",
+        "controller": "StreamsController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "feed"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ]
+      }
+    },
+    {
+      "id": "entry:orders-api:http:GET:/orders/notices",
+      "type": "entry",
+      "label": "GET /orders/notices",
+      "repo": "orders-api",
+      "file": "src/orders/streams.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/notices",
+        "rawPath": "/orders/notices",
+        "controller": "StreamsController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "notices"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "notice"
+        ]
+      }
+    },
+    {
+      "id": "entry:orders-api:http:PATCH:/orders/:param",
+      "type": "entry",
+      "label": "PATCH /orders/:param",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+            "file": "src/main.ts",
+            "line": 15,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders-api:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+            "file": "src/main.ts",
+            "line": 15,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders-api:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/cancel",
+        "rawPath": "/orders/:id/cancel",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "orders-api#src/orders/orders.service.ts:OrdersService.cancel",
+            "file": "src/orders/orders.service.ts",
+            "line": 32,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "orders-api#src/orders/orders.service.ts:OrdersService.cancel",
+            "file": "src/orders/orders.service.ts",
+            "line": 33,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders-api:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "label": "POST /orders/:param/refund",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/refund",
+        "rawPath": "/orders/:id/refund",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "HttpException",
+            "at": "orders-api#src/orders/orders.service.ts:OrdersService.refund",
+            "file": "src/orders/orders.service.ts",
+            "line": 38,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shop-bot:bot_callback:/^order:cancel:(\\w+)$/",
+      "type": "entry",
+      "label": "bot_callback /^order:cancel:(\\w+)$/",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 14,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "/^order:cancel:(\\w+)$/",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "/^order:cancel:(\\w+)$/",
+        "updateClass": "ShopBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:shop-bot:bot_callback:/^order:details:/",
+      "type": "entry",
+      "label": "bot_callback /^order:details:/",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 17,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "/^order:details:/",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "/^order:details:/",
+        "updateClass": "ShopBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:shop-bot:bot_callback:order:confirm",
+      "type": "entry",
+      "label": "bot_callback order:confirm",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 13,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "order:confirm",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "'order:confirm'",
+        "updateClass": "ShopBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:shop-bot:bot_callback:order:tracking",
+      "type": "entry",
+      "label": "bot_callback order:tracking",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 16,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "order:tracking",
+        "adapter": "telegraf-calls",
+        "registration": "action",
+        "trigger": "'order:tracking'",
+        "updateClass": "ShopBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:shop-bot:bot_command:order",
+      "type": "entry",
+      "label": "bot_command order",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 12,
+      "kind": "bot_command",
+      "meta": {
+        "key": "order",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'order'",
+        "updateClass": "ShopBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "orders-api#node_modules/@nestjs/common:ValidationPipe",
+      "type": "pipe",
+      "label": "ValidationPipe",
+      "repo": "orders-api",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true,
+            "forbidNonWhitelisted": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "pipe",
+      "label": "ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "repo": "orders-api",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true,
+            "forbidNonWhitelisted": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders-api#node_modules/@nestjs/config:ConfigModule",
+      "type": "module",
+      "label": "ConfigModule",
+      "repo": "orders-api",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "orders-api#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "orders-api",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "orders-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders-api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "StreamsController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders-api#CreateOrderDto"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": [
+          {
+            "field": "item",
+            "in": "orders-api#src/orders/orders.service.ts:OrdersService.create",
+            "line": 28
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "method",
+      "label": "OrdersController.refund",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.controller.ts:OrdersController.rename",
+      "type": "method",
+      "label": "OrdersController.rename",
+      "repo": "orders-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "type:orders-api#RenameOrderDto"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "title",
+            "line": 35
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService.create",
+      "type": "method",
+      "label": "OrdersService.create",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:orders-api#CreateOrderDto"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "method",
+      "label": "OrdersService.refund",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "method",
+      "label": "OrdersService.remove",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService.rename",
+      "type": "method",
+      "label": "OrdersService.rename",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders/orders.service.ts:OrdersService.statusFor",
+      "type": "method",
+      "label": "OrdersService.statusFor",
+      "repo": "orders-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "orders-api#src/orders/streams.controller.ts:StreamsController",
+      "type": "provider",
+      "label": "StreamsController",
+      "repo": "orders-api",
+      "file": "src/orders/streams.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders-api#src/orders/streams.controller.ts:StreamsController.events",
+      "type": "method",
+      "label": "StreamsController.events",
+      "repo": "orders-api",
+      "file": "src/orders/streams.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders-api#src/orders/streams.controller.ts:StreamsController.feed",
+      "type": "method",
+      "label": "StreamsController.feed",
+      "repo": "orders-api",
+      "file": "src/orders/streams.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders-api#src/orders/streams.controller.ts:StreamsController.notices",
+      "type": "method",
+      "label": "StreamsController.notices",
+      "repo": "orders-api",
+      "file": "src/orders/streams.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "repo:accounts-api",
+      "type": "repo",
+      "label": "accounts-api",
+      "repo": "accounts-api",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "cors": {
+          "at": "src/main.ts:7",
+          "origin": "list",
+          "credentials": true
+        },
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders-api",
+      "type": "repo",
+      "label": "orders-api",
+      "repo": "orders-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {
+            "@nestjs/config": 3,
+            "rxjs": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "cors": {
+          "at": "src/main.ts:9",
+          "origin": "*",
+          "credentials": false,
+          "allowedHeaders": [
+            "authorization",
+            "content-type"
+          ],
+          "methods": [
+            "GET",
+            "PATCH",
+            "POST"
+          ]
+        },
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-bot",
+      "type": "repo",
+      "label": "shop-bot",
+      "repo": "shop-bot",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {
+            "telegraf": 11
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 7,
+            "rxjs": 8
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-bot",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "ShopBot"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-bot#src/shop-bot.ts:ShopBot",
+      "type": "provider",
+      "label": "ShopBot",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.cancel",
+      "type": "method",
+      "label": "ShopBot.cancel",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.confirm",
+      "type": "method",
+      "label": "ShopBot.confirm",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.details",
+      "type": "method",
+      "label": "ShopBot.details",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.onModuleInit",
+      "type": "method",
+      "label": "ShopBot.onModuleInit",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.showOrder",
+      "type": "method",
+      "label": "ShopBot.showOrder",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "callbackButtons": [
+          {
+            "data": "order:confirm",
+            "at": "src/shop-bot.ts:25"
+          },
+          {
+            "data": "order:cancel:${…}",
+            "at": "src/shop-bot.ts:26"
+          },
+          {
+            "data": "order:track",
+            "at": "src/shop-bot.ts:27"
+          },
+          {
+            "data": "order:details:with-the-full-delivery-address-and-the-courier-notes",
+            "at": "src/shop-bot.ts:29"
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-bot#src/shop-bot.ts:ShopBot.track",
+      "type": "method",
+      "label": "ShopBot.track",
+      "repo": "shop-bot",
+      "file": "src/shop-bot.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/order-panel.component.ts:11:13",
+      "type": "ui_action",
+      "label": "click=\"load()\"",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 11,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load()",
+        "component": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+        "template": "src/app/order-panel.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/order-panel.component.ts:12:13",
+      "type": "ui_action",
+      "label": "click=\"place()\"",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 12,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "place()",
+        "component": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+        "template": "src/app/order-panel.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/order-panel.component.ts:13:13",
+      "type": "ui_action",
+      "label": "click=\"cancel('o1')\"",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 13,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "cancel('o1')",
+        "component": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+        "template": "src/app/order-panel.component.ts",
+        "args": [
+          "'o1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/order-panel.component.ts:14:13",
+      "type": "ui_action",
+      "label": "click=\"refund('o1')\"",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 14,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "refund('o1')",
+        "component": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+        "template": "src/app/order-panel.component.ts",
+        "args": [
+          "'o1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/order-panel.component.ts:15:13",
+      "type": "ui_action",
+      "label": "click=\"rename('o1')\"",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 15,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "rename('o1')",
+        "component": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+        "template": "src/app/order-panel.component.ts",
+        "args": [
+          "'o1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/order-panel.component.ts:16:13",
+      "type": "ui_action",
+      "label": "click=\"remove('o1')\"",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 16,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "remove('o1')",
+        "component": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+        "template": "src/app/order-panel.component.ts",
+        "args": [
+          "'o1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:web#src/app/order-panel.component.ts:17:13",
+      "type": "ui_action",
+      "label": "click=\"watch()\"",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 17,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "watch()",
+        "component": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+        "template": "src/app/order-panel.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/accounts-api.service.ts:12:12",
+      "type": "ui_api_call",
+      "label": "GET /accounts/me",
+      "repo": "web",
+      "file": "src/app/accounts-api.service.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${accountsUrl}/accounts/me",
+        "path": "/accounts/me",
+        "baseUrlEnv": "accountsUrl",
+        "responseType": "{name:string}",
+        "bodyType": null,
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "credentials": {
+          "at": "src/app/accounts-api.service.ts:12",
+          "via": "call"
+        },
+        "targetService": "accounts-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/live.service.ts:11:20",
+      "type": "ui_api_call",
+      "label": "GET /orders/events",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 11,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${ordersUrl}/orders/events",
+        "path": "/orders/events",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/live.service.ts:17:20",
+      "type": "ui_api_call",
+      "label": "GET /orders/feed",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 17,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${ordersUrl}/orders/feed",
+        "path": "/orders/feed",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/live.service.ts:23:20",
+      "type": "ui_api_call",
+      "label": "GET /orders/notices",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 23,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${ordersUrl}/orders/notices",
+        "path": "/orders/notices",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:13:12",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${ordersUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "credentials": {
+          "at": "src/app/orders-api.service.ts:13",
+          "via": "call"
+        },
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+      "type": "ui_api_call",
+      "label": "POST /orders",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${ordersUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "string",
+        "bodyType": "{item:string;quantity:number;giftNote:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "giftNote",
+          "item",
+          "quantity"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/cancel",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${ordersUrl}/orders/:param/cancel",
+        "path": "/orders/:param/cancel",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "headerKeys": [
+          "authorization",
+          "x-request-id"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "statusChecks": [
+          {
+            "status": 409,
+            "at": "src/app/order-panel.component.ts:42",
+            "in": "OrderPanelComponent.cancel"
+          },
+          {
+            "status": 410,
+            "at": "src/app/order-panel.component.ts:43",
+            "in": "OrderPanelComponent.cancel"
+          }
+        ],
+        "headers": [
+          "authorization",
+          "x-request-id"
+        ],
+        "sendsJson": true,
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:30:12",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/refund",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${ordersUrl}/orders/:param/refund",
+        "path": "/orders/:param/refund",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "statusChecks": [
+          {
+            "status": 422,
+            "at": "src/app/orders-api.service.ts:32"
+          }
+        ],
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:40:12",
+      "type": "ui_api_call",
+      "label": "PATCH /orders/:param",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "${ordersUrl}/orders/:param",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "void",
+        "bodyType": "{title:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "title"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:45:12",
+      "type": "ui_api_call",
+      "label": "DELETE /orders/:param",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${ordersUrl}/orders/:param",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ordersUrl",
+        "responseType": "void",
+        "bodyType": null,
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "id": "web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "web#src/app/accounts-api.service.ts:AccountsApiService",
+      "type": "provider",
+      "label": "AccountsApiService",
+      "repo": "web",
+      "file": "src/app/accounts-api.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/accounts-api.service.ts:AccountsApiService.me",
+      "type": "method",
+      "label": "AccountsApiService.me",
+      "repo": "web",
+      "file": "src/app/accounts-api.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{name:string}"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/live.service.ts:LiveService",
+      "type": "provider",
+      "label": "LiveService",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/live.service.ts:LiveService.onFeed",
+      "type": "method",
+      "label": "LiveService.onFeed",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/live.service.ts:LiveService.onNotice",
+      "type": "method",
+      "label": "LiveService.onNotice",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/live.service.ts:LiveService.onReady",
+      "type": "method",
+      "label": "LiveService.onReady",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "frame",
+              "type": "MessageEvent<any>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/live.service.ts:LiveService.watchFeed",
+      "type": "method",
+      "label": "LiveService.watchFeed",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/live.service.ts:LiveService.watchNotices",
+      "type": "method",
+      "label": "LiveService.watchNotices",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/live.service.ts:LiveService.watchReady",
+      "type": "method",
+      "label": "LiveService.watchReady",
+      "repo": "web",
+      "file": "src/app/live.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+      "type": "ui_component",
+      "label": "OrderPanelComponent",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 7,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-order-panel",
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent.cancel",
+      "type": "method",
+      "label": "OrderPanelComponent.cancel",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent.load",
+      "type": "method",
+      "label": "OrderPanelComponent.load",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent.place",
+      "type": "method",
+      "label": "OrderPanelComponent.place",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent.refund",
+      "type": "method",
+      "label": "OrderPanelComponent.refund",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent.remove",
+      "type": "method",
+      "label": "OrderPanelComponent.remove",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 56,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent.rename",
+      "type": "method",
+      "label": "OrderPanelComponent.rename",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/order-panel.component.ts:OrderPanelComponent.watch",
+      "type": "method",
+      "label": "OrderPanelComponent.watch",
+      "repo": "web",
+      "file": "src/app/order-panel.component.ts",
+      "line": 60,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "provider",
+      "label": "OrdersApiService",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
+      "type": "method",
+      "label": "OrdersApiService.cancel",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "method",
+      "label": "OrdersApiService.create",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "method",
+      "label": "OrdersApiService.list",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.refund",
+      "type": "method",
+      "label": "OrdersApiService.refund",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.remove",
+      "type": "method",
+      "label": "OrdersApiService.remove",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 44,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/app/orders-api.service.ts:OrdersApiService.rename",
+      "type": "method",
+      "label": "OrdersApiService.rename",
+      "repo": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "accounts-api#src/accounts/accounts.controller.ts:AccountsController",
+      "to": "accounts-api#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "accounts-api#src/accounts/accounts.controller.ts:AccountsController.me",
+      "to": "config_key:accounts-api#SESSION_SECRET",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "accounts-api#src/app.module.ts:AppModule",
+      "to": "accounts-api#node_modules/@nestjs/config:ConfigModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "consumer:web#src/app/live.service.ts:LiveService.onFeed",
+      "to": "web#src/app/live.service.ts:LiveService.onFeed",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 18
+    },
+    {
+      "from": "consumer:web#src/app/live.service.ts:LiveService.onNotice",
+      "to": "web#src/app/live.service.ts:LiveService.onNotice",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 24
+    },
+    {
+      "from": "consumer:web#src/app/live.service.ts:LiveService.onReady",
+      "to": "web#src/app/live.service.ts:LiveService.onReady",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:accounts-api:http:GET:/accounts/me",
+      "to": "accounts-api#src/accounts/accounts.controller.ts:AccountsController.me",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{name:string;session:string}",
+      "file": "src/accounts/accounts.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:orders-api:http:DELETE:/orders/:param",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:DELETE:/orders/:param",
+      "to": "orders-api#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 38,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders",
+      "to": "orders-api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/events",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/events",
+      "to": "orders-api#src/orders/streams.controller.ts:StreamsController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "MessageEvent<any>",
+      "file": "src/orders/streams.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/feed",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/feed",
+      "to": "orders-api#src/orders/streams.controller.ts:StreamsController.feed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "MessageEvent<any>",
+      "file": "src/orders/streams.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/notices",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:GET:/orders/notices",
+      "to": "orders-api#src/orders/streams.controller.ts:StreamsController.notices",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "MessageEvent<any>",
+      "file": "src/orders/streams.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:orders-api:http:PATCH:/orders/:param",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:PATCH:/orders/:param",
+      "to": "orders-api#src/orders/orders.controller.ts:OrdersController.rename",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:orders-api#RenameOrderDto"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 33,
+      "meta": {
+        "params": "{id:string}",
+        "body": "type:orders-api#RenameOrderDto"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders",
+      "to": "orders-api#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders-api#CreateOrderDto"
+      ],
+      "returns": "string",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16,
+      "meta": {
+        "body": "type:orders-api#CreateOrderDto"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders/:param/cancel",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders/:param/cancel",
+      "to": "orders-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders/:param/refund",
+      "to": "orders-api#node_modules/@nestjs/common:ValidationPipe({\"forbidNonWhitelisted\":true,\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 15,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:orders-api:http:POST:/orders/:param/refund",
+      "to": "orders-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop-bot:bot_callback:/^order:cancel:(\\w+)$/",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 38
+    },
+    {
+      "from": "entry:shop-bot:bot_callback:/^order:details:/",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.details",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 46
+    },
+    {
+      "from": "entry:shop-bot:bot_callback:order:confirm",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.confirm",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 34
+    },
+    {
+      "from": "entry:shop-bot:bot_callback:order:tracking",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.track",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 42
+    },
+    {
+      "from": "entry:shop-bot:bot_command:order",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.showOrder",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 21
+    },
+    {
+      "from": "orders-api#src/app.module.ts:AppModule",
+      "to": "orders-api#node_modules/@nestjs/config:ConfigModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "orders-api#src/orders/orders.controller.ts:OrdersController",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "orders-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "orders-api#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders-api#CreateOrderDto"
+      ],
+      "returns": "string",
+      "file": "src/orders/orders.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "orders-api#src/orders/orders.controller.ts:OrdersController.list",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "orders-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "orders-api#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 40
+    },
+    {
+      "from": "orders-api#src/orders/orders.controller.ts:OrdersController.rename",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService.rename",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35
+    },
+    {
+      "from": "orders-api#src/orders/orders.service.ts:OrdersService",
+      "to": "orders-api#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "orders-api#src/orders/orders.service.ts:OrdersService.create",
+      "to": "config_key:orders-api#ORDER_MODE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 27
+    },
+    {
+      "from": "orders-api#src/orders/orders.service.ts:OrdersService.create",
+      "to": "config_key:orders-api#REDIS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 23
+    },
+    {
+      "from": "orders-api#src/orders/orders.service.ts:OrdersService.create",
+      "to": "config_key:orders-api#SMTP_HOST",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 25
+    },
+    {
+      "from": "orders-api#src/orders/orders.service.ts:OrdersService.list",
+      "to": "config_key:orders-api#LOG_LEVEL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "orders-api#src/orders/orders.service.ts:OrdersService.list",
+      "to": "config_key:orders-api#PAYMENT_API_KEY",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "orders-api#src/orders/orders.service.ts:OrdersService.refund",
+      "to": "orders-api#src/orders/orders.service.ts:OrdersService.statusFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/orders/orders.service.ts",
+      "line": 38
+    },
+    {
+      "from": "shop-bot#src/shop-bot.ts:ShopBot.onModuleInit",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-bot#src/shop-bot.ts:ShopBot.onModuleInit",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.confirm",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 13
+    },
+    {
+      "from": "shop-bot#src/shop-bot.ts:ShopBot.onModuleInit",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.details",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 17
+    },
+    {
+      "from": "shop-bot#src/shop-bot.ts:ShopBot.onModuleInit",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.showOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 12
+    },
+    {
+      "from": "shop-bot#src/shop-bot.ts:ShopBot.onModuleInit",
+      "to": "shop-bot#src/shop-bot.ts:ShopBot.track",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/shop-bot.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:web#src/app/order-panel.component.ts:11:13",
+      "to": "web#src/app/order-panel.component.ts:OrderPanelComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_action:web#src/app/order-panel.component.ts:12:13",
+      "to": "web#src/app/order-panel.component.ts:OrderPanelComponent.place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 12
+    },
+    {
+      "from": "ui_action:web#src/app/order-panel.component.ts:13:13",
+      "to": "web#src/app/order-panel.component.ts:OrderPanelComponent.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 13
+    },
+    {
+      "from": "ui_action:web#src/app/order-panel.component.ts:14:13",
+      "to": "web#src/app/order-panel.component.ts:OrderPanelComponent.refund",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:web#src/app/order-panel.component.ts:15:13",
+      "to": "web#src/app/order-panel.component.ts:OrderPanelComponent.rename",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 15
+    },
+    {
+      "from": "ui_action:web#src/app/order-panel.component.ts:16:13",
+      "to": "web#src/app/order-panel.component.ts:OrderPanelComponent.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:web#src/app/order-panel.component.ts:17:13",
+      "to": "web#src/app/order-panel.component.ts:OrderPanelComponent.watch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 17
+    },
+    {
+      "from": "ui_api_call:web#src/app/accounts-api.service.ts:12:12",
+      "to": "entry:accounts-api:http:GET:/accounts/me",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/accounts-api.service.ts",
+      "line": 12,
+      "returns": "{name:string}",
+      "meta": {
+        "via": "api-target",
+        "targetService": "accounts-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/live.service.ts:11:20",
+      "to": "consumer:web#src/app/live.service.ts:LiveService.onReady",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 12
+    },
+    {
+      "from": "ui_api_call:web#src/app/live.service.ts:11:20",
+      "to": "entry:orders-api:http:GET:/orders/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 11,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/live.service.ts:17:20",
+      "to": "consumer:web#src/app/live.service.ts:LiveService.onFeed",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:web#src/app/live.service.ts:17:20",
+      "to": "entry:orders-api:http:GET:/orders/feed",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 17,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/live.service.ts:23:20",
+      "to": "consumer:web#src/app/live.service.ts:LiveService.onNotice",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 24
+    },
+    {
+      "from": "ui_api_call:web#src/app/live.service.ts:23:20",
+      "to": "entry:orders-api:http:GET:/orders/notices",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 23,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:13:12",
+      "to": "entry:orders-api:http:GET:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 13,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+      "to": "entry:orders-api:http:POST:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 18,
+      "params": [
+        "{item:string;quantity:number;giftNote:string}"
+      ],
+      "returns": "string",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+      "to": "entry:orders-api:http:POST:/orders/:param/cancel",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 23,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:30:12",
+      "to": "entry:orders-api:http:POST:/orders/:param/refund",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 30,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:40:12",
+      "to": "entry:orders-api:http:PATCH:/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 40,
+      "params": [
+        "{title:string}"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/orders-api.service.ts:45:12",
+      "to": "entry:orders-api:http:DELETE:/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 45,
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders-api"
+      }
+    },
+    {
+      "from": "web#src/app/accounts-api.service.ts:AccountsApiService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/accounts-api.service.ts",
+      "line": 9
+    },
+    {
+      "from": "web#src/app/accounts-api.service.ts:AccountsApiService.me",
+      "to": "ui_api_call:web#src/app/accounts-api.service.ts:12:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/accounts-api.service.ts",
+      "line": 12
+    },
+    {
+      "from": "web#src/app/live.service.ts:LiveService.watchFeed",
+      "to": "ui_api_call:web#src/app/live.service.ts:17:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/app/live.service.ts:LiveService.watchFeed",
+      "to": "web#src/app/live.service.ts:LiveService.onFeed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "MessageEvent<any>"
+      ],
+      "returns": "void",
+      "file": "src/app/live.service.ts",
+      "line": 18
+    },
+    {
+      "from": "web#src/app/live.service.ts:LiveService.watchNotices",
+      "to": "ui_api_call:web#src/app/live.service.ts:23:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 23
+    },
+    {
+      "from": "web#src/app/live.service.ts:LiveService.watchNotices",
+      "to": "web#src/app/live.service.ts:LiveService.onNotice",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "MessageEvent<any>"
+      ],
+      "returns": "void",
+      "file": "src/app/live.service.ts",
+      "line": 24
+    },
+    {
+      "from": "web#src/app/live.service.ts:LiveService.watchReady",
+      "to": "ui_api_call:web#src/app/live.service.ts:11:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/live.service.ts",
+      "line": 11
+    },
+    {
+      "from": "web#src/app/live.service.ts:LiveService.watchReady",
+      "to": "web#src/app/live.service.ts:LiveService.onReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "MessageEvent<any>"
+      ],
+      "returns": "void",
+      "file": "src/app/live.service.ts",
+      "line": 12
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+      "to": "web#src/app/accounts-api.service.ts:AccountsApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 25
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+      "to": "web#src/app/live.service.ts:LiveService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 26
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/order-panel.component.ts",
+      "line": 24
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.cancel",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/order-panel.component.ts",
+      "line": 40
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.load",
+      "to": "web#src/app/accounts-api.service.ts:AccountsApiService.me",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{name:string}",
+      "file": "src/app/order-panel.component.ts",
+      "line": 31
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.load",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/order-panel.component.ts",
+      "line": 30
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.place",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "string",
+      "file": "src/app/order-panel.component.ts",
+      "line": 35
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.refund",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.refund",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/order-panel.component.ts",
+      "line": 49
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.remove",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/order-panel.component.ts",
+      "line": 57
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.rename",
+      "to": "web#src/app/orders-api.service.ts:OrdersApiService.rename",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/order-panel.component.ts",
+      "line": 53
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.watch",
+      "to": "web#src/app/live.service.ts:LiveService.watchFeed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/order-panel.component.ts",
+      "line": 62
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.watch",
+      "to": "web#src/app/live.service.ts:LiveService.watchNotices",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/order-panel.component.ts",
+      "line": 63
+    },
+    {
+      "from": "web#src/app/order-panel.component.ts:OrderPanelComponent.watch",
+      "to": "web#src/app/live.service.ts:LiveService.watchReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/order-panel.component.ts",
+      "line": 61
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 9
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.cancel",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 23
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.create",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 18
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.list",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 13
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.refund",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:30:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 30
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.remove",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:45:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 45
+    },
+    {
+      "from": "web#src/app/orders-api.service.ts:OrdersApiService.rename",
+      "to": "ui_api_call:web#src/app/orders-api.service.ts:40:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders-api.service.ts",
+      "line": 40
+    }
+  ],
+  "types": {
+    "type:orders-api#CreateOrderDto": {
+      "name": "CreateOrderDto",
+      "kind": "object",
+      "declaredIn": "orders-api#src/orders/dto.ts",
+      "structuralHash": "8de9e73103926d09",
+      "fields": [
+        {
+          "name": "item",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "validators": [
+              "IsString"
+            ]
+          }
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "validators": [
+              "IsInt"
+            ]
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders-api#RenameOrderDto": {
+      "name": "RenameOrderDto",
+      "kind": "object",
+      "declaredIn": "orders-api#src/orders/dto.ts",
+      "structuralHash": "695c192abad871ec",
+      "fields": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "validators": [
+              "IsString"
+            ]
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/orders/streams.controller.ts",
+      "line": 8,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "sites": 3,
+      "message": "This route streams server-sent events, and no subscription to a channel was found in the code behind it.",
+      "hint": "What reaches the stream is decided by code not read as a subscription (a pipeline over a subject, a request handed to an object of its own). Annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /orders/events",
+      "service": "orders-api"
+    },
+    {
+      "file": "src/shop-bot.ts",
+      "line": 22,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 5,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "ShopBot.showOrder -> ctx.reply",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 5,
+            "samples": [
+              {
+                "file": "src/shop-bot.ts",
+                "line": 22,
+                "symbol": "ShopBot.showOrder -> ctx.reply"
+              },
+              {
+                "file": "src/shop-bot.ts",
+                "line": 35,
+                "symbol": "ShopBot.confirm -> ctx.reply"
+              },
+              {
+                "file": "src/shop-bot.ts",
+                "line": 39,
+                "symbol": "ShopBot.cancel -> ctx.reply"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "shop-bot"
+    }
+  ]
+}

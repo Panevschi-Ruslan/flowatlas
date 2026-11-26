@@ -1,0 +1,37 @@
+-> ItemsService.listByShop                                           store-api/src/items.service.ts:6
+  -> ItemsController.list                                            store-api/src/items.controller.ts:8
+    @  GET /api/shops/items                                          store-api/src/items.controller.ts:8
+      => store-bot ^  GET /api/shops/items                           store-bot/src/api.client.ts:15
+        -> ApiClient.getItems                                        store-bot/src/api.client.ts:14
+          -> StoreBot.onStatusEvent                                  store-bot/src/store-bot.ts:32
+            ~  StoreBot.onStatusEvent                                store-bot/src/store-bot.ts:22
+              ~  shop:*:closed                                       src/events.service.ts:19
+                => store-api ~  message shop:*:closed                store-api/src/events.service.ts:19
+                  -> EventsService.orderClosed                       store-api/src/events.service.ts:18
+                    -> OrdersService.remove                          store-api/src/orders.service.ts:25
+                      -> OrdersController.remove                     store-api/src/orders.controller.ts:24
+                        @  DELETE /api/orders/:param                 store-api/src/orders.controller.ts:24
+                          => store-web ^  DELETE /api/orders/:param  store-web/src/app/orders.client.ts:17
+                            -> OrdersClient.remove                   store-web/src/app/orders.client.ts:16
+                              -> OrdersAdminComponent.remove         store-web/src/app/orders-admin.component.ts:18
+                                %  OrdersAdminComponent              store-web/src/app/orders-admin.component.ts:6
+                                  %  /orders                         store-web/src/app/app.routes.ts:22
+                    -> OrdersService.setStatus                       store-api/src/orders.service.ts:13
+                      -> OrdersController.setStatus                  store-api/src/orders.controller.ts:14
+                        @  PATCH /api/orders/:param/status           store-api/src/orders.controller.ts:14
+              ~  shop:*:orders                                       src/events.service.ts:11
+                => store-api ~  message shop:*:orders                store-api/src/events.service.ts:11
+                  -> EventsService.orderChanged                      store-api/src/events.service.ts:10
+                    -> OrdersService.create                          store-api/src/orders.service.ts:9
+                      -> OrdersController.create                     store-api/src/orders.controller.ts:9
+                        @  POST /api/orders                          store-api/src/orders.controller.ts:9
+                    -> OrdersService.pay                             store-api/src/orders.service.ts:19
+                      -> OrdersController.pay                        store-api/src/orders.controller.ts:19
+                        @  POST /api/orders/:param/pay               store-api/src/orders.controller.ts:19
+Reachable from: 4 http entries (store-api), 1 screen (store-web)
+Beyond the channels StoreBot.onStatusEvent takes messages from (shop:*:closed, shop:*:orders, shop:*:paid), calling none of it:
+  DELETE /api/orders/:param (store-api)  alive, via channel shop:*:closed, by OrdersController.remove src/orders.controller.ts:24
+  PATCH /api/orders/:param/status (store-api)  dead, via channel shop:*:closed, by OrdersController.setStatus src/orders.controller.ts:14
+  POST /api/orders (store-api)  alive, via channel shop:*:orders, by OrdersController.create src/orders.controller.ts:9
+  POST /api/orders/:param/pay (store-api)  dead, via channel shop:*:orders, by OrdersController.pay src/orders.controller.ts:19
+  /orders (store-web)  outside, via channel shop:*:closed, by OrdersAdminComponent src/app/orders-admin.component.ts:6

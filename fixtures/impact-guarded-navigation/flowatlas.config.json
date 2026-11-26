@@ -1,0 +1,23 @@
+{
+  "services": [
+    {
+      "name": "store-api",
+      "repo": "./store-api",
+      "type": "nestjs",
+      "baseUrlEnv": ["STORE_API_URL"]
+    },
+    {
+      "name": "store-web",
+      "repo": "./store-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "store-api" }
+    },
+    {
+      "name": "store-bot",
+      "repo": "./store-bot",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

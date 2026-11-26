@@ -1,0 +1,22 @@
+{
+  "matches": [
+    {
+      "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+      "line": 32,
+      "reach": "alive",
+      "from": "GET /orders/:param",
+      "requests": [
+        {
+          "route": "entry:orders:http:GET:/orders/:param",
+          "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+        }
+      ]
+    }
+  ],
+  "total": 1,
+  "complete": true,
+  "next": [
+    "impact({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})",
+    "get_source({symbol: \"gateway#src/clients/orders.client.ts:OrdersClient.fetchOne\"})"
+  ]
+}

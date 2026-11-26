@@ -44,6 +44,7 @@
       ]
     }
   },
+  "complete": true,
   "next": [
     "type_usage({type: \"type:@fx/contracts#OrderDto\"})",
     "find_symbol({query: \"OrderDto\"})"

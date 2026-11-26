@@ -5,13 +5,17 @@
  * session in one repository answers a question about another one without
  * opening it.
  */
-export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS } from './server.js';
+export { createFlowatlasServer, startStdioServer, SERVER_NAME, INSTRUCTIONS, INSTRUCTIONS_MAX } from './server.js';
 export type { ServerOptions } from './server.js';
+export { compactAnswer, compactOutputSchema, FULL_ANSWER_TOOLS } from './compact.js';
+export { routeAloud, settledAnswer, SETTLING_TOOLS } from './settled.js';
+export { cappedAnswer, MAX_ANSWER_CHARS } from './capped.js';
 export { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS } from './tool-needs.js';
+export { ALWAYS_LOAD_KEY, CORE_TOOLS, isCoreTool, UPFRONT_DESCRIPTION_MAX, UPFRONT_LISTING_MAX } from './upfront.js';
 export type { Need, NeedSource, ToolFacts, ToolName } from './tool-needs.js';
 export { LISTING_POLL_MS, listingSettingsOf, ToolListing } from './tool-listing.js';
 export type { ListingOptions, ListingSettings } from './tool-listing.js';
-export { DbHandle } from './query/db.js';
+export { DbHandle, PULLED_DIR } from './query/db.js';
 export { ruleBreaksAt, rulesReportOf, violatedHops } from './tools/rules.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
 export { resolveEntryRef, resolveSymbol, isResolved } from './query/entry-ref.js';
@@ -30,6 +34,22 @@ export {
   DEFAULT_WALK_NODES,
 } from './query/flow.js';
 export type { CrossingLeft, FlowOptions, FlowResult } from './query/flow.js';
+export { DEFAULT_PATH_NODES, findPath } from './query/path.js';
+export { checkoutLines, freshnessBeside, pulledLine, staleFor, withStale } from './query/fresh.js';
+export type { StaleRef } from './query/fresh.js';
+export {
+  DEFAULT_QUESTIONS_BYTES,
+  QUESTIONS_FILE,
+  loggedCall,
+  questionLogSettings,
+  questionOf,
+  questionsByGap,
+  questionsPathFor,
+  readQuestions,
+  recordQuestion,
+} from './query/questions.js';
+export type { QuestionEntry, QuestionLogSettings } from './query/questions.js';
+export type { PathOptions, PathResult, ReversePath } from './query/path.js';
 export { projectDetail, projectEdge, truncate, clampDetail, CLAMP_NOTE, MAX_DETAIL } from './query/detail.js';
 export type { Truncated } from './query/detail.js';
 export { truncationMessage } from './query/types.js';
@@ -60,6 +80,11 @@ export type { ContractStatus } from './tools/contract.js';
 // what a type refers to (L2) and where a declaration ends (L3).
 export { expandType } from './tools/types.js';
 export { endOfDeclaration } from './tools/source.js';
+// What each end of a crossing reads and sends (P368), for the usage verdicts `diff --spec` gives (P390).
+export { consumerReading, readingOf, readsField, shapeFields, topField } from './query/fields.js';
+export type { FieldSite, Reading } from './query/fields.js';
+// What each client reads of a route's answer (P391), for the same verdicts on a response field (P393).
+export { answerReadingOf } from './query/answer-fields.js';
 // The chain an answer hands on (P63) and the same chain as Markdown (P67): pure,
 // so a page can render the words the describe_for_prompt tool answers with.
 export { hintsFor, nextFor, withNext, MAX_NEXT } from './query/next.js';
@@ -84,19 +109,35 @@ export {
   serviceInputOf,
 } from './prompt/gather.js';
 export type { PromptScopeName, ScopeContext, ServiceCrossing, ServiceInput } from './prompt/gather.js';
-export { checkSubjectAt, promptScopeContext } from './tools/prompt.js';
+export { checkSubjectAt, describeAnswer, promptScopeContext } from './tools/prompt.js';
+export type { DescribeInput } from './tools/prompt.js';
 export { loadContractBreaks } from './query/contracts.js';
 export { deadOptionsOf, deadRows, DEAD_KINDS } from './tools/dead.js';
 export type { DeadKind } from './tools/dead.js';
-export { findingsOf, FINDINGS_TOP, rankedFindingsOf } from './tools/findings.js';
+export { countedNotListed, countedOf, findingsOf, FINDINGS_TOP, rankedFindingsOf } from './tools/findings.js';
+export type { CountedFindings } from './tools/findings.js';
 export { usesOfType, TYPE_USE_GROUPS } from './tools/type-usage.js';
 export { specOfNode, specsFor } from './tools/spec.js';
 export type { Carries, EdgeUse, EntryUse, TypeUses } from './tools/type-usage.js';
 export { CONTRACT_STATUS_RANK, crossingsBetween, crossingStatusOf } from './tools/contract.js';
 export { runSearch, SEARCH_KINDS } from './tools/search.js';
 export type { GapHit, SearchKind, TypeHit } from './tools/search.js';
-export { diffState, readDiff, serviceInId, sideLabel, summariseChanges, verdictOf, VERDICTS } from './tools/changes.js';
+export {
+  CHECK_CHANGE_SECONDS,
+  CHECK_CHANGE_SECONDS_MAX,
+  checkChangeAnswer,
+  diffState,
+  readDiff,
+  serviceInId,
+  sideLabel,
+  summariseChanges,
+  verdictOf,
+  VERDICTS,
+} from './tools/changes.js';
 export type {
+  ChangeCheck,
+  ChangeChecker,
+  ChangeCheckInput,
   ChangedEntry,
   NewFinding,
   NewGap,
@@ -113,12 +154,13 @@ export type { PromptName } from './prompts.js';
 export {
   reasonCatalogOf,
   serviceSummaryOf,
+  OVERVIEW_URI,
   REASONS_URI,
   SERVICES_URI,
   SERVICE_TEMPLATE,
   SERVICE_TOP_FINDINGS,
 } from './resources.js';
-export type { ReasonEntry, ReasonHint } from './resources.js';
+export type { OverviewWriter, ReasonEntry, ReasonHint } from './resources.js';
 export { startSummaryOf } from './tools/start.js';
 export {
   blindSpotsAsRows,
@@ -153,5 +195,14 @@ export {
   staleDocsCount,
   stopsIn,
   withDocs,
+  resolveMention,
+  MAX_MENTIONS,
 } from './query/docs.js';
 export type { DocAsk, DocCheck, DocRef, DocSubject, DocTarget } from './query/docs.js';
+export { impactOf, throughByConsumer } from './tools/reach.js';
+export type { ImpactInput, ImpactOf, ThroughChannel, ThroughConsumer } from './tools/reach.js';
+export { viaSaid } from './query/ways-in.js';
+export type { Reach, Walked, WalkedFrom, WayInFound } from './query/ways-in.js';
+// The names an edit in one file can break in another repository, for the edit hook (P387).
+export { crossingNamesOf } from './query/crossing-names.js';
+export type { CrossingKind, CrossingName, CrossingRole } from './query/crossing-names.js';

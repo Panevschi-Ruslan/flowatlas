@@ -1,4 +1,4 @@
-import { Node, SyntaxKind, VariableDeclarationKind, type Node as TsNode } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind, type Node as TsNode, type PropertyDeclaration } from 'ts-morph';
 
 /** How many wrappers and bindings are followed before the answer is no. */
 const MOST_STEPS = 8;
@@ -69,7 +69,33 @@ const boundValue = (declaration: TsNode): TsNode | undefined => {
     return kind === VariableDeclarationKind.Const ? declaration.getInitializer() : undefined;
   }
   if (Node.isPropertyAssignment(declaration)) return declaration.getInitializer();
+  if (Node.isPropertyDeclaration(declaration) && declaration.isStatic()) return staticValue(declaration);
   return undefined;
+};
+
+/**
+ * The one value a static field of a class holds (P299): `private static
+ * readonly table = process.env.ENTRY_TABLE`, or `Entries.table =
+ * process.env.ENTRY_TABLE` written once for a field declared with no value. A
+ * field given a value in two places holds whichever ran last, which is no
+ * one value.
+ */
+const staticValue = (declaration: PropertyDeclaration): TsNode | undefined => {
+  const initial = declaration.getInitializer();
+  if (declaration.isReadonly()) return initial;
+  const name = declaration.getNameNode();
+  if (!Node.isIdentifier(name)) return initial;
+  const assigned: TsNode[] = [];
+  for (const reference of name.findReferencesAsNodes()) {
+    const access = reference.getParent();
+    if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getNameNode() !== reference) continue;
+    const write = access.getParent();
+    if (write === undefined || !Node.isBinaryExpression(write) || write.getLeft() !== access) continue;
+    if (write.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return undefined;
+    assigned.push(write.getRight());
+  }
+  const values = [...(initial === undefined ? [] : [initial]), ...assigned];
+  return values.length === 1 ? values[0] : undefined;
 };
 
 /** An environment variable a value is read from, and what the code uses when it is unset. */

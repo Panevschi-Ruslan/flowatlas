@@ -45,6 +45,9 @@ export const KEYS = {
   /** A join deploying would lose (P117): its kind and both ends, the caller without its line. */
   join: (join: { kind: string; caller: string; target: string }): string =>
     `${join.kind}|${stableNodeKey(join.caller)}|${stableNodeKey(join.target)}`,
+  /** A finding of the findings list (P384): its kind and both ends, without their lines. */
+  finding: (row: { kind: string; id: string; to?: string }): string =>
+    `${row.kind}|${stableNodeKey(row.id)}|${row.to === undefined ? '' : stableNodeKey(row.to)}`,
   /** A cycle is its members, whichever one the walk started from. */
   cycle: (nodes: readonly string[]): string => [...new Set(nodes.map((id) => stableNodeKey(id)))].sort().join(' '),
 } as const;

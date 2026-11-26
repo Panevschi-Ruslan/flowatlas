@@ -1,0 +1,252 @@
+{
+  "$id": "https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/schema/docs.v2.schema.json",
+  "title": "<output>/docs.json, the doc blocks and mentions flowatlas docs read",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "docsFormatVersion": {
+      "anyOf": [
+        {
+          "type": "number",
+          "const": 1
+        },
+        {
+          "type": "number",
+          "const": 2
+        }
+      ]
+    },
+    "mentions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "text": {
+            "type": "string"
+          },
+          "node": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "mention",
+              "see"
+            ]
+          },
+          "heading": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "line",
+          "text",
+          "node",
+          "kind"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "deadMentions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "text": {
+            "type": "string"
+          },
+          "near": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "file",
+          "line",
+          "text",
+          "near"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "flow",
+              "channel",
+              "symbol",
+              "ref",
+              "overview"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "node": {
+            "type": "string"
+          },
+          "view": {
+            "type": "string",
+            "enum": [
+              "steps",
+              "mermaid",
+              "sequence",
+              "prompt",
+              "contract",
+              "tour"
+            ]
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "depth": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "maxNodes": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "detail": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "const": 0
+                  },
+                  {
+                    "type": "number",
+                    "const": 1
+                  },
+                  {
+                    "type": "number",
+                    "const": 2
+                  }
+                ]
+              },
+              "service": {
+                "type": "string"
+              },
+              "sections": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "changed",
+              "gone",
+              "ambiguous"
+            ]
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "near": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "file",
+          "line",
+          "kind",
+          "id",
+          "state"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "problems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "line",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "docsFormatVersion",
+    "files",
+    "blocks",
+    "problems"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,741 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T16:45:42.076Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:10:5|emits|consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:10:5|emits|consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:10:5|emits|consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:10:5",
+        "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:10:5|emits|consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:14:5",
+        "to": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:14:5|emits|consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:14:5",
+        "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:14:5|emits|consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:14:5",
+        "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:14:5|emits|consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/desk/desk.service.ts:14:5",
+        "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/desk/desk.service.ts:14:5|emits|consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleRefund declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.log",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:bot#src/bot/bot.ts:Bot.log",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.log declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/stream/stream.controller.ts:StreamController.stream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:10:5",
+        "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:10:5|emits|consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleRefund declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.log",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:bot#src/bot/bot.ts:Bot.log",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.log declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/stream/stream.controller.ts:StreamController.stream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:14:5",
+        "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:14:5|emits|consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleRefund declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.log",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:bot#src/bot/bot.ts:Bot.log",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.log declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/stream/stream.controller.ts:StreamController.stream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:18:5",
+        "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:18:5|emits|consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleRefund declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.log",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:bot#src/bot/bot.ts:Bot.log",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.log declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/stream/stream.controller.ts:StreamController.stream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:22:5",
+        "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:22:5|emits|consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleRefund declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.handleStatus declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:bot#src/bot/bot.ts:Bot.log",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:bot#src/bot/bot.ts:Bot.log",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:bot#src/bot/bot.ts:Bot.log declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/stream/stream.controller.ts:StreamController.stream declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:shop#src/orders/orders.service.ts:26:5",
+        "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+        "type": "emits"
+      },
+      "edgeKey": "producer:shop#src/orders/orders.service.ts:26:5|emits|consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20",
+        "to": "entry:shop:http:GET:/events/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20|hits|entry:shop:http:GET:/events/stream",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/screens/PickupBoard.tsx:PickupBoard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20",
+        "to": "entry:shop:http:GET:/events/stream",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20|hits|entry:shop:http:GET:/events/stream",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/screens/PickupBoard.tsx:PickupBoard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 60,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

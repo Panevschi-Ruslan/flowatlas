@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:15.099Z",
+  "configHash": "7e5ebaeda238",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2487,
+      "packages": {
+        "name": "maker-held-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2450,
+      "packages": {
+        "name": "maker-held-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 15,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 2465,
+      "packages": {
+        "name": "maker-held-shop",
+        "runtime": [
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 7,
+    "resolved": 7,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 7,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 32,
+    "edges": 23,
+    "types": 0,
+    "missed": 2,
+    "sites": 11,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

@@ -90,7 +90,7 @@ export const deadResultSchema = z.object({
         class: z.enum(['actionable', 'stream', 'infrastructure', 'declared']),
         /** The rule that put the row in its class. */
         why: z.string(),
-        role: z.enum(['probe', 'webhook', 'callback', 'discovery', 'configured']).optional(),
+        role: z.enum(['probe', 'webhook', 'callback', 'discovery', 'configured', 'bot']).optional(),
         /** `likely-dead` where a request whose address was read in part could reach it. */
         confidence: z.enum(['dead', 'likely-dead']),
         /** What `dead` claims (P95): `dead`, `likely-dead` or `unknown`; `alive` only where traffic was seen (P110). */

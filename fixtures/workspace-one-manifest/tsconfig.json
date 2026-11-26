@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "baseUrl": "./",
+    "types": [],
+    "paths": {
+      "@shop/order-events": ["libs/order-events/src"],
+      "@shop/order-events/*": ["libs/order-events/src/*"]
+    }
+  }
+}

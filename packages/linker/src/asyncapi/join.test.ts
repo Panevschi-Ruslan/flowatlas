@@ -97,9 +97,10 @@ describe('a channel where one end is a service nobody could read', () => {
     expect(findings().sort()).toEqual([
       'error missing_required currency',
       'error type_mismatch amount',
-      'warning optionality_mismatch customerId',
-      'warning optionality_mismatch total',
-      'warning optionality_mismatch total',
+      // Optional for the receiver and always sent: information, which breaks nothing (P384).
+      'info optionality_mismatch customerId',
+      'info optionality_mismatch total',
+      'info optionality_mismatch total',
     ]);
   });
 

@@ -13,4 +13,4 @@
               -> Approved? [Choice]                         circulation/statemachines/loan-review.asl.json:19
                 -> Renewed [Succeed]                        circulation/statemachines/loan-review.asl.json:30
                 -> Refused [Fail]                           circulation/statemachines/loan-review.asl.json:33
-unresolved on this path: 0
+unresolved on this path: 1

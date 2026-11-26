@@ -1,0 +1,9 @@
+{
+  "name": "interfaces-legacy",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "graphql": "^16.9.0",
+    "graphql-yoga": "^5.7.0"
+  }
+}

@@ -326,3 +326,48 @@ describe('a bot with no way in', () => {
     expect(ctx.builder.build().unresolved.map((row) => row.reason)).toEqual(['dynamic-bot-trigger']);
   });
 });
+
+describe('registrations made in a loop over a table written out (P398)', () => {
+  it('opens one way in per element, keyed by its trigger and handled by what its handler runs', () => {
+    const { ctx, entries } = extract(`
+      function help(ctx: unknown) {}
+      export class Bot {
+        private bot = new Telegraf();
+        private routes() {
+          return [
+            { pattern: /^done:(\\w+)$/, handler: this.done.bind(this) },
+            { pattern: 'help', handler: help },
+            { pattern: 'ping', handler: (ctx: unknown) => this.ping(ctx) },
+          ];
+        }
+        setup() {
+          for (const route of this.routes()) this.bot.action(route.pattern, (ctx) => route.handler(ctx));
+        }
+        done(ctx: unknown) {}
+        ping(ctx: unknown) {}
+      }
+    `);
+    expect(entries.map((entry) => entry.id)).toEqual(['entry:bot:bot_callback:/^done:(\\w+)$/', 'entry:bot:bot_callback:help', 'entry:bot:bot_callback:ping']);
+    expect(entries.map(handlerName)).toEqual(['done', 'help', 'action ping']);
+    expect(entries.every((entry) => entry.meta?.['handlerVia'] === 'table')).toBe(true);
+    expect(ctx.builder.unresolved).toEqual([]);
+  });
+
+  it('keeps the triggers it read and says how many it could not', () => {
+    const { ctx, entries } = extract(`
+      declare const extra: Array<{ name: string; run: (ctx: unknown) => void }>;
+      export class Bot {
+        private bot = new Telegraf();
+        setup() {
+          const commands = [{ name: 'orders', run: (ctx: unknown) => this.orders(ctx) }, ...extra];
+          commands.forEach((command) => this.bot.command(command.name, command.run));
+        }
+        orders(ctx: unknown) {}
+      }
+    `);
+    expect(ids(entries)).toEqual(['entry:bot:bot_command:orders']);
+    const rows = ctx.builder.unresolved;
+    expect(rows.map((row) => row.reason)).toEqual(['dynamic-bot-trigger']);
+    expect(rows[0]?.hint).toContain('1 of 2 elements');
+  });
+});

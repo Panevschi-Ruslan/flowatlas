@@ -1,0 +1,55 @@
+{
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "fastify"
+    },
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "koa"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "react"
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "express"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

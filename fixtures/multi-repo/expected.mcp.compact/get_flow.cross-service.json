@@ -1,0 +1,116 @@
+{
+  "settled": "the request lands on GET /orders/:param (orders), OrdersController.findOne",
+  "requests": [
+    {
+      "route": "entry:orders:http:GET:/orders/:param",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    }
+  ],
+  "root": {
+    "id": "entry:gateway:http:GET:/orders/:param",
+    "loc": "src/orders/orders.controller.ts:30",
+    "children": [
+      {
+        "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+        "line": "30-33",
+        "edge": {
+          "type": "handles",
+          "params": [
+            "string"
+          ],
+          "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+        },
+        "children": [
+          {
+            "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+            "line": "32-34",
+            "edge": {
+              "type": "calls",
+              "params": [
+                "string"
+              ],
+              "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+            },
+            "children": [
+              {
+                "id": "config_key:gateway#ORDERS_URL",
+                "loc": "src/clients/orders.client.ts:33",
+                "edge": "reads_config"
+              },
+              {
+                "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+                "label": "GET /orders/:param",
+                "edge": "calls",
+                "children": [
+                  {
+                    "id": "entry:orders:http:GET:/orders/:param",
+                    "loc": "src/orders/orders.controller.ts:25",
+                    "edge": {
+                      "type": "http_calls",
+                      "returns": "type:@fx/contracts#OrderDto"
+                    },
+                    "children": [
+                      {
+                        "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+                        "line": "25-28",
+                        "edge": {
+                          "type": "handles",
+                          "params": [
+                            "string"
+                          ],
+                          "returns": "type:@fx/contracts#OrderDto"
+                        },
+                        "children": [
+                          {
+                            "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+                            "line": "25-28",
+                            "edge": {
+                              "type": "calls",
+                              "params": [
+                                "string"
+                              ],
+                              "returns": "type:@fx/contracts#OrderDto"
+                            },
+                            "children": [
+                              {
+                                "id": "db_query:orders#src/orders/orders.service.ts:26:23",
+                                "label": "read orders",
+                                "edge": "calls",
+                                "children": [
+                                  {
+                                    "id": "table:orders#orders",
+                                    "edge": "queries"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "docs": [
+    {
+      "file": "docs/architecture.md",
+      "line": 10,
+      "kind": "flow",
+      "state": "ok"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 113,
+      "kind": "flow",
+      "state": "ok"
+    }
+  ],
+  "complete": true
+}

@@ -15,13 +15,21 @@ const manifestVersion = (): string | undefined => {
   }
 };
 
-/** `--config <path>`, `--db <path>` and `--all-tools`, kept deliberately small. */
-const readArgs = (argv: readonly string[]): { configPath?: string; dbPath?: string; allTools?: boolean } => {
-  const out: { configPath?: string; dbPath?: string; allTools?: boolean } = {};
+interface Args {
+  configPath?: string;
+  dbPath?: string;
+  allTools?: boolean;
+  alwaysLoad?: boolean;
+}
+
+/** `--config <path>`, `--db <path>`, `--all-tools` and `--no-always-load`, kept deliberately small. */
+const readArgs = (argv: readonly string[]): Args => {
+  const out: Args = {};
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     const value = argv[index + 1];
     if (flag === '--all-tools') out.allTools = true;
+    else if (flag === '--no-always-load') out.alwaysLoad = false;
     else if (flag === '--config' && value !== undefined) {
       out.configPath = value;
       index += 1;
@@ -44,6 +52,7 @@ const options = {
   ...(args.configPath === undefined ? {} : { configPath: args.configPath }),
   ...(args.dbPath ?? fromEnv ? { dbPath: args.dbPath ?? fromEnv } : {}),
   ...(args.allTools === true ? { allTools: true } : {}),
+  ...(args.alwaysLoad === false ? { alwaysLoad: false } : {}),
 };
 
 const version = manifestVersion();

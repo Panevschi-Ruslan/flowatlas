@@ -1,0 +1,1560 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:33:39.457Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/list-products.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/list-products.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "channel:notifications",
+      "type": "channel",
+      "label": "notifications",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 33,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 3,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:receipts",
+      "type": "channel",
+      "label": "receipts",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 8,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:refunds",
+      "type": "channel",
+      "label": "refunds",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 21,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10@src/workers.ts:8",
+      "type": "consumer",
+      "label": "ReceiptWorker.constructor.Worker@10",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 8,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:jobs:event:receipts"
+      }
+    },
+    {
+      "id": "consumer:jobs#src/workers.ts:startRefunds.Worker@23@src/workers.ts:21",
+      "type": "consumer",
+      "label": "startRefunds.Worker@23",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 21,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:jobs:event:refunds"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "lib/catalog-stack.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "deployedBy": "cdk",
+        "api": "shop-catalog",
+        "function": "shop-list-products",
+        "declaredAs": "CatalogStack/Catalog/Default/products/GET",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-catalog",
+            "chosenDefault": "beta"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:shop-list-products",
+      "type": "entry",
+      "label": "shop-list-products",
+      "repo": "catalog",
+      "file": "lib/catalog-stack.ts",
+      "line": 19,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-list-products",
+        "deployedBy": "cdk",
+        "name": "shop-list-products",
+        "runtime": "nodejs20.x",
+        "declaredAs": "CatalogStack/ListProducts",
+        "constructPath": "CatalogStack/ListProducts",
+        "handler": "src/list-products.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:event:receipts",
+      "type": "entry",
+      "label": "event receipts",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "pattern": "receipts",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:jobs:event:refunds",
+      "type": "entry",
+      "label": "event refunds",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "refunds",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/orders/:param/notify",
+      "type": "entry",
+      "label": "POST /orders/:param/notify",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/notify",
+        "rawPath": "/orders/:orderId/notify",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/orders/:param/pushed",
+      "type": "entry",
+      "label": "POST /orders/:param/pushed",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/pushed",
+        "rawPath": "/orders/:orderId/pushed",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/orders/:param/remind",
+      "type": "entry",
+      "label": "POST /orders/:param/remind",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/remind",
+        "rawPath": "/orders/:orderId/remind",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:payments:http:GET:/receipts",
+      "type": "entry",
+      "label": "GET /receipts",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 85,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/receipts",
+        "rawPath": "/receipts",
+        "deployedBy": "terraform",
+        "api": "shop-receipts",
+        "function": "shop-pay",
+        "declaredAs": "aws_apigatewayv2_route.receipt",
+        "stages": [
+          "default"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-receipts",
+            "chosenDefault": "default"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:payments:http:POST:/payments",
+      "type": "entry",
+      "label": "POST /payments",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 60,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/payments",
+        "rawPath": "/payments",
+        "deployedBy": "terraform",
+        "api": "shop-payments",
+        "function": "shop-pay",
+        "declaredAs": "aws_apigatewayv2_route.pay",
+        "stages": [
+          "live",
+          "sandbox"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-payments",
+            "chosenDefault": "live",
+            "chosenIn": "the workspace production"
+          },
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-payments",
+            "chosenDefault": "sandbox"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:payments:invoke:shop-pay",
+      "type": "entry",
+      "label": "shop-pay",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 34,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-pay",
+        "deployedBy": "terraform",
+        "name": "shop-pay",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.pay",
+        "handler": "pay.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "jobs#src/notifier.ts:Notifier",
+      "type": "provider",
+      "label": "Notifier",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 17,
+      "kind": "injectable"
+    },
+    {
+      "id": "jobs#src/notifier.ts:Notifier.check",
+      "type": "method",
+      "label": "Notifier.check",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/notifier.ts:Notifier.enqueue",
+      "type": "method",
+      "label": "Notifier.enqueue",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/notifier.ts:Notifier.notify",
+      "type": "method",
+      "label": "Notifier.notify",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/notifier.ts:Notifier.pushed",
+      "type": "method",
+      "label": "Notifier.pushed",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/notifier.ts:Notifier.remind",
+      "type": "method",
+      "label": "Notifier.remind",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/server.ts:POST /orders/:orderId/notify@8",
+      "type": "function",
+      "label": "POST /orders/:orderId/notify@8",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "kind",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "jobs#src/server.ts:POST /orders/:orderId/pushed@13",
+      "type": "function",
+      "label": "POST /orders/:orderId/pushed@13",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "jobs#src/server.ts:POST /orders/:orderId/remind@18",
+      "type": "function",
+      "label": "POST /orders/:orderId/remind@18",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10",
+      "type": "function",
+      "label": "ReceiptWorker.constructor.Worker@10",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "line": 11
+          },
+          {
+            "field": "data.email",
+            "line": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:refundOrder",
+      "type": "function",
+      "label": "refundOrder",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "refund",
+            "at": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:renderReceipt",
+      "type": "function",
+      "label": "renderReceipt",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:sendReceipt",
+      "type": "function",
+      "label": "sendReceipt",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "receipt to",
+            "at": 36
+          }
+        ]
+      }
+    },
+    {
+      "id": "jobs#src/workers.ts:startRefunds.Worker@23",
+      "type": "function",
+      "label": "startRefunds.Worker@23",
+      "repo": "jobs",
+      "file": "src/workers.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "data.orderId",
+            "in": "jobs#src/workers.ts:startRefunds",
+            "line": 24
+          },
+          {
+            "field": "data.orderId",
+            "in": "jobs#src/workers.ts:startRefunds",
+            "line": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "payments#src/pay.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "payments",
+      "file": "src/pay.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "producer:jobs#src/notifier.ts:33:13",
+      "type": "producer",
+      "label": "job notifications",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 33,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "notify-later",
+        "through": [
+          "Notifier.enqueue"
+        ]
+      }
+    },
+    {
+      "id": "producer:jobs#src/notifier.ts:41:13",
+      "type": "producer",
+      "label": "job notifications",
+      "repo": "jobs",
+      "file": "src/notifier.ts",
+      "line": 41,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": null,
+        "through": [
+          "Notifier.enqueue"
+        ]
+      }
+    },
+    {
+      "id": "producer:jobs#src/server.ts:19:9",
+      "type": "producer",
+      "label": "job notifications",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 19,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "remind-payment",
+        "through": [
+          "Notifier.enqueue",
+          "Notifier.remind"
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:payments",
+      "type": "repo",
+      "label": "payments",
+      "repo": "payments",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 3,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:12:24",
+      "type": "ui_api_call",
+      "label": "GET /default/receipts",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://k1l2m3n4o5.execute-api.eu-west-1.amazonaws.com/default/receipts",
+        "path": "/default/receipts",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "k1l2m3n4o5.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "payments"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:2:24",
+      "type": "ui_api_call",
+      "label": "GET /beta/products",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://p6q7r8s9t0.execute-api.eu-west-1.amazonaws.com/beta/products",
+        "path": "/beta/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "p6q7r8s9t0.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/shop.js:7:24",
+      "type": "ui_api_call",
+      "label": "POST /live/payments",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://f6g7h8i9j0.execute-api.eu-west-1.amazonaws.com/live/payments",
+        "path": "/live/payments",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{orderId:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId"
+        ],
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "f6g7h8i9j0.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "payments"
+      }
+    },
+    {
+      "id": "web#js/shop.js:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/shop.js:listReceipts",
+      "type": "function",
+      "label": "listReceipts",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/shop.js:pay",
+      "type": "function",
+      "label": "pay",
+      "repo": "web",
+      "file": "js/shop.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:receipts",
+      "to": "consumer:jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10@src/workers.ts:8",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 8
+    },
+    {
+      "from": "channel:refunds",
+      "to": "consumer:jobs#src/workers.ts:startRefunds.Worker@23@src/workers.ts:21",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10@src/workers.ts:8",
+      "to": "jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 8
+    },
+    {
+      "from": "consumer:jobs#src/workers.ts:startRefunds.Worker@23@src/workers.ts:21",
+      "to": "jobs#src/workers.ts:startRefunds.Worker@23",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/list-products.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{products:undefined[]}",
+      "file": "src/list-products.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:invoke:shop-list-products",
+      "to": "catalog#src/list-products.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-products.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:jobs:event:receipts",
+      "to": "jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/workers.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:jobs:event:refunds",
+      "to": "jobs#src/workers.ts:startRefunds.Worker@23",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/workers.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:jobs:http:POST:/orders/:param/notify",
+      "to": "jobs#src/server.ts:POST /orders/:orderId/notify@8",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/orders/:param/pushed",
+      "to": "jobs#src/server.ts:POST /orders/:orderId/pushed@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/orders/:param/remind",
+      "to": "jobs#src/server.ts:POST /orders/:orderId/remind@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:payments:http:GET:/receipts",
+      "to": "payments#src/pay.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{received:unknown}",
+      "file": "src/pay.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:payments:http:POST:/payments",
+      "to": "payments#src/pay.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{received:unknown}",
+      "file": "src/pay.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:payments:invoke:shop-pay",
+      "to": "payments#src/pay.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pay.ts",
+      "line": 4
+    },
+    {
+      "from": "jobs#src/notifier.ts:Notifier.notify",
+      "to": "jobs#src/notifier.ts:Notifier.check",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/notifier.ts",
+      "line": 30
+    },
+    {
+      "from": "jobs#src/notifier.ts:Notifier.notify",
+      "to": "jobs#src/notifier.ts:Notifier.enqueue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/notifier.ts",
+      "line": 33
+    },
+    {
+      "from": "jobs#src/notifier.ts:Notifier.notify",
+      "to": "producer:jobs#src/notifier.ts:33:13",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/notifier.ts",
+      "line": 33
+    },
+    {
+      "from": "jobs#src/notifier.ts:Notifier.pushed",
+      "to": "jobs#src/notifier.ts:Notifier.enqueue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/notifier.ts",
+      "line": 41
+    },
+    {
+      "from": "jobs#src/notifier.ts:Notifier.pushed",
+      "to": "producer:jobs#src/notifier.ts:41:13",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/notifier.ts",
+      "line": 41
+    },
+    {
+      "from": "jobs#src/notifier.ts:Notifier.remind",
+      "to": "jobs#src/notifier.ts:Notifier.enqueue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/notifier.ts",
+      "line": 50
+    },
+    {
+      "from": "jobs#src/server.ts:POST /orders/:orderId/notify@8",
+      "to": "jobs#src/notifier.ts:Notifier.notify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/server.ts",
+      "line": 9
+    },
+    {
+      "from": "jobs#src/server.ts:POST /orders/:orderId/pushed@13",
+      "to": "jobs#src/notifier.ts:Notifier.pushed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/server.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/server.ts:POST /orders/:orderId/remind@18",
+      "to": "jobs#src/notifier.ts:Notifier.remind",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/server.ts",
+      "line": 19
+    },
+    {
+      "from": "jobs#src/server.ts:POST /orders/:orderId/remind@18",
+      "to": "producer:jobs#src/server.ts:19:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 19
+    },
+    {
+      "from": "jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10",
+      "to": "jobs#src/workers.ts:renderReceipt",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/workers.ts",
+      "line": 11
+    },
+    {
+      "from": "jobs#src/workers.ts:ReceiptWorker.constructor.Worker@10",
+      "to": "jobs#src/workers.ts:sendReceipt",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/workers.ts",
+      "line": 12
+    },
+    {
+      "from": "jobs#src/workers.ts:startRefunds.Worker@23",
+      "to": "jobs#src/workers.ts:refundOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/workers.ts",
+      "line": 25
+    },
+    {
+      "from": "producer:jobs#src/notifier.ts:33:13",
+      "to": "channel:notifications",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "unknown"
+      ],
+      "file": "src/notifier.ts",
+      "line": 33
+    },
+    {
+      "from": "producer:jobs#src/notifier.ts:41:13",
+      "to": "channel:notifications",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "unknown"
+      ],
+      "file": "src/notifier.ts",
+      "line": 41
+    },
+    {
+      "from": "producer:jobs#src/server.ts:19:9",
+      "to": "channel:notifications",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{orderId:any}"
+      ],
+      "file": "src/server.ts",
+      "line": 19
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:12:24",
+      "to": "entry:payments:http:GET:/receipts",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 12,
+      "meta": {
+        "via": "served-at",
+        "targetService": "payments",
+        "servedApi": "shop-receipts"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:2:24",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 2,
+      "meta": {
+        "via": "served-at",
+        "targetService": "catalog",
+        "servedApi": "shop-catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/shop.js:7:24",
+      "to": "entry:payments:http:POST:/payments",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/shop.js",
+      "line": 7,
+      "params": [
+        "{orderId:any}"
+      ],
+      "meta": {
+        "via": "served-at",
+        "targetService": "payments",
+        "servedApi": "shop-payments"
+      }
+    },
+    {
+      "from": "web#js/shop.js:listProducts",
+      "to": "ui_api_call:web#js/shop.js:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 2
+    },
+    {
+      "from": "web#js/shop.js:listReceipts",
+      "to": "ui_api_call:web#js/shop.js:12:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 12
+    },
+    {
+      "from": "web#js/shop.js:pay",
+      "to": "ui_api_call:web#js/shop.js:7:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/shop.js",
+      "line": 7
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/list-products.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/list-products.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/notifier.ts",
+      "line": 31,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 9,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "Notifier.notify -> axios.post",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 6,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 10,
+                "symbol": "POST /orders/:orderId/notify@8 -> res.status(202).end"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 10,
+                "symbol": "POST /orders/:orderId/notify@8 -> res.status"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 15,
+                "symbol": "POST /orders/:orderId/pushed@13 -> res.status(202).end"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "axios",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/notifier.ts",
+                "line": 31,
+                "symbol": "Notifier.notify -> axios.post"
+              },
+              {
+                "file": "src/notifier.ts",
+                "line": 39,
+                "symbol": "Notifier.pushed -> axios.post"
+              },
+              {
+                "file": "src/notifier.ts",
+                "line": 48,
+                "symbol": "Notifier.remind -> axios.post"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/notifier.ts",
+      "line": 33,
+      "reason": "channel-dynamic",
+      "message": "Notifier.notify -> 'notify-later'",
+      "hint": "The job's name: error.jobName may be read off an error of axios, which axios.post() throws, and what a package's error carries is not read. Annotate Notifier.notify with the job it adds.",
+      "symbol": "producer:jobs#src/notifier.ts:33:13",
+      "service": "jobs"
+    },
+    {
+      "file": "src/notifier.ts",
+      "line": 41,
+      "reason": "channel-dynamic",
+      "message": "Notifier.pushed -> error",
+      "hint": "The job's name: error.response.data.retryJob may be read off an error of axios, which axios.post() throws, and what a package's error carries is not read. Annotate Notifier.pushed with the job it adds.",
+      "symbol": "producer:jobs#src/notifier.ts:41:13",
+      "service": "jobs"
+    },
+    {
+      "file": "src/workers.ts",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ orderId: string; email: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/workers.ts",
+      "line": 23,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ orderId: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      },
+      "service": "jobs"
+    },
+    {
+      "file": "src/pay.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEventV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "payments"
+    },
+    {
+      "file": "src/pay.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResultV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "payments"
+    },
+    {
+      "file": "src/pay.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "untyped-value"
+      },
+      "service": "payments"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://p6q7r8s9t0.execute-api.eu-west-1.amazonaws.com/beta/products names its API by an id no file holds; it is taken as shop-catalog of catalog, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (beta where none is given), so the stage beta is taken as one of its, and the request as one for /products on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://f6g7h8i9j0.execute-api.eu-west-1.amazonaws.com/live/payments names its API by an id no file holds; it is taken as shop-payments of payments, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (live in the workspace production), so the stage live is taken as one of its, and the request as one for /payments on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:7:24"
+    },
+    {
+      "service": "web",
+      "file": "js/shop.js",
+      "line": 12,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k1l2m3n4o5.execute-api.eu-west-1.amazonaws.com/default/receipts names its API by an id no file holds; it is taken as shop-receipts of payments, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (default where none is given), so the stage default is taken as one of its, and the request as one for /receipts on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/shop.js:12:24"
+    }
+  ]
+}

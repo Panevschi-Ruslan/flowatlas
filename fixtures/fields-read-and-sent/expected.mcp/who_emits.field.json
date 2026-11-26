@@ -1,0 +1,32 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "type": "channel",
+    "label": "order_updates",
+    "loc": "src/orders/orders.service.ts:11",
+    "service": "shop-api"
+  },
+  "producers": [
+    {
+      "id": "producer:shop-api#src/orders/orders.service.ts:11:11",
+      "type": "producer",
+      "label": "event order_updates",
+      "loc": "src/orders/orders.service.ts:11",
+      "service": "shop-api",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /api/orders/:param/ready",
+      "throughDead": true
+    }
+  ],
+  "total": 1,
+  "type": "ORDER_READY",
+  "field": "label",
+  "complete": true,
+  "next": [
+    "check_contract({channel: \"channel:order_updates\", type: \"ORDER_READY\", field: \"label\"})",
+    "who_consumes({channel: \"channel:order_updates\", type: \"ORDER_READY\", field: \"label\"})",
+    "impact({symbol: \"producer:shop-api#src/orders/orders.service.ts:11:11\"})",
+    "get_source({symbol: \"producer:shop-api#src/orders/orders.service.ts:11:11\"})"
+  ]
+}

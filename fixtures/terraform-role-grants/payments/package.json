@@ -1,0 +1,10 @@
+{
+  "name": "payments",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A shop's payments as Lambda functions deployed with Terraform, each sending where its code decides when it runs and allowed only where its role says.",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "@aws-sdk/client-sqs": "^3.700.0"
+  }
+}

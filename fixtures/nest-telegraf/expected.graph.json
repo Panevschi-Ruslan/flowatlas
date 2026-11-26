@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-telegraf",
-  "generatedAt": "2026-10-17T01:51:44.511Z",
+  "generatedAt": "2026-11-23T14:44:41.175Z",
   "nodes": [
     {
       "id": "entry:nest-telegraf:bot_callback:/^order_(\\d+)$/",
@@ -429,7 +429,8 @@
       "file": "src/admin.guard.ts",
       "line": 4,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {

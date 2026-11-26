@@ -1,0 +1,67 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "What the orders handlers keep and send to: the table, the queues, the topic and the bus, exported for the functions' stack.",
+  "Parameters": {
+    "Stage": { "Type": "String", "AllowedValues": ["dev", "prod"] }
+  },
+  "Resources": {
+    "OrdersTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": { "Fn::Sub": "orders-${Stage}-orders" },
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [{ "AttributeName": "orderId", "AttributeType": "S" }],
+        "KeySchema": [{ "AttributeName": "orderId", "KeyType": "HASH" }],
+        "StreamSpecification": { "StreamViewType": "NEW_AND_OLD_IMAGES" }
+      }
+    },
+    "PlacedDeadLetterQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": { "QueueName": { "Fn::Sub": "orders-${Stage}-placed-dlq" } }
+    },
+    "PlacedQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": { "Fn::Sub": "orders-${Stage}-placed" },
+        "RedrivePolicy": {
+          "deadLetterTargetArn": { "Fn::GetAtt": ["PlacedDeadLetterQueue", "Arn"] },
+          "maxReceiveCount": 3
+        }
+      }
+    },
+    "ShippedTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": { "TopicName": { "Fn::Sub": "orders-${Stage}-shipped" } }
+    },
+    "OrdersBus": {
+      "Type": "AWS::Events::EventBus",
+      "Properties": { "Name": { "Fn::Sub": "orders-${Stage}" } }
+    }
+  },
+  "Outputs": {
+    "OrdersTableName": {
+      "Value": { "Ref": "OrdersTable" },
+      "Export": { "Name": { "Fn::Sub": "orders-${Stage}-table-name" } }
+    },
+    "OrdersTableStream": {
+      "Value": { "Fn::GetAtt": ["OrdersTable", "StreamArn"] },
+      "Export": { "Name": { "Fn::Sub": "orders-${Stage}-table-stream" } }
+    },
+    "PlacedQueueUrl": {
+      "Value": { "Ref": "PlacedQueue" },
+      "Export": { "Name": { "Fn::Sub": "orders-${Stage}-placed-queue-url" } }
+    },
+    "PlacedQueueArn": {
+      "Value": { "Fn::GetAtt": ["PlacedQueue", "Arn"] },
+      "Export": { "Name": { "Fn::Sub": "orders-${Stage}-placed-queue-arn" } }
+    },
+    "ShippedTopicArn": {
+      "Value": { "Ref": "ShippedTopic" },
+      "Export": { "Name": { "Fn::Sub": "orders-${Stage}-shipped-topic" } }
+    },
+    "OrdersBusName": {
+      "Value": { "Ref": "OrdersBus" },
+      "Export": { "Name": { "Fn::Sub": "orders-${Stage}-bus-name" } }
+    }
+  }
+}

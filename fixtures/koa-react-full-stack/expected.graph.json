@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "koa-react-full-stack",
-  "generatedAt": "2026-10-17T04:49:27.798Z",
+  "generatedAt": "2026-11-23T14:37:05.163Z",
   "nodes": [
     {
       "id": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",
@@ -78,22 +78,6 @@
       }
     },
     {
-      "id": "http_out:koa-react-full-stack#src/web/api/client.ts:10:26",
-      "type": "http_out",
-      "label": "? ?",
-      "repo": "koa-react-full-stack",
-      "file": "src/web/api/client.ts",
-      "line": 10,
-      "meta": {
-        "method": null,
-        "url": null,
-        "path": null,
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null
-      }
-    },
-    {
       "id": "koa-react-full-stack#src/server/orders.repository.ts:orders.insert",
       "type": "function",
       "label": "orders.insert",
@@ -142,7 +126,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -161,7 +146,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total",
+            "line": 13
+          }
+        ]
       }
     },
     {
@@ -496,14 +487,6 @@
       "returns": "unknown"
     },
     {
-      "from": "koa-react-full-stack#src/web/api/client.ts:ApiClient.send",
-      "to": "http_out:koa-react-full-stack#src/web/api/client.ts:10:26",
-      "type": "calls",
-      "confidence": "heuristic",
-      "file": "src/web/api/client.ts",
-      "line": 10
-    },
-    {
       "from": "ui_action:koa-react-full-stack#src/web/OrdersScreen.tsx:16:15",
       "to": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
       "type": "handles",
@@ -539,13 +522,6 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any"
-    },
-    {
-      "file": "src/web/api/client.ts",
-      "line": 10,
-      "reason": "dynamic-http-url",
-      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
-      "symbol": "fetch(path, { method, body: JSON.stringify(body) })"
     }
   ]
 }

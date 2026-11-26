@@ -1,0 +1,8 @@
+{
+  "services": [
+    { "name": "web", "repo": "./web", "type": "browser" },
+    { "name": "shop", "repo": "./shop", "type": "express" },
+    { "name": "site", "repo": "./site", "type": "react" }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ledger
+spec:
+  selector:
+    matchLabels:
+      app: ledger
+  template:
+    metadata:
+      labels:
+        app: ledger
+    spec:
+      containers:
+        - name: ledger
+          image: registry.example.test/shop/ledger:1.0
+          envFrom:
+            - configMapRef:
+                name: ledger-config
+            - secretRef:
+                name: ledger-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ledger
+spec:
+  selector:
+    app: ledger
+  ports:
+    - port: 80
+      targetPort: 7000

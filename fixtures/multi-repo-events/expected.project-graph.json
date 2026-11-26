@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:50:01.379Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:24:30.550Z",
   "services": [
     {
       "name": "platform-events",
@@ -377,6 +377,15 @@
         "api": "library-loans",
         "function": "library-create-loan",
         "declaredAs": "aws_apigatewayv2_route.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -396,6 +405,15 @@
         "api": "library-loans",
         "function": "library-return-loan",
         "declaredAs": "aws_apigatewayv2_route.return_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -525,7 +543,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -544,7 +563,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1244,6 +1264,19 @@
     }
   },
   "unresolved": [
+    {
+      "file": "infra/main.tf",
+      "line": 57,
+      "reason": "queue-redrive-missing",
+      "message": "library-loan-digest is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.loan_digest a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-loan-digest",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-loan-digest"
+      },
+      "service": "notifications"
+    },
     {
       "service": "routing",
       "file": "rules.tf",

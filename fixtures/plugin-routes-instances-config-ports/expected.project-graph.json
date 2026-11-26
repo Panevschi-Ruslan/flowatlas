@@ -1,0 +1,1497 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:06.192Z",
+  "services": [
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "gatsby",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "workers",
+      "repo": "./workers",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "fastify",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/main.ts:GET /health@11",
+      "type": "function",
+      "label": "GET /health@11",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "cms#src/api/order/controllers/order.ts:order.mine@2",
+      "type": "function",
+      "label": "order.mine@2",
+      "repo": "cms",
+      "file": "src/api/order/controllers/order.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "cms#src/api/order/middlewares/audit.ts:api::order.audit",
+      "type": "middleware",
+      "label": "api::order.audit",
+      "repo": "cms",
+      "file": "src/api/order/middlewares/audit.ts",
+      "line": 2,
+      "kind": "file"
+    },
+    {
+      "id": "cms#src/api/order/middlewares/audit.ts:api::order.audit@2",
+      "type": "function",
+      "label": "api::order.audit@2",
+      "repo": "cms",
+      "file": "src/api/order/middlewares/audit.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "config",
+              "type": "any"
+            },
+            {
+              "name": "{ strapi }",
+              "type": "object"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
+      "id": "cms#src/plugins/reviews/server/controllers/review.ts:review.settings@5",
+      "type": "function",
+      "label": "review.settings@5",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/controllers/review.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "cms#src/plugins/reviews/server/controllers/review.ts:review.summary@2",
+      "type": "function",
+      "label": "review.summary@2",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/controllers/review.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "cms#src/plugins/reviews/server/policies/can-edit.ts:can-edit",
+      "type": "guard",
+      "label": "can-edit",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/policies/can-edit.ts",
+      "line": 2,
+      "kind": "file"
+    },
+    {
+      "id": "cms#src/plugins/reviews/server/policies/can-edit.ts:can-edit@2",
+      "type": "function",
+      "label": "can-edit@2",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/policies/can-edit.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "policyContext",
+              "type": "any"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "cms#src/policies/is-signed-in.ts:global::is-signed-in",
+      "type": "guard",
+      "label": "global::is-signed-in",
+      "repo": "cms",
+      "file": "src/policies/is-signed-in.ts",
+      "line": 2,
+      "kind": "file"
+    },
+    {
+      "id": "cms#src/policies/is-signed-in.ts:global::is-signed-in@2",
+      "type": "function",
+      "label": "global::is-signed-in@2",
+      "repo": "cms",
+      "file": "src/policies/is-signed-in.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "policyContext",
+              "type": "any"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/orders/mine",
+      "type": "entry",
+      "label": "GET /api/orders/mine",
+      "repo": "cms",
+      "file": "src/api/order/routes/order.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/mine",
+        "adapter": "strapi-server",
+        "registration": "strapi/routes",
+        "handlerVia": "inline",
+        "handlerName": "order.mine",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:GET:/api/reviews/summary",
+      "type": "entry",
+      "label": "GET /api/reviews/summary",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/routes/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reviews/summary",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "reviews",
+        "handlerVia": "inline",
+        "handlerName": "review.summary",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:cms:http:PUT:/reviews/settings",
+      "type": "entry",
+      "label": "PUT /reviews/settings",
+      "repo": "cms",
+      "file": "src/plugins/reviews/server/routes/index.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/reviews/settings",
+        "adapter": "strapi-server",
+        "registration": "strapi/plugin-routes",
+        "plugin": "reviews",
+        "handlerVia": "inline",
+        "handlerName": "review.settings",
+        "middlewareRead": false
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/api/status",
+      "type": "entry",
+      "label": "GET /api/status",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/status",
+        "rawPath": "/api/status",
+        "adapter": "fastify-routes",
+        "registration": "fastify.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:site:http:ALL:/api/hello",
+      "type": "entry",
+      "label": "ALL /api/hello",
+      "repo": "site",
+      "file": "src/api/hello.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/hello",
+        "rawPath": "/api/hello",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:http:ALL:/blog/api/hello",
+      "type": "entry",
+      "label": "ALL /blog/api/hello",
+      "repo": "site",
+      "file": "src/api/hello.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/blog/api/hello",
+        "rawPath": "/blog/api/hello",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "pathPrefix": "/blog",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:http:POST:/api/newsletter/subscribe",
+      "type": "entry",
+      "label": "POST /api/newsletter/subscribe",
+      "repo": "site",
+      "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/newsletter/subscribe",
+        "rawPath": "/api/newsletter/subscribe",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "plugin": "newsletter",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:http:POST:/blog/api/newsletter/subscribe",
+      "type": "entry",
+      "label": "POST /blog/api/newsletter/subscribe",
+      "repo": "site",
+      "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/blog/api/newsletter/subscribe",
+        "rawPath": "/blog/api/newsletter/subscribe",
+        "adapter": "gatsby-functions",
+        "registration": "gatsby/function",
+        "plugin": "newsletter",
+        "pathPrefix": "/blog",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:workers:http:GET:/api/work",
+      "type": "entry",
+      "label": "GET /api/work",
+      "repo": "workers",
+      "file": "src/server.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/work",
+        "rawPath": "/api/work",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "gateway#src/app.ts:GET /api/status@5",
+      "type": "function",
+      "label": "GET /api/status@5",
+      "repo": "gateway",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:12:32",
+      "type": "http_out",
+      "label": "POST /api/newsletter/subscribe",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "method": "POST",
+        "url": "http://localhost:8200/api/newsletter/subscribe",
+        "path": "/api/newsletter/subscribe",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8200",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:15:28",
+      "type": "http_out",
+      "label": "GET /blog/api/hello",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 15,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:9200/blog/api/hello",
+        "path": "/blog/api/hello",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:9200",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:18:29",
+      "type": "http_out",
+      "label": "GET /api/status",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 18,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4420/api/status",
+        "path": "/api/status",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4420",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:21:29",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4430/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4430",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:24:27",
+      "type": "http_out",
+      "label": "GET /api/work",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 24,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4440/api/work",
+        "path": "/api/work",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4440",
+        "targetService": "workers"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:2:30",
+      "type": "http_out",
+      "label": "GET /api/reviews/summary",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4411/api/reviews/summary",
+        "path": "/api/reviews/summary",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4411",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:6:3",
+      "type": "http_out",
+      "label": "PUT /reviews/settings",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 6,
+      "meta": {
+        "method": "PUT",
+        "url": "http://localhost:4411/reviews/settings",
+        "path": "/reviews/settings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "unknown",
+        "bodyFrom": "value",
+        "host": "localhost:4411",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "http_out:poller#src/poll.ts:9:29",
+      "type": "http_out",
+      "label": "GET /api/orders/mine",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4411/api/orders/mine",
+        "path": "/api/orders/mine",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4411",
+        "targetService": "cms"
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:health",
+      "type": "function",
+      "label": "health",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:hello",
+      "type": "function",
+      "label": "hello",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:orders",
+      "type": "function",
+      "label": "orders",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:saveSettings",
+      "type": "function",
+      "label": "saveSettings",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "unknown"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:status",
+      "type": "function",
+      "label": "status",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:subscribe",
+      "type": "function",
+      "label": "subscribe",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:summary",
+      "type": "function",
+      "label": "summary",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "poller#src/poll.ts:work",
+      "type": "function",
+      "label": "work",
+      "repo": "poller",
+      "file": "src/poll.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4430,
+            "file": "src/main.ts",
+            "line": 14,
+            "handed": "src/main.ts:8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:cms",
+      "type": "repo",
+      "label": "cms",
+      "repo": "cms",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 1,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "strapi-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4411,
+            "file": "config/env/staging/server.ts",
+            "line": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4420,
+            "file": "fastify.json",
+            "line": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:poller",
+      "type": "repo",
+      "label": "poller",
+      "repo": "poller",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 3,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "gatsby-functions"
+          ]
+        },
+        "listen": [
+          {
+            "port": 8200,
+            "file": "package.json",
+            "line": 5,
+            "devServer": true
+          },
+          {
+            "port": 9200,
+            "file": "package.json",
+            "line": 6,
+            "devServer": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:workers",
+      "type": "repo",
+      "label": "workers",
+      "repo": "workers",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4440,
+            "file": "src/server.ts",
+            "line": 16,
+            "handed": "src/main.ts:12"
+          }
+        ]
+      }
+    },
+    {
+      "id": "site#plugins/newsletter-local/src/api/newsletter/subscribe.ts:subscribe",
+      "type": "function",
+      "label": "subscribe",
+      "repo": "site",
+      "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "site#src/api/hello.ts:hello",
+      "type": "function",
+      "label": "hello",
+      "repo": "site",
+      "file": "src/api/hello.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "workers#src/main.ts:Supervisor",
+      "type": "provider",
+      "label": "Supervisor",
+      "repo": "workers",
+      "file": "src/main.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "workers#src/main.ts:Supervisor.run",
+      "type": "method",
+      "label": "Supervisor.run",
+      "repo": "workers",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "workers#src/server.ts:GET /api/work@4",
+      "type": "function",
+      "label": "GET /api/work@4",
+      "repo": "workers",
+      "file": "src/server.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "workers#src/server.ts:Server",
+      "type": "provider",
+      "label": "Server",
+      "repo": "workers",
+      "file": "src/server.ts",
+      "line": 8,
+      "kind": "injectable"
+    },
+    {
+      "id": "workers#src/server.ts:Server.start",
+      "type": "method",
+      "label": "Server.start",
+      "repo": "workers",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "cms#src/api/order/middlewares/audit.ts:api::order.audit",
+      "to": "cms#src/api/order/middlewares/audit.ts:api::order.audit@2",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any",
+        "object"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "src/api/order/middlewares/audit.ts",
+      "line": 2,
+      "meta": {
+        "wrapper": true
+      }
+    },
+    {
+      "from": "cms#src/plugins/reviews/server/policies/can-edit.ts:can-edit",
+      "to": "cms#src/plugins/reviews/server/policies/can-edit.ts:can-edit@2",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "boolean",
+      "file": "src/plugins/reviews/server/policies/can-edit.ts",
+      "line": 2,
+      "meta": {
+        "wrapper": true
+      }
+    },
+    {
+      "from": "cms#src/policies/is-signed-in.ts:global::is-signed-in",
+      "to": "cms#src/policies/is-signed-in.ts:global::is-signed-in@2",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "boolean",
+      "file": "src/policies/is-signed-in.ts",
+      "line": 2,
+      "meta": {
+        "wrapper": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/health",
+      "to": "api#src/main.ts:GET /health@11",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/main.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/orders/mine",
+      "to": "cms#src/api/order/controllers/order.ts:order.mine@2",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/api/order/controllers/order.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/orders/mine",
+      "to": "cms#src/api/order/middlewares/audit.ts:api::order.audit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/order/middlewares/audit.ts",
+      "line": 2,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "strapi/config.middlewares"
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/orders/mine",
+      "to": "cms#src/policies/is-signed-in.ts:global::is-signed-in",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/policies/is-signed-in.ts",
+      "line": 2,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "strapi/config.policies"
+      }
+    },
+    {
+      "from": "entry:cms:http:GET:/api/reviews/summary",
+      "to": "cms#src/plugins/reviews/server/controllers/review.ts:review.summary@2",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{count:number}",
+      "file": "src/plugins/reviews/server/controllers/review.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:PUT:/reviews/settings",
+      "to": "cms#src/plugins/reviews/server/controllers/review.ts:review.settings@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{saved:boolean}",
+      "file": "src/plugins/reviews/server/controllers/review.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:cms:http:PUT:/reviews/settings",
+      "to": "cms#src/plugins/reviews/server/policies/can-edit.ts:can-edit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/plugins/reviews/server/policies/can-edit.ts",
+      "line": 2,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "strapi/config.policies"
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/api/status",
+      "to": "gateway#src/app.ts:GET /api/status@5",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:true}",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:ALL:/api/hello",
+      "to": "site#src/api/hello.ts:hello",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{hello:string}",
+      "file": "src/api/hello.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:ALL:/blog/api/hello",
+      "to": "site#src/api/hello.ts:hello",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{hello:string}",
+      "file": "src/api/hello.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:POST:/api/newsletter/subscribe",
+      "to": "site#plugins/newsletter-local/src/api/newsletter/subscribe.ts:subscribe",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{subscribed:boolean}",
+      "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:POST:/blog/api/newsletter/subscribe",
+      "to": "site#plugins/newsletter-local/src/api/newsletter/subscribe.ts:subscribe",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{subscribed:boolean}",
+      "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:workers:http:GET:/api/work",
+      "to": "workers#src/server.ts:GET /api/work@4",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:12:32",
+      "to": "entry:site:http:POST:/api/newsletter/subscribe",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "site",
+        "listensAt": "package.json:5"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:15:28",
+      "to": "entry:site:http:ALL:/blog/api/hello",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 15,
+      "meta": {
+        "via": "host",
+        "targetService": "site",
+        "listensAt": "package.json:6"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:18:29",
+      "to": "entry:gateway:http:GET:/api/status",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/poll.ts",
+      "line": 18,
+      "meta": {
+        "via": "host",
+        "targetService": "gateway",
+        "listensAt": "fastify.json:3"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:21:29",
+      "to": "entry:api:http:GET:/health",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 21,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/main.ts:14 (handed at src/main.ts:8)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:24:27",
+      "to": "entry:workers:http:GET:/api/work",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 24,
+      "meta": {
+        "via": "host",
+        "targetService": "workers",
+        "listensAt": "src/server.ts:16 (handed at src/main.ts:12)"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:2:30",
+      "to": "entry:cms:http:GET:/api/reviews/summary",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 2,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/env/staging/server.ts:2"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:6:3",
+      "to": "entry:cms:http:PUT:/reviews/settings",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 6,
+      "params": [
+        "unknown"
+      ],
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/env/staging/server.ts:2"
+      }
+    },
+    {
+      "from": "http_out:poller#src/poll.ts:9:29",
+      "to": "entry:cms:http:GET:/api/orders/mine",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "cms",
+        "listensAt": "config/env/staging/server.ts:2"
+      }
+    },
+    {
+      "from": "poller#src/poll.ts:health",
+      "to": "http_out:poller#src/poll.ts:21:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 21
+    },
+    {
+      "from": "poller#src/poll.ts:hello",
+      "to": "http_out:poller#src/poll.ts:15:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 15
+    },
+    {
+      "from": "poller#src/poll.ts:orders",
+      "to": "http_out:poller#src/poll.ts:9:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 9
+    },
+    {
+      "from": "poller#src/poll.ts:saveSettings",
+      "to": "http_out:poller#src/poll.ts:6:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 6
+    },
+    {
+      "from": "poller#src/poll.ts:status",
+      "to": "http_out:poller#src/poll.ts:18:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 18
+    },
+    {
+      "from": "poller#src/poll.ts:subscribe",
+      "to": "http_out:poller#src/poll.ts:12:32",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 12
+    },
+    {
+      "from": "poller#src/poll.ts:summary",
+      "to": "http_out:poller#src/poll.ts:2:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 2
+    },
+    {
+      "from": "poller#src/poll.ts:work",
+      "to": "http_out:poller#src/poll.ts:24:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/poll.ts",
+      "line": 24
+    },
+    {
+      "from": "workers#src/main.ts:Supervisor.run",
+      "to": "workers#src/server.ts:Server.start",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/main.ts",
+      "line": 8
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 12,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /health@11 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "api"
+    },
+    {
+      "file": "config/env/production/server.ts",
+      "line": 1,
+      "reason": "framework-environment-differs",
+      "level": "info",
+      "message": "Strapi's server is read listening on 4411, NODE_ENV=staging's, which the start script sets; for production, config/env/production/server.ts moves it to 4410. Which one runs is NODE_ENV's, development where nothing sets it",
+      "hint": "Nothing to do. The graph is the production build's; give every environment the same port to have one answer.",
+      "symbol": "production",
+      "adapter": "strapi-server",
+      "meta": {
+        "cause": "framework-environment-differs",
+        "environments": [
+          {
+            "environment": "production",
+            "port": "4410",
+            "file": "config/env/production/server.ts"
+          }
+        ]
+      },
+      "service": "cms"
+    },
+    {
+      "file": "src/extensions/accounts/strapi-server.ts",
+      "line": 1,
+      "reason": "route-mount-unread",
+      "message": "src/extensions/accounts/strapi-server.ts adds GET /accounts/session to the routes of the plugin accounts, which is not installed in the repository nor one of its own, so its router and the prefix it serves them under are not read, nor are they as ways in.",
+      "hint": "Install the dependencies where the map is built, or declare the route in an API of the application (src/api/<api>/routes).",
+      "symbol": "accounts",
+      "adapter": "strapi-server",
+      "service": "cms"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "poller"
+    },
+    {
+      "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+      "line": 2,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "subscribe -> res.status(405).end",
+      "meta": {
+        "causes": [
+          {
+            "cause": "untyped-parameter",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+                "line": 2,
+                "symbol": "subscribe -> res.status(405).end"
+              },
+              {
+                "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+                "line": 2,
+                "symbol": "subscribe -> res.status"
+              },
+              {
+                "file": "plugins/newsletter-local/src/api/newsletter/subscribe.ts",
+                "line": 3,
+                "symbol": "subscribe -> res.json"
+              }
+            ],
+            "files": [
+              "src/api/hello.ts"
+            ]
+          }
+        ]
+      },
+      "service": "site"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 5,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/work@4 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 5,
+                "symbol": "GET /api/work@4 -> res.json"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "express",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 16,
+                "symbol": "Server.start -> app.listen"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "workers"
+    }
+  ]
+}

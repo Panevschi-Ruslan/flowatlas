@@ -1,0 +1,379 @@
+{
+  "target": {
+    "id": "shop-api#src/orders.service.ts:OrdersService.updateStatus",
+    "type": "method",
+    "label": "OrdersService.updateStatus",
+    "loc": "src/orders.service.ts:12",
+    "service": "shop-api",
+    "reach": "alive",
+    "from": "PATCH /orders/status",
+    "ways": 2
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "shop-api#src/archive-helper.ts:ArchiveHelper.copyStatus",
+        "type": "method",
+        "label": "ArchiveHelper.copyStatus",
+        "loc": "src/archive-helper.ts:9",
+        "endLine": 11,
+        "reach": "unreached",
+        "from": "none"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string",
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "shop-api#src/legacy-export.ts:LegacyExport.run",
+            "type": "method",
+            "label": "LegacyExport.run",
+            "loc": "src/legacy-export.ts:9",
+            "endLine": 11,
+            "reach": "dead",
+            "from": "none"
+          },
+          "edge": {
+            "type": "calls",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "void"
+          },
+          "topOfChain": true,
+          "gapsInFile": 0,
+          "children": []
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "shop-api#src/chat-updates.service.ts:ChatUpdatesService.handleUpdate",
+        "type": "method",
+        "label": "ChatUpdatesService.handleUpdate",
+        "loc": "src/chat-updates.service.ts:9",
+        "endLine": 11,
+        "reach": "alive",
+        "from": "POST /hooks/chat"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string",
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "shop-api#src/chat-hook.controller.ts:ChatHookController.receive",
+            "type": "method",
+            "label": "ChatHookController.receive",
+            "loc": "src/chat-hook.controller.ts:9",
+            "endLine": 12,
+            "reach": "alive",
+            "from": "POST /hooks/chat"
+          },
+          "edge": {
+            "type": "calls",
+            "confidence": "static",
+            "params": [
+              "{orderId:string;text:string}"
+            ],
+            "returns": "void"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "entry:shop-api:http:POST:/hooks/chat",
+                "type": "entry",
+                "label": "POST /hooks/chat",
+                "loc": "src/chat-hook.controller.ts:9",
+                "kind": "http",
+                "reach": "outside"
+              },
+              "edge": {
+                "type": "handles",
+                "confidence": "static",
+                "params": [
+                  "{orderId:string;text:string}"
+                ],
+                "returns": "void"
+              },
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node": {
+        "id": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+        "type": "method",
+        "label": "OrdersController.setStatus",
+        "loc": "src/orders.controller.ts:9",
+        "endLine": 12,
+        "reach": "alive",
+        "from": "PATCH /orders/status"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string",
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:shop-api:http:PATCH:/orders/status",
+            "type": "entry",
+            "label": "PATCH /orders/status",
+            "loc": "src/orders.controller.ts:9",
+            "kind": "http",
+            "reach": "alive"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static",
+            "params": [
+              "{orderId:string;status:string}"
+            ],
+            "returns": "void"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "ui_api_call:backoffice-web#src/orders-api.service.ts:13:12",
+                "type": "ui_api_call",
+                "label": "PATCH /orders/status",
+                "loc": "src/orders-api.service.ts:13",
+                "service": "backoffice-web",
+                "kind": "http",
+                "reach": "alive",
+                "from": "screen /board"
+              },
+              "edge": {
+                "type": "hits",
+                "confidence": "static",
+                "params": [
+                  "{orderId:string;status:string}"
+                ],
+                "returns": "void"
+              },
+              "children": [
+                {
+                  "node": {
+                    "id": "backoffice-web#src/orders-api.service.ts:OrdersApiService.setStatus",
+                    "type": "method",
+                    "label": "OrdersApiService.setStatus",
+                    "loc": "src/orders-api.service.ts:12",
+                    "endLine": 14,
+                    "reach": "alive",
+                    "from": "screen /board"
+                  },
+                  "edge": {
+                    "type": "calls",
+                    "confidence": "static"
+                  },
+                  "children": [
+                    {
+                      "node": {
+                        "id": "backoffice-web#src/status-board.component.ts:StatusBoardComponent.markReady",
+                        "type": "method",
+                        "label": "StatusBoardComponent.markReady",
+                        "loc": "src/status-board.component.ts:14",
+                        "endLine": 16,
+                        "reach": "alive",
+                        "from": "screen /board"
+                      },
+                      "edge": {
+                        "type": "calls",
+                        "confidence": "static",
+                        "params": [
+                          "string",
+                          "string"
+                        ],
+                        "returns": "void"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "ui_action:backoffice-web#src/status-board.component.ts:9:22",
+                            "type": "ui_action",
+                            "label": "click=\"markReady('42')\"",
+                            "loc": "src/status-board.component.ts:9",
+                            "kind": "click"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static"
+                          },
+                          "topOfChain": true,
+                          "gapsInFile": 0,
+                          "children": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "node": {
+                "id": "http_out:ops-bot#src/shop.client.ts:15:26",
+                "type": "http_out",
+                "label": "PATCH /orders/status",
+                "loc": "src/shop.client.ts:15",
+                "service": "ops-bot",
+                "reach": "maybe",
+                "from": "behind",
+                "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+                "behind": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+                "confirm": {
+                  "grep": "handleStatus",
+                  "repo": "ops-bot"
+                }
+              },
+              "edge": {
+                "type": "http_calls",
+                "confidence": "static",
+                "params": [
+                  "{orderId:string;status:string}"
+                ]
+              },
+              "children": [
+                {
+                  "node": {
+                    "id": "ops-bot#src/shop.client.ts:ShopClient.updateStatus",
+                    "type": "method",
+                    "label": "ShopClient.updateStatus",
+                    "loc": "src/shop.client.ts:14",
+                    "endLine": 16,
+                    "reach": "maybe",
+                    "from": "behind",
+                    "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+                    "behind": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+                    "confirm": {
+                      "grep": "handleStatus",
+                      "repo": "ops-bot"
+                    }
+                  },
+                  "edge": {
+                    "type": "calls",
+                    "confidence": "static"
+                  },
+                  "children": [
+                    {
+                      "node": {
+                        "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+                        "type": "method",
+                        "label": "OpsBot.handleStatus",
+                        "loc": "src/ops-bot.ts:29",
+                        "endLine": 31,
+                        "reach": "maybe",
+                        "from": "behind",
+                        "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+                        "confirm": {
+                          "grep": "handleStatus",
+                          "repo": "ops-bot"
+                        }
+                      },
+                      "edge": {
+                        "type": "calls",
+                        "confidence": "static",
+                        "params": [
+                          "string",
+                          "string"
+                        ],
+                        "returns": "void"
+                      },
+                      "topOfChain": true,
+                      "gapsInFile": 2,
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:shop-api:http:PATCH:/orders/status",
+      "type": "entry",
+      "label": "PATCH /orders/status",
+      "loc": "src/orders.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 2,
+      "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+    },
+    {
+      "id": "entry:shop-api:http:POST:/hooks/chat",
+      "type": "entry",
+      "label": "POST /hooks/chat",
+      "loc": "src/chat-hook.controller.ts:9",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "outside",
+      "hops": 3,
+      "by": "shop-api#src/chat-hook.controller.ts:ChatHookController.receive"
+    },
+    {
+      "id": "entry:backoffice-web:screen:/board",
+      "type": "entry",
+      "label": "/board",
+      "loc": "src/app.routes.ts:5",
+      "service": "backoffice-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 7,
+      "by": "backoffice-web#src/status-board.component.ts:StatusBoardComponent"
+    }
+  ],
+  "maybe": [
+    {
+      "id": "ops-bot#src/ops-bot.ts:OpsBot.handleStatus",
+      "type": "method",
+      "label": "OpsBot.handleStatus",
+      "loc": "src/ops-bot.ts:29",
+      "service": "ops-bot",
+      "endLine": 31,
+      "reach": "maybe",
+      "from": "behind",
+      "gap": "gap:ops-bot|src/ops-bot.ts|call-dynamic-receiver",
+      "confirm": {
+        "grep": "handleStatus",
+        "repo": "ops-bot"
+      },
+      "hops": 5
+    }
+  ],
+  "complete": false,
+  "left": [
+    "gaps: 1 chain stops at an unread call before any way in: the maybe row"
+  ],
+  "next": [
+    "cant_follow({service: \"ops-bot\"})",
+    "search({query: \"src/ops-bot.ts\", kinds: [\"gaps\"]})",
+    "get_flow({entry: \"entry:shop-api:http:PATCH:/orders/status\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:PATCH:/orders/status\"})"
+  ]
+}

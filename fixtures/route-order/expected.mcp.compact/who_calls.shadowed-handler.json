@@ -1,0 +1,29 @@
+{
+  "settled": "1 way in reaches it, all listed",
+  "target": {
+    "id": "shop-api#src/orders/orders.controller.ts:OrdersController.latest",
+    "line": 20,
+    "reach": "dead",
+    "from": "GET /orders/latest"
+  },
+  "callers": [
+    {
+      "id": "entry:shop-api:http:GET:/orders/latest",
+      "loc": "src/orders/orders.controller.ts:20",
+      "reach": "dead",
+      "edge": {
+        "type": "handles",
+        "returns": "type:shop-api#Order"
+      }
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:shop-api:http:GET:/orders/latest",
+      "line": 20,
+      "reach": "dead",
+      "hops": 1
+    }
+  ],
+  "complete": true
+}

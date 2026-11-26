@@ -1,0 +1,19 @@
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.8", import: ["@key", "@context", "@fromContext", "@policy"])
+
+type Query {
+  me: User
+  wishItem(id: ID!): WishItem
+}
+
+type User @key(fields: "id") @context(name: "viewer") {
+  id: ID!
+  currency: String!
+  email: String! @policy(policies: [["account:owner"], ["support", "staff"]])
+  wishlist: [WishItem!]!
+}
+
+type WishItem {
+  id: ID!
+  name: String!
+  price(currency: String @fromContext(field: "$viewer { currency }")): Float!
+}

@@ -1,4 +1,5 @@
-import { PATH_DEPTHS, faceOf, layout, panelKeysOf, step } from '../graph.js';
+import { PATH_DEPTHS } from '../../../../core/src/shortest-ways.js';
+import { faceOf, layout, panelKeysOf, step } from '../graph.js';
 import { formatHash, pinch, pressed, wheelIntent, wordFor } from '../frame.js';
 
 /* What a person does on the Graph tab: the state changes every control ends

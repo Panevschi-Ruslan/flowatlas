@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T11:02:03.825Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:22:57.675Z",
   "services": [
     {
       "name": "members",
@@ -205,6 +205,15 @@
         "api": "library-kiosk",
         "function": "library-members-kiosk",
         "declaredAs": "aws_lb_listener_rule.kiosk_checkout",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-kiosk"
+          }
+        ],
         "by": "load-balancer",
         "hosts": [
           "kiosk.library.example"
@@ -509,7 +518,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#ALBResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -631,7 +641,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1093,6 +1104,20 @@
     }
   },
   "unresolved": [
+    {
+      "file": "infra/returns.tf",
+      "line": 43,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "library-members-restock: Restock invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "members#infra/returns.tf:library-members-restock/Restock",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "members"
+    },
     {
       "file": "infra/returns.tf",
       "line": 52,

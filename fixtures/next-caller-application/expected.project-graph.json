@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T18:56:29.628Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:03.751Z",
   "services": [
     {
       "name": "shop",
@@ -148,7 +148,10 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "application": "."
+        "application": ".",
+        "originless": true,
+        "sameCall": "ui_api_call:shop#app/orders-client.ts:8:24",
+        "targetService": "shop"
       }
     },
     {
@@ -166,6 +169,7 @@
         "responseType": null,
         "bodyType": null,
         "application": ".",
+        "sameCall": "ui_api_call:shop#app/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -183,7 +187,10 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "application": "examples/blog"
+        "application": "examples/blog",
+        "originless": true,
+        "sameCall": "ui_api_call:shop#examples/blog/src/api-client.ts:12:24",
+        "targetService": "shop"
       }
     },
     {
@@ -200,7 +207,10 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "application": "examples/blog"
+        "application": "examples/blog",
+        "originless": true,
+        "sameCall": "ui_api_call:shop#examples/blog/src/api-client.ts:17:24",
+        "targetService": "shop"
       }
     },
     {
@@ -218,6 +228,7 @@
         "responseType": null,
         "bodyType": null,
         "application": "examples/blog",
+        "sameCall": "ui_api_call:shop#examples/blog/src/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -235,7 +246,10 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "application": "examples/template"
+        "application": "examples/template",
+        "originless": true,
+        "sameCall": "ui_api_call:shop#examples/template/src/orders-client.ts:11:24",
+        "targetService": "shop"
       }
     },
     {
@@ -284,7 +298,17 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
       }
     },
     {
@@ -298,7 +322,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -312,7 +337,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -382,7 +408,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -396,7 +423,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -424,7 +452,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -456,6 +485,7 @@
         "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "template-env"
@@ -476,10 +506,12 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "application": ".",
         "via": "literal",
+        "sameCall": "http_out:shop#app/orders-client.ts:8:24",
         "targetService": "shop"
       }
     },
@@ -498,10 +530,12 @@
         "baseUrlEnv": "SHOP_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "application": ".",
         "via": "template-env",
+        "sameCall": "http_out:shop#app/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -520,10 +554,12 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "application": "examples/blog",
         "via": "literal",
+        "sameCall": "http_out:shop#examples/blog/src/api-client.ts:12:24",
         "targetService": "shop"
       }
     },
@@ -542,10 +578,12 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "application": "examples/blog",
         "via": "literal",
+        "sameCall": "http_out:shop#examples/blog/src/api-client.ts:17:24",
         "targetService": "shop"
       }
     },
@@ -564,10 +602,12 @@
         "baseUrlEnv": "SHOP_URL",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "application": "examples/blog",
         "via": "template-env",
+        "sameCall": "http_out:shop#examples/blog/src/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -586,10 +626,12 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "application": "examples/template",
         "via": "literal",
+        "sameCall": "http_out:shop#examples/template/src/orders-client.ts:11:24",
         "targetService": "shop"
       }
     }
@@ -659,6 +701,18 @@
       }
     },
     {
+      "from": "http_out:shop#app/orders-client.ts:8:24",
+      "to": "entry:shop@.:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/orders-client.ts",
+      "line": 8,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "shop"
+      }
+    },
+    {
       "from": "http_out:shop#app/orders-upstream.ts:10:24",
       "to": "entry:shop@.:http:GET:/api/orders",
       "type": "http_calls",
@@ -671,6 +725,30 @@
       }
     },
     {
+      "from": "http_out:shop#examples/blog/src/api-client.ts:12:24",
+      "to": "entry:shop@examples/blog:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 12,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "http_out:shop#examples/blog/src/api-client.ts:17:24",
+      "to": "entry:shop@examples/blog:http:GET:/api/*",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "examples/blog/src/api-client.ts",
+      "line": 17,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "shop"
+      }
+    },
+    {
       "from": "http_out:shop#examples/blog/src/orders-upstream.ts:10:24",
       "to": "entry:shop@examples/blog:http:GET:/api/orders",
       "type": "http_calls",
@@ -679,6 +757,18 @@
       "line": 10,
       "meta": {
         "via": "baseUrlEnv",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "http_out:shop#examples/template/src/orders-client.ts:11:24",
+      "to": "entry:shop@examples/template:http:GET:/api/*",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "examples/template/src/orders-client.ts",
+      "line": 11,
+      "meta": {
+        "via": "ownOrigin",
         "targetService": "shop"
       }
     },

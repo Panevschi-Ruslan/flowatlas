@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-query-loop",
-  "generatedAt": "2026-10-17T03:50:33.752Z",
+  "generatedAt": "2026-11-23T14:44:25.305Z",
   "nodes": [
     {
       "id": "db_query:nest-query-loop#src/orders/orders.service.ts:17:27",
@@ -294,7 +294,21 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "length",
+            "in": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveAll",
+            "line": 42
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "nest-query-loop#src/orders/orders.service.ts:OrdersService.saveOne",
+            "line": 48,
+            "why": "handed to this.orders.save"
+          }
+        ]
       }
     },
     {
@@ -313,7 +327,15 @@
             }
           ],
           "returns": "number"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-query-loop#src/orders/orders.service.ts:OrdersService.later",
+            "line": 54,
+            "why": "handed to this.orders.delete"
+          }
+        ]
       }
     },
     {
@@ -332,7 +354,15 @@
             }
           ],
           "returns": "type:nest-query-loop#Order[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-query-loop#src/orders/orders.service.ts:OrdersService.byIdsOneByOne",
+            "line": 17,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -351,7 +381,8 @@
             }
           ],
           "returns": "[type:nest-query-loop#Order[],type:nest-query-loop#Order]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -370,7 +401,8 @@
             }
           ],
           "returns": "type:nest-query-loop#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -384,7 +416,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -565,7 +598,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

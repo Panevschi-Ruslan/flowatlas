@@ -1,6 +1,6 @@
 # Getting started
 
-From nothing to a graph you can walk, and the first four questions worth asking
+From nothing to a graph you can walk, and the first five questions worth asking
 of it.
 
 Everything below can be run. The examples use the fixtures in this repository —
@@ -51,8 +51,10 @@ the TypeScript checker and closes the files.
 **Install each repository's dependencies if you can.** The checker follows a
 type into a package only when the package is on disk. A repository read without
 them is still read — the source says a great deal on its own, and what is read
-that way is marked `heuristic` — but a run over one opens with a sentence saying
-the read was partial, and means it.
+that way is marked `heuristic`, save an application the framework's own maker
+makes right there (`const app = express()`) — but a run over one opens with a
+sentence saying the read was partial, and means it. A package installed above
+the repository's checkout is never used in their place.
 
 ---
 
@@ -72,7 +74,9 @@ flowatlas init --dir .    # look under this directory instead
 > `init` with no `--dir` scans the *parent* directory, which is what you want
 > when the configuration lives inside one of the repositories. Pass `--dir .`
 > when it lives above them. It looks one level down, at each directory with a
-> `package.json`.
+> `package.json`, and at each directory of plain pages and the scripts they
+> load with no manifest and nothing that builds them, which it offers as
+> `browser`.
 
 Over a copy of `fixtures/multi-repo`, with its configuration deleted, it
 proposes this:
@@ -89,9 +93,11 @@ Wrote …/flowatlas.config.json with 4 service(s):
 Without `--yes` it asks about each one. The type is what decides which reader
 opens a repository, and it is read from the manifest: a server type wins over a
 browser type when a repository declares both, because the server reader reads
-the browser half too. A framework nothing here reads — Nuxt, Vue, plain
-Svelte — is named rather than silently skipped; SvelteKit and Remix are read
-for their file routes, loads and actions.
+the browser half too. A framework nothing here reads — Astro, Solid — is
+named rather than silently skipped; SvelteKit, Nuxt and Remix are read for
+their file routes, loads and actions, Strapi for its routes files and plugins,
+Gatsby for its functions, Vue and Svelte for their components, and a plain
+page for the requests its scripts make.
 
 **A monorepo is proposed as its applications.** A repository that declares a
 workspace, in `workspaces` or a `pnpm-workspace.yaml`, becomes one service per
@@ -119,14 +125,14 @@ One service, and one graph that runs from its route into the package:
       →  readOrders             web/../../packages/orders-lib/src/store.ts:13
         ⚙  ORDERS_UPSTREAM_URL  web/../../packages/orders-lib/src/store.ts:14
         ↗  GET /orders          web/../../packages/orders-lib/src/store.ts:16
-        ↗  GET /orders          web/../../packages/orders-lib/src/store.ts:16
-unresolved on this path: 2
+unresolved on this path: 1
 ```
 
-The request is there twice because one `fetch` is read by both halves of a
-repository that is a server and a browser at once, and the two rows are true: the
-far side is not in this configuration, and nothing declares
-`ORDERS_UPSTREAM_URL`.
+Both halves of a repository that is a server and a browser at once read that
+`fetch`, and it is drawn once, on the server, because what reaches it is a
+route's handler; a call a screen and a handler both reach is drawn on both
+sides, each naming the other. The one row is true: the far side is not in this
+configuration, and nothing declares `ORDERS_UPSTREAM_URL`.
 
 `flowatlas link ../gateway ../orders ../web` is the same thing with the
 repositories named rather than discovered, for when they are not all in one
@@ -160,7 +166,7 @@ channels: 3 total, 1 joined, 1 with no handler, 1 with no publisher
 routes: 15 total, 7 reached, 8 never called, 1 claimed by two handlers
 ways in: 17 found, 17 with a handler that was read, 0 without — only the second number is coverage of what happens after the request arrives
 types: 15 (4 from shared packages)
-missed: 9 · notes: 0 · findings: 4
+missed: 11 · notes: 0 · findings: 4
 ```
 
 A first build is rarely all joined, and it is not supposed to be. Nothing was
@@ -202,10 +208,10 @@ pnpm flowatlas doctor --config fixtures/multi-repo/flowatlas.config.json
 The first line is the verdict:
 
 ```
-unresolved: total=11 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=13 (missing) · markers: errors=0 warnings=0 · desync=5 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 ```
 
-`total=11` is the rows somebody could act on. The places static reading cannot
+`total=13` is the rows somebody could act on. The places static reading cannot
 see at all are counted beside them and never added in, and neither are the
 places where nothing joins because there is nothing to join. `(missing)` says
 there is no baseline yet; `flowatlas doctor --accept` writes one, to commit like
@@ -258,7 +264,7 @@ settings key points at.
 What survives a configured build is no longer missing configuration. It is the
 project disagreeing with itself, which is the thing worth knowing.
 
-## 6. The first four questions
+## 6. The first five questions
 
 ### Follow one request: `flow`
 
@@ -323,7 +329,14 @@ pnpm flowatlas impact OrdersService.create --entries-only --config fixtures/mult
 →  OrdersService.create  orders/src/orders/orders.service.ts:40
   ◆  POST /orders        orders/src/orders/orders.controller.ts:31
 Reachable from: 1 http entry (orders)
+Could break:
+  POST /orders (orders)  dead
 ```
+
+Each way in that could break is listed with whether it runs (`dead` here:
+nothing in the fixture requests the route) and, on the calling side, `via`,
+the route or channel it came through; `--format json` prints what the graph
+server's `impact` tool answers.
 
 Give it a table and it names the routes that write it. Give it a method and it
 names the ones in other people's services.
@@ -376,6 +389,33 @@ pnpm flowatlas channel order.created --config fixtures/multi-repo/flowatlas.conf
 A channel with nothing at one end comes back with an empty list, which is an
 answer rather than an error.
 
+### Ask what looks broken: `findings`
+
+```sh
+pnpm flowatlas findings --config fixtures/multi-repo/flowatlas.config.json
+```
+
+```
+call-to-missing-route (2)
+  1. [high] OrdersClient.cancel sends POST /orders/:param/cancel to orders, which serves no such route (gateway src/clients/orders.client.ts:44)
+     the nearest route: POST /orders/:param/archive (one segment off: cancel for archive)
+     met through POST /orders/:param/cancel (gateway), POST /orders/:param/refund (gateway), POST /orders/:param/resume (gateway)
+  …
+one-ended-channel (2)
+  …
+unguarded (4)
+  …
+held back: 1 call-to-missing-route, the evidence not holding (the service it is sent to is not named)
+```
+
+What looks broken between the services comes first, each kind only where the
+fact that makes it a defect holds, every row with its precision (`high`,
+`medium`, `low`), the nearest fix and the ways in that meet it. A candidate
+whose evidence did not hold is said under `held back`, with why, never left
+out in silence. `--fail-on high` makes it exit 1 on the rows that are nearly
+always right, and `--format sarif` writes them for code scanning; every kind is
+in [the command reference](CLI.md#flowatlas-findings).
+
 ---
 
 ## 7. Try it on the other shapes
@@ -386,6 +426,12 @@ to look for.
 | Fixture | What it shows |
 |---|---|
 | [`trpc-join`](../fixtures/trpc-join) | procedures on the server, and `trpc.orders.list.useQuery(…)` in a browser joined to them by path |
+| [`orpc-next`](../fixtures/orpc-next) | an oRPC router mounted for RPC and OpenAPI, its REST routes, and a client joined through its link's URL |
+| [`orpc-contract`](../fixtures/orpc-contract) | a contract-first oRPC service, its routes and failures read off the contract |
+| [`rpc-server-to-server`](../fixtures/rpc-server-to-server) | a NestJS worker's oRPC and tRPC clients joined to the procedures of two other services by their links' settings and hosts |
+| [`rpc-contracts`](../fixtures/rpc-contracts) | each procedure call's input and answer compared with the procedure's, a tRPC link checked against its mount, a client injected by a token, and an Angular client |
+| [`rpc-shared-types`](../fixtures/rpc-shared-types) | a plain request to a procedure's REST route compared field by field, a client typed from a workspace package's `AppRouter`, Fastify's and Hono's tRPC mounts, a client a module's `forRoot` / `forRootAsync` builds, and a lazy branch under a Vite alias |
+| [`graphql-requires-auth`](../fixtures/graphql-requires-auth) | the router's check not drawn on a field it fetches for a `@requires`, and a requiring field that does not carry its required fields' check |
 | [`next-caller-application`](../fixtures/next-caller-application) | one service holding three Next.js applications, and a request reaching its own application's route |
 | [`nest-two-applications`](../fixtures/nest-two-applications) | an API and a worker in one repository, each serving `GET /health` |
 | [`socket-namespaces`](../fixtures/socket-namespaces) | socket.io read from both ends, with the namespace opened by `io.of(…)` |
@@ -394,6 +440,26 @@ to look for.
 | [`nest-mount-empty`](../fixtures/nest-mount-empty) | a route behind a mount every environment file leaves empty, joined and marked as a guess |
 | [`express-not-installed`](../fixtures/express-not-installed) | an Express service with no `node_modules`, read from what its source states |
 | [`koa-react-full-stack`](../fixtures/koa-react-full-stack) | one directory that is a server and a browser, read by the reader that reads both |
+| [`script-wrappers`](../fixtures/script-wrappers) | a plain page with no manifest, its functions kept in wrappers, and jQuery, superagent and ky as globals a script tag or the linter declares |
+| [`script-ready-handlers`](../fixtures/script-ready-handlers) | a plain page whose code waits for the document to load, a CommonJS script requiring axios, and a server whose module exports name its functions |
+| [`script-load-events`](../fixtures/script-load-events) | requests at the top of a wrapper run at once, the page's other load events, superagent's sent query, globals a shared linter configuration declares, and a client's global nothing declares |
+| [`script-tops-plugin-configs`](../fixtures/script-tops-plugin-configs) | requests and calls at the very top of a script, a client's global called directly or through a wrapper's parameter asking for a declaration, globals a linter plugin's configuration declares, and a named import read for its export alone |
+| [`graphql-codegen-sdk`](../fixtures/graphql-codegen-sdk) | calls through the SDK GraphQL Code Generator writes, joined to the operations they send |
+| [`grpc-contract-messages`](../fixtures/grpc-contract-messages) | what a gRPC call sends compared with its contract's message, and a server that disagrees with its contract |
+| [`front-end-route-branches`](../fixtures/front-end-route-branches) | a route table written over a list, pages a condition chooses between, a locale prefix and Angular's guards |
+| [`assumed-port-requests`](../fixtures/assumed-port-requests) | two servers heard on one port only by guesses - a framework's default and a port read through a merge - each request placed at the one that serves it |
+| [`gateway-served-everywhere`](../fixtures/gateway-served-everywhere) | APIs deployed four ways, called by the address API Gateway serves each at |
+| [`job-queue-layers`](../fixtures/job-queue-layers) | BullMQ queues behind layers of the repository's own, read where each caller names them |
+| [`framework-routes-in-place-writes`](../fixtures/framework-routes-in-place-writes) | a Strapi application's routes files and a Gatsby site's functions as ways in, and servers whose port is changed in place or read per instance |
+| [`installed-plugins-server-routes-config-packages`](../fixtures/installed-plugins-server-routes-config-packages) | routes a Strapi application registers in code, plugins installed under `node_modules` and the extensions that add to them, and a `fastify start --config` naming a package |
+| [`compose-include-shell-env`](../fixtures/compose-include-shell-env) | a compose file filled from `COMPOSE_ENV_FILES`, its `include:` and `extends:`, a script's exported port, and a cluster workload's config map and secret |
+| [`untyped-callers-framework-held-outside-writes`](../fixtures/untyped-callers-framework-held-outside-writes) | requests through instances handed around with no types, elements the browser connects, and queues written onto instances from outside their classes |
+| [`pair-keys-instances`](../fixtures/pair-keys-instances) | routes spelled from the keys of `[key, entry]` pairs, and registries read per instance |
+| [`express-maker-direct-and-stated`](../fixtures/express-maker-direct-and-stated) | an Express service with nothing installed whose applications the framework's own maker makes, as sure as typed ones, beside routes that stay `heuristic` |
+| [`wrapped-spread-providers-tops`](../fixtures/wrapped-spread-providers-tops) | components wrapped in `memo` and `forwardRef` handed their client through spreads, and readers the NestJS injector makes from providers built by spreads and calls |
+| [`key-reads-places-webpack-plugins`](../fixtures/key-reads-places-webpack-plugins) | routes written over `Object.keys(...)` and over lists put together, objects a registry keeps per call, and Strapi plugins shipped as webpack bundles or not installed at all |
+| [`bundled-plugins-unread-dependencies-whole-controllers`](../fixtures/bundled-plugins-unread-dependencies-whole-controllers) | Strapi plugins shipped as rollup and esbuild bundles, dependencies a fresh clone has not installed, and extensions writing a controller whole |
+| [`script-modes-workspace-make-fields`](../fixtures/script-modes-workspace-make-fields) | a Makefile's included file, a script run in another package of the workspace, and Bun's mode however the environment gives it |
 
 A fixture with a `flowatlas.config.json` is a project:
 
@@ -498,10 +564,10 @@ them gets the whole project.
 
 ![flowatlas mcp](media/09-mcp.gif)
 
-Twenty-six tools, and only one of them returns source code. A trace never drags in the
+Twenty-seven tools, and only one of them returns source code. A trace never drags in the
 body of every method along it; the agent asks the graph which name to look at,
 then asks for that one name. A session is offered only the tools your project can
-answer - nineteen on the demo - and the run-time ones appear once you have run
+answer - twenty on the demo - and the run-time ones appear once you have run
 `flowatlas observe`, without a restart; `flowatlas mcp --all-tools` lists every
 one.
 
@@ -510,7 +576,16 @@ flowatlas mcp --install       # register in every repository, merging what is th
 flowatlas mcp --install --dry-run
 ```
 
-After that, `claude mcp list` shows `flowatlas`.
+After that, `claude mcp list` shows `flowatlas`. To tell each assistant which
+questions to ask the graph rather than search for, to have a search that
+names another repository's route say what it could not see, and to have a
+prompt that names one get the graph's answer before the first turn:
+
+```sh
+flowatlas agents install --hook
+```
+
+([Tell the assistant when to ask](mcp.md#tell-the-assistant-when-to-ask).)
 
 ---
 
@@ -519,7 +594,7 @@ After that, `claude mcp list` shows `flowatlas`.
 - [Through a change, start to finish](workflow.md) — which command to reach for
   before a change, while coding, before the PR, in CI, at deploy and after it runs.
 - [The graph server](mcp.md) — setup for Claude Code, Cursor, VS Code and Claude
-  Desktop, what each of the twenty-six tools takes, and the order to call them in.
+  Desktop, what each of the twenty-seven tools takes, and the order to call them in.
 - [The command reference](CLI.md) — every command, every flag, every
   configuration key, and every reason a row can carry.
 - [Running it in CI](ci.md) — the staged adoption that does not fail the build on
@@ -528,6 +603,8 @@ After that, `claude mcp list` shows `flowatlas`.
   and timings on the map.
 - [Coverage](coverage.md) — how the tool is measured against repositories nobody
   here wrote.
+- [The benchmark](benchmark.md) — whether an assistant answers better with it,
+  with and without the graph, against a key the tool did not write.
 - [The README](../README.md) — how the joining works, what it reads, and what it
   still cannot.
 

@@ -1,0 +1,43 @@
+{
+  "settled": "3 consumers of CARD_MOVED, all listed",
+  "channel": {
+    "id": "channel:board:*:events",
+    "loc": "src/boards/boards.service.ts:15",
+    "service": "boards-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:admin#src/app/boards/board-page.component.ts:BoardPageComponent.load",
+      "line": 29,
+      "kind": "sse",
+      "selectedIn": "BoardPageComponent.ngOnInit",
+      "via": "filter",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:admin#src/app/boards/card-timeline.component.ts:CardTimelineComponent.reorder",
+      "line": 32,
+      "kind": "sse",
+      "selectedIn": "CardTimelineComponent.ngOnInit",
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards/:param/move (boards-api)",
+      "ways": 8
+    },
+    {
+      "id": "consumer:web#src/screens/BoardScreen.tsx:BoardScreen",
+      "line": 13,
+      "kind": "sse",
+      "via": "if",
+      "reach": "alive",
+      "from": "POST /boards/:param/cards/:param/archive (boards-api)",
+      "ways": 3
+    }
+  ],
+  "total": 3,
+  "channelUsed": "channel:board:*:events",
+  "type": "CARD_MOVED",
+  "complete": true
+}

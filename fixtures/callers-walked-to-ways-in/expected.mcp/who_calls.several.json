@@ -1,0 +1,124 @@
+{
+  "answers": [
+    {
+      "asked": "stock-api#src/stock/stock.service.ts:StockService.reserve",
+      "target": {
+        "id": "stock-api#src/stock/stock.service.ts:StockService.reserve",
+        "type": "method",
+        "label": "StockService.reserve",
+        "loc": "src/stock/stock.service.ts:17",
+        "service": "stock-api",
+        "reach": "alive",
+        "from": "POST /checkout"
+      },
+      "callers": [
+        {
+          "node": {
+            "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+            "type": "method",
+            "label": "CheckoutService.place",
+            "loc": "src/checkout/checkout.service.ts:9",
+            "endLine": 13,
+            "reach": "alive",
+            "from": "POST /checkout"
+          },
+          "edge": {
+            "type": "calls",
+            "confidence": "static",
+            "params": [
+              "string",
+              "number"
+            ],
+            "returns": "void"
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "asked": "stock-api#src/stock/stock.service.ts:StockService.restock",
+      "target": {
+        "id": "stock-api#src/stock/stock.service.ts:StockService.restock",
+        "type": "method",
+        "label": "StockService.restock",
+        "loc": "src/stock/stock.service.ts:25",
+        "service": "stock-api",
+        "reach": "alive",
+        "from": "cron StockJobs.nightly"
+      },
+      "callers": [
+        {
+          "node": {
+            "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+            "type": "method",
+            "label": "StockJobs.nightly",
+            "loc": "src/stock/stock.jobs.ts:10",
+            "endLine": 13,
+            "reach": "alive",
+            "from": "cron StockJobs.nightly"
+          },
+          "edge": {
+            "type": "calls",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "void"
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:stock-api:cron:StockJobs.nightly",
+      "type": "entry",
+      "label": "cron StockJobs.nightly",
+      "loc": "src/stock/stock.jobs.ts:10",
+      "service": "stock-api",
+      "kind": "cron",
+      "reach": "outside",
+      "hops": 2,
+      "by": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+      "reaches": [
+        "StockService.restock"
+      ]
+    },
+    {
+      "id": "entry:stock-api:http:POST:/checkout",
+      "type": "entry",
+      "label": "POST /checkout",
+      "loc": "src/checkout/checkout.controller.ts:8",
+      "service": "stock-api",
+      "kind": "http",
+      "reach": "alive",
+      "hops": 3,
+      "by": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place",
+      "reaches": [
+        "StockService.reserve"
+      ]
+    },
+    {
+      "id": "entry:store-web:screen:/checkout",
+      "type": "entry",
+      "label": "/checkout",
+      "loc": "src/app/app.routes.ts:9",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 8,
+      "by": "store-web#src/app/checkout.component.ts:CheckoutComponent",
+      "reaches": [
+        "StockService.reserve"
+      ]
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:stock-api:cron:StockJobs.nightly\"})",
+    "describe_for_prompt({id: \"entry:stock-api:cron:StockJobs.nightly\"})",
+    "impact({symbol: \"entry:stock-api:cron:StockJobs.nightly\"})",
+    "impact({symbol: \"stock-api#src/stock/stock.service.ts:StockService.reserve\"})"
+  ]
+}

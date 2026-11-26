@@ -1,0 +1,44 @@
+{
+  "id": "shop-api#src/reports/reports.controller.ts:ReportsController",
+  "type": "provider",
+  "kind": "controller",
+  "line": 12,
+  "verdict": "alive",
+  "reason": "4 routes hand it work; the liveliest is alive",
+  "evidence": {
+    "via": "entry:shop-api:http:GET:/api/reports/daily",
+    "callers": 1,
+    "caller": "ui_api_call:shop-web#src/app/reports.client.ts:18:12"
+  },
+  "waysIn": [
+    {
+      "id": "entry:shop-api:http:DELETE:/api/reports/:param",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "callers": 0
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/reports/daily",
+      "verdict": "alive",
+      "callers": 1,
+      "caller": "ui_api_call:shop-web#src/app/reports.client.ts:18:12"
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/reports/weekly",
+      "verdict": "dead",
+      "reason": "no http_calls/hits from any repo (may be a public API)",
+      "callers": 0
+    },
+    {
+      "id": "entry:shop-api:http:POST:/api/reports/export",
+      "verdict": "alive",
+      "callers": 1,
+      "caller": "ui_api_call:shop-web#src/app/reports.client.ts:22:12"
+    }
+  ],
+  "uncalled": 2,
+  "complete": true,
+  "next": [
+    "get_source({symbol: \"entry:shop-api:http:DELETE:/api/reports/:param\"})"
+  ]
+}

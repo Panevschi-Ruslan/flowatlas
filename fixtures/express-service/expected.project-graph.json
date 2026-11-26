@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:09:54.315Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:13:44.535Z",
   "services": [
     {
       "name": "api",
@@ -54,7 +54,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -138,7 +139,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -161,7 +163,13 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total",
+            "line": 37
+          }
+        ]
       }
     },
     {
@@ -202,7 +210,8 @@
             }
           ],
           "returns": "type:express#Response<unknown>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -225,7 +234,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -395,7 +405,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 26
+          }
+        ]
       }
     },
     {
@@ -473,6 +490,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "api"
@@ -497,8 +515,10 @@
         "bodyKeys": [
           "total"
         ],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "api"
       }
     },
@@ -573,7 +593,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-orders"
+        "selector": "app-orders",
+        "unreferenced": true
       }
     },
     {

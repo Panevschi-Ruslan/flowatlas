@@ -1,0 +1,3874 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T16:00:43.865Z",
+  "services": [
+    {
+      "name": "docs-api",
+      "repo": "./docs-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "notify-worker",
+      "repo": "./notify-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "realtime-gateway",
+      "repo": "./realtime-gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:space:*:events",
+      "type": "channel",
+      "label": "space:*:events",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 16,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "space-bus"
+        ],
+        "producers": 6,
+        "consumers": 7
+      }
+    },
+    {
+      "id": "channel:space:*:events#COMMENT_ADDED",
+      "type": "channel",
+      "label": "space:*:events#COMMENT_ADDED",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 22,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:space:*:events",
+        "messageType": "COMMENT_ADDED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:21",
+              "text": "type: SpaceEventType.CommentAdded"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/mention.handler.ts:13",
+              "text": "event.type !== 'COMMENT_ADDED'",
+              "why": "COMMENT_ADDED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:space:*:events#DOC_ARCHIVED",
+      "type": "channel",
+      "label": "space:*:events#DOC_ARCHIVED",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:space:*:events",
+        "messageType": "DOC_ARCHIVED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [],
+          "sentCount": 0,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:space:*:events#DOC_PUBLISHED",
+      "type": "channel",
+      "label": "space:*:events#DOC_PUBLISHED",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 16,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:space:*:events",
+        "messageType": "DOC_PUBLISHED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:16",
+              "text": "type: 'DOC_PUBLISHED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/audit-trail.service.ts:16",
+              "text": "DOC_PUBLISHED: (event) => this.recordPublish(event)",
+              "why": "DOC_PUBLISHED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:space:*:events#EXPORT_FINISHED",
+      "type": "channel",
+      "label": "space:*:events#EXPORT_FINISHED",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 32,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:space:*:events",
+        "messageType": "EXPORT_FINISHED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/space-events.ts:44",
+              "text": "type: 'EXPORT_FINISHED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": false,
+          "defined": 2,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:space:*:events#MEMBER_JOINED",
+      "type": "channel",
+      "label": "space:*:events#MEMBER_JOINED",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 27,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:space:*:events",
+        "messageType": "MEMBER_JOINED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:27",
+              "text": "type: SPACE_EVENTS.memberJoined"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/audit-trail.service.ts:17",
+              "text": "MEMBER_JOINED: this.recordJoin.bind(this)",
+              "why": "MEMBER_JOINED is written here; the graph read no choice of it"
+            },
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/dispatcher.service.ts:30",
+              "text": "'MEMBER_JOINED'",
+              "why": "MEMBER_JOINED is written here; the graph read no choice of it"
+            },
+            {
+              "service": "notify-worker",
+              "loc": "src/handlers/welcome.handlers.ts:13",
+              "text": "@OnSpaceEvent('MEMBER_JOINED') greet(event: MemberJoined): void { void event.mem",
+              "why": "MEMBER_JOINED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 3
+        },
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:space:*:events#QUOTA_WARNING",
+      "type": "channel",
+      "label": "space:*:events#QUOTA_WARNING",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:space:*:events",
+        "messageType": "QUOTA_WARNING",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "docs-api",
+              "loc": "src/spaces/spaces.service.ts:37",
+              "text": "type: 'QUOTA_WARNING'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 2,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "type": "consumer",
+      "label": "ActivityFeed.onMessage",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:space:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "COMMENT_ADDED",
+            "consumer": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+            "via": "if",
+            "line": 25
+          },
+          {
+            "type": "DOC_ARCHIVED",
+            "consumer": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+            "via": "if",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+      "type": "consumer",
+      "label": "ActivityFeed.pushArchive",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 36,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "messageTypes": [
+          "DOC_ARCHIVED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+      "type": "consumer",
+      "label": "ActivityFeed.pushComment",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "messageTypes": [
+          "COMMENT_ADDED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "type": "consumer",
+      "label": "AuditTrail.record",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:space:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "DOC_PUBLISHED",
+            "consumer": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordPublish",
+            "via": "map",
+            "line": 27
+          },
+          {
+            "type": "MEMBER_JOINED",
+            "consumer": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin",
+            "via": "map",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin",
+      "type": "consumer",
+      "label": "AuditTrail.recordJoin",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 34,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "messageTypes": [
+          "MEMBER_JOINED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordPublish",
+      "type": "consumer",
+      "label": "AuditTrail.recordPublish",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 30,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "messageTypes": [
+          "DOC_PUBLISHED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "type": "consumer",
+      "label": "SpaceEventsDispatcher.dispatch",
+      "repo": "notify-worker",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:space:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "COMMENT_ADDED",
+            "consumer": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+            "via": "switch",
+            "line": 28
+          },
+          {
+            "type": "DOC_PUBLISHED",
+            "consumer": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+            "via": "switch",
+            "line": 26
+          },
+          {
+            "type": "EXPORT_FINISHED",
+            "consumer": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
+            "via": "switch",
+            "line": 31
+          },
+          {
+            "type": "MEMBER_JOINED",
+            "consumer": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
+            "via": "switch",
+            "line": 31
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+      "type": "consumer",
+      "label": "SpaceEventsDispatcher.onComment",
+      "repo": "notify-worker",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 38,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "messageTypes": [
+          "COMMENT_ADDED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+      "type": "consumer",
+      "label": "ExportWatcher.notifyOwner",
+      "repo": "notify-worker",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "messageTypes": [
+          "EXPORT_FINISHED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "type": "consumer",
+      "label": "ExportWatcher.onEvent",
+      "repo": "notify-worker",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:space:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "EXPORT_FINISHED",
+            "consumer": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+            "via": "guard",
+            "line": 17
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota",
+      "type": "consumer",
+      "label": "LegacyDigest.mailQuota",
+      "repo": "notify-worker",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "messageTypes": [
+          "QUOTA_WARNING"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "type": "consumer",
+      "label": "LegacyDigest.onEvent",
+      "repo": "notify-worker",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:space:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "QUOTA_WARNING",
+            "consumer": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota",
+            "via": "if",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "type": "consumer",
+      "label": "Notices.digest",
+      "repo": "notify-worker",
+      "file": "src/handlers/notices.service.ts",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "messageTypes": [
+          "EXPORT_FINISHED",
+          "MEMBER_JOINED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+      "type": "consumer",
+      "label": "Notices.docPublished",
+      "repo": "notify-worker",
+      "file": "src/handlers/notices.service.ts",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "messageTypes": [
+          "DOC_PUBLISHED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "type": "consumer",
+      "label": "RegistryDispatcher.route",
+      "repo": "notify-worker",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:notify-worker:event:space:*:events",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "MEMBER_JOINED",
+            "consumer": "consumer:notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
+            "via": "decorator",
+            "line": 25,
+            "heuristic": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
+      "type": "consumer",
+      "label": "WelcomeHandlers.greet",
+      "repo": "notify-worker",
+      "file": "src/handlers/welcome.handlers.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "selectedBy": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "messageTypes": [
+          "MEMBER_JOINED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "type": "consumer",
+      "label": "StreamRelay.forward",
+      "repo": "realtime-gateway",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:realtime-gateway:event:space:*:events"
+      }
+    },
+    {
+      "id": "docs-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "docs-api",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "SpacesController"
+        ],
+        "providers": [
+          "SpaceBus",
+          "SpacesService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "docs-api#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "provider",
+      "label": "SpaceBus",
+      "repo": "docs-api",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "docs-api#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "method",
+      "label": "SpaceBus.publish",
+      "repo": "docs-api",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "docs-api#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "method",
+      "label": "SpaceBus.subscribe",
+      "repo": "docs-api",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.controller.ts:SpacesController",
+      "type": "provider",
+      "label": "SpacesController",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.controller.ts:SpacesController.comment",
+      "type": "method",
+      "label": "SpacesController.comment",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "docId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{commentId:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "commentId",
+            "line": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.controller.ts:SpacesController.exportDone",
+      "type": "method",
+      "label": "SpacesController.exportDone",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{url:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "url",
+            "line": 26
+          }
+        ]
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.controller.ts:SpacesController.join",
+      "type": "method",
+      "label": "SpacesController.join",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{memberId:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "memberId",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.controller.ts:SpacesController.publish",
+      "type": "method",
+      "label": "SpacesController.publish",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "docId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.controller.ts:SpacesController.quota",
+      "type": "method",
+      "label": "SpacesController.quota",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{usedBytes:number}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "usedBytes",
+            "line": 31
+          }
+        ]
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.service.ts:SpacesService",
+      "type": "provider",
+      "label": "SpacesService",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment",
+      "type": "method",
+      "label": "SpacesService.addComment",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "docId",
+              "type": "string"
+            },
+            {
+              "name": "commentId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport",
+      "type": "method",
+      "label": "SpacesService.finishExport",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.service.ts:SpacesService.join",
+      "type": "method",
+      "label": "SpacesService.join",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "memberId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc",
+      "type": "method",
+      "label": "SpacesService.publishDoc",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "docId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay",
+      "type": "method",
+      "label": "SpacesService.relay",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "event",
+              "type": "type:docs-api#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota",
+      "type": "method",
+      "label": "SpacesService.warnQuota",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "spaceId",
+              "type": "string"
+            },
+            {
+              "name": "usedBytes",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:docs-api:http:POST:/spaces/:param/docs/:param/comments",
+      "type": "entry",
+      "label": "POST /spaces/:param/docs/:param/comments",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/spaces/:param/docs/:param/comments",
+        "rawPath": "/spaces/:spaceId/docs/:docId/comments",
+        "controller": "SpacesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:docs-api:http:POST:/spaces/:param/docs/:param/publish",
+      "type": "entry",
+      "label": "POST /spaces/:param/docs/:param/publish",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/spaces/:param/docs/:param/publish",
+        "rawPath": "/spaces/:spaceId/docs/:docId/publish",
+        "controller": "SpacesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:docs-api:http:POST:/spaces/:param/exports/:param/done",
+      "type": "entry",
+      "label": "POST /spaces/:param/exports/:param/done",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/spaces/:param/exports/:param/done",
+        "rawPath": "/spaces/:spaceId/exports/:jobId/done",
+        "controller": "SpacesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:docs-api:http:POST:/spaces/:param/members",
+      "type": "entry",
+      "label": "POST /spaces/:param/members",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/spaces/:param/members",
+        "rawPath": "/spaces/:spaceId/members",
+        "controller": "SpacesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:docs-api:http:POST:/spaces/:param/quota",
+      "type": "entry",
+      "label": "POST /spaces/:param/quota",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/spaces/:param/quota",
+        "rawPath": "/spaces/:spaceId/quota",
+        "controller": "SpacesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:notify-worker:event:space:*:events",
+      "type": "entry",
+      "label": "event space:*:events",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "pattern": "space:*:events",
+        "adapter": "space-bus"
+      }
+    },
+    {
+      "id": "entry:realtime-gateway:event:space:*:events",
+      "type": "entry",
+      "label": "event space:*:events",
+      "repo": "realtime-gateway",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "space:*:events",
+        "adapter": "space-bus"
+      }
+    },
+    {
+      "id": "notify-worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "notify-worker",
+      "file": "src/app.module.ts",
+      "line": 13,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "SpaceBus",
+          "Notices",
+          "SpaceEventsDispatcher",
+          "ExportWatcher",
+          "AuditTrail",
+          "ActivityFeed",
+          "HandlerRegistry",
+          "WelcomeHandlers",
+          "RegistryDispatcher"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "notify-worker#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "provider",
+      "label": "SpaceBus",
+      "repo": "notify-worker",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "method",
+      "label": "SpaceBus.publish",
+      "repo": "notify-worker",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "method",
+      "label": "SpaceBus.subscribe",
+      "repo": "notify-worker",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed",
+      "type": "provider",
+      "label": "ActivityFeed",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "type": "method",
+      "label": "ActivityFeed.onMessage",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "type:notify-worker#Envelope"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 24
+          },
+          {
+            "field": "docId",
+            "in": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+            "line": 37
+          },
+          {
+            "field": "docId",
+            "in": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+            "line": 33
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onModuleInit",
+      "type": "method",
+      "label": "ActivityFeed.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+      "type": "method",
+      "label": "ActivityFeed.pushArchive",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "type:notify-worker#Envelope"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+      "type": "method",
+      "label": "ActivityFeed.pushComment",
+      "repo": "notify-worker",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "type:notify-worker#Envelope"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail",
+      "type": "provider",
+      "label": "AuditTrail",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.onModuleInit",
+      "type": "method",
+      "label": "AuditTrail.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "type": "method",
+      "label": "AuditTrail.record",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 27
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "line": 27,
+            "why": "handed to this.handlers[event.type]"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin",
+      "type": "method",
+      "label": "AuditTrail.recordJoin",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordPublish",
+      "type": "method",
+      "label": "AuditTrail.recordPublish",
+      "repo": "notify-worker",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher",
+      "type": "provider",
+      "label": "SpaceEventsDispatcher",
+      "repo": "notify-worker",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "type": "method",
+      "label": "SpaceEventsDispatcher.dispatch",
+      "repo": "notify-worker",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 25,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'DOC_PUBLISHED'",
+                "'COMMENT_ADDED'",
+                "'MEMBER_JOINED'",
+                "'EXPORT_FINISHED'"
+              ],
+              "line": 25
+            }
+          },
+          {
+            "field": "commentId",
+            "in": "notify-worker#src/handlers/notices.service.ts:Notices.comment",
+            "line": 17,
+            "when": [
+              "COMMENT_ADDED"
+            ]
+          },
+          {
+            "field": "type",
+            "in": "notify-worker#src/handlers/notices.service.ts:Notices.digest",
+            "line": 13,
+            "when": [
+              "MEMBER_JOINED",
+              "EXPORT_FINISHED"
+            ]
+          },
+          {
+            "field": "docId",
+            "in": "notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+            "line": 9,
+            "when": [
+              "DOC_PUBLISHED"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+      "type": "method",
+      "label": "SpaceEventsDispatcher.onComment",
+      "repo": "notify-worker",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#CommentAdded"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onModuleInit",
+      "type": "method",
+      "label": "SpaceEventsDispatcher.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher",
+      "type": "provider",
+      "label": "ExportWatcher",
+      "repo": "notify-worker",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+      "type": "method",
+      "label": "ExportWatcher.notifyOwner",
+      "repo": "notify-worker",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#ExportFinished"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "type": "method",
+      "label": "ExportWatcher.onEvent",
+      "repo": "notify-worker",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 17
+          },
+          {
+            "field": "url",
+            "in": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+            "line": 22,
+            "when": [
+              "EXPORT_FINISHED"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onModuleInit",
+      "type": "method",
+      "label": "ExportWatcher.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest",
+      "type": "provider",
+      "label": "LegacyDigest",
+      "repo": "notify-worker",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 12,
+      "kind": "injectable"
+    },
+    {
+      "id": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota",
+      "type": "method",
+      "label": "LegacyDigest.mailQuota",
+      "repo": "notify-worker",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "usedBytes",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "type": "method",
+      "label": "LegacyDigest.onEvent",
+      "repo": "notify-worker",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 21
+          },
+          {
+            "field": "usedBytes",
+            "line": 21,
+            "when": [
+              "QUOTA_WARNING"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onModuleInit",
+      "type": "method",
+      "label": "LegacyDigest.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/mention.handler.ts:MentionHandler",
+      "type": "provider",
+      "label": "MentionHandler",
+      "repo": "notify-worker",
+      "file": "src/handlers/mention.handler.ts",
+      "line": 10,
+      "kind": "injectable"
+    },
+    {
+      "id": "notify-worker#src/handlers/mention.handler.ts:MentionHandler.handle",
+      "type": "method",
+      "label": "MentionHandler.handle",
+      "repo": "notify-worker",
+      "file": "src/handlers/mention.handler.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/notices.service.ts:Notices",
+      "type": "provider",
+      "label": "Notices",
+      "repo": "notify-worker",
+      "file": "src/handlers/notices.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/notices.service.ts:Notices.comment",
+      "type": "method",
+      "label": "Notices.comment",
+      "repo": "notify-worker",
+      "file": "src/handlers/notices.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#CommentAdded"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "type": "method",
+      "label": "Notices.digest",
+      "repo": "notify-worker",
+      "file": "src/handlers/notices.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#ExportFinished|type:notify-worker#MemberJoined"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+      "type": "method",
+      "label": "Notices.docPublished",
+      "repo": "notify-worker",
+      "file": "src/handlers/notices.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#DocPublished"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher",
+      "type": "provider",
+      "label": "RegistryDispatcher",
+      "repo": "notify-worker",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.onModuleInit",
+      "type": "method",
+      "label": "RegistryDispatcher.onModuleInit",
+      "repo": "notify-worker",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "type": "method",
+      "label": "RegistryDispatcher.route",
+      "repo": "notify-worker",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#SpaceEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 25
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "line": 26,
+            "why": "handed to handler"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/welcome.handlers.ts:HandlerRegistry",
+      "type": "provider",
+      "label": "HandlerRegistry",
+      "repo": "notify-worker",
+      "file": "src/handlers/welcome.handlers.ts",
+      "line": 20,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/welcome.handlers.ts:HandlerRegistry.find",
+      "type": "method",
+      "label": "HandlerRegistry.find",
+      "repo": "notify-worker",
+      "file": "src/handlers/welcome.handlers.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "type",
+              "type": "string"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers",
+      "type": "provider",
+      "label": "WelcomeHandlers",
+      "repo": "notify-worker",
+      "file": "src/handlers/welcome.handlers.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
+      "type": "method",
+      "label": "WelcomeHandlers.greet",
+      "repo": "notify-worker",
+      "file": "src/handlers/welcome.handlers.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:notify-worker#MemberJoined"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+      "type": "producer",
+      "label": "event space:*:events",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "DOC_PUBLISHED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+      "type": "producer",
+      "label": "event space:*:events",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "COMMENT_ADDED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+      "type": "producer",
+      "label": "event space:*:events",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "MEMBER_JOINED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+      "type": "producer",
+      "label": "event space:*:events",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "EXPORT_FINISHED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+      "type": "producer",
+      "label": "event space:*:events",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "QUOTA_WARNING"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+      "type": "producer",
+      "label": "event space:*:events",
+      "repo": "docs-api",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 46,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "space-bus",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypeUnread": "event may be any of 5 types (DOC_PUBLISHED, COMMENT_ADDED, MEMBER_JOINED, EXPORT_FINISHED, …); which one is decided where it is built, not here.",
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "realtime-gateway#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "realtime-gateway",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "SpaceBus",
+          "Clients",
+          "StreamRelay"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "realtime-gateway#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "provider",
+      "label": "SpaceBus",
+      "repo": "realtime-gateway",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "realtime-gateway#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "method",
+      "label": "SpaceBus.publish",
+      "repo": "realtime-gateway",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "realtime-gateway#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "method",
+      "label": "SpaceBus.subscribe",
+      "repo": "realtime-gateway",
+      "file": "src/bus/space-bus.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "pattern",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "realtime-gateway#src/stream/stream-relay.service.ts:Clients",
+      "type": "provider",
+      "label": "Clients",
+      "repo": "realtime-gateway",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "realtime-gateway#src/stream/stream-relay.service.ts:Clients.broadcast",
+      "type": "method",
+      "label": "Clients.broadcast",
+      "repo": "realtime-gateway",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay",
+      "type": "provider",
+      "label": "StreamRelay",
+      "repo": "realtime-gateway",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 18,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "type": "method",
+      "label": "StreamRelay.forward",
+      "repo": "realtime-gateway",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.onModuleInit",
+      "type": "method",
+      "label": "StreamRelay.onModuleInit",
+      "repo": "realtime-gateway",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "repo:docs-api",
+      "type": "repo",
+      "label": "docs-api",
+      "repo": "docs-api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:notify-worker",
+      "type": "repo",
+      "label": "notify-worker",
+      "repo": "notify-worker",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 12,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:realtime-gateway",
+      "type": "repo",
+      "label": "realtime-gateway",
+      "repo": "realtime-gateway",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:space:*:events",
+      "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20
+    },
+    {
+      "from": "channel:space:*:events",
+      "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 23
+    },
+    {
+      "from": "channel:space:*:events",
+      "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:space:*:events",
+      "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:space:*:events",
+      "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 17
+    },
+    {
+      "from": "channel:space:*:events",
+      "to": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:space:*:events",
+      "to": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:space:*:events#COMMENT_ADDED",
+      "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:space:*:events#COMMENT_ADDED",
+      "to": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 28,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:space:*:events#DOC_ARCHIVED",
+      "to": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 27,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:space:*:events#DOC_PUBLISHED",
+      "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordPublish",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 27,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "via": "map"
+      }
+    },
+    {
+      "from": "channel:space:*:events#DOC_PUBLISHED",
+      "to": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 26,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:space:*:events#EXPORT_FINISHED",
+      "to": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 17,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+        "via": "guard"
+      }
+    },
+    {
+      "from": "channel:space:*:events#EXPORT_FINISHED",
+      "to": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 31,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:space:*:events#MEMBER_JOINED",
+      "to": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 27,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+        "via": "map"
+      }
+    },
+    {
+      "from": "channel:space:*:events#MEMBER_JOINED",
+      "to": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 31,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:space:*:events#MEMBER_JOINED",
+      "to": "consumer:notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+        "via": "decorator"
+      }
+    },
+    {
+      "from": "channel:space:*:events#QUOTA_WARNING",
+      "to": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 21,
+      "meta": {
+        "selectedBy": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+        "via": "if"
+      }
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "to": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#Envelope"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+      "to": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#Envelope"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 36
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+      "to": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#Envelope"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 32
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "to": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 23
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin",
+      "to": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 34
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordPublish",
+      "to": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordPublish",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 30
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "to": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+      "to": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#CommentAdded"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 38
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+      "to": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#ExportFinished"
+      ],
+      "returns": "void",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "to": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota",
+      "to": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 24
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "to": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 17
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "to": "notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#ExportFinished|type:notify-worker#MemberJoined"
+      ],
+      "returns": "void",
+      "file": "src/handlers/notices.service.ts",
+      "line": 12
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+      "to": "notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#DocPublished"
+      ],
+      "returns": "void",
+      "file": "src/handlers/notices.service.ts",
+      "line": 8
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "to": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
+      "to": "notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
+      "type": "handles",
+      "confidence": "heuristic",
+      "params": [
+        "type:notify-worker#MemberJoined"
+      ],
+      "returns": "void",
+      "file": "src/handlers/welcome.handlers.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "to": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 26
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.controller.ts:SpacesController",
+      "to": "docs-api#src/spaces/spaces.service.ts:SpacesService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.controller.ts:SpacesController.comment",
+      "to": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.controller.ts:SpacesController.exportDone",
+      "to": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.controller.ts:SpacesController.join",
+      "to": "docs-api#src/spaces/spaces.service.ts:SpacesService.join",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.controller.ts:SpacesController.publish",
+      "to": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.controller.ts:SpacesController.quota",
+      "to": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 31
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService",
+      "to": "docs-api#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 12
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment",
+      "to": "docs-api#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 22
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.addComment",
+      "to": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 22
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport",
+      "to": "docs-api#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 32
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.finishExport",
+      "to": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 32
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.join",
+      "to": "docs-api#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 27
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.join",
+      "to": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 27
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc",
+      "to": "docs-api#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 16
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.publishDoc",
+      "to": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 16
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay",
+      "to": "docs-api#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 46
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.relay",
+      "to": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 46
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota",
+      "to": "docs-api#src/bus/space-bus.service.ts:SpaceBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37
+    },
+    {
+      "from": "docs-api#src/spaces/spaces.service.ts:SpacesService.warnQuota",
+      "to": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37
+    },
+    {
+      "from": "entry:docs-api:http:POST:/spaces/:param/docs/:param/comments",
+      "to": "docs-api#src/spaces/spaces.controller.ts:SpacesController.comment",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{commentId:string}"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{spaceId:string;docId:string}",
+        "body": "{commentId:string}"
+      }
+    },
+    {
+      "from": "entry:docs-api:http:POST:/spaces/:param/docs/:param/publish",
+      "to": "docs-api#src/spaces/spaces.controller.ts:SpacesController.publish",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{spaceId:string;docId:string}"
+      }
+    },
+    {
+      "from": "entry:docs-api:http:POST:/spaces/:param/exports/:param/done",
+      "to": "docs-api#src/spaces/spaces.controller.ts:SpacesController.exportDone",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "{url:string}"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 24,
+      "meta": {
+        "params": "{spaceId:string;jobId:string}",
+        "body": "{url:string}"
+      }
+    },
+    {
+      "from": "entry:docs-api:http:POST:/spaces/:param/members",
+      "to": "docs-api#src/spaces/spaces.controller.ts:SpacesController.join",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{memberId:string}"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{spaceId:string}",
+        "body": "{memberId:string}"
+      }
+    },
+    {
+      "from": "entry:docs-api:http:POST:/spaces/:param/quota",
+      "to": "docs-api#src/spaces/spaces.controller.ts:SpacesController.quota",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{usedBytes:number}"
+      ],
+      "returns": "void",
+      "file": "src/spaces/spaces.controller.ts",
+      "line": 29,
+      "meta": {
+        "params": "{spaceId:string}",
+        "body": "{usedBytes:number}"
+      }
+    },
+    {
+      "from": "entry:notify-worker:event:space:*:events",
+      "to": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#Envelope"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:notify-worker:event:space:*:events",
+      "to": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:notify-worker:event:space:*:events",
+      "to": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:notify-worker:event:space:*:events",
+      "to": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:notify-worker:event:space:*:events",
+      "to": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 17
+    },
+    {
+      "from": "entry:notify-worker:event:space:*:events",
+      "to": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:realtime-gateway:event:space:*:events",
+      "to": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 26
+    },
+    {
+      "from": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 17
+    },
+    {
+      "from": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "to": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushArchive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#Envelope"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 28
+    },
+    {
+      "from": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "to": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.pushComment",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#Envelope"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 26
+    },
+    {
+      "from": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onModuleInit",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20
+    },
+    {
+      "from": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onModuleInit",
+      "to": "notify-worker#src/handlers/activity-feed.service.ts:ActivityFeed.onMessage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#Envelope"
+      ],
+      "returns": "void",
+      "file": "src/handlers/activity-feed.service.ts",
+      "line": 20
+    },
+    {
+      "from": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 20
+    },
+    {
+      "from": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.onModuleInit",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 23
+    },
+    {
+      "from": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.onModuleInit",
+      "to": "notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 23
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 16
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher",
+      "to": "notify-worker#src/handlers/notices.service.ts:Notices",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 17
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "to": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#CommentAdded"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 29
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "to": "notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#ExportFinished|type:notify-worker#MemberJoined"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 32
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "to": "notify-worker#src/handlers/notices.service.ts:Notices.docPublished",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#DocPublished"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 27
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onComment",
+      "to": "notify-worker#src/handlers/notices.service.ts:Notices.comment",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#CommentAdded"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 39
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onModuleInit",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.onModuleInit",
+      "to": "notify-worker#src/handlers/dispatcher.service.ts:SpaceEventsDispatcher.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 10
+    },
+    {
+      "from": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "to": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.notifyOwner",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#ExportFinished"
+      ],
+      "returns": "void",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 18
+    },
+    {
+      "from": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onModuleInit",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 13
+    },
+    {
+      "from": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onModuleInit",
+      "to": "notify-worker#src/handlers/export-watcher.service.ts:ExportWatcher.onEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/export-watcher.service.ts",
+      "line": 13
+    },
+    {
+      "from": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 14
+    },
+    {
+      "from": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "to": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.mailQuota",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 21
+    },
+    {
+      "from": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onModuleInit",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 17
+    },
+    {
+      "from": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onModuleInit",
+      "to": "notify-worker#src/handlers/legacy-digest.service.ts:LegacyDigest.onEvent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/legacy-digest.service.ts",
+      "line": 17
+    },
+    {
+      "from": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 16
+    },
+    {
+      "from": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher",
+      "to": "notify-worker#src/handlers/welcome.handlers.ts:HandlerRegistry",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 17
+    },
+    {
+      "from": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.onModuleInit",
+      "to": "notify-worker#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.onModuleInit",
+      "to": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:notify-worker#SpaceEvent"
+      ],
+      "returns": "void",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 21
+    },
+    {
+      "from": "notify-worker#src/handlers/registry-dispatcher.service.ts:RegistryDispatcher.route",
+      "to": "notify-worker#src/handlers/welcome.handlers.ts:HandlerRegistry.find",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "src/handlers/registry-dispatcher.service.ts",
+      "line": 25
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+      "to": "channel:space:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;docId:string}"
+      ],
+      "file": "src/spaces/spaces.service.ts",
+      "line": 16
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:16:5",
+      "to": "channel:space:*:events#DOC_PUBLISHED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 16,
+      "params": [
+        "{type:string;docId:string}"
+      ]
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+      "to": "channel:space:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:docs-api#CommentAdded"
+      ],
+      "file": "src/spaces/spaces.service.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:22:5",
+      "to": "channel:space:*:events#COMMENT_ADDED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 22,
+      "params": [
+        "type:docs-api#CommentAdded"
+      ]
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+      "to": "channel:space:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:'MEMBER_JOINED';memberId:string}"
+      ],
+      "file": "src/spaces/spaces.service.ts",
+      "line": 27
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:27:5",
+      "to": "channel:space:*:events#MEMBER_JOINED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 27,
+      "params": [
+        "{type:'MEMBER_JOINED';memberId:string}"
+      ]
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+      "to": "channel:space:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:docs-api#ExportFinished"
+      ],
+      "file": "src/spaces/spaces.service.ts",
+      "line": 32
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:32:5",
+      "to": "channel:space:*:events#EXPORT_FINISHED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 32,
+      "params": [
+        "type:docs-api#ExportFinished"
+      ]
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+      "to": "channel:space:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;usedBytes:number}"
+      ],
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+      "to": "channel:space:*:events#QUOTA_WARNING",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37,
+      "params": [
+        "{type:string;usedBytes:number}"
+      ]
+    },
+    {
+      "from": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+      "to": "channel:space:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "type:docs-api#SpaceEvent"
+      ],
+      "file": "src/spaces/spaces.service.ts",
+      "line": 46
+    },
+    {
+      "from": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay",
+      "to": "realtime-gateway#src/bus/space-bus.service.ts:SpaceBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 21
+    },
+    {
+      "from": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay",
+      "to": "realtime-gateway#src/stream/stream-relay.service.ts:Clients",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 22
+    },
+    {
+      "from": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "to": "realtime-gateway#src/stream/stream-relay.service.ts:Clients.broadcast",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 30
+    },
+    {
+      "from": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.onModuleInit",
+      "to": "realtime-gateway#src/bus/space-bus.service.ts:SpaceBus.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 26
+    },
+    {
+      "from": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.onModuleInit",
+      "to": "realtime-gateway#src/stream/stream-relay.service.ts:StreamRelay.forward",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/stream/stream-relay.service.ts",
+      "line": 26
+    }
+  ],
+  "types": {
+    "type:docs-api#CommentAdded": {
+      "name": "CommentAdded",
+      "kind": "object",
+      "declaredIn": "docs-api#src/spaces/space-events.ts",
+      "structuralHash": "ff8dbab057ab3d52",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'COMMENT_ADDED'",
+          "optional": false
+        },
+        {
+          "name": "docId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "commentId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:docs-api#DocPublished": {
+      "name": "DocPublished",
+      "kind": "object",
+      "declaredIn": "docs-api#src/spaces/space-events.ts",
+      "structuralHash": "b21881c0a223c9f6",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'DOC_PUBLISHED'",
+          "optional": false
+        },
+        {
+          "name": "docId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:docs-api#ExportFinished": {
+      "name": "ExportFinished",
+      "kind": "object",
+      "declaredIn": "docs-api#src/spaces/space-events.ts",
+      "structuralHash": "ca56cd81b29012a9",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'EXPORT_FINISHED'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:docs-api#MemberJoined": {
+      "name": "MemberJoined",
+      "kind": "object",
+      "declaredIn": "docs-api#src/spaces/space-events.ts",
+      "structuralHash": "a4c6eadd35ebffd9",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'MEMBER_JOINED'",
+          "optional": false
+        },
+        {
+          "name": "memberId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:docs-api#QuotaWarning": {
+      "name": "QuotaWarning",
+      "kind": "object",
+      "declaredIn": "docs-api#src/spaces/space-events.ts",
+      "structuralHash": "ff359703a5b6109e",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'QUOTA_WARNING'",
+          "optional": false
+        },
+        {
+          "name": "usedBytes",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:docs-api#SpaceEvent": {
+      "name": "SpaceEvent",
+      "kind": "union",
+      "declaredIn": "docs-api#src/spaces/space-events.ts",
+      "structuralHash": "d3df2a894cec4ca9",
+      "members": [
+        "type:docs-api#CommentAdded",
+        "type:docs-api#ExportFinished",
+        "type:docs-api#DocPublished",
+        "type:docs-api#MemberJoined",
+        "type:docs-api#QuotaWarning"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:notify-worker#CommentAdded": {
+      "name": "CommentAdded",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/handlers/space-events.ts",
+      "structuralHash": "ff8dbab057ab3d52",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'COMMENT_ADDED'",
+          "optional": false
+        },
+        {
+          "name": "docId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "commentId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:notify-worker#DocPublished": {
+      "name": "DocPublished",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/handlers/space-events.ts",
+      "structuralHash": "b21881c0a223c9f6",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'DOC_PUBLISHED'",
+          "optional": false
+        },
+        {
+          "name": "docId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:notify-worker#Envelope": {
+      "name": "Envelope",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/handlers/activity-feed.service.ts",
+      "structuralHash": "8763f82b3b31ab54",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "docId",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:notify-worker#ExportFinished": {
+      "name": "ExportFinished",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/handlers/space-events.ts",
+      "structuralHash": "ca56cd81b29012a9",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'EXPORT_FINISHED'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:notify-worker#MemberJoined": {
+      "name": "MemberJoined",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/handlers/space-events.ts",
+      "structuralHash": "a4c6eadd35ebffd9",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'MEMBER_JOINED'",
+          "optional": false
+        },
+        {
+          "name": "memberId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:notify-worker#QuotaWarning": {
+      "name": "QuotaWarning",
+      "kind": "object",
+      "declaredIn": "notify-worker#src/handlers/space-events.ts",
+      "structuralHash": "ff359703a5b6109e",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'QUOTA_WARNING'",
+          "optional": false
+        },
+        {
+          "name": "usedBytes",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:notify-worker#SpaceEvent": {
+      "name": "SpaceEvent",
+      "kind": "union",
+      "declaredIn": "notify-worker#src/handlers/space-events.ts",
+      "structuralHash": "d3df2a894cec4ca9",
+      "members": [
+        "type:notify-worker#DocPublished",
+        "type:notify-worker#CommentAdded",
+        "type:notify-worker#MemberJoined",
+        "type:notify-worker#ExportFinished",
+        "type:notify-worker#QuotaWarning"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bus/space-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "docs-api"
+    },
+    {
+      "file": "src/spaces/spaces.service.ts",
+      "line": 37,
+      "reason": "message-type-unselected",
+      "message": "no code that runs compares QUOTA_WARNING: its name is written only where it is sent, at src/spaces/spaces.service.ts:37 in docs-api; only LegacyDigest.mailQuota selects it, and nothing builds LegacyDigest: no module registers it and nothing injects it; 5 consumers choose other types; 1 consumer takes every type and hands it on, and no code past it compares the name",
+      "symbol": "producer:docs-api#src/spaces/spaces.service.ts:37:5",
+      "service": "docs-api",
+      "meta": {
+        "type": "channel:space:*:events#QUOTA_WARNING",
+        "channel": "channel:space:*:events",
+        "messageType": "QUOTA_WARNING",
+        "sureness": "sure"
+      }
+    },
+    {
+      "file": "src/spaces/spaces.service.ts",
+      "line": 46,
+      "reason": "message-type-unread",
+      "level": "info",
+      "message": "SpacesService.relay -> type",
+      "hint": "event may be any of 5 types (DOC_PUBLISHED, COMMENT_ADDED, MEMBER_JOINED, EXPORT_FINISHED, …); which one is decided where it is built, not here. So this publish is drawn onto its channel and onto no type of message on it.",
+      "symbol": "producer:docs-api#src/spaces/spaces.service.ts:46:5",
+      "service": "docs-api"
+    },
+    {
+      "file": "src/bus/space-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "notify-worker"
+    },
+    {
+      "file": "src/handlers/audit-trail.service.ts",
+      "line": 27,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The method is chosen at run time; nothing static to point at.",
+      "symbol": "AuditTrail.record -> this.handlers[event.type]",
+      "meta": {
+        "cause": "dynamic-member"
+      },
+      "service": "notify-worker"
+    },
+    {
+      "file": "src/bus/space-bus.service.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "realtime-gateway"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular"
+    }
+  ],
+  "output": ".flowatlas"
+}

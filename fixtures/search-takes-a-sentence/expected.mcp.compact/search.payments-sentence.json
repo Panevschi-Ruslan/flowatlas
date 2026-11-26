@@ -1,0 +1,92 @@
+{
+  "query": "what handles payments",
+  "best": [
+    {
+      "id": "entry:shop-api:http:POST:/payments",
+      "loc": "src/payments/payments.controller.ts:9",
+      "reach": "alive",
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.capture",
+      "line": 5,
+      "reach": "alive",
+      "from": "POST /payments",
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.controller.ts:PaymentsController.capture",
+      "line": 9,
+      "reach": "alive",
+      "from": "POST /payments",
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/payments.client.ts:PaymentsClient.pay",
+      "line": 10,
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "line": 9,
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService",
+      "type": "provider",
+      "line": 3,
+      "kind": "injectable",
+      "reach": "alive",
+      "from": "POST /payments",
+      "ways": 2,
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.controller.ts:PaymentsController",
+      "type": "provider",
+      "line": 4,
+      "kind": "controller",
+      "reach": "alive",
+      "from": "POST /payments",
+      "matched": [
+        "payments"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/payments.client.ts:PaymentsClient",
+      "type": "provider",
+      "line": 6,
+      "kind": "injectable",
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "payments"
+      ]
+    }
+  ],
+  "complete": false,
+  "left": [
+    "fuzzy: ranked by the words handles, payments"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:POST:/payments\"})",
+    "impact({symbol: \"entry:shop-api:http:POST:/payments\"})"
+  ]
+}

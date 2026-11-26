@@ -1,0 +1,32 @@
+{
+  "channel": {
+    "id": "channel:desk_alerts",
+    "type": "channel",
+    "label": "desk_alerts",
+    "loc": "src/desk/desk-watcher.service.ts:23",
+    "service": "shop"
+  },
+  "consumers": [
+    {
+      "id": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+      "type": "consumer",
+      "label": "DeskWatcher.archive",
+      "loc": "src/desk/desk-watcher.service.ts:32",
+      "service": "shop",
+      "kind": "event",
+      "selectedIn": "DeskWatcher.onModuleInit",
+      "via": "if",
+      "endLine": 34,
+      "reach": "alive",
+      "from": "event desk_alerts"
+    }
+  ],
+  "total": 1,
+  "type": "DESK_CLOSED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:desk_alerts\", type: \"DESK_CLOSED\"})",
+    "impact({symbol: \"consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive\"})",
+    "get_source({symbol: \"consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive\"})"
+  ]
+}

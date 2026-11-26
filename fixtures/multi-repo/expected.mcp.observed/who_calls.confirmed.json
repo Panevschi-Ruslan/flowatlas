@@ -8,7 +8,8 @@
     "kind": "http",
     "observed": 22,
     "p95": 72.88,
-    "errorRate": 0
+    "errorRate": 0,
+    "reach": "alive"
   },
   "callers": [
     {
@@ -18,7 +19,9 @@
         "label": "GET /orders/:param",
         "loc": "src/app/orders-api.service.ts:21",
         "service": "web",
-        "kind": "http"
+        "kind": "http",
+        "reach": "unreached",
+        "from": "none"
       },
       "edge": {
         "type": "hits",
@@ -34,7 +37,9 @@
         "label": "GET /orders/:param",
         "loc": "src/app/orders-api.service.ts:73",
         "service": "web",
-        "kind": "http"
+        "kind": "http",
+        "reach": "unreached",
+        "from": "none"
       },
       "edge": {
         "type": "hits",
@@ -48,18 +53,22 @@
       "children": []
     }
   ],
-  "truncated": "2 more nodes past depth 1; raise depth",
-  "stoppedBy": [
-    "depth"
-  ],
-  "frontier": [
-    "ui_api_call:web#src/app/orders-api.service.ts:21:12",
-    "ui_api_call:web#src/app/orders-api.service.ts:73:12"
+  "waysIn": [],
+  "waysInNone": "no way in reaches this; the components on the way (components) call it",
+  "unreached": 1,
+  "components": {
+    "web": [
+      "src/app/checkout.component.ts"
+    ]
+  },
+  "complete": false,
+  "left": [
+    "gaps: something reaches it but no way in does; its callers may be behind a gap"
   ],
   "next": [
-    "who_calls({symbol: \"entry:gateway:http:GET:/orders/:param\", depth: 2})",
+    "cant_follow({service: \"web\"})",
+    "search({query: \"src/app/orders-api.service.ts\", kinds: [\"gaps\"]})",
     "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
-    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
-    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})"
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})"
   ]
 }

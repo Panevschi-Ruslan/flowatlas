@@ -1,0 +1,31 @@
+{
+  "query": "/reports",
+  "counts": {
+    "routes": 1,
+    "classes": 1
+  },
+  "results": {
+    "routes": [
+      {
+        "id": "entry:angular-basic:screen:/reports",
+        "loc": "src/app/app.routes.ts:26",
+        "reach": "outside"
+      }
+    ],
+    "classes": [
+      {
+        "id": "angular-basic#src/app/reports.component.ts:ReportsComponent",
+        "type": "ui_component",
+        "line": 4,
+        "kind": "standalone",
+        "reach": "alive",
+        "from": "screen /reports"
+      }
+    ]
+  },
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:angular-basic:screen:/reports\"})",
+    "impact({symbol: \"entry:angular-basic:screen:/reports\"})"
+  ]
+}

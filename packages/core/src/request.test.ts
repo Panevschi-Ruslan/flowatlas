@@ -568,3 +568,22 @@ describe('a package helper reached through a default import or a barrel of the r
     expect(callsIn(files, { name: 'fail', package: '@acme/http-kit' })).toEqual([]);
   });
 });
+
+describe('a helper a framework makes global (P233)', () => {
+  const calls = (source: string) => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const file = project.createSourceFile('handler.ts', source);
+    return file.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => call.getExpression().getText() === 'readBody');
+  };
+  const helper = { name: 'readBody', package: 'h3', global: true };
+
+  it('is matched by name where nothing binds it, and by its import where something does', () => {
+    expect(calls('export default (event: unknown) => readBody(event);').map((call) => callsHelper(call, helper))).toEqual([true]);
+    expect(calls("import { readBody } from 'h3';\nexport default (event: unknown) => readBody(event);").map((call) => callsHelper(call, helper))).toEqual([true]);
+  });
+
+  it("is not a function of the project's own that shares the name", () => {
+    expect(calls('const readBody = (x: unknown) => x;\nexport default (event: unknown) => readBody(event);').map((call) => callsHelper(call, helper))).toEqual([false]);
+    expect(calls('export default (event: unknown) => readBody(event);').map((call) => callsHelper(call, { name: 'readBody', package: 'h3' }))).toEqual([false]);
+  });
+});

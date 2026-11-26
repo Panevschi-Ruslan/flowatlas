@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-shared-failures",
-  "generatedAt": "2026-10-17T01:51:43.332Z",
+  "generatedAt": "2026-11-23T14:44:38.479Z",
   "nodes": [
     {
       "id": "entry:nest-shared-failures:http:DELETE:/billing/:param",
@@ -1155,7 +1155,8 @@
             "text": "copying invoice {id}",
             "at": 37
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1180,6 +1181,39 @@
             "level": "log",
             "text": "creating invoice {id}",
             "at": 19
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 19
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 21
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 22
+          },
+          {
+            "field": "version",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 22
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 23
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 23,
+            "why": "handed to this.records.set"
           }
         ]
       }
@@ -1207,7 +1241,8 @@
             "text": "reading invoice {id}",
             "at": 13
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1233,7 +1268,8 @@
             "text": "removing invoice {id}",
             "at": 44
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1263,6 +1299,13 @@
             "text": "replacing invoice {id}",
             "at": 25
           }
+        ],
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 26,
+            "why": "spread into another value"
+          }
         ]
       }
     },
@@ -1289,7 +1332,8 @@
             "text": "touching invoice {id}",
             "at": 31
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1327,7 +1371,8 @@
             "text": "copying product {id}",
             "at": 37
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1352,6 +1397,39 @@
             "level": "log",
             "text": "creating product {id}",
             "at": 19
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 19
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 21
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 22
+          },
+          {
+            "field": "version",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 22
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 23
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 23,
+            "why": "handed to this.records.set"
           }
         ]
       }
@@ -1379,7 +1457,8 @@
             "text": "reading product {id}",
             "at": 13
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1405,7 +1484,8 @@
             "text": "removing product {id}",
             "at": 44
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1435,6 +1515,13 @@
             "text": "replacing product {id}",
             "at": 25
           }
+        ],
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 26,
+            "why": "spread into another value"
+          }
         ]
       }
     },
@@ -1461,7 +1548,8 @@
             "text": "touching product {id}",
             "at": 31
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1499,7 +1587,8 @@
             "text": "copying order {id}",
             "at": 37
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1524,6 +1613,39 @@
             "level": "log",
             "text": "creating order {id}",
             "at": 19
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 19
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 21
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 22
+          },
+          {
+            "field": "version",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 22
+          },
+          {
+            "field": "id",
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 23
+          }
+        ],
+        "fieldsUnread": [
+          {
+            "in": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "line": 23,
+            "why": "handed to this.records.set"
           }
         ]
       }
@@ -1551,7 +1673,8 @@
             "text": "reading order {id}",
             "at": 13
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1577,7 +1700,8 @@
             "text": "removing order {id}",
             "at": 44
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1607,6 +1731,13 @@
             "text": "replacing order {id}",
             "at": 25
           }
+        ],
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 26,
+            "why": "spread into another value"
+          }
         ]
       }
     },
@@ -1633,7 +1764,8 @@
             "text": "touching order {id}",
             "at": 31
           }
-        ]
+        ],
+        "fieldsRead": []
       }
     },
     {
@@ -1644,7 +1776,8 @@
       "file": "src/shared/api-key.guard.ts",
       "line": 4,
       "meta": {
-        "module": "AppModule"
+        "module": "AppModule",
+        "fieldsRead": []
       }
     },
     {
@@ -1767,7 +1900,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 9
+          }
+        ]
       }
     }
   ],

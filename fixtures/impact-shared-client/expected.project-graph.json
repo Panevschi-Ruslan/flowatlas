@@ -1,0 +1,4210 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T21:14:21.786Z",
+  "services": [
+    {
+      "name": "market-api",
+      "repo": "./market-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "market-web",
+      "repo": "./market-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "kiosk-web",
+      "repo": "./kiosk-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "market-bot",
+      "repo": "./market-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cache_op:market-api#src/events.service.ts:11:11",
+      "type": "cache_op",
+      "label": "other shop:*:events",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:market-api#src/events.service.ts:15:11",
+      "type": "cache_op",
+      "label": "other shop:*:events",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:market-api#src/live.controller.ts:13:12",
+      "type": "cache_op",
+      "label": "other shop:*:events",
+      "repo": "market-api",
+      "file": "src/live.controller.ts",
+      "line": 13,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:events",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:market-api#src/live.controller.ts:16:25",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "market-api",
+      "file": "src/live.controller.ts",
+      "line": 16,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "unsubscribe"
+      }
+    },
+    {
+      "id": "channel:shop:*:events",
+      "type": "channel",
+      "label": "shop:*:events",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 2,
+        "consumers": 4
+      }
+    },
+    {
+      "id": "channel:shop:*:events#DESK_URGENT",
+      "type": "channel",
+      "label": "shop:*:events#DESK_URGENT",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:events",
+        "messageType": "DESK_URGENT",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "market-api",
+              "loc": "src/events.service.ts:15",
+              "text": "type: 'DESK_URGENT'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:events#ITEMS_CHANGED",
+      "type": "channel",
+      "label": "shop:*:events#ITEMS_CHANGED",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:events",
+        "messageType": "ITEMS_CHANGED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "market-api",
+              "loc": "src/events.service.ts:11",
+              "text": "type: 'ITEMS_CHANGED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:market-bot#MARKET_API_URL",
+      "type": "config_key",
+      "label": "MARKET_API_URL",
+      "repo": "market-bot",
+      "file": "src/app.service.ts",
+      "line": 15,
+      "meta": {
+        "key": "MARKET_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:market-api#src/live.controller.ts:LiveController.events",
+      "type": "consumer",
+      "label": "LiveController.events",
+      "repo": "market-api",
+      "file": "src/live.controller.ts",
+      "line": 13,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "relay": "entry:market-api:http:GET:/api/shops/:param/events",
+        "entryId": "entry:market-api:event:shop:*:events",
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 13,
+            "column": 56,
+            "through": "listener.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "type": "consumer",
+      "label": "HistoryPageComponent.ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/history-page.component.ts",
+      "line": 24,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 24,
+            "column": 5,
+            "through": "ShopEventsService.event$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ITEMS_CHANGED",
+            "consumer": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+            "via": "filter",
+            "line": 24
+          }
+        ],
+        "routes": [
+          "entry:market-api:http:GET:/api/shops/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+      "type": "consumer",
+      "label": "HistoryPageComponent.refresh",
+      "repo": "market-web",
+      "file": "src/app/history-page.component.ts",
+      "line": 27,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+        "readsNothing": true,
+        "messageTypes": [
+          "ITEMS_CHANGED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "type": "consumer",
+      "label": "ShopEventsService.connect",
+      "repo": "market-web",
+      "file": "src/app/shop-events.service.ts",
+      "line": 22,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "handsOnTo": [
+          "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+          "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit"
+        ],
+        "subjects": [
+          "ShopEventsService._event$"
+        ],
+        "routes": [
+          "entry:market-api:http:GET:/api/shops/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "type": "consumer",
+      "label": "StaffBoardComponent.ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 27,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 27,
+            "column": 5,
+            "through": "ShopEventsService.event$"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "DESK_URGENT",
+            "consumer": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+            "via": "filter",
+            "line": 27
+          }
+        ],
+        "routes": [
+          "entry:market-api:http:GET:/api/shops/:param/events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "type": "consumer",
+      "label": "StaffBoardComponent.onUrgency",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 30,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "selectedBy": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+        "messageTypes": [
+          "DESK_URGENT"
+        ]
+      }
+    },
+    {
+      "id": "entry:kiosk-web:screen:/browse",
+      "type": "entry",
+      "label": "/browse",
+      "repo": "kiosk-web",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "kind": "screen",
+      "meta": {
+        "path": "/browse",
+        "by": "angular-routes",
+        "screens": [
+          "BrowsePageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:kiosk-web:screen:/order",
+      "type": "entry",
+      "label": "/order",
+      "repo": "kiosk-web",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "kind": "screen",
+      "meta": {
+        "path": "/order",
+        "by": "angular-routes",
+        "screens": [
+          "OrderPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-api:event:shop:*:events",
+      "type": "entry",
+      "label": "event shop:*:events",
+      "repo": "market-api",
+      "file": "src/live.controller.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "pattern": "shop:*:events",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:market-api:http:ALL:/api/*",
+      "type": "entry",
+      "label": "ALL /api/*",
+      "repo": "market-api",
+      "file": "src/fallback.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/*",
+        "rawPath": "/api/*",
+        "controller": "FallbackController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "market-api#src/fallback.controller.ts:FallbackController.notFound",
+            "file": "src/fallback.controller.ts",
+            "line": 11,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:market-api:http:DELETE:/api/admin/:param/bundles/:param",
+      "type": "entry",
+      "label": "DELETE /api/admin/:param/bundles/:param",
+      "repo": "market-api",
+      "file": "src/bundles.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/admin/:param/bundles/:param",
+        "rawPath": "/api/admin/:shopId/bundles/:bundleId",
+        "controller": "BundlesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:market-api:http:GET:/api/items",
+      "type": "entry",
+      "label": "GET /api/items",
+      "repo": "market-api",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/items",
+        "rawPath": "/api/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:market-api:http:GET:/api/shops/:param/events",
+      "type": "entry",
+      "label": "GET /api/shops/:param/events",
+      "repo": "market-api",
+      "file": "src/live.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/shops/:param/events",
+        "rawPath": "/api/shops/:shopId/events",
+        "controller": "LiveController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "events"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:shop:*:events"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-api:http:GET:/api/staff/desks",
+      "type": "entry",
+      "label": "GET /api/staff/desks",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/staff/desks",
+        "rawPath": "/api/staff/desks",
+        "controller": "DesksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:market-api:http:POST:/api/items",
+      "type": "entry",
+      "label": "POST /api/items",
+      "repo": "market-api",
+      "file": "src/items.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/items",
+        "rawPath": "/api/items",
+        "controller": "ItemsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:market-api:http:POST:/api/staff/desks/:param/ack-call",
+      "type": "entry",
+      "label": "POST /api/staff/desks/:param/ack-call",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/staff/desks/:param/ack-call",
+        "rawPath": "/api/staff/desks/:deskId/ack-call",
+        "controller": "DesksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:market-api:http:POST:/api/staff/desks/:param/call",
+      "type": "entry",
+      "label": "POST /api/staff/desks/:param/call",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/staff/desks/:param/call",
+        "rawPath": "/api/staff/desks/:deskId/call",
+        "controller": "DesksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:market-api:http:POST:/api/staff/desks/:param/close",
+      "type": "entry",
+      "label": "POST /api/staff/desks/:param/close",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/staff/desks/:param/close",
+        "rawPath": "/api/staff/desks/:deskId/close",
+        "controller": "DesksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:market-bot:bot_command:desks",
+      "type": "entry",
+      "label": "bot_command desks",
+      "repo": "market-bot",
+      "file": "src/market-bot.ts",
+      "line": 15,
+      "kind": "bot_command",
+      "meta": {
+        "key": "desks",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'desks'",
+        "updateClass": "MarketBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:market-bot:bot_command:items",
+      "type": "entry",
+      "label": "bot_command items",
+      "repo": "market-bot",
+      "file": "src/market-bot.ts",
+      "line": 14,
+      "kind": "bot_command",
+      "meta": {
+        "key": "items",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "'items'",
+        "updateClass": "MarketBot",
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/catalog",
+      "type": "entry",
+      "label": "/catalog",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 13,
+      "kind": "screen",
+      "meta": {
+        "path": "/catalog",
+        "by": "angular-routes",
+        "screens": [
+          "CatalogPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/history",
+      "type": "entry",
+      "label": "/history",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 12,
+      "kind": "screen",
+      "meta": {
+        "path": "/history",
+        "by": "angular-routes",
+        "screens": [
+          "HistoryPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 14,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports",
+        "by": "angular-routes",
+        "screens": [
+          "ReportsPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/settings",
+      "type": "entry",
+      "label": "/settings",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 15,
+      "kind": "screen",
+      "meta": {
+        "path": "/settings",
+        "by": "angular-routes",
+        "screens": [
+          "SettingsPageComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/staff",
+      "type": "entry",
+      "label": "/staff",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 16,
+      "kind": "screen",
+      "meta": {
+        "path": "/staff",
+        "by": "angular-routes",
+        "screens": [
+          "StaffBoardComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/staff/archive/orders",
+      "type": "entry",
+      "label": "/staff/archive/orders",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 19,
+      "kind": "screen",
+      "meta": {
+        "path": "/staff/archive/orders",
+        "by": "angular-routes",
+        "screens": [
+          "StaffOrderComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/staff/desks/:param",
+      "type": "entry",
+      "label": "/staff/desks/:param",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "kind": "screen",
+      "meta": {
+        "path": "/staff/desks/:param",
+        "by": "angular-routes",
+        "screens": [
+          "StaffDeskDetailComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/staff/orders",
+      "type": "entry",
+      "label": "/staff/orders",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 17,
+      "kind": "screen",
+      "meta": {
+        "path": "/staff/orders",
+        "by": "angular-routes",
+        "screens": [
+          "StaffOrderComponent"
+        ]
+      }
+    },
+    {
+      "id": "entry:market-web:screen:/staff/orders/:param",
+      "type": "entry",
+      "label": "/staff/orders/:param",
+      "repo": "market-web",
+      "file": "src/app/app.routes.ts",
+      "line": 18,
+      "kind": "screen",
+      "meta": {
+        "path": "/staff/orders/:param",
+        "by": "angular-routes",
+        "screens": [
+          "StaffOrderComponent"
+        ]
+      }
+    },
+    {
+      "id": "http_out:market-bot#src/app.service.ts:15:43",
+      "type": "http_out",
+      "label": "GET /api/items",
+      "repo": "market-bot",
+      "file": "src/app.service.ts",
+      "line": 15,
+      "meta": {
+        "method": "GET",
+        "url": "${MARKET_API_URL}/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": "MARKET_API_URL",
+        "responseType": "string[]",
+        "bodyType": null,
+        "queryType": "{shopId:string}",
+        "queryKeys": [
+          "shopId"
+        ],
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "http_out:market-bot#src/app.service.ts:20:43",
+      "type": "http_out",
+      "label": "GET /api/staff/desks",
+      "repo": "market-bot",
+      "file": "src/app.service.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "${MARKET_API_URL}/api/staff/desks",
+        "path": "/api/staff/desks",
+        "baseUrlEnv": "MARKET_API_URL",
+        "responseType": "string[]",
+        "bodyType": null,
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "kiosk-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "kiosk-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/browse-page.component.ts:BrowsePageComponent",
+      "type": "ui_component",
+      "label": "BrowsePageComponent",
+      "repo": "kiosk-web",
+      "file": "src/app/browse-page.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-browse-page",
+        "route": "/browse"
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/browse-page.component.ts:BrowsePageComponent.ngOnInit",
+      "type": "method",
+      "label": "BrowsePageComponent.ngOnInit",
+      "repo": "kiosk-web",
+      "file": "src/app/browse-page.component.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/kiosk.client.ts:KioskClient",
+      "type": "provider",
+      "label": "KioskClient",
+      "repo": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/kiosk.client.ts:KioskClient.browse",
+      "type": "method",
+      "label": "KioskClient.browse",
+      "repo": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/kiosk.client.ts:KioskClient.forward",
+      "type": "method",
+      "label": "KioskClient.forward",
+      "repo": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/kiosk.client.ts:KioskClient.order",
+      "type": "method",
+      "label": "KioskClient.order",
+      "repo": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent",
+      "type": "ui_component",
+      "label": "OrderPageComponent",
+      "repo": "kiosk-web",
+      "file": "src/app/order-page.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-order-page",
+        "route": "/order"
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent.help",
+      "type": "method",
+      "label": "OrderPageComponent.help",
+      "repo": "kiosk-web",
+      "file": "src/app/order-page.component.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent.place",
+      "type": "method",
+      "label": "OrderPageComponent.place",
+      "repo": "kiosk-web",
+      "file": "src/app/order-page.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "market-api",
+      "file": "src/app.module.ts",
+      "line": 11,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ItemsController",
+          "DesksController",
+          "BundlesController",
+          "LiveController",
+          "FallbackController"
+        ],
+        "providers": [
+          "ItemsService",
+          "DesksService",
+          "EventsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "market-api#src/bundles.controller.ts:BundlesController",
+      "type": "provider",
+      "label": "BundlesController",
+      "repo": "market-api",
+      "file": "src/bundles.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/bundles.controller.ts:BundlesController.remove",
+      "type": "method",
+      "label": "BundlesController.remove",
+      "repo": "market-api",
+      "file": "src/bundles.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "bundleId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-api#src/desks.controller.ts:DesksController",
+      "type": "provider",
+      "label": "DesksController",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/desks.controller.ts:DesksController.ackCall",
+      "type": "method",
+      "label": "DesksController.ackCall",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-api#src/desks.controller.ts:DesksController.call",
+      "type": "method",
+      "label": "DesksController.call",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-api#src/desks.controller.ts:DesksController.close",
+      "type": "method",
+      "label": "DesksController.close",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-api#src/desks.controller.ts:DesksController.list",
+      "type": "method",
+      "label": "DesksController.list",
+      "repo": "market-api",
+      "file": "src/desks.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-api#src/desks.service.ts:DesksService",
+      "type": "provider",
+      "label": "DesksService",
+      "repo": "market-api",
+      "file": "src/desks.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/desks.service.ts:DesksService.ackCall",
+      "type": "method",
+      "label": "DesksService.ackCall",
+      "repo": "market-api",
+      "file": "src/desks.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/desks.service.ts:DesksService.call",
+      "type": "method",
+      "label": "DesksService.call",
+      "repo": "market-api",
+      "file": "src/desks.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/desks.service.ts:DesksService.close",
+      "type": "method",
+      "label": "DesksService.close",
+      "repo": "market-api",
+      "file": "src/desks.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/desks.service.ts:DesksService.list",
+      "type": "method",
+      "label": "DesksService.list",
+      "repo": "market-api",
+      "file": "src/desks.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/events.service.ts:EventsService",
+      "type": "provider",
+      "label": "EventsService",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/events.service.ts:EventsService.deskUrgent",
+      "type": "method",
+      "label": "EventsService.deskUrgent",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/events.service.ts:EventsService.itemsChanged",
+      "type": "method",
+      "label": "EventsService.itemsChanged",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/fallback.controller.ts:FallbackController",
+      "type": "provider",
+      "label": "FallbackController",
+      "repo": "market-api",
+      "file": "src/fallback.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/fallback.controller.ts:FallbackController.notFound",
+      "type": "method",
+      "label": "FallbackController.notFound",
+      "repo": "market-api",
+      "file": "src/fallback.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "never"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-api#src/items.controller.ts:ItemsController",
+      "type": "provider",
+      "label": "ItemsController",
+      "repo": "market-api",
+      "file": "src/items.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/items.controller.ts:ItemsController.create",
+      "type": "method",
+      "label": "ItemsController.create",
+      "repo": "market-api",
+      "file": "src/items.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{shopId:string;name:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 16
+          },
+          {
+            "field": "shopId",
+            "line": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "market-api#src/items.controller.ts:ItemsController.list",
+      "type": "method",
+      "label": "ItemsController.list",
+      "repo": "market-api",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-api#src/items.service.ts:ItemsService",
+      "type": "provider",
+      "label": "ItemsService",
+      "repo": "market-api",
+      "file": "src/items.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/items.service.ts:ItemsService.create",
+      "type": "method",
+      "label": "ItemsService.create",
+      "repo": "market-api",
+      "file": "src/items.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/items.service.ts:ItemsService.listByShop",
+      "type": "method",
+      "label": "ItemsService.listByShop",
+      "repo": "market-api",
+      "file": "src/items.service.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "market-api#src/live.controller.ts:LiveController",
+      "type": "provider",
+      "label": "LiveController",
+      "repo": "market-api",
+      "file": "src/live.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-api#src/live.controller.ts:LiveController.events",
+      "type": "method",
+      "label": "LiveController.events",
+      "repo": "market-api",
+      "file": "src/live.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "market-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "market-bot",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "market-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "market-bot",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "market-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "market-bot",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "MarketBot",
+          "AppService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "market-bot#src/app.service.ts:AppService",
+      "type": "provider",
+      "label": "AppService",
+      "repo": "market-bot",
+      "file": "src/app.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-bot#src/app.service.ts:AppService.getActive",
+      "type": "method",
+      "label": "AppService.getActive",
+      "repo": "market-bot",
+      "file": "src/app.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "market-bot#src/app.service.ts:AppService.getDesks",
+      "type": "method",
+      "label": "AppService.getDesks",
+      "repo": "market-bot",
+      "file": "src/app.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "market-bot#src/market-bot.ts:MarketBot",
+      "type": "provider",
+      "label": "MarketBot",
+      "repo": "market-bot",
+      "file": "src/market-bot.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "market-bot#src/market-bot.ts:MarketBot.onModuleInit",
+      "type": "method",
+      "label": "MarketBot.onModuleInit",
+      "repo": "market-bot",
+      "file": "src/market-bot.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "market-bot#src/market-bot.ts:MarketBot.showDesks",
+      "type": "method",
+      "label": "MarketBot.showDesks",
+      "repo": "market-bot",
+      "file": "src/market-bot.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-bot#src/market-bot.ts:MarketBot.showItems",
+      "type": "method",
+      "label": "MarketBot.showItems",
+      "repo": "market-bot",
+      "file": "src/market-bot.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "market-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+      "type": "ui_component",
+      "label": "CatalogPageComponent",
+      "repo": "market-web",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 11,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-catalog-page",
+        "route": "/catalog"
+      }
+    },
+    {
+      "id": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent.add",
+      "type": "method",
+      "label": "CatalogPageComponent.add",
+      "repo": "market-web",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent.ngOnDestroy",
+      "type": "method",
+      "label": "CatalogPageComponent.ngOnDestroy",
+      "repo": "market-web",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/history-page.component.ts:HistoryPageComponent",
+      "type": "ui_component",
+      "label": "HistoryPageComponent",
+      "repo": "market-web",
+      "file": "src/app/history-page.component.ts",
+      "line": 8,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-history-page",
+        "route": "/history"
+      }
+    },
+    {
+      "id": "market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "type": "method",
+      "label": "HistoryPageComponent.ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/history-page.component.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+      "type": "method",
+      "label": "HistoryPageComponent.refresh",
+      "repo": "market-web",
+      "file": "src/app/history-page.component.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/items.client.ts:ItemsClient",
+      "type": "provider",
+      "label": "ItemsClient",
+      "repo": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "market-web#src/app/items.client.ts:ItemsClient.archive",
+      "type": "method",
+      "label": "ItemsClient.archive",
+      "repo": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/items.client.ts:ItemsClient.create",
+      "type": "method",
+      "label": "ItemsClient.create",
+      "repo": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/items.client.ts:ItemsClient.getHistory",
+      "type": "method",
+      "label": "ItemsClient.getHistory",
+      "repo": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/reports-page.component.ts:ReportsPageComponent",
+      "type": "ui_component",
+      "label": "ReportsPageComponent",
+      "repo": "market-web",
+      "file": "src/app/reports-page.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-reports-page",
+        "route": "/reports"
+      }
+    },
+    {
+      "id": "market-web#src/app/reports-page.component.ts:ReportsPageComponent.archiveOld",
+      "type": "method",
+      "label": "ReportsPageComponent.archiveOld",
+      "repo": "market-web",
+      "file": "src/app/reports-page.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "type": "ui_component",
+      "label": "SettingsPageComponent",
+      "repo": "market-web",
+      "file": "src/app/settings-page.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-settings-page",
+        "route": "/settings"
+      }
+    },
+    {
+      "id": "market-web#src/app/shop-events.service.ts:ShopEventsService",
+      "type": "provider",
+      "label": "ShopEventsService",
+      "repo": "market-web",
+      "file": "src/app/shop-events.service.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "type": "method",
+      "label": "ShopEventsService.connect",
+      "repo": "market-web",
+      "file": "src/app/shop-events.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/shop-events.service.ts:ShopEventsService.disconnect",
+      "type": "method",
+      "label": "ShopEventsService.disconnect",
+      "repo": "market-web",
+      "file": "src/app/shop-events.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.component.ts:StaffBoardComponent",
+      "type": "ui_component",
+      "label": "StaffBoardComponent",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 11,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-staff-board",
+        "route": "/staff"
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "type": "method",
+      "label": "StaffBoardComponent.ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "type": "method",
+      "label": "StaffBoardComponent.onUrgency",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.routeAction",
+      "type": "method",
+      "label": "StaffBoardComponent.routeAction",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "action",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.service.ts:StaffBoardService",
+      "type": "provider",
+      "label": "StaffBoardService",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.service.ts:StaffBoardService.ackCall",
+      "type": "method",
+      "label": "StaffBoardService.ackCall",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.service.ts:StaffBoardService.callStaff",
+      "type": "method",
+      "label": "StaffBoardService.callStaff",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.service.ts:StaffBoardService.close",
+      "type": "method",
+      "label": "StaffBoardService.close",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-board.service.ts:StaffBoardService.listDesks",
+      "type": "method",
+      "label": "StaffBoardService.listDesks",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-desk-detail.component.ts:StaffDeskDetailComponent",
+      "type": "ui_component",
+      "label": "StaffDeskDetailComponent",
+      "repo": "market-web",
+      "file": "src/app/staff-desk-detail.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-staff-desk-detail",
+        "route": "/staff/desks/:param"
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-desk-detail.component.ts:StaffDeskDetailComponent.closeDesk",
+      "type": "method",
+      "label": "StaffDeskDetailComponent.closeDesk",
+      "repo": "market-web",
+      "file": "src/app/staff-desk-detail.component.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-order.component.ts:StaffOrderComponent",
+      "type": "ui_component",
+      "label": "StaffOrderComponent",
+      "repo": "market-web",
+      "file": "src/app/staff-order.component.ts",
+      "line": 9,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-staff-order",
+        "route": "/staff/archive/orders /staff/orders /staff/orders/:param"
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-order.component.ts:StaffOrderComponent.callStaff",
+      "type": "method",
+      "label": "StaffOrderComponent.callStaff",
+      "repo": "market-web",
+      "file": "src/app/staff-order.component.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market-web#src/app/staff-order.component.ts:StaffOrderComponent.ngOnInit",
+      "type": "method",
+      "label": "StaffOrderComponent.ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/staff-order.component.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:market-api#src/events.service.ts:11:11",
+      "type": "producer",
+      "label": "message shop:*:events",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ITEMS_CHANGED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:market-api#src/events.service.ts:15:11",
+      "type": "producer",
+      "label": "message shop:*:events",
+      "repo": "market-api",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "DESK_URGENT"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:kiosk-web",
+      "type": "repo",
+      "label": "kiosk-web",
+      "repo": "kiosk-web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "templates": 2,
+          "skippedExternalCalls": {
+            "rxjs": 3,
+            "@angular/common": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:market-api",
+      "type": "repo",
+      "label": "market-api",
+      "repo": "market-api",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "skippedExternalCalls": {
+            "redis": 4,
+            "rxjs": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:market-bot",
+      "type": "repo",
+      "label": "market-bot",
+      "repo": "market-bot",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 2,
+            "@nestjs/config": 2,
+            "telegraf": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:market-web",
+      "type": "repo",
+      "label": "market-web",
+      "repo": "market-web",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 10,
+          "templates": 7,
+          "skippedExternalCalls": {
+            "rxjs": 13,
+            "@angular/common": 7
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_action:kiosk-web#src/app/browse-page.component.ts:16:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "kiosk-web",
+      "file": "src/app/browse-page.component.ts",
+      "line": 16,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "kiosk-web#src/app/browse-page.component.ts:BrowsePageComponent",
+        "template": "src/app/browse-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:kiosk-web#src/app/order-page.component.ts:9:22",
+      "type": "ui_action",
+      "label": "click=\"place('lamp')\"",
+      "repo": "kiosk-web",
+      "file": "src/app/order-page.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "place('lamp')",
+        "component": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent",
+        "template": "src/app/order-page.component.ts",
+        "args": [
+          "'lamp'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:kiosk-web#src/app/order-page.component.ts:9:68",
+      "type": "ui_action",
+      "label": "click=\"help()\"",
+      "repo": "kiosk-web",
+      "file": "src/app/order-page.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "help()",
+        "component": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent",
+        "template": "src/app/order-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/catalog-page.component.ts:14:22",
+      "type": "ui_action",
+      "label": "click=\"add('lamp')\"",
+      "repo": "market-web",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 14,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "add('lamp')",
+        "component": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+        "template": "src/app/catalog-page.component.ts",
+        "args": [
+          "'lamp'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/catalog-page.component.ts:26:3",
+      "type": "ui_action",
+      "label": "ngOnDestroy",
+      "repo": "market-web",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 26,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnDestroy",
+        "handler": "ngOnDestroy",
+        "component": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+        "template": "src/app/catalog-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/history-page.component.ts:21:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/history-page.component.ts",
+      "line": 21,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "market-web#src/app/history-page.component.ts:HistoryPageComponent",
+        "template": "src/app/history-page.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/reports-page.component.ts:9:22",
+      "type": "ui_action",
+      "label": "click=\"archiveOld('7')\"",
+      "repo": "market-web",
+      "file": "src/app/reports-page.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "archiveOld('7')",
+        "component": "market-web#src/app/reports-page.component.ts:ReportsPageComponent",
+        "template": "src/app/reports-page.component.ts",
+        "args": [
+          "'7'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/staff-board.component.ts:14:56",
+      "type": "ui_action",
+      "label": "click=\"onUrgency(desk)\"",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 14,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "onUrgency(desk)",
+        "component": "market-web#src/app/staff-board.component.ts:StaffBoardComponent",
+        "template": "src/app/staff-board.component.ts",
+        "args": [
+          "desk"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/staff-board.component.ts:24:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/staff-board.component.ts",
+      "line": 24,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "market-web#src/app/staff-board.component.ts:StaffBoardComponent",
+        "template": "src/app/staff-board.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/staff-desk-detail.component.ts:9:22",
+      "type": "ui_action",
+      "label": "click=\"closeDesk('1')\"",
+      "repo": "market-web",
+      "file": "src/app/staff-desk-detail.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "closeDesk('1')",
+        "component": "market-web#src/app/staff-desk-detail.component.ts:StaffDeskDetailComponent",
+        "template": "src/app/staff-desk-detail.component.ts",
+        "args": [
+          "'1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/staff-order.component.ts:12:22",
+      "type": "ui_action",
+      "label": "click=\"callStaff('1')\"",
+      "repo": "market-web",
+      "file": "src/app/staff-order.component.ts",
+      "line": 12,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "callStaff('1')",
+        "component": "market-web#src/app/staff-order.component.ts:StaffOrderComponent",
+        "template": "src/app/staff-order.component.ts",
+        "args": [
+          "'1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:market-web#src/app/staff-order.component.ts:19:3",
+      "type": "ui_action",
+      "label": "ngOnInit",
+      "repo": "market-web",
+      "file": "src/app/staff-order.component.ts",
+      "line": 19,
+      "kind": "lifecycle",
+      "meta": {
+        "event": "ngOnInit",
+        "handler": "ngOnInit",
+        "component": "market-web#src/app/staff-order.component.ts:StaffOrderComponent",
+        "template": "src/app/staff-order.component.ts"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:18:12",
+      "type": "ui_api_call",
+      "label": "GET /api/items",
+      "repo": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "queryType": "{shopId:string}",
+        "queryKeys": [
+          "shopId"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:22:12",
+      "type": "ui_api_call",
+      "label": "POST /api/items",
+      "repo": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "{shopId:string;name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name",
+          "shopId"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:26:12",
+      "type": "ui_api_call",
+      "label": "GET /api/:param",
+      "repo": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/:param",
+        "path": "/api/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "unknown",
+        "bodyType": null,
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/items.client.ts:17:12",
+      "type": "ui_api_call",
+      "label": "GET /api/items",
+      "repo": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "queryType": "{shopId:string}",
+        "queryKeys": [
+          "shopId"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/items.client.ts:21:12",
+      "type": "ui_api_call",
+      "label": "POST /api/items",
+      "repo": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "{shopId:string;name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name",
+          "shopId"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/items.client.ts:26:12",
+      "type": "ui_api_call",
+      "label": "DELETE /api/items/:param",
+      "repo": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${apiUrl}/api/items/:param",
+        "path": "/api/items/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": null,
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19",
+      "type": "ui_api_call",
+      "label": "GET /api/shops/:param/events",
+      "repo": "market-web",
+      "file": "src/app/shop-events.service.ts",
+      "line": 21,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/shops/:param/events",
+        "path": "/api/shops/:param/events",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/staff-board.service.ts:13:12",
+      "type": "ui_api_call",
+      "label": "POST /api/staff/desks/:param/ack-call",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/staff/desks/:param/ack-call",
+        "path": "/api/staff/desks/:param/ack-call",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/staff-board.service.ts:17:12",
+      "type": "ui_api_call",
+      "label": "POST /api/staff/desks/:param/call",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/staff/desks/:param/call",
+        "path": "/api/staff/desks/:param/call",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/staff-board.service.ts:21:12",
+      "type": "ui_api_call",
+      "label": "GET /api/staff/desks",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/api/staff/desks",
+        "path": "/api/staff/desks",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.routeAction",
+            "line": 35,
+            "why": "handed to this.board.ackCall, deeper than the walk follows"
+          },
+          {
+            "line": 21,
+            "why": "cut: deeper than 4 calls"
+          }
+        ],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "id": "ui_api_call:market-web#src/app/staff-board.service.ts:25:12",
+      "type": "ui_api_call",
+      "label": "POST /api/staff/desks/:param/close",
+      "repo": "market-web",
+      "file": "src/app/staff-board.service.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/api/staff/desks/:param/close",
+        "path": "/api/staff/desks/:param/close",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "void",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "market-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:shop:*:events",
+      "to": "consumer:market-api#src/live.controller.ts:LiveController.events",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:shop:*:events",
+      "to": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 24,
+      "meta": {
+        "via": "sse",
+        "route": "entry:market-api:http:GET:/api/shops/:param/events",
+        "call": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19"
+      }
+    },
+    {
+      "from": "channel:shop:*:events",
+      "to": "consumer:market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/shop-events.service.ts",
+      "line": 22,
+      "meta": {
+        "via": "sse",
+        "route": "entry:market-api:http:GET:/api/shops/:param/events",
+        "call": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19"
+      }
+    },
+    {
+      "from": "channel:shop:*:events",
+      "to": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 27,
+      "meta": {
+        "via": "sse",
+        "route": "entry:market-api:http:GET:/api/shops/:param/events",
+        "call": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19"
+      }
+    },
+    {
+      "from": "channel:shop:*:events#DESK_URGENT",
+      "to": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 27,
+      "meta": {
+        "selectedBy": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+        "via": "filter"
+      }
+    },
+    {
+      "from": "channel:shop:*:events#ITEMS_CHANGED",
+      "to": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 24,
+      "meta": {
+        "selectedBy": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+        "via": "filter"
+      }
+    },
+    {
+      "from": "consumer:market-api#src/live.controller.ts:LiveController.events",
+      "to": "market-api#src/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "to": "market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 24
+    },
+    {
+      "from": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+      "to": "market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 27
+    },
+    {
+      "from": "consumer:market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "to": "market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/shop-events.service.ts",
+      "line": 22
+    },
+    {
+      "from": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "to": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 27
+    },
+    {
+      "from": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "to": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:kiosk-web:screen:/browse",
+      "to": "kiosk-web#src/app/browse-page.component.ts:BrowsePageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 7,
+      "meta": {
+        "route": "/browse"
+      }
+    },
+    {
+      "from": "entry:kiosk-web:screen:/order",
+      "to": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 8,
+      "meta": {
+        "route": "/order"
+      }
+    },
+    {
+      "from": "entry:market-api:event:shop:*:events",
+      "to": "market-api#src/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:market-api:http:ALL:/api/*",
+      "to": "market-api#src/fallback.controller.ts:FallbackController.notFound",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "never",
+      "file": "src/fallback.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:market-api:http:DELETE:/api/admin/:param/bundles/:param",
+      "to": "market-api#src/bundles.controller.ts:BundlesController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/bundles.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{shopId:string;bundleId:string}"
+      }
+    },
+    {
+      "from": "entry:market-api:http:GET:/api/items",
+      "to": "market-api#src/items.controller.ts:ItemsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/items.controller.ts",
+      "line": 9,
+      "meta": {
+        "query": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:market-api:http:GET:/api/shops/:param/events",
+      "to": "market-api#src/live.controller.ts:LiveController.events",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:market-api:http:GET:/api/staff/desks",
+      "to": "market-api#src/desks.controller.ts:DesksController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/desks.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:market-api:http:POST:/api/items",
+      "to": "market-api#src/items.controller.ts:ItemsController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{shopId:string;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/items.controller.ts",
+      "line": 14,
+      "meta": {
+        "body": "{shopId:string;name:string}"
+      }
+    },
+    {
+      "from": "entry:market-api:http:POST:/api/staff/desks/:param/ack-call",
+      "to": "market-api#src/desks.controller.ts:DesksController.ackCall",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desks.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{deskId:string}"
+      }
+    },
+    {
+      "from": "entry:market-api:http:POST:/api/staff/desks/:param/call",
+      "to": "market-api#src/desks.controller.ts:DesksController.call",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desks.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{deskId:string}"
+      }
+    },
+    {
+      "from": "entry:market-api:http:POST:/api/staff/desks/:param/close",
+      "to": "market-api#src/desks.controller.ts:DesksController.close",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desks.controller.ts",
+      "line": 24,
+      "meta": {
+        "params": "{deskId:string}"
+      }
+    },
+    {
+      "from": "entry:market-bot:bot_command:desks",
+      "to": "market-bot#src/market-bot.ts:MarketBot.showDesks",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/market-bot.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:market-bot:bot_command:items",
+      "to": "market-bot#src/market-bot.ts:MarketBot.showItems",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/market-bot.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:market-web:screen:/catalog",
+      "to": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 13,
+      "meta": {
+        "route": "/catalog"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/history",
+      "to": "market-web#src/app/history-page.component.ts:HistoryPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 12,
+      "meta": {
+        "route": "/history"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/reports",
+      "to": "market-web#src/app/reports-page.component.ts:ReportsPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 14,
+      "meta": {
+        "route": "/reports"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/settings",
+      "to": "market-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 15,
+      "meta": {
+        "route": "/settings"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/staff",
+      "to": "market-web#src/app/staff-board.component.ts:StaffBoardComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 16,
+      "meta": {
+        "route": "/staff"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/staff/archive/orders",
+      "to": "market-web#src/app/staff-order.component.ts:StaffOrderComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 19,
+      "meta": {
+        "route": "/staff/archive/orders"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/staff/desks/:param",
+      "to": "market-web#src/app/staff-desk-detail.component.ts:StaffDeskDetailComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 20,
+      "meta": {
+        "route": "/staff/desks/:param"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/staff/orders",
+      "to": "market-web#src/app/staff-order.component.ts:StaffOrderComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 17,
+      "meta": {
+        "route": "/staff/orders"
+      }
+    },
+    {
+      "from": "entry:market-web:screen:/staff/orders/:param",
+      "to": "market-web#src/app/staff-order.component.ts:StaffOrderComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 18,
+      "meta": {
+        "route": "/staff/orders/:param"
+      }
+    },
+    {
+      "from": "http_out:market-bot#src/app.service.ts:15:43",
+      "to": "entry:market-api:http:GET:/api/items",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 15,
+      "returns": "string[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "http_out:market-bot#src/app.service.ts:20:43",
+      "to": "entry:market-api:http:GET:/api/staff/desks",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 20,
+      "returns": "string[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "kiosk-web#src/app/browse-page.component.ts:BrowsePageComponent",
+      "to": "kiosk-web#src/app/kiosk.client.ts:KioskClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/browse-page.component.ts",
+      "line": 14
+    },
+    {
+      "from": "kiosk-web#src/app/browse-page.component.ts:BrowsePageComponent.ngOnInit",
+      "to": "kiosk-web#src/app/kiosk.client.ts:KioskClient.browse",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/browse-page.component.ts",
+      "line": 17
+    },
+    {
+      "from": "kiosk-web#src/app/kiosk.client.ts:KioskClient",
+      "to": "kiosk-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/kiosk.client.ts",
+      "line": 15
+    },
+    {
+      "from": "kiosk-web#src/app/kiosk.client.ts:KioskClient.browse",
+      "to": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/kiosk.client.ts",
+      "line": 18
+    },
+    {
+      "from": "kiosk-web#src/app/kiosk.client.ts:KioskClient.forward",
+      "to": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:26:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/kiosk.client.ts",
+      "line": 26
+    },
+    {
+      "from": "kiosk-web#src/app/kiosk.client.ts:KioskClient.order",
+      "to": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/kiosk.client.ts",
+      "line": 22
+    },
+    {
+      "from": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent",
+      "to": "kiosk-web#src/app/kiosk.client.ts:KioskClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/order-page.component.ts",
+      "line": 12
+    },
+    {
+      "from": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent.help",
+      "to": "kiosk-web#src/app/kiosk.client.ts:KioskClient.forward",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/app/order-page.component.ts",
+      "line": 19
+    },
+    {
+      "from": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent.place",
+      "to": "kiosk-web#src/app/kiosk.client.ts:KioskClient.order",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/order-page.component.ts",
+      "line": 15
+    },
+    {
+      "from": "market-api#src/bundles.controller.ts:BundlesController",
+      "to": "market-api#src/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/bundles.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "market-api#src/bundles.controller.ts:BundlesController.remove",
+      "to": "market-api#src/events.service.ts:EventsService.itemsChanged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/bundles.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "market-api#src/desks.controller.ts:DesksController",
+      "to": "market-api#src/desks.service.ts:DesksService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desks.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "market-api#src/desks.controller.ts:DesksController.ackCall",
+      "to": "market-api#src/desks.service.ts:DesksService.ackCall",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desks.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "market-api#src/desks.controller.ts:DesksController.call",
+      "to": "market-api#src/desks.service.ts:DesksService.call",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desks.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "market-api#src/desks.controller.ts:DesksController.close",
+      "to": "market-api#src/desks.service.ts:DesksService.close",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desks.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "market-api#src/desks.controller.ts:DesksController.list",
+      "to": "market-api#src/desks.service.ts:DesksService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/desks.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "market-api#src/desks.service.ts:DesksService",
+      "to": "market-api#src/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desks.service.ts",
+      "line": 9
+    },
+    {
+      "from": "market-api#src/desks.service.ts:DesksService.call",
+      "to": "market-api#src/events.service.ts:EventsService.deskUrgent",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desks.service.ts",
+      "line": 17
+    },
+    {
+      "from": "market-api#src/events.service.ts:EventsService.deskUrgent",
+      "to": "cache_op:market-api#src/events.service.ts:15:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "market-api#src/events.service.ts:EventsService.deskUrgent",
+      "to": "producer:market-api#src/events.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "market-api#src/events.service.ts:EventsService.itemsChanged",
+      "to": "cache_op:market-api#src/events.service.ts:11:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 11
+    },
+    {
+      "from": "market-api#src/events.service.ts:EventsService.itemsChanged",
+      "to": "producer:market-api#src/events.service.ts:11:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 11
+    },
+    {
+      "from": "market-api#src/items.controller.ts:ItemsController",
+      "to": "market-api#src/items.service.ts:ItemsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "market-api#src/items.controller.ts:ItemsController.create",
+      "to": "market-api#src/items.service.ts:ItemsService.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/items.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "market-api#src/items.controller.ts:ItemsController.list",
+      "to": "market-api#src/items.service.ts:ItemsService.listByShop",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/items.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "market-api#src/items.service.ts:ItemsService",
+      "to": "market-api#src/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/items.service.ts",
+      "line": 9
+    },
+    {
+      "from": "market-api#src/items.service.ts:ItemsService.create",
+      "to": "market-api#src/events.service.ts:EventsService.itemsChanged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/items.service.ts",
+      "line": 17
+    },
+    {
+      "from": "market-api#src/live.controller.ts:LiveController.events",
+      "to": "cache_op:market-api#src/live.controller.ts:13:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/live.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "market-api#src/live.controller.ts:LiveController.events",
+      "to": "cache_op:market-api#src/live.controller.ts:16:25",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "market-bot#src/app.service.ts:AppService",
+      "to": "market-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 10
+    },
+    {
+      "from": "market-bot#src/app.service.ts:AppService",
+      "to": "market-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 11
+    },
+    {
+      "from": "market-bot#src/app.service.ts:AppService.getActive",
+      "to": "config_key:market-bot#MARKET_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 15
+    },
+    {
+      "from": "market-bot#src/app.service.ts:AppService.getActive",
+      "to": "http_out:market-bot#src/app.service.ts:15:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 15
+    },
+    {
+      "from": "market-bot#src/app.service.ts:AppService.getDesks",
+      "to": "config_key:market-bot#MARKET_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 20
+    },
+    {
+      "from": "market-bot#src/app.service.ts:AppService.getDesks",
+      "to": "http_out:market-bot#src/app.service.ts:20:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.service.ts",
+      "line": 20
+    },
+    {
+      "from": "market-bot#src/market-bot.ts:MarketBot",
+      "to": "market-bot#src/app.service.ts:AppService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/market-bot.ts",
+      "line": 11
+    },
+    {
+      "from": "market-bot#src/market-bot.ts:MarketBot.onModuleInit",
+      "to": "market-bot#src/market-bot.ts:MarketBot.showDesks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/market-bot.ts",
+      "line": 15
+    },
+    {
+      "from": "market-bot#src/market-bot.ts:MarketBot.onModuleInit",
+      "to": "market-bot#src/market-bot.ts:MarketBot.showItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/market-bot.ts",
+      "line": 14
+    },
+    {
+      "from": "market-bot#src/market-bot.ts:MarketBot.showDesks",
+      "to": "market-bot#src/app.service.ts:AppService.getDesks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/market-bot.ts",
+      "line": 24
+    },
+    {
+      "from": "market-bot#src/market-bot.ts:MarketBot.showItems",
+      "to": "market-bot#src/app.service.ts:AppService.getActive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/market-bot.ts",
+      "line": 20
+    },
+    {
+      "from": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+      "to": "market-web#src/app/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 18
+    },
+    {
+      "from": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent",
+      "to": "market-web#src/app/shop-events.service.ts:ShopEventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 19
+    },
+    {
+      "from": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent.add",
+      "to": "market-web#src/app/items.client.ts:ItemsClient.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 23
+    },
+    {
+      "from": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent.ngOnDestroy",
+      "to": "market-web#src/app/shop-events.service.ts:ShopEventsService.disconnect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 27
+    },
+    {
+      "from": "market-web#src/app/history-page.component.ts:HistoryPageComponent",
+      "to": "market-web#src/app/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 17
+    },
+    {
+      "from": "market-web#src/app/history-page.component.ts:HistoryPageComponent",
+      "to": "market-web#src/app/shop-events.service.ts:ShopEventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 18
+    },
+    {
+      "from": "market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "to": "market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/app/history-page.component.ts",
+      "line": 22
+    },
+    {
+      "from": "market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "to": "market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/history-page.component.ts",
+      "line": 23
+    },
+    {
+      "from": "market-web#src/app/history-page.component.ts:HistoryPageComponent.refresh",
+      "to": "market-web#src/app/items.client.ts:ItemsClient.getHistory",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "src/app/history-page.component.ts",
+      "line": 28
+    },
+    {
+      "from": "market-web#src/app/items.client.ts:ItemsClient",
+      "to": "market-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 14
+    },
+    {
+      "from": "market-web#src/app/items.client.ts:ItemsClient.archive",
+      "to": "ui_api_call:market-web#src/app/items.client.ts:26:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 26
+    },
+    {
+      "from": "market-web#src/app/items.client.ts:ItemsClient.create",
+      "to": "ui_api_call:market-web#src/app/items.client.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 21
+    },
+    {
+      "from": "market-web#src/app/items.client.ts:ItemsClient.getHistory",
+      "to": "ui_api_call:market-web#src/app/items.client.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 17
+    },
+    {
+      "from": "market-web#src/app/reports-page.component.ts:ReportsPageComponent",
+      "to": "market-web#src/app/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/reports-page.component.ts",
+      "line": 12
+    },
+    {
+      "from": "market-web#src/app/reports-page.component.ts:ReportsPageComponent.archiveOld",
+      "to": "market-web#src/app/items.client.ts:ItemsClient.archive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/reports-page.component.ts",
+      "line": 15
+    },
+    {
+      "from": "market-web#src/app/settings-page.component.ts:SettingsPageComponent",
+      "to": "market-web#src/app/items.client.ts:ItemsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/settings-page.component.ts",
+      "line": 12
+    },
+    {
+      "from": "market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "to": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/shop-events.service.ts",
+      "line": 21
+    },
+    {
+      "from": "market-web#src/app/staff-board.component.ts:StaffBoardComponent",
+      "to": "market-web#src/app/shop-events.service.ts:ShopEventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 21
+    },
+    {
+      "from": "market-web#src/app/staff-board.component.ts:StaffBoardComponent",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 20
+    },
+    {
+      "from": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "to": "market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/staff-board.component.ts",
+      "line": 26
+    },
+    {
+      "from": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "to": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/staff-board.component.ts",
+      "line": 27
+    },
+    {
+      "from": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService.listDesks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/staff-board.component.ts",
+      "line": 25
+    },
+    {
+      "from": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "to": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.routeAction",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/staff-board.component.ts",
+      "line": 31
+    },
+    {
+      "from": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.routeAction",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService.ackCall",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/staff-board.component.ts",
+      "line": 35
+    },
+    {
+      "from": "market-web#src/app/staff-board.service.ts:StaffBoardService",
+      "to": "market-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 10
+    },
+    {
+      "from": "market-web#src/app/staff-board.service.ts:StaffBoardService.ackCall",
+      "to": "ui_api_call:market-web#src/app/staff-board.service.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 13
+    },
+    {
+      "from": "market-web#src/app/staff-board.service.ts:StaffBoardService.callStaff",
+      "to": "ui_api_call:market-web#src/app/staff-board.service.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 17
+    },
+    {
+      "from": "market-web#src/app/staff-board.service.ts:StaffBoardService.close",
+      "to": "ui_api_call:market-web#src/app/staff-board.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 25
+    },
+    {
+      "from": "market-web#src/app/staff-board.service.ts:StaffBoardService.listDesks",
+      "to": "ui_api_call:market-web#src/app/staff-board.service.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 21
+    },
+    {
+      "from": "market-web#src/app/staff-desk-detail.component.ts:StaffDeskDetailComponent",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/staff-desk-detail.component.ts",
+      "line": 12
+    },
+    {
+      "from": "market-web#src/app/staff-desk-detail.component.ts:StaffDeskDetailComponent.closeDesk",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService.close",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/staff-desk-detail.component.ts",
+      "line": 15
+    },
+    {
+      "from": "market-web#src/app/staff-order.component.ts:StaffOrderComponent",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/staff-order.component.ts",
+      "line": 17
+    },
+    {
+      "from": "market-web#src/app/staff-order.component.ts:StaffOrderComponent.callStaff",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService.callStaff",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/app/staff-order.component.ts",
+      "line": 24
+    },
+    {
+      "from": "market-web#src/app/staff-order.component.ts:StaffOrderComponent.ngOnInit",
+      "to": "market-web#src/app/staff-board.service.ts:StaffBoardService.listDesks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/staff-order.component.ts",
+      "line": 20
+    },
+    {
+      "from": "producer:market-api#src/events.service.ts:11:11",
+      "to": "channel:shop:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/events.service.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:market-api#src/events.service.ts:11:11",
+      "to": "channel:shop:*:events#ITEMS_CHANGED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:market-api#src/events.service.ts:15:11",
+      "to": "channel:shop:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/events.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:market-api#src/events.service.ts:15:11",
+      "to": "channel:shop:*:events#DESK_URGENT",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/events.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "ui_action:kiosk-web#src/app/browse-page.component.ts:16:3",
+      "to": "kiosk-web#src/app/browse-page.component.ts:BrowsePageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/browse-page.component.ts",
+      "line": 16
+    },
+    {
+      "from": "ui_action:kiosk-web#src/app/order-page.component.ts:9:22",
+      "to": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent.place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-page.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:kiosk-web#src/app/order-page.component.ts:9:68",
+      "to": "kiosk-web#src/app/order-page.component.ts:OrderPageComponent.help",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/order-page.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:market-web#src/app/catalog-page.component.ts:14:22",
+      "to": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent.add",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:market-web#src/app/catalog-page.component.ts:26:3",
+      "to": "market-web#src/app/catalog-page.component.ts:CatalogPageComponent.ngOnDestroy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/catalog-page.component.ts",
+      "line": 26
+    },
+    {
+      "from": "ui_action:market-web#src/app/history-page.component.ts:21:3",
+      "to": "market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_action:market-web#src/app/reports-page.component.ts:9:22",
+      "to": "market-web#src/app/reports-page.component.ts:ReportsPageComponent.archiveOld",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/reports-page.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:market-web#src/app/staff-board.component.ts:14:56",
+      "to": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.onUrgency",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 14
+    },
+    {
+      "from": "ui_action:market-web#src/app/staff-board.component.ts:24:3",
+      "to": "market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 24
+    },
+    {
+      "from": "ui_action:market-web#src/app/staff-desk-detail.component.ts:9:22",
+      "to": "market-web#src/app/staff-desk-detail.component.ts:StaffDeskDetailComponent.closeDesk",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/staff-desk-detail.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:market-web#src/app/staff-order.component.ts:12:22",
+      "to": "market-web#src/app/staff-order.component.ts:StaffOrderComponent.callStaff",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/staff-order.component.ts",
+      "line": 12
+    },
+    {
+      "from": "ui_action:market-web#src/app/staff-order.component.ts:19:3",
+      "to": "market-web#src/app/staff-order.component.ts:StaffOrderComponent.ngOnInit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/staff-order.component.ts",
+      "line": 19
+    },
+    {
+      "from": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:18:12",
+      "to": "entry:market-api:http:GET:/api/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/kiosk.client.ts",
+      "line": 18,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:22:12",
+      "to": "entry:market-api:http:POST:/api/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/kiosk.client.ts",
+      "line": 22,
+      "params": [
+        "{shopId:string;name:string}"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:26:12",
+      "to": "entry:market-api:http:ALL:/api/*",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/kiosk.client.ts",
+      "line": 26,
+      "returns": "unknown",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/items.client.ts:17:12",
+      "to": "entry:market-api:http:GET:/api/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 17,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/items.client.ts:21:12",
+      "to": "entry:market-api:http:POST:/api/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 21,
+      "params": [
+        "{shopId:string;name:string}"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/items.client.ts:26:12",
+      "to": "entry:market-api:http:ALL:/api/*",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/items.client.ts",
+      "line": 26,
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19",
+      "to": "consumer:market-web#src/app/history-page.component.ts:HistoryPageComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/history-page.component.ts",
+      "line": 24
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19",
+      "to": "consumer:market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/shop-events.service.ts",
+      "line": 22
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19",
+      "to": "consumer:market-web#src/app/staff-board.component.ts:StaffBoardComponent.ngOnInit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/staff-board.component.ts",
+      "line": 27
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/shop-events.service.ts:21:19",
+      "to": "entry:market-api:http:GET:/api/shops/:param/events",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/shop-events.service.ts",
+      "line": 21,
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/staff-board.service.ts:13:12",
+      "to": "entry:market-api:http:POST:/api/staff/desks/:param/ack-call",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 13,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/staff-board.service.ts:17:12",
+      "to": "entry:market-api:http:POST:/api/staff/desks/:param/call",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 17,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/staff-board.service.ts:21:12",
+      "to": "entry:market-api:http:GET:/api/staff/desks",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 21,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    },
+    {
+      "from": "ui_api_call:market-web#src/app/staff-board.service.ts:25:12",
+      "to": "entry:market-api:http:POST:/api/staff/desks/:param/close",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/staff-board.service.ts",
+      "line": 25,
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "meta": {
+        "via": "api-target",
+        "targetService": "market-api"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "kiosk-web",
+      "file": "src/app/kiosk.client.ts",
+      "line": 26,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all ALL /api/* in market-api answers GET /api/:param",
+      "hint": "No route of market-api spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:kiosk-web#src/app/kiosk.client.ts:26:12"
+    },
+    {
+      "file": "src/live.controller.ts",
+      "line": 13,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "LiveController.events",
+      "service": "market-api"
+    },
+    {
+      "file": "src/live.controller.ts",
+      "line": 16,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.unsubscribe",
+      "service": "market-api"
+    },
+    {
+      "file": "src/market-bot.ts",
+      "line": 20,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "MarketBot.showItems -> ctx.reply",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/market-bot.ts",
+                "line": 20,
+                "symbol": "MarketBot.showItems -> ctx.reply"
+              },
+              {
+                "file": "src/market-bot.ts",
+                "line": 24,
+                "symbol": "MarketBot.showDesks -> ctx.reply"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "market-bot"
+    },
+    {
+      "service": "market-web",
+      "file": "src/app/items.client.ts",
+      "line": 26,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all ALL /api/* in market-api answers DELETE /api/items/:param",
+      "hint": "No route of market-api spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:market-web#src/app/items.client.ts:26:12"
+    }
+  ]
+}

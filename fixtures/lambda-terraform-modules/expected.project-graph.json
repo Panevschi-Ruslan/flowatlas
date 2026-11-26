@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:43.772Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:33.787Z",
   "services": [
     {
       "name": "catalogue",
@@ -44,7 +44,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -63,7 +64,29 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/register-borrower.ts:audited",
+      "type": "function",
+      "label": "audited",
+      "repo": "catalogue",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{after:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "borrower registered",
+            "at": 7
+          }
+        ]
       }
     },
     {
@@ -91,7 +114,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -110,7 +134,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -205,6 +230,15 @@
         "api": "catalogue-admin",
         "function": "catalogue-get-borrower",
         "declaredAs": "module.get_borrower_route.aws_api_gateway_method.this",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "catalogue-admin"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -224,6 +258,15 @@
         "api": "catalogue",
         "function": "catalogue-search-titles",
         "declaredAs": "module.http_api.aws_apigatewayv2_route.this[\"GET /titles\"]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "catalogue"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -243,6 +286,15 @@
         "api": "catalogue",
         "function": "catalogue-get-title",
         "declaredAs": "module.http_api.aws_apigatewayv2_route.this[\"GET /titles/{isbn}\"]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "catalogue"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -262,6 +314,15 @@
         "api": "catalogue",
         "function": "catalogue-register-borrower",
         "declaredAs": "module.http_api.aws_apigatewayv2_route.this[\"POST /borrowers\"]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "catalogue"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -406,6 +467,19 @@
       "returns": "type:catalogue#Title|undefined",
       "file": "src/handlers/get-title.ts",
       "line": 5
+    },
+    {
+      "from": "catalogue#src/handlers/register-borrower.ts:audited()",
+      "to": "catalogue#src/handlers/register-borrower.ts:audited",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{after:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 16,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "catalogue#src/handlers/register-borrower.ts:register",

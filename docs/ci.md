@@ -107,6 +107,22 @@ violations are read; then accept what is real and planned for, with a note
 edge is shown and never fails a run until `rulesSettings.failOnHeuristic` says
 so - leave it off until the guesses are rare.
 
+**Findings.** `flowatlas findings` lists what looks broken between the
+services, each row with its precision, and exits 0 unless asked. Start with
+the kinds that are nearly always a defect where their evidence holds - a call
+to a route that does not exist, a field read and never sent, a type of message
+nothing publishes, a contract error:
+
+```sh
+flowatlas findings                  # read them first
+flowatlas findings --fail-on high   # then fail on a high-precision finding
+```
+
+`--fail-on medium` adds the settings no deployment sets, likely N+1 loops and
+one-ended channels; `low` adds unguarded routes, which an internal service
+often has by design. A row whose evidence did not hold is never listed: it is
+counted under `held back` with why.
+
 ## The job
 
 ```yaml
@@ -141,6 +157,8 @@ jobs:
       # The architecture rules on their own, once they are at error; doctor
       # --strict already fails on a new violation, so this is for a report.
       - run: npx @flowatlas/cli rules --format github --fail-on error
+      # What looks broken between the services, failing on the surest kinds.
+      - run: npx @flowatlas/cli findings --fail-on high
 ```
 
 `--format github` prints one `::error file=…,line=…::` per finding, so they
@@ -207,9 +225,11 @@ One file and one `category` per command. Each log already carries its
 category (`automationDetails.id`, `flowatlas/<command>/`); the step names the
 same one. Code scanning replaces a category's alerts on each upload, so one
 category per command is what keeps the doctor's alerts open on a run that
-uploaded only contracts. `rules`, `dead`, `cycles` and `diff` take
-`--format sarif --output <file>` the same way; `dead` is notes only, worth
-uploading once its rows have been read.
+uploaded only contracts. `findings`, `rules`, `dead`, `cycles`, `diff`,
+`check`, `spec diff` and `spec --against` take `--format sarif --output <file>`
+the same way; `findings` writes each kind as a `finding/<kind>` rule whose
+level follows its precision (`high` an error, `medium` a warning, `low` a
+note), and `dead` is notes only, worth uploading once its rows have been read.
 
 The format decides no exit code: `doctor --strict` fails on what it always
 failed on, and `contracts` only with `--fail-on`. Each result's fingerprint is
@@ -233,6 +253,99 @@ file, and the workflow decides where it goes. Any code host that reads SARIF
 2.1.0 reads the same file.
 
 ## On a pull request
+
+### The action
+
+One step, in the repository that holds the configuration:
+
+```yaml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write          # the comment
+  security-events: write        # only with sarif: true
+jobs:
+  flowatlas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Panevschi-Ruslan/flowatlas/action@v0.7.0
+        with:
+          repositories: |
+            orders=acme/orders
+            billing=acme/billing@main
+          token: ${{ secrets.FLOWATLAS_READ_TOKEN }}   # can read those repositories
+```
+
+It installs flowatlas at the action's own version, fetches the pull request's
+base commit, clones every other service the configuration names into the
+directory the configuration expects (a service it cannot fetch is named, and
+the diff runs without it, saying what that costs), restores the base graphs from
+the cache under that commit, runs `flowatlas diff --format comment`, and keeps
+**one comment** on the pull request up to date: found by a marker that names the
+configuration, so a repository with two projects keeps two, and written by the
+action's own token. The marker can be computed from the configuration, so a
+comment somebody else wrote with it in is never the one updated: with a
+person's token the comment must be that person's (`GET /user` names them), and
+with the job's `github.token` or an app's token, which cannot ask who they are,
+it must be a bot's (`github-actions[bot]`, `<app>[bot]`). The comment opens
+with three lines:
+
+```
+Reaches 5 ways in, in 3 services.
+1 new contract break · 1 new rule break · 2 docs made stale
+Verdict: unsafe
+```
+
+and the whole report under them. With nothing to say it posts nothing, and
+updates a comment it posted before to say nothing changed. The job summary gets
+the same text every time, which is where a pull request from a fork is told:
+its token cannot comment.
+
+| Input | Default | Does |
+|---|---|---|
+| `config` | `flowatlas.config.json` | the configuration, relative to the repository |
+| `base` | the pull request's base | the commit to compare against |
+| `repositories` | none | the services not in this checkout, `name=owner/repo` or `name=owner/repo@ref`, one a line |
+| `token` | `github.token` | reads those repositories and comments; the default reads this one only |
+| `comment` | `update` | `update` one comment, post a `new` one each time, or `off` |
+| `comment-when` | `changes` | or `always` |
+| `fail-on` | `contract-break,rule-break` | fail the check on new breaks of these kinds - `broken-call` too, a call between the services the branch leaves landing nowhere (P384), and `api-break`, an API or message change a consumer in the project feels (P390) - or `stale-docs` for doc blocks this branch makes stale; empty never fails |
+| `sarif` | `false` | also upload the new and fixed findings to code scanning |
+| `api` | `true` | compare the API documents too (`diff --spec`) and weigh each change by the consumers it meets, with the flows to them (P390); `false` leaves the section out |
+| `docs-check` | `true` | also `flowatlas docs --check`, as annotations, against the branch's graph `diff` built (`--head-db`); it fails nothing by itself, and one that cannot run is said under the comment |
+| `install` | `none` | `ci` runs `npm ci --ignore-scripts` in each repository first, for types the checker can follow |
+| `version` | the action's | the flowatlas version to install |
+
+Outputs: `verdict`, `reaches`, `contract-breaks`, `rule-breaks`, `stale-docs`,
+`api-breaks`, `comment-url`.
+
+The docs check never fails a pull request for a block that was stale before
+it: those are annotations, like the rest. `fail-on: stale-docs` fails it on
+the blocks the branch itself makes stale, the `stale-docs` the comment and the
+output count.
+
+The other repositories are cloned with the token as an `Authorization` header
+handed to git through its environment (`GIT_CONFIG_COUNT`, git 2.31 or later),
+the way `actions/checkout` sends it: never in the remote's address, so it is not
+left in a clone's `.git/config` on a runner that keeps its workspace, and never
+on a command line, and masked in the log.
+
+**Never run it with `pull_request_target` and `install: ci`.** flowatlas reads
+code and never runs it, and the action never runs a repository's install
+scripts, but `pull_request_target` hands a fork's code a token that can write.
+
+The action lives in this repository's `action/` folder and is tagged with the
+command, so the action and the flowatlas it installs never drift apart. It is
+not in the Marketplace; listing it there would only change the `uses:` line.
+
+**Publishing the team's graph.** On a push to the main branch, `publish: true`
+builds the graph and uploads it as the artifact `flowatlas-graph`, for
+`flowatlas pull gh:owner/repo/flowatlas-graph` ([one graph for the
+team](team.md)). `pull` takes only an artifact from a push that succeeded,
+never one a pull request's run made.
+
+### By hand
 
 `flowatlas diff` answers the question a reviewer has, which is not which lines
 moved:
@@ -280,6 +393,15 @@ To fail only on a break this branch introduced:
 flowatlas diff origin/main --fail-on-contract-break --fail-on-rule-break
 ```
 
+`--fail-on-broken-call` (P384) fails on a call between the services the
+branch breaks: a join the base side made that the head side loses (a route
+renamed under a caller), or a new request to a route nothing serves, counted as
+`check` counts them; each is printed as a `broken call:` line.
+`--fail-on-api-break` (P390) fails on an API or message change a consumer in
+the project feels - it reads the removed field, omits one now required, or
+calls a route that is gone - and never on one only its kind calls breaking;
+each is printed as an `api break:` line.
+
 The second flag does for the architecture rules what the first does for the
 contracts: the comment's **Rules** section sorts violations into new, fixed,
 already there and excused, and only a new one at `error` fails the build.
@@ -308,6 +430,20 @@ or under `doctor.publicRoutes`, and its breaking changes fail the job whoever
 calls it. `--format sarif` uploads each change at the route it is about, its
 callers as related locations. The same table can ride in the `diff` comment
 with `flowatlas diff origin/main --spec`.
+
+Each change is then weighed by what its consumers do with it (P390): an error
+only where a consumer in the project reads the removed field, sends one now
+invalid, omits one now required or calls a route that is gone; an info where
+no consumer reads it, among the ones counted; a warning where one takes the
+value whole or what it reads is not known (a response field is weighed by the
+fields each browser client reads of the answer; a request whose client is not
+read, a server's among them, is a warning and said so). A message change says which side to
+deploy first. In SARIF, each flow from a way in to a consumer it breaks is a
+code flow across repositories, and a removal is placed on the nearest line of
+its file the branch keeps, or said in the summary where the file went, since
+code scanning annotates only lines in the diff. A coverage line says how many
+consumers in how many repositories were counted; consumers outside them are
+unknown.
 
 A repository that commits its own document can keep it honest. flowatlas never
 writes into a repository it reads, so write the document under the output

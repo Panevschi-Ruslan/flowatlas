@@ -1,0 +1,264 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-25T13:21:27.780Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:staff-bot#src/staff.api.ts:20:43",
+        "to": "entry:shop-api:http:GET:/api/orders/active",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:staff-bot#src/staff.api.ts:20:43|http_calls|entry:shop-api:http:GET:/api/orders/active",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{id:string;summary:string}[]",
+        "symbol": "shop-api#src/orders.controller.ts:OrdersController.active"
+      },
+      "receiver": {
+        "service": "staff-bot",
+        "typeId": "type:staff-bot#ActiveOrder[]",
+        "symbol": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:staff-bot#src/staff.api.ts:25:26",
+        "to": "entry:shop-api:http:PATCH:/api/orders/status",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:staff-bot#src/staff.api.ts:25:26|http_calls|entry:shop-api:http:PATCH:/api/orders/status",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "staff-bot",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "staff-bot#src/staff.api.ts:StaffApi.setStatus",
+        "writes": [
+          "orderId",
+          "status"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:staff-bot#src/staff.api.ts:29:43",
+        "to": "entry:shop-api:http:GET:/api/stock",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:staff-bot#src/staff.api.ts:29:43|http_calls|entry:shop-api:http:GET:/api/stock",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "shop-api",
+        "typeId": "{items:number}",
+        "symbol": "shop-api#src/stock.controller.ts:StockController.count"
+      },
+      "receiver": {
+        "service": "staff-bot",
+        "typeId": "{items:number}",
+        "symbol": "staff-bot#src/staff.api.ts:StaffApi.getStock"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+        "to": "entry:shop-api:http:PATCH:/api/orders/status",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/orders-api.ts:11:9|hits|entry:shop-api:http:PATCH:/api/orders/status",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop-web",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "shop-web#src/orders-api.ts:markReady",
+        "writes": [
+          "orderId",
+          "status"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "shop-api",
+        "typeId": "{orderId:string;status:string}",
+        "symbol": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:staff-bot#src/staff.api.ts:20:43",
+        "to": "entry:shop-api:http:GET:/api/orders/active",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:staff-bot#src/staff.api.ts:20:43|http_calls|entry:shop-api:http:GET:/api/orders/active",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:staff-bot#src/staff.api.ts:25:26",
+        "to": "entry:shop-api:http:PATCH:/api/orders/status",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:staff-bot#src/staff.api.ts:25:26|http_calls|entry:shop-api:http:PATCH:/api/orders/status",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop-api#src/orders.controller.ts:OrdersController.setStatus declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:staff-bot#src/staff.api.ts:29:43",
+        "to": "entry:shop-api:http:GET:/api/stock",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:staff-bot#src/staff.api.ts:29:43|http_calls|entry:shop-api:http:GET:/api/stock",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "staff-bot#src/staff.api.ts:StaffApi.getStock declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:kiosk#js/kiosk.js:2:10",
+        "to": "entry:shop-api:http:GET:/api/reports/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:kiosk#js/kiosk.js:2:10|hits|entry:shop-api:http:GET:/api/reports/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "kiosk#js/kiosk.js:showReport declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:kiosk#js/kiosk.js:2:10",
+        "to": "entry:shop-api:http:GET:/api/reports/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:kiosk#js/kiosk.js:2:10|hits|entry:shop-api:http:GET:/api/reports/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "kiosk#js/kiosk.js:showReport declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:kiosk#js/kiosk.js:6:10",
+        "to": "entry:shop-api:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:kiosk#js/kiosk.js:6:10|hits|entry:shop-api:http:GET:/api/stock",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "kiosk#js/kiosk.js:showStock declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:kiosk#js/kiosk.js:6:10",
+        "to": "entry:shop-api:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:kiosk#js/kiosk.js:6:10|hits|entry:shop-api:http:GET:/api/stock",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "kiosk#js/kiosk.js:showStock declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+        "to": "entry:shop-api:http:PATCH:/api/orders/status",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/orders-api.ts:11:9|hits|entry:shop-api:http:PATCH:/api/orders/status",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "shop-api#src/orders.controller.ts:OrdersController.setStatus declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+        "to": "entry:shop-api:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/orders-api.ts:16:24|hits|entry:shop-api:http:GET:/api/stock",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/orders-api.ts:countStock declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+        "to": "entry:shop-api:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/orders-api.ts:16:24|hits|entry:shop-api:http:GET:/api/stock",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-web#src/orders-api.ts:countStock declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+        "to": "entry:shop-api:http:GET:/api/reports/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/orders-api.ts:5:24|hits|entry:shop-api:http:GET:/api/reports/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop-web#src/orders-api.ts:loadReport declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+        "to": "entry:shop-api:http:GET:/api/reports/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop-web#src/orders-api.ts:5:24|hits|entry:shop-api:http:GET:/api/reports/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop-web#src/orders-api.ts:loadReport declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 4,
+    "shared": 0,
+    "identical": 3,
+    "hash_differs": 1,
+    "unchecked": 12,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

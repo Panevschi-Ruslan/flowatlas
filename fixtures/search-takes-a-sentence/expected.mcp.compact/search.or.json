@@ -1,0 +1,104 @@
+{
+  "query": "cancel OR refund",
+  "best": [
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:14",
+      "reach": "alive",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/refund",
+      "loc": "src/orders/orders.controller.ts:19",
+      "reach": "dead",
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens.issue",
+      "line": 10,
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+      "line": 14,
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "line": 16,
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "line": 14,
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
+      "line": 21,
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
+      "line": 20,
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "line": 9,
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
+      "matched": [
+        "refund"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "line": 19,
+      "reach": "dead",
+      "from": "POST /orders/:param/refund",
+      "throughDead": true,
+      "matched": [
+        "refund"
+      ]
+    }
+  ],
+  "complete": false,
+  "left": [
+    "fuzzy: ranked by the words cancel, refund; 1 more rows hold as many"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:POST:/orders/:param/cancel\"})",
+    "impact({symbol: \"entry:shop-api:http:POST:/orders/:param/cancel\"})"
+  ]
+}

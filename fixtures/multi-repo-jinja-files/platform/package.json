@@ -1,0 +1,9 @@
+{
+  "name": "shop-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The platform of a shop, written with Terraform: the queues other services hand jobs and audit records to.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

@@ -1,9 +1,12 @@
+import type { ChangeChecker } from './changes.js';
 import type { DetailLevel, EntryShapes, GraphEdge } from '@flowatlas/core';
 import type { MissingGroup, GraphDb } from '@flowatlas/linker';
+import type { GetPromptResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { CLAMP_NOTE, clampDetail } from '../query/detail.js';
 import type { DbHandle } from '../query/db.js';
 import { MAX_NEXT } from '../query/next.js';
+import { withStale } from '../query/fresh.js';
 
 /**
  * What every tool says about itself (P93): it reads a database built
@@ -22,7 +25,17 @@ export const READ_ONLY = { readOnlyHint: true, openWorldHint: false, idempotentH
 export const commonInput = {
   detail: z.number().int().min(0).max(3).default(1),
   maxNodes: z.number().int().min(1).max(2000).default(150),
+  verbose: z.boolean().optional(),
 };
+
+/**
+ * Whether to hand the answer over whole (P365): every tool takes it, those
+ * that do not spread `commonInput` given it where they are registered. Read
+ * where every answer is serialised and never handed to the tool, which
+ * answers the same either way; unset or false, the answer is compacted there
+ * (`compact.ts`).
+ */
+export const verboseInput = commonInput.verbose;
 
 /** Where a page of a list starts (P93); a cut answer says the next one. */
 export const pageInput = {
@@ -55,8 +68,13 @@ export interface ToolContext {
   missingCandidates?: MissingCandidates;
   /** Filled by the contracts package: a route's traffic shapes against its code (P113). */
   trafficChecker?: TrafficChecker;
-  /** The tools not listed and when each appears, for `start_here` to say in one line (P201). */
-  listing?: { hiddenLine(): string | undefined };
+  /**
+   * The tools not listed and when each appears, for `start_here` to say in
+   * one line (P201); and a prompt's text without a call to one of them (P360).
+   */
+  listing?: { hiddenLine(): string | undefined; offeredPrompt?(result: GetPromptResult): GetPromptResult };
+  /** Filled by the command line (P387): the working tree compared with the built graph, for `check_change`. */
+  changeChecker?: ChangeChecker;
 }
 
 /** The directories that look like each group's repository, by path, aligned with `groups`. */
@@ -230,10 +248,128 @@ export const withDb = (
   const opened = handle.open();
   if ('error' in opened) return respond({ error: opened.error });
   try {
-    return respond(run(opened.db));
+    // Every answer that cites a file says when one changed since the build (P230).
+    return respond(withStale(handle, run(opened.db)));
   } catch (cause) {
     return respond({ error: cause instanceof Error ? cause.message : String(cause) });
   }
+};
+
+/**
+ * Whether a list answer is the whole answer (P364): `complete: true` when it
+ * holds every row the graph has and nothing on the way was left unread;
+ * otherwise `complete: false` and `left`, each thing cut or unread in a few
+ * words. The cuts and notes each tool already says (`truncated`,
+ * `stoppedBy`, a gap at the top of a chain, a publish whose type was not
+ * read) are gathered here, so an agent reads one field to know whether to
+ * stop.
+ */
+export const completeOf = (left: ReadonlyArray<string | undefined | false>): { complete: boolean; left?: string[] } => {
+  const said = left.filter((item): item is string => typeof item === 'string' && item !== '');
+  return said.length === 0 ? { complete: true } : { complete: false, left: said };
+};
+
+/** How a page cut is said in `left`. */
+export const pageLeft = (total: number, shown: number, offset: number, nextOffset: number | undefined): string | undefined =>
+  nextOffset === undefined ? undefined : `page: ${total - Math.min(offset, total) - shown} more rows from offset ${nextOffset}`;
+
+/** The most inputs one call answers (P364): `ids`, `queries`, `symbols` or `types`. */
+export const MAX_ASKED = 20;
+
+/** A list of inputs asked together, beside the single one a tool takes; undescribed, as the instructions say it once. */
+export const severalInput = () => z.array(z.string()).min(1).max(MAX_ASKED).optional();
+
+/** The single input and the several, in order, without repeats; none when neither was given. */
+export const askedOf = (one: string | undefined, several: readonly string[] | undefined): string[] =>
+  [...new Set([...(one === undefined ? [] : [one]), ...(several ?? [])])];
+
+/**
+ * Each tool's single input and the list it takes several in (P364, P381),
+ * for `pluralAsked`.
+ */
+export const PLURAL_INPUTS: Readonly<Record<string, { one: string; several: string }>> = {
+  who_calls: { one: 'symbol', several: 'symbols' },
+  impact: { one: 'symbol', several: 'symbols' },
+  dead: { one: 'id', several: 'ids' },
+  find_symbol: { one: 'query', several: 'queries' },
+  search: { one: 'query', several: 'queries' },
+  get_type: { one: 'type', several: 'types' },
+  who_consumes: { one: 'channel', several: 'channels' },
+  who_emits: { one: 'channel', several: 'channels' },
+};
+
+/** The strings a value holds: itself, or each string of a list. */
+const stringsOf = (value: unknown): string[] =>
+  typeof value === 'string' ? [value] : Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+
+/**
+ * A call's arguments with several inputs said the way the tool takes them
+ * (P381): `ids` beside a tool whose list is named otherwise (`symbols`,
+ * `queries`, `channels`, `types`), a list in the single input
+ * (`symbol: ["a", "b"]`), and one string in the list (`symbols: "a"`) are
+ * each the tool's list; a list of one is the single input. The habit a guide
+ * teaches (`ids: [...]`) then works on every tool, and costs the listing
+ * nothing: read where every call passes, before the tool's own schema checks
+ * it, which would drop an unknown key and answer as if nothing was asked.
+ */
+export const pluralAsked = (tool: string, args: Record<string, unknown>): Record<string, unknown> => {
+  const keys = PLURAL_INPUTS[tool];
+  if (keys === undefined) return args;
+  const { one, several } = keys;
+  const aliased = several !== 'ids' && 'ids' in args;
+  const listed = Array.isArray(args[one]) || (several in args && !Array.isArray(args[several]));
+  if (!aliased && !listed) return args;
+  const asked = [...new Set([...stringsOf(args[one]), ...stringsOf(args[several]), ...(aliased ? stringsOf(args['ids']) : [])])];
+  const { [one]: _one, [several]: _several, ...rest } = args;
+  if (aliased) delete rest['ids'];
+  if (asked.length === 0) return rest;
+  return asked.length === 1 ? { ...rest, [one]: asked[0] } : { ...rest, [several]: asked };
+};
+
+/** Whether an answer of several answers nothing about what it was asked: an error, or the nodes a name could mean. */
+const unanswered = (answer: Record<string, unknown>): string | undefined =>
+  typeof answer['error'] === 'string'
+    ? 'not found'
+    : Array.isArray(answer['candidates'])
+      ? `names ${answer['candidates'].length} nodes, see its candidates`
+      : undefined;
+
+/**
+ * Several inputs answered in one answer (P364): each by the tool's own code
+ * in turn, bounded as a single one is, under `answers` with the input it
+ * answers as `asked` (a key no answer uses: get_type's has a `type`); the
+ * hints of all, the first of each first, in one `next`; and `complete`
+ * false where any answer is cut or left something unread, or answers nothing
+ * about what it was asked (an error, candidates: P381).
+ */
+export const answerEach = (key: string, asked: readonly string[], run: (value: string) => object): object => {
+  const answers: Array<Record<string, unknown>> = [];
+  const hints: string[][] = [];
+  for (const value of asked) {
+    const { next, ...rest } = run(value) as { next?: string[] } & Record<string, unknown>;
+    answers.push({ asked: value, ...rest });
+    hints.push(next ?? []);
+  }
+  const next: string[] = [];
+  for (let at = 0; next.length < MAX_NEXT && hints.some((list) => list.length > at); at += 1) {
+    for (const list of hints) {
+      const hint = list[at];
+      if (hint !== undefined && !next.includes(hint) && next.length < MAX_NEXT) next.push(hint);
+    }
+  }
+  const left = answers.flatMap((answer) => {
+    const missed = unanswered(answer);
+    if (missed !== undefined) return [`${key} ${String(answer['asked'])}: ${missed}`];
+    return answer['complete'] === false ? [`${key} ${String(answer['asked'])}: see its left`] : [];
+  });
+  // Said only where the answers say it: a verdict is not a list to be whole.
+  const lists = answers.some((answer) => 'complete' in answer);
+  return {
+    answers,
+    ...(lists ? { complete: left.length === 0 } : {}),
+    ...(lists && left.length > 0 ? { left } : {}),
+    ...(next.length === 0 ? {} : { next }),
+  };
 };
 
 /*
@@ -245,6 +381,36 @@ export const withDb = (
 /** The calls that take the ids an answer returned. */
 export const nextOutput = z.array(z.string()).optional();
 
+/** Whether a row runs and where it is reached from (P364), as `reachReader` says it; a maybe with what it sits behind (P367). */
+export const reachOutput = {
+  reach: z.enum(['alive', 'maybe', 'unreached', 'dead', 'outside']).optional(),
+  from: z.string().optional(),
+  ways: z.number().optional(),
+  walkCut: z.literal(true).optional(),
+  gap: z.string().optional(),
+  behind: z.string().optional(),
+  /** On a maybe row: the name to search for (grep -rnw) and the repository to search, to confirm it (P393). */
+  confirm: z.object({ grep: z.string(), repo: z.string() }).optional(),
+  /** Every way in that reaches it is judged dead (P381): `reach` is `dead`, though code calls it. */
+  throughDead: z.literal(true).optional(),
+};
+
+/** Where the requests a method sends land (P377), as `requestsOf` says it. */
+export const requestsOutput = {
+  // One list (P393): a route joined, a request joined to none as written, or how many more.
+  requests: z
+    .array(z.union([z.object({ route: z.string(), by: z.string().optional() }), z.object({ unjoined: z.string() }), z.object({ more: z.number() })]))
+    .optional(),
+  /** The tables a method writes or deletes rows of (P406), as `writesOf` says it. */
+  writes: z.array(z.string()).optional(),
+};
+
+/** Whether a list is the whole answer, and what was left if not (P364). */
+export const completeOutput = {
+  complete: z.boolean().optional(),
+  left: z.array(z.string()).optional(),
+};
+
 /**
  * A node as it goes over the wire (`CompactNode`). Named, so a schema that
  * holds it twice declares it once under `definitions` and refers to it.
@@ -255,11 +421,19 @@ export const nodeOutput = z
     type: z.string(),
     label: z.string(),
     loc: z.string().optional(),
+    /** Where its declaration ends, read from the checkout (P393). */
+    endLine: z.number().optional(),
     service: z.string().optional(),
     kind: z.string().optional(),
     meta: z.record(z.string(), z.unknown()).optional(),
   })
   .meta({ id: 'Node' });
+
+/** A row of code with whether it runs and where it is reached from (P364). */
+export const reachedNodeOutput = nodeOutput.extend(reachOutput).meta({ id: 'ReachedNode' });
+
+/** A find_symbol match: a reached node, and where the requests it sends land (P377). */
+export const matchedNodeOutput = reachedNodeOutput.extend(requestsOutput).meta({ id: 'MatchedNode' });
 
 /** What every cut list says beside its rows. */
 export const pageOutput = {
@@ -267,3 +441,6 @@ export const pageOutput = {
   nextOffset: z.number().optional(),
   truncated: z.string().optional(),
 };
+
+/** Several inputs answered together: one answer per input, each the shape a single one has. */
+export const answersOutput = z.array(z.record(z.string(), z.unknown())).optional();

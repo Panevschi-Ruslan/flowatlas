@@ -5,7 +5,7 @@ The project map, offered to an agent over stdio.
 This package is private: it is compiled into the `flowatlas` command, and
 `flowatlas mcp` is how it is run. It is not published on its own.
 
-Everything else builds a graph; these twenty-six tools, three prompts and three
+Everything else builds a graph; these twenty-seven tools, three prompts and four
 resources are how a session sitting in one repository answers a question about
 another one without opening it. A session is offered only the tools the project
 can answer (`tool-needs.ts` says what each needs), and told when that changes.
@@ -54,7 +54,10 @@ Inside this workspace, where the package is linked rather than published:
 `--db <path>` names a database directly, and `FLOWATLAS_DB` does the same through
 the environment. With neither, the server looks for a configuration from the
 directory it was started in. `--all-tools` lists every tool, not only those the
-project can answer.
+project can answer. The nine core tools are listed with
+`_meta: {"anthropic/alwaysLoad": true}`, so Claude Code loads them upfront;
+`--no-always-load` (or `mcp.alwaysLoad: false` in the configuration) lists
+none that way.
 
 The server answers `initialize` as `flowatlas`. Under `flowatlas mcp` its
 `serverInfo.version` is the installed command's version; the workspace bin
@@ -62,9 +65,10 @@ above answers this package's own manifest version.
 
 Confirm it is there with `claude mcp list`.
 
-Run from this bin, the server has no contracts checker, pattern tester or
-traffic checker: `check_contract` answers without field findings and
-`test_pattern` says it needs the readers. `flowatlas mcp` hands it all of them.
+Run from this bin, the server has no contracts checker, pattern tester,
+change checker, traffic checker or overview: `check_contract` answers without
+field findings, `test_pattern` says it needs the readers, and `check_change` and
+`flowatlas://overview` are not offered. `flowatlas mcp` hands it all of them.
 
 ## What it can be asked
 
@@ -86,9 +90,10 @@ traffic checker: `check_contract` answers without field findings and
 | `cant_follow` | why flows stop: the steps the reading could not follow, by cause and package |
 | `test_pattern` | a draft extraction pattern run over code before it is suggested |
 | `dead` | whether a node is dead and what could make that wrong |
-| `findings` | likely N+1 loops, unguarded routes, contract breaks, one-ended channels, broken rules |
+| `findings` | what looks broken between the services first (missing routes, fields never sent or returned, types never published, contract breaks, settings, CORS, …), each with its precision, then likely N+1 loops, unguarded routes, one-ended channels and broken rules |
 | `check_rules` | the architecture rules of the configuration and each violation |
 | `what_changed` | the last `flowatlas diff` or `check`, and with `verdict` whether it is safe |
+| `check_change` | the working tree against the built graph before it is committed: lost joins, new contract errors and findings, the ways in it reaches |
 | `hot_paths` / `slow_steps` / `trace_for` | what real traffic used most, where it was slowest, and sample requests |
 | `undeclared_failures` / `never_seen` | statuses traffic got that the code never declares, and what traffic never touched |
 | `get_source` | the code of one symbol, and the only tool that returns code |
@@ -96,7 +101,9 @@ traffic checker: `check_contract` answers without field findings and
 The prompts `before-rename`, `pr-review` and `trace-route` write out the calls a
 common review takes; the resources `flowatlas://reasons`,
 `flowatlas://services` and `flowatlas://services/{name}` hold the reason
-catalogue, the services and one service's summary.
+catalogue, the services and one service's summary, and under `flowatlas mcp`
+`flowatlas://overview` holds the project's overview as `flowatlas report`
+prints it.
 
 The tools that thin their rows take `detail` (0 identity, 1 adds location, 2
 adds metadata; 3 is answered at 2 and says so) and `maxNodes` (the most rows an answer holds), which defaults

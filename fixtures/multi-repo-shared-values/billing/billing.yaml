@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Billing, a plain stack deployed by rain with the values its command and configuration give.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+  Prefix:
+    Type: String
+    Default: acme
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  InvoicesQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Prefix}-${Stage}-invoices
+
+  InvoiceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-invoice
+      Runtime: nodejs20.x
+      Handler: invoice.handler
+      Code: ./src
+      Role: !GetAtt LambdaRole.Arn
+
+  InvoicesMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt InvoicesQueue.Arn
+      FunctionName: !Ref InvoiceFunction
+
+Outputs:
+  InvoicesQueueName:
+    Value: !GetAtt InvoicesQueue.QueueName

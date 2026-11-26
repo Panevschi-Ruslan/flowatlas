@@ -1,12 +1,21 @@
 import {
   causeMeta,
+  FRAMEWORK_CALLS_META,
   findMethod,
+  methodNamedOn,
   forEachCall,
   lineOf,
   methodBodies,
   resolveReceiver,
+  isDispatchedTableMember,
+  tableDispatchOf,
+  tableDispatchOfName,
+  tableTargetOf,
+  tableUnreadHint,
   whyNoClass,
+  type FrameworkCallTime,
   type NamedFunction,
+  type TableDispatch,
 } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -38,6 +47,13 @@ interface Caller {
   owner?: ClassDeclaration;
   /** Creates the caller's own node, which nothing does until it has an edge. */
   ensure(): void;
+  /**
+   * Functions written in the body that a way in names as its handler (P398,
+   * P399): a call inside one is drawn from that function's own node, which
+   * the way in reaches, and not again from the method around it, which runs
+   * it only to register it.
+   */
+  handlersInside?: ReadonlySet<TsNode>;
 }
 
 /**
@@ -55,9 +71,78 @@ interface Caller {
  * (R156).
  */
 interface Follow {
-  byName?: (fn: NamedFunction, call: TsNode) => void;
-  byMember?: (fn: NamedFunction, call: TsNode) => void;
+  byName?: (fn: NamedFunction, call: TsNode, meta?: EdgeMeta) => void;
+  byMember?: (fn: NamedFunction, call: TsNode, meta?: EdgeMeta) => void;
 }
+
+/** What an edge drawn through a table of handlers carries: `via: "table"` and the key that selects the element (P398). */
+type EdgeMeta = Readonly<Record<string, string>>;
+
+/** How many tables inside the functions a table holds are followed before the walk stops. */
+const TABLE_DEPTH = 3;
+
+/**
+ * A call through an element of a table the code writes out (P398): an edge to
+ * what each element's member runs - a method, a function, or the calls of a
+ * function written in the element, walked as the caller's own - each marked
+ * `via: "table"` with the key that selects it. Elements whose member is not
+ * read keep the call's gap, with how many.
+ */
+const followTable = (
+  ctx: NestExtractContext,
+  caller: Caller,
+  call: TsNode & { getExpression(): TsNode },
+  dispatch: TableDispatch,
+  follow: Follow,
+  depth: number,
+): void => {
+  let unreadValues = 0;
+  for (const row of dispatch.rows) {
+    const target = tableTargetOf(row.value);
+    const meta: EdgeMeta = { via: 'table', ...(row.selectedBy === undefined ? {} : { selectedBy: row.selectedBy }) };
+    if (target === undefined) {
+      unreadValues += 1;
+      continue;
+    }
+    if (target.kind === 'method') {
+      const toId = ctx.methodIdOf(target.method);
+      if (toId === undefined) {
+        unreadValues += 1;
+        continue;
+      }
+      caller.ensure();
+      ctx.ensureMethodNode(target.method);
+      ctx.builder.addEdge({ from: caller.id, to: toId, type: 'calls', confidence: 'static', file: caller.file, line: lineOf(call), meta: { ...meta } });
+      continue;
+    }
+    const onFunction = follow.byName ?? follow.byMember;
+    if (target.kind === 'function') {
+      if (onFunction === undefined) unreadValues += 1;
+      else onFunction(target.fn, call, meta);
+      continue;
+    }
+    // A function written in the element runs as part of this call: its calls are the caller's.
+    const body = target.fn.getBody();
+    if (body === undefined) continue;
+    const { owner: _owner, ...rest } = caller;
+    const inner: Caller = target.owner === undefined ? rest : { ...rest, owner: target.owner };
+    walkCalls(ctx, inner, body, onFunction === undefined ? follow : { ...follow, byName: onFunction }, meta, depth + 1);
+  }
+  if (dispatch.unread + unreadValues === 0) return;
+  ctx.report({
+    file: caller.file,
+    line: lineOf(call),
+    reason: 'call-dynamic-receiver',
+    level: 'info',
+    hint: tableUnreadHint(dispatch, unreadValues),
+    symbol: `${caller.label} -> ${call.getExpression().getText()}`,
+    ...causeMeta({ cause: 'table-rows-unread' }),
+  });
+};
+
+/** Whether an entry adapter's ways in stand for a call (P399): see `EntryAdapter.standsForCall`. */
+const standsForWaysIn = (ctx: NestExtractContext, call: TsNode): boolean =>
+  ctx.adapters.entry.some((adapter) => adapter.standsForCall?.(call) === true);
 
 /**
  * Draws the edges one body's calls stand for.
@@ -73,14 +158,50 @@ const walkCalls = (
   caller: Caller,
   body: TsNode,
   follow: Follow = {},
+  edgeMeta?: EdgeMeta,
+  depth = 0,
 ): void => {
+  const withMeta = (meta?: Readonly<Record<string, string>>): { meta?: Record<string, string> } =>
+    meta === undefined && edgeMeta === undefined ? {} : { meta: { ...meta, ...edgeMeta } };
+  // Inside a function a table holds, every edge says it came through the table.
+  const named: Follow =
+    edgeMeta === undefined
+      ? follow
+      : {
+          ...(follow.byName === undefined ? {} : { byName: (fn: NamedFunction, call: TsNode) => follow.byName?.(fn, call, edgeMeta) }),
+          ...(follow.byMember === undefined ? {} : { byMember: (fn: NamedFunction, call: TsNode) => follow.byMember?.(fn, call, edgeMeta) }),
+        };
+  const handlers = caller.handlersInside;
   forEachCall(body, (call) => {
     const callee = call.getExpression();
 
+    // A call written in a function a way in names as its handler is that
+    // function's, drawn from its own node, which the way in reaches; not again
+    // from the method it is written in, which runs it only to register it
+    // (P398 for calls through a table, P399 for every call).
+    if (handlers !== undefined && call.getFirstAncestor((node) => handlers.has(node)) !== undefined) return;
+
+    // `route.handler(ctx)` where `route` is an element of a table written out,
+    // and `const { handler } = route; handler(ctx)`: a call of each element's
+    // member (P398).
+    if (depth < TABLE_DEPTH) {
+      const dispatch = Node.isIdentifier(callee)
+        ? tableDispatchOfName(callee, call)
+        : Node.isPropertyAccessExpression(callee)
+          ? tableDispatchOf(callee.getExpression(), callee.getName(), call)
+          : undefined;
+      if (dispatch !== undefined) {
+        // A call whose table's elements are ways in of their own (a bot's listener split by prefix, P399): each way in
+        // hands the update to its element, so the call is theirs, with nothing left unread.
+        if (!standsForWaysIn(ctx, call)) followTable(ctx, caller, call, dispatch, named, depth);
+        return;
+      }
+    }
+
     if (!Node.isPropertyAccessExpression(callee)) {
-      if (Node.isIdentifier(callee) && follow.byName !== undefined) {
+      if (Node.isIdentifier(callee) && named.byName !== undefined) {
         const fn = functionNamedBy(callee);
-        if (fn !== undefined) follow.byName(fn, call);
+        if (fn !== undefined) named.byName(fn, call);
         return;
       }
       if (Node.isElementAccessExpression(callee)) {
@@ -103,7 +224,7 @@ const walkCalls = (
     // `commands.myOrders(ctx)` on `export const commands = { myOrders: … }` —
     // a module of functions spelled as an object, followed like a function
     // called by name.
-    const onMember = follow.byMember ?? follow.byName;
+    const onMember = named.byMember ?? named.byName;
     if (onMember !== undefined) {
       const member = memberFunctionCalled(callee);
       if (member !== undefined) {
@@ -147,6 +268,9 @@ const walkCalls = (
     }
 
     if (receiver.classDecl === undefined) {
+      // `handler: this.h.bind(this)` in a table a call here dispatches over is
+      // a reference that dispatch follows, not a call nothing could (P398).
+      if (calledName === 'bind' && isDispatchedTableMember(call)) return;
       ctx.report({
         file: caller.file,
         line: lineOf(call),
@@ -193,7 +317,7 @@ const walkCalls = (
       confidence: 'static',
       file: caller.file,
       line: lineOf(call),
-      ...(receiver.kind === 'super' ? { meta: { via: 'super' } } : {}),
+      ...withMeta(receiver.kind === 'super' ? { via: 'super' } : undefined),
     });
   });
 };
@@ -207,7 +331,7 @@ const walkCalls = (
  */
 const callsFunction =
   (ctx: NestExtractContext, from: { id: string; file: string }, ensure: () => void) =>
-  (called: NamedFunction, call: TsNode): void => {
+  (called: NamedFunction, call: TsNode, meta?: EdgeMeta): void => {
     ensure();
     ctx.ensureFunctionNode(called);
     ctx.builder.addEdge({
@@ -217,6 +341,7 @@ const callsFunction =
       confidence: 'static',
       file: from.file,
       line: lineOf(call),
+      ...(meta === undefined ? {} : { meta: { ...meta } }),
     });
   };
 
@@ -230,6 +355,8 @@ const callsFunction =
  */
 const walkClasses = (ctx: NestExtractContext): NamedFunction[] => {
   const reached: NamedFunction[] = [];
+  // Functions a way in names, written inside a method: walked as handlers of their own below.
+  const handlersInside: ReadonlySet<TsNode> = new Set(ctx.handlerFunctions.map((fn) => fn.declaration));
   for (const indexed of ctx.classes.all()) {
     if (!WALKED.has(indexed.role)) continue;
     const owner: ClassDeclaration = indexed.declaration;
@@ -251,13 +378,15 @@ const walkClasses = (ctx: NestExtractContext): NamedFunction[] => {
             ctx.ensureMethodNode(method);
             created = true;
           },
+          handlersInside,
         },
         body,
         {
-          byMember: (called, call) => {
+          byMember: (called, call, meta) => {
             callsFunction(ctx, { id, file: indexed.file }, () => ctx.ensureMethodNode(method))(
               called,
               call,
+              meta,
             );
             reached.push(called);
           },
@@ -328,8 +457,8 @@ const walkHandlerFunctions = (ctx: NestExtractContext, alsoReached: readonly Nam
       },
       fn.body,
       {
-        byName: (called, call) => {
-          callsFunction(ctx, { id, file }, () => ctx.ensureFunctionNode(fn))(called, call);
+        byName: (called, call, meta) => {
+          callsFunction(ctx, { id, file }, () => ctx.ensureFunctionNode(fn))(called, call, meta);
           if (visited.has(called.declaration)) return;
           visited.add(called.declaration);
           queue.push(called);
@@ -339,8 +468,52 @@ const walkHandlerFunctions = (ctx: NestExtractContext, alsoReached: readonly Nam
   }
 };
 
+/**
+ * The lifecycle hooks Nest calls by itself on every provider and controller it
+ * builds, and when (the framework's lifecycle events): the application starts,
+ * or it stops.
+ */
+const NEST_HOOKS: ReadonlyMap<string, FrameworkCallTime> = new Map([
+  ['onModuleInit', 'startup'],
+  ['onApplicationBootstrap', 'startup'],
+  ['onModuleDestroy', 'shutdown'],
+  ['beforeApplicationShutdown', 'shutdown'],
+  ['onApplicationShutdown', 'shutdown'],
+]);
+
+/**
+ * Marks the lifecycle hooks Nest calls (P399): on a controller or a provider
+ * a module of the repository registers (a class, or a `useClass`), each hook
+ * it declares whose node the walk drew is written `frameworkCalls: { hook,
+ * when }`, so what answers reach reads it as a way in - `startup
+ * (onModuleInit)` - and a method only it calls (`setup()`) as reached. A hook
+ * on a class no module registers is left as it was: nothing says Nest builds
+ * that class.
+ */
+const markLifecycleHooks = (ctx: NestExtractContext): void => {
+  const registered = new Set<ClassDeclaration>();
+  for (const module of ctx.modules.all()) {
+    for (const controller of module.controllers) registered.add(controller);
+    for (const provider of [...module.providers, ...(module.dynamicProviders ?? [])]) {
+      if (provider.declaration !== undefined && (provider.kind === 'class' || provider.kind === 'useClass')) registered.add(provider.declaration);
+    }
+  }
+  if (registered.size === 0) return;
+  for (const indexed of ctx.classes.all()) {
+    if (!WALKED.has(indexed.role) || !registered.has(indexed.declaration)) continue;
+    for (const [hook, when] of NEST_HOOKS) {
+      const method = methodNamedOn(indexed.declaration, hook);
+      const id = method === undefined ? undefined : ctx.methodIdOf(method);
+      const node = id === undefined ? undefined : ctx.builder.getNode(id);
+      if (node === undefined) continue;
+      node.meta = { ...node.meta, [FRAMEWORK_CALLS_META]: { hook, when } };
+    }
+  }
+};
+
 /** Turns call sites into edges between the things that hold them. */
 export const callsPass = definePass('calls', (ctx: NestExtractContext) => {
   const reached = walkClasses(ctx);
   walkHandlerFunctions(ctx, reached);
+  markLifecycleHooks(ctx);
 });

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: api
+version: 0.1.0
+dependencies:
+  - name: ports
+    version: 0.1.0
+    repository: file://../ports
+    import-values:
+      - child: exports.ports
+        parent: service

@@ -1,0 +1,13 @@
+@  Order.customer                            orders/src/orders/orders.resolver.ts:32
+  => admin ^  query OrderCustomers /graphql  admin/src/app/orders.component.ts:27
+    -> OrdersComponent.refresh               admin/src/app/orders.component.ts:25
+      %  OrdersComponent                     admin/src/app/orders.component.ts:15
+Reachable from: no entry points. Also reaches admin, web, where the chain stops before an entry point
+Maybe, behind a call the reading could not follow:
+  OrdersComponent (admin)  maybe, via graphql Order.customer (orders), gap gap:admin|src/app/orders.component.ts|di-type-unresolved
+Unreached: 1 chain ends at code whose name its repository writes nowhere else, so nothing could break through it
+Components on the way:
+  web  src/orders/OrderSummary.tsx
+  web  src/orders/OrdersPage.tsx
+no way in reaches this; the components on the way (components) call it
+Left: gaps: 1 chain stops at an unread call before any way in: the maybe row

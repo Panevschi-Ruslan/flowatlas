@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-18T10:28:16.517Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:32.658Z",
   "configHash": "a4aa242aade4",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1039,
+      "durationMs": 2596,
       "packages": {
         "name": "@acme/gateway",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 6,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 700,
+      "durationMs": 1162,
       "packages": {
         "name": "@acme/jobs",
         "runtime": [],
@@ -49,7 +49,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 1087,
+      "durationMs": 2788,
       "packages": {
         "name": "@acme/orders",
         "runtime": [

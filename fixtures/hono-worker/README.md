@@ -32,6 +32,11 @@ click Watch             web/src/app/orders.component.ts:10
         OrdersService.changesFor                   calls, static
 ```
 
+The browser holds that route open as a stream of server-sent events, and its
+listener, written in place in `LiveEventsService.open`, is a `consumer` the
+request `triggers`. Nothing behind `orderStream` subscribes to a channel, so the
+route carries a `stream-relay-unread` row from the linker (P359).
+
 The browser writes the address without `/api`, because its base already ends
 there. The worker writes `/api` out in the path, because nothing adds it to a
 route declared outside the framework that has a global prefix. They meet because

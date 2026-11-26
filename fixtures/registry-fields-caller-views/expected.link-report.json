@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:36.662Z",
+  "configHash": "481b5ee8317e",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 21,
+      "edges": 13,
+      "types": 4,
+      "unresolved": 15,
+      "durationMs": 1173,
+      "packages": {
+        "name": "registry-fields-caller-views-console",
+        "runtime": [
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 6,
+      "durationMs": 1137,
+      "packages": {
+        "name": "registry-fields-caller-views-site",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 28,
+    "edges": 17,
+    "types": 4,
+    "missed": 21,
+    "sites": 21,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 21
+  }
+}

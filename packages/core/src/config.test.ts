@@ -501,3 +501,13 @@ describe('what a software catalogue says of a service (P119)', () => {
     expect(() => parseConfig({ services: [{ name: 'orders', repo: '.', catalog: { owner: '' } }] })).toThrow();
   });
 });
+
+describe('the log block (P235)', () => {
+  it('is off unless asked for, and refuses a key it does not have', () => {
+    expect(parseConfig({}).log).toBeUndefined();
+    expect(parseConfig({ log: { questions: true } }).log).toEqual({ questions: true, text: false });
+    expect(parseConfig({ log: { questions: true, text: true, maxBytes: 1000 } }).log).toEqual({ questions: true, text: true, maxBytes: 1000 });
+    expect(() => parseConfig({ log: { question: true } })).toThrow();
+    expect(() => parseConfig({ log: { maxBytes: 0 } })).toThrow();
+  });
+});

@@ -1,0 +1,37 @@
+{
+  "kind": "config-name-mismatch",
+  "rows": [
+    {
+      "kind": "config-name-mismatch",
+      "id": "config_key:orders-api#PAYMENT_API_KEY",
+      "service": "orders-api",
+      "loc": "src/orders/orders.service.ts:17",
+      "message": "PAYMENT_API_KEY is read with no default by OrdersService.list and set nowhere, while PAYMENTS_API_KEY is set in .env.example and read nowhere",
+      "precision": "high",
+      "evidence": "one name is read and set nowhere, the other set and read nowhere, a letter or two apart",
+      "fix": "one name spelled two ways: read PAYMENTS_API_KEY, or set PAYMENT_API_KEY",
+      "seenBy": [
+        "GET /orders (orders-api)"
+      ],
+      "rank": 1,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "get_source({symbol: \"config_key:orders-api#PAYMENT_API_KEY\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "the configuration module in src/app.module.ts validates the settings with a schema, which may give it a default"
+    },
+    "status-never-answered": {
+      "count": 1,
+      "why": "POST /orders/:param/refund throws HttpException, whose status is not read"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"config_key:orders-api#PAYMENT_API_KEY\"})"
+  ]
+}

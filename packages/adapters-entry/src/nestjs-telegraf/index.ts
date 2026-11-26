@@ -1,6 +1,7 @@
 import type { EntryAdapter, EntryNode, ExtractContext } from '@flowatlas/core';
 import { firstStringArg, getDecorator, hasAnyDependency, makeEntryId, startLineOf } from '@flowatlas/core';
 import type { ClassDeclaration, MethodDeclaration } from 'ts-morph';
+import { isSplitTableCall, tableAt, tableRouteEntries, tableRoutesIn } from '../bot-table-routes.js';
 import { fileOfNode, handlerOf, repoClasses } from '../shared.js';
 import { BOT_DECORATORS, BOT_KINDS, deriveKey, entryMeta, type BotDecorator } from './ids.js';
 import { readBotClass, wizardChain, type StepSite } from './scenes.js';
@@ -174,14 +175,32 @@ const classEntries = (
         continue;
       }
 
-      for (const trigger of resolved.triggers) {
+      // `@On('callback_query')` choosing through a table by the update's data: a way in per element (P399).
+      const only = resolved.triggers.length === 1 ? resolved.triggers[0] : undefined;
+      const split = name === 'On' && only?.kind === 'text' ? tableRoutesIn(method, only.value) : undefined;
+      if (split !== undefined && only?.kind === 'text') {
         entries.push(
-          entryOf(ctx, scope, {
-            method,
+          ...tableRouteEntries(ctx, split, only.value, {
+            adapter: ADAPTER,
             decorator: name,
-            trigger,
-            triggerText: argument?.getText() ?? '',
+            trigger: argument?.getText() ?? '',
+            updateClass: scope.owner,
           }),
+        );
+        if (!split.rest) continue;
+      }
+
+      for (const trigger of resolved.triggers) {
+        const entry = entryOf(ctx, scope, {
+          method,
+          decorator: name,
+          trigger,
+          triggerText: argument?.getText() ?? '',
+        });
+        entries.push(
+          split === undefined
+            ? entry
+            : { ...entry, meta: { ...entry.meta, splitByTable: tableAt(split, ctx), ...(split.restReadsData ? { restReadsData: true } : {}) } },
         );
       }
     }
@@ -227,6 +246,7 @@ export const nestjsTelegrafAdapter: EntryAdapter = {
   // `telegraf` on its own means the imperative API, which registers handlers in
   // calls this adapter cannot see.
   detect: (pkg) => hasAnyDependency(pkg, [TELEGRAF_MODULE]),
+  standsForCall: (call) => isSplitTableCall(call, 'decorator'),
   extractEntries: (ctx) => {
     const entries: EntryNode[] = [];
 

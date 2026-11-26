@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:19:19.762Z",
+  "configHash": "f12d467d3a76",
+  "services": [
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 15,
+      "edges": 11,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 7060,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "@aws-sdk/client-sqs",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:sqs/stock-restock",
+      "channel:sqs/stock-write-off"
+    ]
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "stock",
+      "file": "src/ship.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/ship.ts:9 does not say where it sends: carriers.get(event.carrier) is looked up in carriers by event.carrier, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; stock-ship runs it and is granted only sqs/stock-shipments, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:stock#src/ship.ts:9:9",
+      "meta": {
+        "granted": [
+          "sqs/stock-shipments"
+        ],
+        "functions": [
+          "stock-ship"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 15,
+    "edges": 12,
+    "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 1,
+    "findings": 3,
+    "unresolved": 1
+  }
+}

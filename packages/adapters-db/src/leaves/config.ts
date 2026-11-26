@@ -1,5 +1,6 @@
 import type { Node as TsNode } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
+import { takenMember } from '@flowatlas/core';
 import { evaluateExpression } from '@flowatlas/extractor-nestjs';
 
 /** How a configuration value was reached. */
@@ -12,7 +13,32 @@ export interface ConfigRead {
   defaultValue?: unknown;
   /** True when the key itself could not be read. */
   dynamic?: boolean;
+  /**
+   * True when the read goes on without the value, whatever it is (P388): a
+   * default not written out (`get('X', fallback)`), `process.env.X ?? y`,
+   * `|| y`, the value only tested (`process.env.X ? a : b`, `if
+   * (process.env.X)`). A read that is none of these needs the key set.
+   */
+  fallback?: true;
 }
+
+/** Whether a read is followed by what is used without it: `?? y`, `|| y`, a test of whether it is there. */
+const goesOnWithout = (node: TsNode): boolean => {
+  let at: TsNode = node;
+  let parent = at.getParent();
+  while (parent !== undefined && (Node.isParenthesizedExpression(parent) || Node.isAsExpression(parent) || Node.isNonNullExpression(parent))) {
+    at = parent;
+    parent = at.getParent();
+  }
+  if (parent === undefined) return false;
+  if (Node.isBinaryExpression(parent) && parent.getLeft() === at) {
+    const operator = parent.getOperatorToken().getKind();
+    return operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken;
+  }
+  if (Node.isConditionalExpression(parent)) return parent.getCondition() === at;
+  if (Node.isIfStatement(parent)) return parent.getExpression() === at;
+  return false;
+};
 
 const CONFIG_PACKAGES = ['@nestjs/config'];
 
@@ -36,6 +62,17 @@ const isConfigReceiver = (receiver: TsNode): boolean => {
  * one of them.
  */
 export const readConfig = (node: TsNode): ConfigRead | null => {
+  // `const { ORDERS_URL = 'http://orders:3000' } = process.env`: the read is
+  // spelled where the name is declared, and the name stands for it (P269).
+  const taken = takenMember(node);
+  if (taken !== undefined) {
+    const target = taken.from.getText();
+    const fallback = taken.fallback === undefined ? undefined : evaluateExpression(taken.fallback);
+    const withDefault = fallback?.resolved === true ? { defaultValue: fallback.value } : taken.fallback !== undefined ? { fallback: true as const } : {};
+    if (target === 'process.env') return { key: taken.key, source: 'process.env', ...withDefault };
+    if ((target === 'env' || target.endsWith('.env')) && ENV_KEY.test(taken.key)) return { key: taken.key, source: 'binding', ...withDefault };
+    return null;
+  }
   if (Node.isCallExpression(node)) {
     const callee = node.getExpression();
     if (!Node.isPropertyAccessExpression(callee)) return null;
@@ -51,14 +88,20 @@ export const readConfig = (node: TsNode): ConfigRead | null => {
     return {
       key: key.value,
       source: 'config.get',
-      ...(fallback?.resolved === true ? { defaultValue: fallback.value } : {}),
+      ...(fallback?.resolved === true ? { defaultValue: fallback.value } : defaultArg !== undefined || goesOnWithout(node) ? { fallback: true as const } : {}),
     };
   }
 
   if (Node.isElementAccessExpression(node)) {
     const target = node.getExpression().getText();
     if (target === 'process.env' || target.endsWith('.env') || target === 'env') {
-      return { key: node.getArgumentExpression()?.getText() ?? '?', source: 'process.env', dynamic: true };
+      // `process.env['JOB_VERBS']` names its key as plainly as `process.env.JOB_VERBS` (P401).
+      const argument = node.getArgumentExpression();
+      const key = argument === undefined ? undefined : evaluateExpression(argument);
+      if (key?.resolved === true && typeof key.value === 'string' && (target === 'process.env' || ENV_KEY.test(key.value))) {
+        return { key: key.value, source: target === 'process.env' ? 'process.env' : 'binding', ...(goesOnWithout(node) ? { fallback: true as const } : {}) };
+      }
+      return { key: argument?.getText() ?? '?', source: 'process.env', dynamic: true };
     }
     return null;
   }
@@ -66,10 +109,11 @@ export const readConfig = (node: TsNode): ConfigRead | null => {
   if (Node.isPropertyAccessExpression(node)) {
     const target = node.getExpression().getText();
     const key = node.getName();
-    if (target === 'process.env') return { key, source: 'process.env' };
+    const without = goesOnWithout(node) ? { fallback: true as const } : {};
+    if (target === 'process.env') return { key, source: 'process.env', ...without };
     // A platform binding: an environment object whose properties are the keys.
     if ((target === 'env' || target.endsWith('.env')) && ENV_KEY.test(key)) {
-      return { key, source: 'binding' };
+      return { key, source: 'binding', ...without };
     }
     return null;
   }

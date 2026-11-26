@@ -1,13 +1,24 @@
-import { rowKindOf, waysInOf, type GraphNode } from '@flowatlas/core';
+import { isMessageTypeNode, ROUTES_UNREAD_REASONS, rowKindOf, waysInOf, type GraphNode, type Precision } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
 import type { RuleViolation } from '../rules/types.js';
+import { promoteGap, typesNeverPublished, type BoundaryFinding, type HeldBack } from './boundary.js';
 import { deadChannels } from './dead.js';
+import { boundaryMismatches } from './mismatches.js';
+import { UNSELECTED_HELD_META } from '../message-types.js';
 import { byId } from './graph.js';
 
 /**
  * What the reading found about the code, gathered into one list and ranked by
  * reach (P95): the "what should I look at" answer.
+ *
+ * What looks broken between the services comes first (P384): a call to a route
+ * that does not exist, a field read that no sender sends, a type of message
+ * handled that nothing publishes, a contract break, a route left unguarded
+ * among guarded siblings, an annotation naming a missing route, a value the
+ * deployment does not set. Each is gated on the fact that makes it a defect
+ * (`boundary.ts`) and carries a `precision`; a candidate whose fact does not
+ * hold is counted under `heldBack` with why.
  *
  * Four kinds have a name of their own: a likely N+1 (`query-in-loop`, P69,
  * P89), a route nothing guards (`route-unguarded`, P76), a field two services
@@ -17,13 +28,41 @@ import { byId } from './graph.js';
  * broken architecture rule (P114) is a finding too, though no row records it:
  * kind `rule`, ranked by severity, then by the ways in reaching where it starts.
  */
-export const FINDING_KINDS = ['n-plus-one', 'unguarded', 'contract-break', 'one-ended-channel', 'rule'] as const;
+export const FINDING_KINDS = [
+  'call-to-missing-route',
+  'field-never-sent',
+  'answer-field-never-returned',
+  'type-never-published',
+  'contract-break',
+  'unguarded-among-guarded',
+  'annotation-to-missing-route',
+  'env-not-set',
+  // Protocol, validation, settings, status and CORS mismatches (P388), surest first.
+  'sse-event-unhandled',
+  'bot-button-unhandled',
+  'bot-button-data-too-long',
+  'config-name-mismatch',
+  'status-never-answered',
+  'cors-credentials',
+  'cors-header-not-allowed',
+  'cors-method-not-allowed',
+  'config-not-set',
+  'sse-event-never-sent',
+  'bot-handler-untriggered',
+  'n-plus-one',
+  'unguarded',
+  'config-never-read',
+  'one-ended-channel',
+  'rule',
+] as const;
 export type FindingKindName = (typeof FINDING_KINDS)[number];
 
 /** The reasons whose rows are listed under a name of their own. */
 const KIND_OF_REASON: Readonly<Record<string, FindingKindName>> = {
   'query-in-loop': 'n-plus-one',
   'route-unguarded': 'unguarded',
+  // The route audit names the one open write among guarded ones itself (P401).
+  'route-unguarded-among-guarded': 'unguarded-among-guarded',
 };
 
 /** The kind a finding row is listed under: its own name, or its reason. */
@@ -40,13 +79,21 @@ export interface FindingReach {
   callers?: number;
   /** Producers or consumers on the end of a channel that exists. */
   ends?: number;
+  /** Routes beside an unguarded one, in its controller, that a guard is in front of. */
+  guardedSiblings?: number;
+  /** Browser requests and screen or bot ways in that reach a route: a person can send it. */
+  people?: number;
+  /** Requests from other services that reach a route. */
+  services?: number;
 }
 
 export interface FindingRow {
   kind: string;
   /** The node the row is about: the loop's method, the route, the sending side, the channel. */
   id: string;
-  /** The receiving side of a contract break. */
+  /** The sending side, where the row is about the receiving one: the request whose body lacks a field read (P384). */
+  from?: string;
+  /** The receiving side of a contract break; the channel, type or route of a defect between the services. */
   to?: string;
   /** The method that handles a route. */
   method?: string;
@@ -55,6 +102,16 @@ export interface FindingRow {
   message: string;
   /** A contract break's severity. */
   severity?: string;
+  /** How often a finding of its kind is a real defect where its evidence holds (P384). */
+  precision: Precision;
+  /** The fact that makes it a defect, where one had to hold (P384). */
+  evidence?: string;
+  /** The nearest fix: the route it was probably meant for, the field or type it was probably renamed from. */
+  fix?: string;
+  /** The ids the fix names. */
+  nearest?: string[];
+  /** The ways in that reach the sending side: who meets it. */
+  seenBy?: string[];
   reach: FindingReach;
   /** Place within its kind, 1 first; 0 until ranked. */
   rank: number;
@@ -83,6 +140,14 @@ export interface FindingSources {
   contracts?: readonly ContractBreak[];
   /** The violations `evaluateRules` found, excused ones left out (P114). */
   rules?: readonly RuleViolation[];
+  /**
+   * Every row of the graph, accepted ones too, that the evidence of a defect
+   * is read from (P384): a route accepted as unread is still unread. `rows`
+   * when absent.
+   */
+  all?: readonly AnchoredUnresolvedRow[];
+  /** Findings worked out elsewhere, listed and ranked with these: the fields read that no sender sends (P384). */
+  extra?: readonly FindingRow[];
 }
 
 export interface CollectedFindings {
@@ -93,6 +158,8 @@ export interface CollectedFindings {
    * the likely ones, never listed.
    */
   notes: Record<string, number>;
+  /** Candidates whose evidence did not hold, by kind: how many, and why the first was held back (P384). */
+  heldBack: Record<string, { count: number; why: string }>;
 }
 
 const locOf = (row: Pick<AnchoredUnresolvedRow, 'file' | 'line'>): string | undefined =>
@@ -119,35 +186,185 @@ const routeOfRow = (db: GraphDb, row: AnchoredUnresolvedRow): GraphNode | undefi
   );
 };
 
+/**
+ * How often a finding of each kind is a real defect where its evidence holds
+ * (P384). A contract break is `high` at error and `medium` at warning; a kind
+ * not named here, a reason listed under itself, is `medium`.
+ */
+const PRECISION: Readonly<Record<string, Precision>> = {
+  'call-to-missing-route': 'high',
+  'field-never-sent': 'high',
+  // A field of an answer a client reads and the route's answer, read whole, never holds (P393).
+  'answer-field-never-returned': 'high',
+  'type-never-published': 'high',
+  'annotation-to-missing-route': 'high',
+  // A literal route an earlier parameter route answers never runs (P385).
+  'route-shadowed-by-earlier': 'high',
+  // The one write of its router open where every other write is guarded, its router read whole (P401).
+  'unguarded-among-guarded': 'high',
+  'env-not-set': 'medium',
+  'n-plus-one': 'medium',
+  // Internal services are often unguarded by design: worth a look, not a verdict.
+  unguarded: 'low',
+  'one-ended-channel': 'medium',
+  rule: 'high',
+  // A deployment's settings against the code it runs (P389): a lost or repeated message is a defect; a missing
+  // redrive, few receives, an unretried function or a callback with no heartbeat is advice, ranked below.
+  'batch-failures-unreported': 'high',
+  'queue-visibility-short': 'high',
+  'batch-failures-ignored': 'medium',
+  'workflow-task-untimed': 'medium',
+  'queue-redrive-missing': 'low',
+  'queue-receives-few': 'low',
+  'workflow-function-unretried': 'low',
+  'workflow-callback-no-heartbeat': 'low',
+  // P388: each is said with its own precision too; these are the kinds' own.
+  'sse-event-unhandled': 'high',
+  'sse-event-never-sent': 'medium',
+  'bot-button-unhandled': 'high',
+  'bot-button-data-too-long': 'high',
+  'bot-handler-untriggered': 'medium',
+  'config-name-mismatch': 'high',
+  'config-not-set': 'medium',
+  'config-never-read': 'low',
+  'status-never-answered': 'high',
+  'cors-credentials': 'high',
+  'cors-header-not-allowed': 'high',
+  'cors-method-not-allowed': 'high',
+};
+
+/** How sure a finding of a kind is, at a severity where the kind has several. */
+export const precisionOf = (kind: string, severity?: string): Precision =>
+  kind === 'contract-break' ? (severity === 'error' ? 'high' : 'medium') : (PRECISION[kind] ?? 'medium');
+
+/** Wrapping that can refuse a request, as the route audit reads it. */
+const GATE_LAYERS: ReadonlySet<string> = new Set(['guard', 'middleware']);
+
+/** The guards in front of a route, by label; none for a route nothing guards. */
+const gatesOf = (db: GraphDb, id: string): string[] =>
+  db
+    .edgesFrom(id, ['guarded_by'])
+    .filter((edge) => GATE_LAYERS.has(String(edge.meta?.['layer'] ?? '')))
+    .map((edge) => db.node(edge.to)?.label ?? edge.to);
+
+/**
+ * The routes beside one, in its controller (or its file where no controller
+ * is named), that a guard is in front of: the deviance an unguarded route is
+ * ranked by (P384, after "bugs as deviant behaviour"). A sibling the audit
+ * itself calls unguarded, its guard skipped, is not counted.
+ */
+const guardedSiblingsOf = (
+  db: GraphDb,
+  route: GraphNode,
+  unguarded: ReadonlySet<string>,
+): { siblings: number; guarded: number; guards: string[]; controller: string } => {
+  const controller = String(route.meta?.['controller'] ?? '');
+  const siblings = db
+    .nodesByType('entry', 'http')
+    .filter(
+      (other) =>
+        other.id !== route.id &&
+        other.repo === route.repo &&
+        (controller === '' ? other.file === route.file : String(other.meta?.['controller'] ?? '') === controller),
+    );
+  const guards = new Set<string>();
+  let guarded = 0;
+  for (const sibling of siblings) {
+    if (unguarded.has(sibling.id)) continue;
+    const gates = gatesOf(db, sibling.id);
+    if (gates.length === 0) continue;
+    guarded += 1;
+    for (const gate of gates) guards.add(gate);
+  }
+  return { siblings: siblings.length, guarded, guards: [...guards].sort(byId), controller: controller === '' ? (route.file ?? '') : controller };
+};
+
+/** A sentence without its full stop, so a clause can follow it. */
+const unstopped = (text: string): string => (text.endsWith('.') ? text.slice(0, -1) : text);
+
 /** A row of the graph's findings as a finding: the node it is about, where, and what it says. */
-const rowFinding = (db: GraphDb, row: AnchoredUnresolvedRow): FindingRow => {
+const rowFinding = (db: GraphDb, row: AnchoredUnresolvedRow, unguarded: ReadonlySet<string>): FindingRow => {
   const kind = findingKindOf(row.reason);
-  const route = kind === 'unguarded' ? routeOfRow(db, row) : undefined;
+  const sharp = kind === 'unguarded-among-guarded';
+  const route = kind === 'unguarded' || sharp ? routeOfRow(db, row) : undefined;
   const handler = route === undefined ? undefined : db.edgesFrom(route.id, ['handles'])[0]?.to;
   const loc = locOf(row);
   const ways = waysInOf(row);
+  const beside = route === undefined ? undefined : guardedSiblingsOf(db, route, unguarded);
+  // Some of the routes beside it guarded, not every other write (that is the route audit's own row, P401):
+  // said, and ranked first among the unguarded, never the sharp kind.
+  const someGuarded = !sharp && beside !== undefined && beside.guarded > 0;
   return {
     kind,
     id: route?.id ?? row.node ?? `gap:${row.service ?? ''}|${row.file ?? ''}|${row.reason}`,
     ...(handler === undefined ? {} : { method: handler }),
     service: row.service ?? route?.repo ?? '',
     ...(loc === undefined ? {} : { loc }),
-    message: row.message,
-    reach: ways === undefined ? {} : { waysIn: ways },
+    message: someGuarded
+      ? `${unstopped(row.message)}, while ${beside.guarded} of the ${beside.siblings} other routes of ${beside.controller} have ${beside.guards.join(', ')} in front`
+      : row.message,
+    precision: precisionOf(kind),
+    ...(sharp ? { evidence: `every other write of its router is guarded and the routes of ${row.file ?? 'its file'} were read whole; no public marker is on it` } : {}),
+    reach: {
+      ...(ways === undefined ? {} : { waysIn: ways }),
+      ...(beside !== undefined && beside.guarded > 0 ? { guardedSiblings: beside.guarded } : {}),
+    },
     rank: 0,
   };
 };
 
 /**
+ * Why the one open write among guarded ones is not said (P401): a route of
+ * its file, or of its service where the reading of a route has no file, was
+ * not read, so the siblings it is held against may not be all of them.
+ */
+const siblingsUnread = (row: AnchoredUnresolvedRow, all: readonly AnchoredUnresolvedRow[]): string | undefined => {
+  const gap = all.find((other) => other.service === row.service && ROUTES_UNREAD_REASONS.has(other.reason) && (other.file === null || other.file === row.file));
+  return gap === undefined ? undefined : `a route of ${gap.file ?? row.service ?? 'its service'} was not read (${gap.reason}), so its siblings may not all be guarded`;
+};
+
+/** A defect between the services as a finding row. */
+const boundaryRow = (found: BoundaryFinding): FindingRow => ({
+  kind: found.kind,
+  id: found.id,
+  ...(found.to === undefined ? {} : { to: found.to }),
+  service: found.service,
+  ...(found.loc === undefined ? {} : { loc: found.loc }),
+  message: found.message,
+  precision: found.precision,
+  evidence: found.evidence,
+  ...(found.fix === undefined ? {} : { fix: found.fix }),
+  ...(found.nearest === undefined ? {} : { nearest: found.nearest }),
+  ...(found.seenBy === undefined ? {} : { seenBy: found.seenBy }),
+  reach: found.waysIn !== undefined ? { waysIn: found.waysIn } : found.seenBy === undefined ? {} : { waysIn: found.seenBy.length },
+  rank: 0,
+});
+
+/** Counts one candidate held back under its kind, keeping why the first was. */
+const holdBack = (into: Record<string, { count: number; why: string }>, held: HeldBack): void => {
+  const already = into[held.kind];
+  into[held.kind] = already === undefined ? { count: 1, why: held.why } : { ...already, count: already.count + 1 };
+};
+
+/** The reasons the route audit gives a route nothing in front of refuses. */
+const UNGUARDED_REASONS: ReadonlySet<string> = new Set(['route-unguarded', 'route-guard-skipped', 'route-unguarded-among-guarded']);
+
+/**
  * Every finding the sources hold, unranked.
  *
- * Rows the graph classes a finding (P81), a channel with one end (the rows
- * `dead` lists), and each contract break of the report that is an error or a
- * warning and not ignored. The per-item loops are notes and only counted.
+ * Rows the graph classes a finding (P81), the gaps that are defects where
+ * their evidence holds and the types of message handled that nothing
+ * publishes (P384), a channel with one end (the rows `dead` lists), and each
+ * contract break of the report that is an error or a warning and not ignored.
+ * The per-item loops are notes and only counted; a defect whose evidence did
+ * not hold is counted under `heldBack`.
  */
 export const collectFindings = (db: GraphDb, sources: FindingSources): CollectedFindings => {
   const findings: FindingRow[] = [];
   const notes: Record<string, number> = {};
+  const heldBack: Record<string, { count: number; why: string }> = {};
+  const all = sources.all ?? sources.rows;
+  const unguarded = new Set(all.filter((row) => UNGUARDED_REASONS.has(row.reason)).flatMap((row) => routeOfRow(db, row)?.id ?? []));
   for (const row of sources.rows) {
     const rowKind = rowKindOf(row);
     if (rowKind === 'note' && KIND_OF_REASON[row.reason] !== undefined) {
@@ -155,11 +372,38 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
       notes[kind] = (notes[kind] ?? 0) + 1;
       continue;
     }
+    if (rowKind === 'gap') {
+      const promoted = promoteGap(db, row, all);
+      if (promoted === undefined) continue;
+      if ('held' in promoted) holdBack(heldBack, promoted.held);
+      else findings.push(boundaryRow(promoted.finding));
+      continue;
+    }
     if (rowKind !== 'finding' || row.level === 'nothing') continue;
-    findings.push(rowFinding(db, row));
+    // A type nothing selects where a consumer choosing it receives channels not all read (P400): held back, with why.
+    const held = row.reason === 'message-type-unselected' ? row.meta?.[UNSELECTED_HELD_META] : undefined;
+    if (typeof held === 'string') {
+      holdBack(heldBack, { kind: row.reason, id: row.node ?? '', why: held });
+      continue;
+    }
+    const unreadSiblings = row.reason === 'route-unguarded-among-guarded' ? siblingsUnread(row, all) : undefined;
+    if (unreadSiblings !== undefined) {
+      holdBack(heldBack, { kind: 'unguarded-among-guarded', id: row.node ?? '', why: unreadSiblings });
+      continue;
+    }
+    findings.push(rowFinding(db, row, unguarded));
+  }
+  // Read off the graph rather than the rows, as the one-ended channels are:
+  // only where the report is handed in, so counting a slice of rows does not
+  // count them again.
+  for (const promoted of sources.report === undefined ? [] : [...typesNeverPublished(db), ...boundaryMismatches(db, all)]) {
+    if ('held' in promoted) holdBack(heldBack, promoted.held);
+    else findings.push(boundaryRow(promoted.finding));
   }
   for (const channel of deadChannels(db, sources.report)) {
     const node = db.node(channel.id);
+    // A type of message nothing selects is its own finding, listed by its reason (P358).
+    if (isMessageTypeNode(node)) continue;
     const loc = nodeLoc(node);
     findings.push({
       kind: 'one-ended-channel',
@@ -167,6 +411,7 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
       service: [...channel.producers, ...channel.consumers][0] ?? node?.repo ?? '',
       ...(loc === undefined ? {} : { loc }),
       message: channel.reason,
+      precision: precisionOf('one-ended-channel'),
       reach: {},
       rank: 0,
     });
@@ -183,6 +428,7 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
       ...(loc === undefined ? {} : { loc }),
       message: item.message,
       severity: item.severity,
+      precision: precisionOf('contract-break', item.severity),
       reach: {},
       rank: 0,
     });
@@ -197,11 +443,13 @@ export const collectFindings = (db: GraphDb, sources: FindingSources): Collected
       ...(loc === undefined ? {} : { loc }),
       message: `${violation.rule}: ${violation.message}`,
       severity: violation.severity,
+      precision: precisionOf('rule'),
       reach: {},
       rank: 0,
     });
   }
-  return { findings, notes };
+  findings.push(...(sources.extra ?? []));
+  return { findings, notes, heldBack };
 };
 
 /** The edges a walk from a route follows to what it reaches, as `get_flow` does. */
@@ -216,7 +464,8 @@ const storeReachOf = (db: GraphDb, id: string): { writes: number; reads: number 
   let reads = 0;
   for (const row of db.traverse({ from: id, direction: 'out', edgeTypes: FORWARD, ...REACH_WALK }).rows) {
     if (row.type !== 'db_query') continue;
-    if (row.meta['op'] === 'write') writes += 1;
+    // A delete changes stored data as a write does (P384).
+    if (row.meta['op'] === 'write' || row.meta['op'] === 'delete') writes += 1;
     else if (row.meta['op'] === 'read') reads += 1;
   }
   return { writes, reads };
@@ -240,12 +489,53 @@ interface Ranker {
   order: (a: FindingRow, b: FindingRow) => number;
 }
 
+/** The ways in a person reaches directly: a screen, a bot's command, button or event. */
+const PERSON_KINDS: ReadonlySet<string> = new Set(['screen', 'bot_command', 'bot_callback', 'bot_event', 'scene_step']);
+
+/**
+ * Who sends a route directly (P384): a person, through a browser's request or
+ * a request a bot or a screen's code makes, or only another service's code.
+ * A route a person can send is ranked above one only services call, which is
+ * often internal by design. Only the requests joined to the route itself are
+ * counted: a person reaching another service that calls this one is that
+ * service's caller, and its guard is the one in front of them.
+ */
+const sendersOf = (db: GraphDb, id: string): { people?: number; services?: number } => {
+  let people = 0;
+  let services = 0;
+  for (const edge of db.edgesTo(id, ['hits', 'http_calls'])) {
+    const request = db.node(edge.from);
+    if (request?.type === 'ui_api_call') {
+      people += 1;
+      continue;
+    }
+    // Within the sending service only: the calls and handlers behind the request.
+    const behind = db.traverse({ from: edge.from, direction: 'in', edgeTypes: ['calls', 'handles', 'triggers'], ...REACH_WALK }).rows;
+    if (behind.some((row) => row.type === 'entry' && PERSON_KINDS.has(row.kind ?? ''))) people += 1;
+    else services += 1;
+  }
+  return { ...(people === 0 ? {} : { people }), ...(services === 0 ? {} : { services }) };
+};
+
+/**
+ * An unguarded route, ranked by deviance (P384): one whose siblings are
+ * guarded first, then one that writes, then one a person can send, then one
+ * that reads; one only other services call last.
+ */
+const UNGUARDED_RANKER: Ranker = {
+  measure: (db, row) => ({ ...storeReachOf(db, row.id), ...sendersOf(db, row.id) }),
+  order: (a, b) =>
+    most(a.reach.guardedSiblings, b.reach.guardedSiblings) ||
+    most(a.reach.writes, b.reach.writes) ||
+    most(a.reach.people, b.reach.people) ||
+    most(a.reach.reads, b.reach.reads) ||
+    byPlace(a, b),
+};
+
 const RANKERS: Readonly<Record<string, Ranker>> = {
   'n-plus-one': { order: (a, b) => most(a.reach.waysIn, b.reach.waysIn) || byPlace(a, b) },
-  unguarded: {
-    measure: (db, row) => storeReachOf(db, row.id),
-    order: (a, b) => most(a.reach.writes, b.reach.writes) || most(a.reach.reads, b.reach.reads) || byPlace(a, b),
-  },
+  unguarded: UNGUARDED_RANKER,
+  'unguarded-among-guarded': UNGUARDED_RANKER,
   'contract-break': {
     measure: (db, row) => ({ callers: waysInto(db, row.id) }),
     order: (a, b) =>
@@ -270,21 +560,27 @@ const RANKERS: Readonly<Record<string, Ranker>> = {
 
 const DEFAULT_RANKER: Ranker = { order: (a: FindingRow, b: FindingRow) => most(a.reach.waysIn, b.reach.waysIn) || byPlace(a, b) };
 
-/** The order kinds are listed in: the four named kinds, then every other by name. */
+/** The order kinds are listed in: what looks broken between the services first, the named kinds, then every other by name. */
 export const compareFindingKinds = (a: string, b: string): number => {
+  // The surest kinds first, whichever ticket added them (a shadowed route, a lost message), then the listed order.
+  const sure = (kind: string): number => PRECISION_ORDER.indexOf(precisionOf(kind));
   const at = (kind: string): number => {
     const index = (FINDING_KINDS as readonly string[]).indexOf(kind);
     return index < 0 ? FINDING_KINDS.length : index;
   };
-  return at(a) - at(b) || byId(a, b);
+  return sure(a) - sure(b) || at(a) - at(b) || byId(a, b);
 };
+
+/** Precision, surest first. */
+const PRECISION_ORDER: readonly Precision[] = ['high', 'medium', 'low'];
 
 /**
  * The findings ranked by reach (P95): each kind measured and ordered by its
  * Strategy, `rank` its place within the kind, kinds in `compareFindingKinds`
  * order. The N+1 behind every request comes before the one behind an admin
- * export, an unguarded route that writes before one that only reads, an error
- * before a warning and a busier sender first.
+ * export, an unguarded route among guarded siblings before one that writes,
+ * and that before one only another service calls, an error before a warning
+ * and a busier sender first.
  */
 export const rankFindings = (db: GraphDb, rows: readonly FindingRow[]): FindingRow[] => {
   const byKind = new Map<string, FindingRow[]>();

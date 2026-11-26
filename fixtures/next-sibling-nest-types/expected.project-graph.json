@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:13.456Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:21.998Z",
   "services": [
     {
       "name": "web",
@@ -51,7 +51,17 @@
             "nestjs-http",
             "nextjs-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
       }
     },
     {
@@ -112,7 +122,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

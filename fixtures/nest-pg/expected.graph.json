@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-pg",
-  "generatedAt": "2026-10-07T14:34:26.134Z",
+  "generatedAt": "2026-11-23T14:44:21.228Z",
   "nodes": [
     {
       "id": "db_query:nest-pg#src/orders/orders.service.ts:10:12",
@@ -227,7 +227,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -241,7 +242,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -417,7 +419,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:31:35.635Z",
+  "configHash": "aee96646c2a2",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 60,
+      "edges": 46,
+      "types": 13,
+      "unresolved": 2,
+      "durationMs": 7007,
+      "packages": {
+        "name": "shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "hono",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 38,
+      "edges": 37,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 5418,
+      "packages": {
+        "name": "shop-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 4,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 4,
+    "uncalled": [
+      "entry:shop-api:http:DELETE:/api/reports/:param",
+      "entry:shop-api:http:GET:/api/reports/weekly",
+      "entry:shop-api:http:PATCH:/api/orders/:param/note",
+      "entry:shop-api:http:POST:/api/desks/:param/help",
+      "entry:shop-api:http:POST:/api/orders/:param/expire",
+      "entry:shop-api:http:POST:/bot/staff/webhook"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 15,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 34,
+      "reason": "route-unguarded-among-guarded",
+      "message": "POST /api/orders/:param/expire has no guard in front of it, while the 2 other writes of OrdersController have ClientGuard, NoteGuard, ShopOpenGuard in front.",
+      "hint": "Put ClientGuard, NoteGuard, ShopOpenGuard in front of it as its siblings have, or, where it is open on purpose, mark it public (a decorator under doctor.publicDecorators, /** @flowatlas-public <why> */, or the route under doctor.publicRoutes).",
+      "symbol": "POST /api/orders/:param/expire"
+    }
+  ],
+  "totals": {
+    "nodes": 99,
+    "edges": 97,
+    "types": 15,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 2
+  }
+}

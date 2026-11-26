@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "name": "ledger",
+      "repo": "./services/ledger",
+      "type": "grpc",
+      "baseUrlEnv": ["LEDGER_ADDR"]
+    },
+    {
+      "name": "till",
+      "repo": "./services/till",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

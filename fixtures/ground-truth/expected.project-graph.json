@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:33:37.326Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:03.481Z",
   "services": [
     {
       "name": "api",
@@ -64,7 +64,8 @@
             }
           ],
           "returns": "{params:object}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -78,7 +79,8 @@
         "signature": {
           "params": [],
           "returns": "{name:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -109,7 +111,8 @@
             }
           ],
           "returns": "{id:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -132,7 +135,13 @@
             }
           ],
           "returns": "{id:string;name:string}"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "name",
+            "line": 24
+          }
+        ]
       }
     },
     {
@@ -217,7 +226,8 @@
             }
           ],
           "returns": "{kind:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -525,7 +535,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -549,7 +566,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],
@@ -795,5 +819,15 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "service": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 35,
+      "reason": "dynamic-http-url",
+      "message": "GET /reports/${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:client#src/orders/orders.client.ts:35:12"
+    }
+  ]
 }

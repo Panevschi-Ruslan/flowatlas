@@ -1,0 +1,10 @@
+{
+  "name": "locale-links-registries-sdk-grpc-site",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@linaria/react": "^6.2.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}

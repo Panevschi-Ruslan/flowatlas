@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "storefront", "repo": "./storefront", "type": "remix" },
+    { "name": "server", "repo": "./server", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

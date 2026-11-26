@@ -1,0 +1,62 @@
+spec diff HEAD~1 -> working tree
+
+error   method-removed  catalog  DELETE /items/{id}
+        the path no longer answers this verb
+        callers: storefront src/catalog.client.ts:31 (static)
+        use: 1 of 1 caller: requests it (breaking: the path no longer answers this verb)
+        deploy callers first: move them off it, then catalog
+        placed at line 19, the nearest that is left (was src/items/items.controller.ts:19)
+error   response-property-removed  catalog  GET /items/{id}  response.price
+        base had `response.price` as `number`; head has no such field
+        callers: dashboard src/api.ts:20, storefront src/catalog.client.ts:35 (static)
+        use: 1 of 2 callers: reads `price` in ItemPage, line 13 (breaking: the answer no longer holds it)
+        deploy callers first: stop relying on `price`, then catalog
+error   request-property-added-required  catalog  POST /items  body.currency
+        head has `body.currency` as `string` and requires it; base did not
+        callers: storefront src/catalog.client.ts:22 (static)
+        use: 1 of 1 caller: sends name, price; no `currency` (breaking: narrows the request: a caller must now send it)
+        deploy callers first: send `currency`, then catalog
+error   message-property-removed  catalog  send item.changed  payload.label
+        base had `payload.label` as `string`; head has no such field
+        callers: notifier src/notify.service.ts:14 (static)
+        use: 1 of 1 consumer: reads `label`, line 16 (breaking: the message no longer carries it)
+        deploy consumers first: stop reading `label` (or cope without it), then catalog
+warning response-property-became-optional  catalog  GET /items  response[].stock
+        `response[].stock` was required in base and may be left out in head
+        callers: dashboard src/api.ts:25 (static)
+        use: 1 of 1 caller: reads `stock` in ItemsList, line 10 of src/ItemsList.tsx, with no check that it is there (breaking: widens the response: it may now be absent)
+        deploy callers first: stop relying on `stock`, then catalog
+warning response-property-removed  catalog  POST /items  response.price
+        base had `response.price` as `number`; head has no such field
+        callers: storefront src/catalog.client.ts:22 (static)
+        use: 1 of 1 caller: which fields of the answer its client reads was not read, so whether it reads `price` is not known (breaking: the answer no longer holds it)
+        deploy callers first: stop relying on `price`, then catalog
+warning message-property-removed  catalog  send stock.changed  payload.warehouse
+        base had `payload.warehouse` as `string`; head has no such field
+        callers: notifier src/audit.service.ts:15 (static)
+        use: 1 of 1 consumer: takes the message whole (spread into another value, line 17), so whether it reads `warehouse` is not known (breaking: the message no longer carries it)
+        deploy consumers first: stop reading `warehouse` (or cope without it), then catalog
+info    response-property-became-optional  catalog  GET /items  response[].badge
+        `response[].badge` was required in base and may be left out in head
+        callers: dashboard src/api.ts:25 (static)
+        use: every caller that reads `badge` checks it is there first, among 1 (breaking: widens the response: it may now be absent)
+info    response-property-removed  catalog  GET /items  response[].thumbnail
+        base had `response[].thumbnail` as `string`; head has no such field
+        callers: dashboard src/api.ts:25 (static)
+        use: no caller reads `thumbnail`, among 1 (breaking: the answer no longer holds it)
+info    response-property-removed  catalog  GET /items/{id}/archive  response.reason
+        base had `response.reason` as `string`; head has no such field (no caller in this project)
+        use: nothing in the 4 repositories read calls it (breaking: the answer no longer holds it)
+info    request-property-became-required  catalog  POST /drafts  body.title
+        `body.title` could be left out in base and is required in head
+        callers: storefront src/catalog.client.ts:27 (static)
+        use: every caller sends `title`, among 1 (breaking: narrows the request: a caller must now send it)
+info    message-property-removed  catalog  send item.changed  payload.legacyCode
+        base had `payload.legacyCode` as `string`; head has no such field
+        callers: notifier src/notify.service.ts:14 (static)
+        use: no consumer reads `legacyCode`, among 1 (breaking: the message no longer carries it)
+
+4 errors, 3 warnings, 5 infos · 12 breaking by kind, 1 of them with no caller in this project
+judged by use: 8 consumers in 4 repositories; consumers outside them unknown
+--- stderr ---
+spec diff: 4 errors, 3 warnings, 5 infos · 12 breaking by kind, 1 of them with no caller in this project · <scratch>/project/.flowatlas/spec-diff.json

@@ -1,0 +1,4547 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T15:51:35.342Z",
+  "services": [
+    {
+      "name": "stores-api",
+      "repo": "./stores-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "back-office",
+      "repo": "./back-office",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "back-office#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "back-office",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "back-office#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "back-office",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "back-office#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "back-office",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "BackOfficeController",
+          "BuildRelayController"
+        ],
+        "providers": [
+          "StoresClient",
+          "BuildBot"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "back-office#src/back-office.controller.ts:BackOfficeController",
+      "type": "provider",
+      "label": "BackOfficeController",
+      "repo": "back-office",
+      "file": "src/back-office.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/back-office.controller.ts:BackOfficeController.create",
+      "type": "method",
+      "label": "BackOfficeController.create",
+      "repo": "back-office",
+      "file": "src/back-office.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "draft",
+              "type": "type:back-office#StoreDraft"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "back-office#src/stores.client.ts:StoresClient.create",
+            "line": 28,
+            "why": "handed to this.http.post"
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot",
+      "type": "provider",
+      "label": "BuildBot",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+      "type": "method",
+      "label": "BuildBot.applyStatus",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildStatusEvent"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "method",
+      "label": "BuildBot.handleBuildDone",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildDoneEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "artifactName",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "method",
+      "label": "BuildBot.handleBuildRetry",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildRetriedEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "attempt",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "method",
+      "label": "BuildBot.handleBuildStatus",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#BuildStatusEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "status",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+            "line": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "method",
+      "label": "BuildBot.handleJobQueued",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:back-office#JobQueuedEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "build_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "jobId",
+            "line": 15
+          },
+          {
+            "field": "priority",
+            "line": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-relay.controller.ts:BuildRelayController",
+      "type": "provider",
+      "label": "BuildRelayController",
+      "repo": "back-office",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "type": "method",
+      "label": "BuildRelayController.relay",
+      "repo": "back-office",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{message:type:back-office#BuildMessage}"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": [
+          {
+            "field": "message",
+            "line": 13
+          },
+          {
+            "field": "message.type",
+            "line": 14
+          },
+          {
+            "field": "message.status",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+            "line": 37
+          },
+          {
+            "field": "message.artifactName",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+            "line": 27
+          },
+          {
+            "field": "message.attempt",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+            "line": 21
+          },
+          {
+            "field": "message.jobId",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+            "line": 15
+          },
+          {
+            "field": "message.priority",
+            "in": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+            "line": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "back-office#src/stores.client.ts:StoresClient",
+      "type": "provider",
+      "label": "StoresClient",
+      "repo": "back-office",
+      "file": "src/stores.client.ts",
+      "line": 19,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "back-office#src/stores.client.ts:StoresClient.create",
+      "type": "method",
+      "label": "StoresClient.create",
+      "repo": "back-office",
+      "file": "src/stores.client.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "draft",
+              "type": "type:back-office#StoreDraft"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/audit/audit.service.ts:11:11",
+      "type": "cache_op",
+      "label": "other shop:*:events",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 11,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/audit/audit.service.ts:15:11",
+      "type": "cache_op",
+      "label": "other shop:*:events",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:events",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/live/live.controller.ts:20:12",
+      "type": "cache_op",
+      "label": "other shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 20,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:orders",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/live/live.controller.ts:21:12",
+      "type": "cache_op",
+      "label": "other shop:*:events",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 21,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:events",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/live/live.controller.ts:22:25",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "unsubscribe"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/live/live.controller.ts:30:12",
+      "type": "cache_op",
+      "label": "other shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 30,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:orders",
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/live/live.controller.ts:31:56",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 31,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "subscribe"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/live/live.controller.ts:32:25",
+      "type": "cache_op",
+      "label": "other ?",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 32,
+      "meta": {
+        "op": "other",
+        "keyPattern": null,
+        "package": "redis",
+        "method": "unsubscribe"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/orders/orders.service.ts:11:11",
+      "type": "cache_op",
+      "label": "other shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:orders",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "cache_op:stores-api#src/orders/orders.service.ts:15:11",
+      "type": "cache_op",
+      "label": "other shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "meta": {
+        "op": "other",
+        "keyPattern": "shop:*:orders",
+        "package": "redis",
+        "method": "publish"
+      }
+    },
+    {
+      "id": "channel:build_updates",
+      "type": "channel",
+      "label": "build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "build-bus",
+          "redis-pubsub"
+        ],
+        "producers": 4,
+        "consumers": 4
+      }
+    },
+    {
+      "id": "channel:build_updates#BUILD_DONE",
+      "type": "channel",
+      "label": "build_updates#BUILD_DONE",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 14,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "BUILD_DONE",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:14",
+              "text": "type: 'BUILD_DONE'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:build_updates#BUILD_FAILED",
+      "type": "channel",
+      "label": "build_updates#BUILD_FAILED",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 22,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "BUILD_FAILED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:22",
+              "text": "type: 'BUILD_FAILED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:build_updates#BUILD_STATUS",
+      "type": "channel",
+      "label": "build_updates#BUILD_STATUS",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 18,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "BUILD_STATUS",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:18",
+              "text": "type: 'BUILD_STATUS'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:build_updates#JOB_QUEUED",
+      "type": "channel",
+      "label": "build_updates#JOB_QUEUED",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:build_updates",
+        "messageType": "JOB_QUEUED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/builds/builds.service.ts:10",
+              "text": "type: 'JOB_QUEUED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:events",
+      "type": "channel",
+      "label": "shop:*:events",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 11,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 2,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:shop:*:events#ALERT_RAISED",
+      "type": "channel",
+      "label": "shop:*:events#ALERT_RAISED",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:events",
+        "messageType": "ALERT_RAISED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/audit/audit.service.ts:15",
+              "text": "type: 'ALERT_RAISED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:shop:*:events#AUDIT_ENTRY_CREATED",
+      "type": "channel",
+      "label": "shop:*:events#AUDIT_ENTRY_CREATED",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 11,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:events",
+        "messageType": "AUDIT_ENTRY_CREATED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/audit/audit.service.ts:11",
+              "text": "type: 'AUDIT_ENTRY_CREATED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:orders",
+      "type": "channel",
+      "label": "shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 20,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "redis-pubsub"
+        ],
+        "producers": 2,
+        "consumers": 4
+      }
+    },
+    {
+      "id": "channel:shop:*:orders#ORDER_PLACED",
+      "type": "channel",
+      "label": "shop:*:orders#ORDER_PLACED",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:orders",
+        "messageType": "ORDER_PLACED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/orders/orders.service.ts:11",
+              "text": "type: 'ORDER_PLACED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:shop:*:orders#ORDER_SHIPPED",
+      "type": "channel",
+      "label": "shop:*:orders#ORDER_SHIPPED",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:shop:*:orders",
+        "messageType": "ORDER_SHIPPED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "stores-api",
+              "loc": "src/orders/orders.service.ts:15",
+              "text": "type: 'ORDER_SHIPPED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:back-office#STORES_API_URL",
+      "type": "config_key",
+      "label": "STORES_API_URL",
+      "repo": "back-office",
+      "file": "src/stores.client.ts",
+      "line": 28,
+      "meta": {
+        "key": "STORES_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildDone",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 25,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "BUILD_DONE",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+            "via": "if",
+            "line": 17,
+            "file": "src/builds/build-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildRetry",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "selectionDiffers": "its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "BUILD_FAILED",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+            "via": "if",
+            "line": 19,
+            "file": "src/builds/build-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "consumer",
+      "label": "BuildBot.handleBuildStatus",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 31,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "BUILD_STATUS",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+            "via": "parameter",
+            "line": 32
+          }
+        ],
+        "selectsRest": [
+          {
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+            "excluding": [
+              "BUILD_DONE",
+              "BUILD_FAILED",
+              "JOB_QUEUED"
+            ],
+            "line": 21,
+            "file": "src/builds/build-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "consumer",
+      "label": "BuildBot.handleJobQueued",
+      "repo": "back-office",
+      "file": "src/builds/build-bot.ts",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "redis-pubsub",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "JOB_QUEUED",
+            "consumer": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+            "via": "if",
+            "line": 15,
+            "file": "src/builds/build-relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "type": "consumer",
+      "label": "handleFeed",
+      "repo": "shop-web",
+      "file": "src/live/useShopStream.ts",
+      "line": 21,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ALERT_RAISED",
+            "consumer": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+            "via": "if",
+            "line": 30,
+            "file": "src/screens/AuditLog.tsx"
+          }
+        ],
+        "routes": [
+          "entry:stores-api:http:GET:/shops/:param/feed"
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "consumer",
+      "label": "handleLive",
+      "repo": "shop-web",
+      "file": "src/live/useShopStream.ts",
+      "line": 12,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "AUDIT_ENTRY_CREATED",
+            "consumer": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+            "via": "switch",
+            "line": 11,
+            "file": "src/screens/AuditLog.tsx"
+          },
+          {
+            "type": "ORDER_PLACED",
+            "consumer": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+            "via": "switch",
+            "line": 14,
+            "file": "src/screens/AuditLog.tsx"
+          },
+          {
+            "type": "ORDER_REFUNDED",
+            "consumer": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+            "via": "switch",
+            "line": 17,
+            "file": "src/screens/AuditLog.tsx"
+          }
+        ],
+        "routes": [
+          "entry:stores-api:http:GET:/shops/:param/stream"
+        ]
+      }
+    },
+    {
+      "id": "consumer:stores-api#src/live/live.controller.ts:LiveController.feed",
+      "type": "consumer",
+      "label": "LiveController.feed",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 30,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "relay": "entry:stores-api:http:GET:/shops/:param/feed",
+        "entryId": "entry:stores-api:event:shop:*:orders",
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 30,
+            "column": 56,
+            "through": "listener.subscribe"
+          },
+          {
+            "line": 31,
+            "column": 84,
+            "through": "listener.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "consumer",
+      "label": "LiveController.stream",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 20,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "relay": "entry:stores-api:http:GET:/shops/:param/stream",
+        "entryId": "entry:stores-api:event:shop:*:orders",
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 20,
+            "column": 56,
+            "through": "listener.subscribe"
+          },
+          {
+            "line": 21,
+            "column": 56,
+            "through": "listener.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:back-office:http:POST:/admin/stores",
+      "type": "entry",
+      "label": "POST /admin/stores",
+      "repo": "back-office",
+      "file": "src/back-office.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/admin/stores",
+        "rawPath": "/admin/stores",
+        "controller": "BackOfficeController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:back-office:http:POST:/events/builds",
+      "type": "entry",
+      "label": "POST /events/builds",
+      "repo": "back-office",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/events/builds",
+        "rawPath": "/events/builds",
+        "controller": "BuildRelayController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:event:shop:*:events",
+      "type": "entry",
+      "label": "event shop:*:events",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "shop:*:events",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:stores-api:event:shop:*:orders",
+      "type": "entry",
+      "label": "event shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "pattern": "shop:*:orders",
+        "adapter": "redis-pubsub"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:GET:/categories/tree",
+      "type": "entry",
+      "label": "GET /categories/tree",
+      "repo": "stores-api",
+      "file": "src/stores/stores.controller.ts",
+      "line": 37,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/categories/tree",
+        "rawPath": "/categories/tree",
+        "controller": "StoresController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:GET:/shops/:param/feed",
+      "type": "entry",
+      "label": "GET /shops/:param/feed",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/shops/:param/feed",
+        "rawPath": "/shops/:shopId/feed",
+        "controller": "LiveController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "feed"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:shop:*:orders"
+        ],
+        "relaysUnread": "1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:GET:/shops/:param/stream",
+      "type": "entry",
+      "label": "GET /shops/:param/stream",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/shops/:param/stream",
+        "rawPath": "/shops/:shopId/stream",
+        "controller": "LiveController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "stream"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:shop:*:events",
+          "channel:shop:*:orders"
+        ]
+      }
+    },
+    {
+      "id": "entry:stores-api:http:GET:/stores/:param",
+      "type": "entry",
+      "label": "GET /stores/:param",
+      "repo": "stores-api",
+      "file": "src/stores/stores.controller.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stores/:param",
+        "rawPath": "/stores/:id",
+        "controller": "StoresController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/done/:param",
+      "type": "entry",
+      "label": "POST /builds/:param/done/:param",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/done/:param",
+        "rawPath": "/builds/:jobId/done/:artifact",
+        "controller": "BuildsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/failed/:param",
+      "type": "entry",
+      "label": "POST /builds/:param/failed/:param",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/failed/:param",
+        "rawPath": "/builds/:jobId/failed/:reason",
+        "controller": "BuildsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/queued",
+      "type": "entry",
+      "label": "POST /builds/:param/queued",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/queued",
+        "rawPath": "/builds/:jobId/queued",
+        "controller": "BuildsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/builds/:param/status/:param",
+      "type": "entry",
+      "label": "POST /builds/:param/status/:param",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/builds/:param/status/:param",
+        "rawPath": "/builds/:jobId/status/:status",
+        "controller": "BuildsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/shops/:param/alerts/:param",
+      "type": "entry",
+      "label": "POST /shops/:param/alerts/:param",
+      "repo": "stores-api",
+      "file": "src/audit/audit.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/shops/:param/alerts/:param",
+        "rawPath": "/shops/:shopId/alerts/:alertId",
+        "controller": "AuditController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/shops/:param/audit/:param",
+      "type": "entry",
+      "label": "POST /shops/:param/audit/:param",
+      "repo": "stores-api",
+      "file": "src/audit/audit.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/shops/:param/audit/:param",
+        "rawPath": "/shops/:shopId/audit/:entryId",
+        "controller": "AuditController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/shops/:param/orders/:param",
+      "type": "entry",
+      "label": "POST /shops/:param/orders/:param",
+      "repo": "stores-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/shops/:param/orders/:param",
+        "rawPath": "/shops/:shopId/orders/:orderId",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/shops/:param/orders/:param/ship",
+      "type": "entry",
+      "label": "POST /shops/:param/orders/:param/ship",
+      "repo": "stores-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/shops/:param/orders/:param/ship",
+        "rawPath": "/shops/:shopId/orders/:orderId/ship",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stores-api:http:POST:/stores",
+      "type": "entry",
+      "label": "POST /stores",
+      "repo": "stores-api",
+      "file": "src/stores/stores.controller.ts",
+      "line": 32,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/stores",
+        "rawPath": "/stores",
+        "controller": "StoresController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "external_api:settings.internal",
+      "type": "external_api",
+      "label": "settings.internal",
+      "repo": "stores-api",
+      "meta": {
+        "host": "settings.internal"
+      }
+    },
+    {
+      "id": "http_out:back-office#src/stores.client.ts:28:34",
+      "type": "http_out",
+      "label": "POST /stores",
+      "repo": "back-office",
+      "file": "src/stores.client.ts",
+      "line": 28,
+      "meta": {
+        "method": "POST",
+        "url": "${STORES_API_URL}/stores",
+        "path": "/stores",
+        "baseUrlEnv": "STORES_API_URL",
+        "responseType": null,
+        "bodyType": "type:back-office#StoreDraft",
+        "bodyFrom": "value",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "id": "http_out:stores-api#src/live/live.controller.ts:38:28",
+      "type": "http_out",
+      "label": "GET /shops/:param",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 38,
+      "meta": {
+        "method": "GET",
+        "url": "http://settings.internal/shops/${…}",
+        "path": "/shops/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "settings.internal"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/audit/audit.service.ts:11:11",
+      "type": "producer",
+      "label": "message shop:*:events",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "AUDIT_ENTRY_CREATED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/audit/audit.service.ts:15:11",
+      "type": "producer",
+      "label": "message shop:*:events",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ALERT_RAISED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "JOB_QUEUED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "BUILD_DONE"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "BUILD_STATUS"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "type": "producer",
+      "label": "event build_updates",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "build-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "BUILD_FAILED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/orders/orders.service.ts:11:11",
+      "type": "producer",
+      "label": "message shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_PLACED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:stores-api#src/orders/orders.service.ts:15:11",
+      "type": "producer",
+      "label": "message shop:*:orders",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "redis-pubsub",
+        "channelVia": "template",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_SHIPPED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:back-office",
+      "type": "repo",
+      "label": "back-office",
+      "repo": "back-office",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {
+            "@nestjs/axios": 1,
+            "@nestjs/config": 1
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 12,
+          "components": 4,
+          "hooks": 2,
+          "skippedExternalCalls": {
+            "react": 7
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:stores-api",
+      "type": "repo",
+      "label": "stores-api",
+      "repo": "stores-api",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 10,
+          "skippedExternalCalls": {
+            "redis": 10,
+            "rxjs": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-web#src/live/useShopStream.ts:useShopFeed",
+      "type": "function",
+      "label": "useShopFeed",
+      "repo": "shop-web",
+      "file": "src/live/useShopStream.ts",
+      "line": 18,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "onEvent",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/live/useShopStream.ts:useShopStream",
+      "type": "function",
+      "label": "useShopStream",
+      "repo": "shop-web",
+      "file": "src/live/useShopStream.ts",
+      "line": 9,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "onEvent",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/screens/AuditLog.tsx:AuditLog",
+      "type": "ui_component",
+      "label": "AuditLog",
+      "repo": "shop-web",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 23,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ shopId }",
+              "type": "{shopId:string}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "shop-web#src/screens/AuditLog.tsx:FeedPanel",
+      "type": "ui_component",
+      "label": "FeedPanel",
+      "repo": "shop-web",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 33,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ shopId }",
+              "type": "{shopId:string}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "type": "function",
+      "label": "handleFeed",
+      "repo": "shop-web",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:shop-web#ShopEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "function",
+      "label": "handleLive",
+      "repo": "shop-web",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:shop-web#ShopEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+      "type": "ui_component",
+      "label": "CategoryMenu",
+      "repo": "shop-web",
+      "file": "src/screens/CategoryMenu.tsx",
+      "line": 14,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "shop-web#src/screens/CategoryMenu.tsx:fetchCategories",
+      "type": "function",
+      "label": "fetchCategories",
+      "repo": "shop-web",
+      "file": "src/screens/CategoryMenu.tsx",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop-web#CategoryNode[]"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/screens/StorePage.tsx:StorePage",
+      "type": "ui_component",
+      "label": "StorePage",
+      "repo": "shop-web",
+      "file": "src/screens/StorePage.tsx",
+      "line": 35,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "shop-web#src/screens/StorePage.tsx:changeSummary",
+      "type": "function",
+      "label": "changeSummary",
+      "repo": "shop-web",
+      "file": "src/screens/StorePage.tsx",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "row",
+              "type": "type:shop-web#StoreView"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/screens/StorePage.tsx:distanceLabel",
+      "type": "function",
+      "label": "distanceLabel",
+      "repo": "shop-web",
+      "file": "src/screens/StorePage.tsx",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "v",
+              "type": "type:shop-web#StoreView"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/screens/StorePage.tsx:fetchStore",
+      "type": "function",
+      "label": "fetchStore",
+      "repo": "shop-web",
+      "file": "src/screens/StorePage.tsx",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop-web#StoreView"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "stores-api",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "AuditController",
+          "LiveController",
+          "StoresController",
+          "BuildsController"
+        ],
+        "providers": [
+          "OrdersService",
+          "AuditService",
+          "BuildsService",
+          "BuildBus"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "stores-api#src/audit/audit.controller.ts:AuditController",
+      "type": "provider",
+      "label": "AuditController",
+      "repo": "stores-api",
+      "file": "src/audit/audit.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/audit/audit.controller.ts:AuditController.alert",
+      "type": "method",
+      "label": "AuditController.alert",
+      "repo": "stores-api",
+      "file": "src/audit/audit.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "alertId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/audit/audit.controller.ts:AuditController.record",
+      "type": "method",
+      "label": "AuditController.record",
+      "repo": "stores-api",
+      "file": "src/audit/audit.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "entryId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/audit/audit.service.ts:AuditService",
+      "type": "provider",
+      "label": "AuditService",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/audit/audit.service.ts:AuditService.alert",
+      "type": "method",
+      "label": "AuditService.alert",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "alertId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/audit/audit.service.ts:AuditService.record",
+      "type": "method",
+      "label": "AuditService.record",
+      "repo": "stores-api",
+      "file": "src/audit/audit.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "entryId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/build-bus.ts:BuildBus",
+      "type": "provider",
+      "label": "BuildBus",
+      "repo": "stores-api",
+      "file": "src/builds/build-bus.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "method",
+      "label": "BuildBus.publish",
+      "repo": "stores-api",
+      "file": "src/builds/build-bus.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController",
+      "type": "provider",
+      "label": "BuildsController",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.done",
+      "type": "method",
+      "label": "BuildsController.done",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "artifact",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.failed",
+      "type": "method",
+      "label": "BuildsController.failed",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.queued",
+      "type": "method",
+      "label": "BuildsController.queued",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.controller.ts:BuildsController.status",
+      "type": "method",
+      "label": "BuildsController.status",
+      "repo": "stores-api",
+      "file": "src/builds/builds.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService",
+      "type": "provider",
+      "label": "BuildsService",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "type": "method",
+      "label": "BuildsService.done",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "artifactName",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "type": "method",
+      "label": "BuildsService.failed",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "type": "method",
+      "label": "BuildsService.queued",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "type": "method",
+      "label": "BuildsService.status",
+      "repo": "stores-api",
+      "file": "src/builds/builds.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/live/live.controller.ts:LiveController",
+      "type": "provider",
+      "label": "LiveController",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 14,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/live/live.controller.ts:LiveController.extraChannel",
+      "type": "method",
+      "label": "LiveController.extraChannel",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "type": "method",
+      "label": "LiveController.feed",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "method",
+      "label": "LiveController.stream",
+      "repo": "stores-api",
+      "file": "src/live/live.controller.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            }
+          ],
+          "returns": "MessageEvent<any>"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "stores-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "method",
+      "label": "OrdersController.place",
+      "repo": "stores-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/orders/orders.controller.ts:OrdersController.ship",
+      "type": "method",
+      "label": "OrdersController.ship",
+      "repo": "stores-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/orders/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/orders/orders.service.ts:OrdersService.ship",
+      "type": "method",
+      "label": "OrdersService.ship",
+      "repo": "stores-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "shopId",
+              "type": "string"
+            },
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stores-api#src/stores/stores.controller.ts:StoresController",
+      "type": "provider",
+      "label": "StoresController",
+      "repo": "stores-api",
+      "file": "src/stores/stores.controller.ts",
+      "line": 25,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stores-api#src/stores/stores.controller.ts:StoresController.categories",
+      "type": "method",
+      "label": "StoresController.categories",
+      "repo": "stores-api",
+      "file": "src/stores/stores.controller.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:stores-api#CategoryTree"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "stores-api#src/stores/stores.controller.ts:StoresController.create",
+      "type": "method",
+      "label": "StoresController.create",
+      "repo": "stores-api",
+      "file": "src/stores/stores.controller.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:stores-api#CreateStoreBody"
+            }
+          ],
+          "returns": "type:stores-api#StoreCard"
+        },
+        "fieldsRead": [
+          {
+            "field": "address",
+            "line": 34
+          },
+          {
+            "field": "name",
+            "line": 34
+          }
+        ]
+      }
+    },
+    {
+      "id": "stores-api#src/stores/stores.controller.ts:StoresController.store",
+      "type": "method",
+      "label": "StoresController.store",
+      "repo": "stores-api",
+      "file": "src/stores/stores.controller.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:stores-api#StoreCard"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20",
+      "type": "ui_api_call",
+      "label": "GET /shops/:param/stream",
+      "repo": "shop-web",
+      "file": "src/live/useShopStream.ts",
+      "line": 11,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_STORES_URL}/shops/:param/stream",
+        "path": "/shops/:param/stream",
+        "baseUrlEnv": "VITE_STORES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20",
+      "type": "ui_api_call",
+      "label": "GET /shops/:param/feed",
+      "repo": "shop-web",
+      "file": "src/live/useShopStream.ts",
+      "line": 20,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_STORES_URL}/shops/:param/feed",
+        "path": "/shops/:param/feed",
+        "baseUrlEnv": "VITE_STORES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26",
+      "type": "ui_api_call",
+      "label": "GET /categories/tree",
+      "repo": "shop-web",
+      "file": "src/screens/CategoryMenu.tsx",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_STORES_URL}/categories/tree",
+        "path": "/categories/tree",
+        "baseUrlEnv": "VITE_STORES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "label",
+            "in": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+            "line": 22
+          },
+          {
+            "field": "children",
+            "in": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+            "line": 23
+          },
+          {
+            "field": "label",
+            "in": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+            "line": 23
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26",
+      "type": "ui_api_call",
+      "label": "GET /stores/:param",
+      "repo": "shop-web",
+      "file": "src/screens/StorePage.tsx",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_STORES_URL}/stores/:param",
+        "path": "/stores/:param",
+        "baseUrlEnv": "VITE_STORES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "name",
+            "in": "shop-web#src/screens/StorePage.tsx:StorePage",
+            "line": 43
+          },
+          {
+            "field": "rating",
+            "in": "shop-web#src/screens/StorePage.tsx:StorePage",
+            "line": 45
+          },
+          {
+            "field": "changesFromPrevious",
+            "in": "shop-web#src/screens/StorePage.tsx:changeSummary",
+            "line": 27,
+            "guarded": true
+          },
+          {
+            "field": "changesFromPrevious.added",
+            "in": "shop-web#src/screens/StorePage.tsx:changeSummary",
+            "line": 29,
+            "guarded": true
+          },
+          {
+            "field": "distance",
+            "in": "shop-web#src/screens/StorePage.tsx:distanceLabel",
+            "line": 20,
+            "guarded": true
+          },
+          {
+            "field": "address",
+            "in": "shop-web#src/screens/StorePage.tsx:distanceLabel",
+            "line": 21,
+            "guarded": true
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "stores-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "back-office#src/back-office.controller.ts:BackOfficeController",
+      "to": "back-office#src/stores.client.ts:StoresClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/back-office.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "back-office#src/back-office.controller.ts:BackOfficeController.create",
+      "to": "back-office#src/stores.client.ts:StoresClient.create",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#StoreDraft"
+      ],
+      "returns": "unknown",
+      "file": "src/back-office.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.applyStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildStatusEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 33
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildDoneEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildRetriedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#BuildStatusEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:back-office#JobQueuedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "back-office#src/stores.client.ts:StoresClient",
+      "to": "back-office#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stores.client.ts",
+      "line": 22
+    },
+    {
+      "from": "back-office#src/stores.client.ts:StoresClient",
+      "to": "back-office#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stores.client.ts",
+      "line": 23
+    },
+    {
+      "from": "back-office#src/stores.client.ts:StoresClient.create",
+      "to": "config_key:back-office#STORES_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/stores.client.ts",
+      "line": 28
+    },
+    {
+      "from": "back-office#src/stores.client.ts:StoresClient.create",
+      "to": "http_out:back-office#src/stores.client.ts:28:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/stores.client.ts",
+      "line": 28
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 25
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 19
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 31
+    },
+    {
+      "from": "channel:build_updates",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 13
+    },
+    {
+      "from": "channel:build_updates#BUILD_DONE",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 17,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:build_updates#BUILD_FAILED",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 19,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:build_updates#BUILD_STATUS",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-bot.ts",
+      "line": 32,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+        "via": "parameter"
+      }
+    },
+    {
+      "from": "channel:build_updates#JOB_QUEUED",
+      "to": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 15,
+      "meta": {
+        "selectedBy": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:shop:*:events",
+      "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 12,
+      "meta": {
+        "via": "sse",
+        "route": "entry:stores-api:http:GET:/shops/:param/stream",
+        "call": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20"
+      }
+    },
+    {
+      "from": "channel:shop:*:events",
+      "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:shop:*:events#AUDIT_ENTRY_CREATED",
+      "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 11,
+      "meta": {
+        "selectedBy": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:shop:*:orders",
+      "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 21,
+      "meta": {
+        "via": "sse",
+        "route": "entry:stores-api:http:GET:/shops/:param/feed",
+        "call": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20"
+      }
+    },
+    {
+      "from": "channel:shop:*:orders",
+      "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 12,
+      "meta": {
+        "via": "sse",
+        "route": "entry:stores-api:http:GET:/shops/:param/stream",
+        "call": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20"
+      }
+    },
+    {
+      "from": "channel:shop:*:orders",
+      "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.feed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "channel:shop:*:orders",
+      "to": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "channel:shop:*:orders#ORDER_PLACED",
+      "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 14,
+      "meta": {
+        "selectedBy": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#BuildDoneEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 25
+    },
+    {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#BuildRetriedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 19
+    },
+    {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#BuildStatusEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 31
+    },
+    {
+      "from": "consumer:back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "to": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:back-office#JobQueuedEvent"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-bot.ts",
+      "line": 13
+    },
+    {
+      "from": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "to": "shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "to": "shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 12
+    },
+    {
+      "from": "consumer:stores-api#src/live/live.controller.ts:LiveController.feed",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 30,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "consumer:stores-api#src/live/live.controller.ts:LiveController.stream",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 20,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:back-office:http:POST:/admin/stores",
+      "to": "back-office#src/back-office.controller.ts:BackOfficeController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:back-office#StoreDraft"
+      ],
+      "returns": "unknown",
+      "file": "src/back-office.controller.ts",
+      "line": 8,
+      "meta": {
+        "body": "type:back-office#StoreDraft"
+      }
+    },
+    {
+      "from": "entry:back-office:http:POST:/events/builds",
+      "to": "back-office#src/builds/build-relay.controller.ts:BuildRelayController.relay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{message:type:back-office#BuildMessage}"
+      ],
+      "returns": "string",
+      "file": "src/builds/build-relay.controller.ts",
+      "line": 11,
+      "meta": {
+        "body": "{message:type:back-office#BuildMessage}"
+      }
+    },
+    {
+      "from": "entry:stores-api:event:shop:*:events",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 21,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:event:shop:*:orders",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 30,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:event:shop:*:orders",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 20,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:GET:/categories/tree",
+      "to": "stores-api#src/stores/stores.controller.ts:StoresController.categories",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:stores-api#CategoryTree",
+      "file": "src/stores/stores.controller.ts",
+      "line": 37
+    },
+    {
+      "from": "entry:stores-api:http:GET:/shops/:param/feed",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 26,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:GET:/shops/:param/stream",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "MessageEvent<any>",
+      "file": "src/live/live.controller.ts",
+      "line": 16,
+      "meta": {
+        "params": "{shopId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:GET:/stores/:param",
+      "to": "stores-api#src/stores/stores.controller.ts:StoresController.store",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:stores-api#StoreCard",
+      "file": "src/stores/stores.controller.ts",
+      "line": 27,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/done/:param",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.done",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{jobId:string;artifact:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/failed/:param",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.failed",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 18,
+      "meta": {
+        "params": "{jobId:string;reason:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/queued",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.queued",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{jobId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/builds/:param/status/:param",
+      "to": "stores-api#src/builds/builds.controller.ts:BuildsController.status",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 23,
+      "meta": {
+        "params": "{jobId:string;status:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/shops/:param/alerts/:param",
+      "to": "stores-api#src/audit/audit.controller.ts:AuditController.alert",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/audit/audit.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{shopId:string;alertId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/shops/:param/audit/:param",
+      "to": "stores-api#src/audit/audit.controller.ts:AuditController.record",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/audit/audit.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{shopId:string;entryId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/shops/:param/orders/:param",
+      "to": "stores-api#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{shopId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/shops/:param/orders/:param/ship",
+      "to": "stores-api#src/orders/orders.controller.ts:OrdersController.ship",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "params": "{shopId:string;orderId:string}"
+      }
+    },
+    {
+      "from": "entry:stores-api:http:POST:/stores",
+      "to": "stores-api#src/stores/stores.controller.ts:StoresController.create",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:stores-api#CreateStoreBody"
+      ],
+      "returns": "type:stores-api#StoreCard",
+      "file": "src/stores/stores.controller.ts",
+      "line": 32,
+      "meta": {
+        "body": "type:stores-api#CreateStoreBody"
+      }
+    },
+    {
+      "from": "http_out:back-office#src/stores.client.ts:28:34",
+      "to": "entry:stores-api:http:POST:/stores",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/stores.client.ts",
+      "line": 28,
+      "params": [
+        "type:back-office#StoreDraft"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "from": "http_out:stores-api#src/live/live.controller.ts:38:28",
+      "to": "external_api:settings.internal",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 38
+    },
+    {
+      "from": "producer:stores-api#src/audit/audit.service.ts:11:11",
+      "to": "channel:shop:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/audit/audit.service.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:stores-api#src/audit/audit.service.ts:11:11",
+      "to": "channel:shop:*:events#AUDIT_ENTRY_CREATED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/audit/audit.service.ts:15:11",
+      "to": "channel:shop:*:events",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/audit/audit.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:stores-api#src/audit/audit.service.ts:15:11",
+      "to": "channel:shop:*:events#ALERT_RAISED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "to": "channel:build_updates#JOB_QUEUED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 10,
+      "params": [
+        "{type:string;jobId:string}"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string;artifactName:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 14
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "to": "channel:build_updates#BUILD_DONE",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 14,
+      "params": [
+        "{type:string;jobId:string;artifactName:string}"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string;status:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 18
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "to": "channel:build_updates#BUILD_STATUS",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 18,
+      "params": [
+        "{type:string;jobId:string;status:string}"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "to": "channel:build_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;jobId:string;reason:string}"
+      ],
+      "file": "src/builds/builds.service.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "to": "channel:build_updates#BUILD_FAILED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 22,
+      "params": [
+        "{type:string;jobId:string;reason:string}"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/orders/orders.service.ts:11:11",
+      "to": "channel:shop:*:orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:stores-api#src/orders/orders.service.ts:11:11",
+      "to": "channel:shop:*:orders#ORDER_PLACED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "producer:stores-api#src/orders/orders.service.ts:15:11",
+      "to": "channel:shop:*:orders",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:stores-api#src/orders/orders.service.ts:15:11",
+      "to": "channel:shop:*:orders#ORDER_SHIPPED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "params": [
+        "string"
+      ]
+    },
+    {
+      "from": "shop-web#src/live/useShopStream.ts:useShopFeed",
+      "to": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 20
+    },
+    {
+      "from": "shop-web#src/live/useShopStream.ts:useShopStream",
+      "to": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 11
+    },
+    {
+      "from": "shop-web#src/screens/AuditLog.tsx:AuditLog",
+      "to": "shop-web#src/live/useShopStream.ts:useShopStream",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 24
+    },
+    {
+      "from": "shop-web#src/screens/AuditLog.tsx:FeedPanel",
+      "to": "shop-web#src/live/useShopStream.ts:useShopFeed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/screens/AuditLog.tsx",
+      "line": 35
+    },
+    {
+      "from": "shop-web#src/screens/CategoryMenu.tsx:CategoryMenu",
+      "to": "shop-web#src/screens/CategoryMenu.tsx:fetchCategories",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop-web#CategoryNode[]",
+      "file": "src/screens/CategoryMenu.tsx",
+      "line": 17
+    },
+    {
+      "from": "shop-web#src/screens/CategoryMenu.tsx:fetchCategories",
+      "to": "ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/CategoryMenu.tsx",
+      "line": 10
+    },
+    {
+      "from": "shop-web#src/screens/StorePage.tsx:StorePage",
+      "to": "shop-web#src/screens/StorePage.tsx:changeSummary",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:shop-web#StoreView"
+      ],
+      "returns": "string",
+      "file": "src/screens/StorePage.tsx",
+      "line": 46
+    },
+    {
+      "from": "shop-web#src/screens/StorePage.tsx:StorePage",
+      "to": "shop-web#src/screens/StorePage.tsx:distanceLabel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:shop-web#StoreView"
+      ],
+      "returns": "string",
+      "file": "src/screens/StorePage.tsx",
+      "line": 44
+    },
+    {
+      "from": "shop-web#src/screens/StorePage.tsx:StorePage",
+      "to": "shop-web#src/screens/StorePage.tsx:fetchStore",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop-web#StoreView",
+      "file": "src/screens/StorePage.tsx",
+      "line": 38
+    },
+    {
+      "from": "shop-web#src/screens/StorePage.tsx:fetchStore",
+      "to": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/StorePage.tsx",
+      "line": 14
+    },
+    {
+      "from": "stores-api#src/audit/audit.controller.ts:AuditController",
+      "to": "stores-api#src/audit/audit.service.ts:AuditService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/audit/audit.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "stores-api#src/audit/audit.controller.ts:AuditController.alert",
+      "to": "stores-api#src/audit/audit.service.ts:AuditService.alert",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/audit/audit.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "stores-api#src/audit/audit.controller.ts:AuditController.record",
+      "to": "stores-api#src/audit/audit.service.ts:AuditService.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/audit/audit.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/audit/audit.service.ts:AuditService.alert",
+      "to": "cache_op:stores-api#src/audit/audit.service.ts:15:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 15
+    },
+    {
+      "from": "stores-api#src/audit/audit.service.ts:AuditService.alert",
+      "to": "producer:stores-api#src/audit/audit.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 15
+    },
+    {
+      "from": "stores-api#src/audit/audit.service.ts:AuditService.record",
+      "to": "cache_op:stores-api#src/audit/audit.service.ts:11:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 11
+    },
+    {
+      "from": "stores-api#src/audit/audit.service.ts:AuditService.record",
+      "to": "producer:stores-api#src/audit/audit.service.ts:11:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/audit/audit.service.ts",
+      "line": 11
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/builds/builds.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.done",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.failed",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.queued",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/builds/builds.controller.ts:BuildsController.status",
+      "to": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.controller.ts",
+      "line": 25
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 7
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "to": "producer:stores-api#src/builds/builds.service.ts:14:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 14
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.done",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 14
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "to": "producer:stores-api#src/builds/builds.service.ts:22:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 22
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.failed",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 22
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "to": "producer:stores-api#src/builds/builds.service.ts:10:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.queued",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "to": "producer:stores-api#src/builds/builds.service.ts:18:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/builds/builds.service.ts",
+      "line": 18
+    },
+    {
+      "from": "stores-api#src/builds/builds.service.ts:BuildsService.status",
+      "to": "stores-api#src/builds/build-bus.ts:BuildBus.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/builds/builds.service.ts",
+      "line": 18
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.extraChannel",
+      "to": "http_out:stores-api#src/live/live.controller.ts:38:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 38
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "to": "cache_op:stores-api#src/live/live.controller.ts:30:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "to": "cache_op:stores-api#src/live/live.controller.ts:31:56",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live/live.controller.ts",
+      "line": 31
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "to": "cache_op:stores-api#src/live/live.controller.ts:32:25",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live/live.controller.ts",
+      "line": 32
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.feed",
+      "to": "stores-api#src/live/live.controller.ts:LiveController.extraChannel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/live/live.controller.ts",
+      "line": 31
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "to": "cache_op:stores-api#src/live/live.controller.ts:20:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "to": "cache_op:stores-api#src/live/live.controller.ts:21:12",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/live/live.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "stores-api#src/live/live.controller.ts:LiveController.stream",
+      "to": "cache_op:stores-api#src/live/live.controller.ts:22:25",
+      "type": "caches",
+      "confidence": "heuristic",
+      "file": "src/live/live.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "stores-api#src/orders/orders.controller.ts:OrdersController",
+      "to": "stores-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "stores-api#src/orders/orders.controller.ts:OrdersController.place",
+      "to": "stores-api#src/orders/orders.service.ts:OrdersService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "stores-api#src/orders/orders.controller.ts:OrdersController.ship",
+      "to": "stores-api#src/orders/orders.service.ts:OrdersService.ship",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "stores-api#src/orders/orders.service.ts:OrdersService.place",
+      "to": "cache_op:stores-api#src/orders/orders.service.ts:11:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "stores-api#src/orders/orders.service.ts:OrdersService.place",
+      "to": "producer:stores-api#src/orders/orders.service.ts:11:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 11
+    },
+    {
+      "from": "stores-api#src/orders/orders.service.ts:OrdersService.ship",
+      "to": "cache_op:stores-api#src/orders/orders.service.ts:15:11",
+      "type": "caches",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "stores-api#src/orders/orders.service.ts:OrdersService.ship",
+      "to": "producer:stores-api#src/orders/orders.service.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 15
+    },
+    {
+      "from": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20",
+      "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleLive",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 12
+    },
+    {
+      "from": "ui_api_call:shop-web#src/live/useShopStream.ts:11:20",
+      "to": "entry:stores-api:http:GET:/shops/:param/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 11,
+      "meta": {
+        "via": "api-target",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20",
+      "to": "consumer:shop-web#src/screens/AuditLog.tsx:handleFeed",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_api_call:shop-web#src/live/useShopStream.ts:20:20",
+      "to": "entry:stores-api:http:GET:/shops/:param/feed",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/live/useShopStream.ts",
+      "line": 20,
+      "meta": {
+        "via": "api-target",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/screens/CategoryMenu.tsx:10:26",
+      "to": "entry:stores-api:http:GET:/categories/tree",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/screens/CategoryMenu.tsx",
+      "line": 10,
+      "meta": {
+        "via": "api-target",
+        "targetService": "stores-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26",
+      "to": "entry:stores-api:http:GET:/stores/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/screens/StorePage.tsx",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "stores-api"
+      }
+    }
+  ],
+  "types": {
+    "type:back-office#BuildDoneEvent": {
+      "name": "BuildDoneEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "beaa19c4d6753f17",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'BUILD_DONE'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "artifactName",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#BuildMessage": {
+      "name": "BuildMessage",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "b7b782bbd79984f0",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#BuildRetriedEvent": {
+      "name": "BuildRetriedEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "bd983c4a9a39ac9b",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'BUILD_RETRIED'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "attempt",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#BuildStatusEvent": {
+      "name": "BuildStatusEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "de2f79348a893be8",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'BUILD_STATUS'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#JobQueuedEvent": {
+      "name": "JobQueuedEvent",
+      "kind": "object",
+      "declaredIn": "back-office#src/builds/build-events.ts",
+      "structuralHash": "1032320c0d9e0228",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'JOB_QUEUED'",
+          "optional": false
+        },
+        {
+          "name": "jobId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:back-office#StoreDraft": {
+      "name": "StoreDraft",
+      "kind": "object",
+      "declaredIn": "back-office#src/stores.client.ts",
+      "structuralHash": "84e6bdfe6d14189c",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "address",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "phone",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "postcode",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "openingHours",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "priceTier",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#CategoryNode": {
+      "name": "CategoryNode",
+      "kind": "object",
+      "declaredIn": "shop-web#src/screens/CategoryMenu.tsx",
+      "structuralHash": "b5689558d7e1cfd7",
+      "fields": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "children",
+          "type": "type:shop-web#CategoryNode[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#ShopEvent": {
+      "name": "ShopEvent",
+      "kind": "object",
+      "declaredIn": "shop-web#src/live/useShopStream.ts",
+      "structuralHash": "54f4b4225091a273",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop-web#StoreView": {
+      "name": "StoreView",
+      "kind": "object",
+      "declaredIn": "shop-web#src/screens/StorePage.tsx",
+      "structuralHash": "aff4fb5e276fde7e",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "address",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "distance",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "rating",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "changesFromPrevious",
+          "type": "{added:string[]}",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stores-api#CategoryTree": {
+      "name": "CategoryTree",
+      "kind": "union",
+      "declaredIn": "stores-api#src/stores/stores.controller.ts",
+      "structuralHash": "e52fcf9e53f30847",
+      "members": [
+        "string",
+        "type:stores-api#CategoryTree[]"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:stores-api#CreateStoreBody": {
+      "name": "CreateStoreBody",
+      "kind": "object",
+      "declaredIn": "stores-api#src/stores/stores.controller.ts",
+      "structuralHash": "4554a160a0617943",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "address",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "phone",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "postcode",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "openingHours",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "priceTier",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stores-api#StoreCard": {
+      "name": "StoreCard",
+      "kind": "object",
+      "declaredIn": "stores-api#src/stores/stores.controller.ts",
+      "structuralHash": "88b8743478e691d6",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "address",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/builds/build-bot.ts",
+      "line": 20,
+      "reason": "message-type-differs",
+      "level": "info",
+      "hint": "The parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED (src/builds/build-relay.controller.ts:19). The caller's choice is drawn.",
+      "symbol": "BuildBot.handleBuildRetry",
+      "service": "back-office"
+    },
+    {
+      "file": "src/audit/audit.service.ts",
+      "line": 15,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ALERT_RAISED on shop:*:events: 1 consumer chooses other types (handleLive); handleFeed chooses it and receives channels not all read (1 subscription(s) behind GET /shops/:param/feed name a channel not read)",
+      "symbol": "producer:stores-api#src/audit/audit.service.ts:15:11",
+      "service": "stores-api",
+      "meta": {
+        "type": "channel:shop:*:events#ALERT_RAISED",
+        "channel": "channel:shop:*:events",
+        "messageType": "ALERT_RAISED",
+        "sureness": "unsure",
+        "heldBecause": "handleFeed chooses ALERT_RAISED, and 1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+      }
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 20,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "LiveController.stream",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 21,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "LiveController.stream",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 22,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.unsubscribe",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 30,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "LiveController.feed",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 31,
+      "reason": "channel-dynamic",
+      "hint": "The channel name cannot be read here. Annotate LiveController.feed with the channel it uses.",
+      "symbol": "LiveController.feed -> channel",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 31,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "LiveController.feed",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 31,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.subscribe",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/live/live.controller.ts",
+      "line": 32,
+      "reason": "dynamic-cache-key",
+      "hint": "The key is built at run time. A literal prefix would make the pattern visible.",
+      "symbol": "listener.unsubscribe",
+      "service": "stores-api"
+    },
+    {
+      "file": "src/orders/orders.service.ts",
+      "line": 15,
+      "reason": "message-type-unselected",
+      "message": "no code that runs selects ORDER_SHIPPED on shop:*:orders: 2 consumers choose other types (handleFeed, handleLive)",
+      "symbol": "producer:stores-api#src/orders/orders.service.ts:15:11",
+      "service": "stores-api",
+      "meta": {
+        "type": "channel:shop:*:orders#ORDER_SHIPPED",
+        "channel": "channel:shop:*:orders",
+        "messageType": "ORDER_SHIPPED",
+        "sureness": "sure"
+      }
+    }
+  ]
+}

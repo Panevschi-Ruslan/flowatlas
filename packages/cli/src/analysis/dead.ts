@@ -73,6 +73,8 @@ const FIELD_TRAVEL: Record<FieldDirection, string> = {
 };
 
 const STRIPPED = 'sent in a request the receiver whitelists; the pipe removes it on arrival';
+/** A field the receiver's validation pipe refuses the whole request over (P388): `forbidNonWhitelisted`. */
+const REFUSED = 'sent in a request the receiver forbids it in; the pipe refuses the request with 400';
 
 export interface FieldsResult {
   fields: DeadField[];
@@ -90,11 +92,12 @@ export interface FieldsResult {
  * The rules the contract checker fires when the receiving side removes a field.
  *
  * `whitelist-strip` is a validation pipe that does not declare it;
+ * `whitelist-reject` the same pipe refusing the whole request over it (P388);
  * `class-transformer` is a receiver that excludes it. The mechanism differs and
  * the outcome does not: what the sender sent is thrown away before anything
  * reads it.
  */
-const REMOVED_BY_RECEIVER = new Set(['whitelist-strip', 'class-transformer']);
+const REMOVED_BY_RECEIVER = new Set(['whitelist-strip', 'whitelist-reject', 'class-transformer']);
 
 /**
  * As much of a contract finding as this file reads.
@@ -227,7 +230,7 @@ export const deadFields = async (db: GraphDb, options: DeadOptions = {}): Promis
         sentOn: on === '' ? [] : [on],
         direction,
         dropped,
-        reason: dropped ? STRIPPED : FIELD_TRAVEL[direction],
+        reason: finding.rule === 'whitelist-reject' ? REFUSED : dropped ? STRIPPED : FIELD_TRAVEL[direction],
       });
       continue;
     }
@@ -236,7 +239,7 @@ export const deadFields = async (db: GraphDb, options: DeadOptions = {}): Promis
     // for, whichever edge the checker happened to report first.
     if (dropped && !existing.dropped) {
       existing.dropped = true;
-      existing.reason = STRIPPED;
+      existing.reason = finding.rule === 'whitelist-reject' ? REFUSED : STRIPPED;
     }
   }
 

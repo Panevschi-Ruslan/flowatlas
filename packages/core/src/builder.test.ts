@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { GraphBuilder } from './builder.js';
+import { EDGE_END_MISSING_REASON, GraphBuilder } from './builder.js';
+import { causePartsOf } from './cant-follow.js';
 import { DanglingEdgeError, DuplicateTypeError } from './errors.js';
 import type { GraphEdge } from './model/edges.js';
 import type { GraphNode } from './model/nodes.js';
@@ -190,6 +191,60 @@ describe('GraphBuilder', () => {
     );
   });
 
+  it("keeps in a fold's own meta only what every row folded into it says (P338)", () => {
+    // Two navigations under different prefixes fold into one row; the fold says neither prefix for both, and each place
+    // still names its own address in the fold's list.
+    const b = builder();
+    b.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'unread', level: 'info', symbol: 'A navigates to /portal/${x}', meta: { cause: 'unread', why: 'dynamic', prefix: '/portal/' } });
+    b.addUnresolved({ file: 'src/b.ts', line: 2, reason: 'unread', level: 'info', symbol: 'B navigates to /search${q}', meta: { cause: 'unread', why: 'dynamic', prefix: '/search' } });
+    const [row] = b.build().unresolved;
+    expect(row?.sites).toBe(2);
+    expect(row?.meta?.['why']).toBe('dynamic');
+    expect(row?.meta).not.toHaveProperty('prefix');
+    const causes = row?.meta?.['causes'] as Array<{ readonly samples: Array<{ readonly symbol: string; readonly meta?: Record<string, unknown> }> }>;
+    expect(causes[0]?.samples.map((sample) => [sample.symbol, sample.meta])).toEqual([
+      ['A navigates to /portal/${x}', { prefix: '/portal/' }],
+      ['B navigates to /search${q}', { prefix: '/search' }],
+    ]);
+    // Rows that agree keep what they say.
+    const same = builder();
+    same.addUnresolved({ file: 'src/a.ts', line: 1, reason: 'unread', level: 'info', meta: { prefix: '/portal/' } });
+    same.addUnresolved({ file: 'src/b.ts', line: 2, reason: 'unread', level: 'info', meta: { prefix: '/portal/' } });
+    expect(same.build().unresolved[0]?.meta).toEqual({ prefix: '/portal/' });
+  });
+
+  it('says each value only places past the samples write, once, with how many write it and the first (P344)', () => {
+    const b = builder();
+    const row = (file: string, prefix: string): void => {
+      b.addUnresolved({ file, line: 1, reason: 'unread', level: 'info', symbol: `${file} ${prefix}`, meta: { cause: 'unread', why: 'dynamic', prefix } });
+    };
+    row('src/a.ts', '/portal/');
+    row('src/b.ts', '/search');
+    row('src/c.ts', '/portal/');
+    // A fourth place writing a sample's value adds nothing; the fifth and the seventh write one value none does, the sixth another.
+    row('src/d.ts', '/search');
+    row('src/e.ts', '/admin/');
+    row('src/f.ts', '/help/');
+    row('src/g.ts', '/admin/');
+    const [folded] = b.build().unresolved;
+    expect(folded?.sites).toBe(7);
+    const [part] = folded?.meta?.['causes'] as Array<{ readonly samples: unknown[]; readonly differing?: unknown }>;
+    expect(part?.samples).toHaveLength(3);
+    expect(part?.differing).toEqual([
+      { sites: 2, first: { file: 'src/e.ts', line: 1, symbol: 'src/e.ts /admin/', meta: { prefix: '/admin/' } } },
+      { sites: 1, first: { file: 'src/f.ts', line: 1, symbol: 'src/f.ts /help/', meta: { prefix: '/help/' } } },
+    ]);
+    // Read back from the row, the part keeps it.
+    expect(causePartsOf(folded as never)[0]?.differing).toEqual(part?.differing);
+    // Places past the samples writing only what a sample writes add nothing.
+    const quiet = builder();
+    for (const [file, prefix] of [['src/a.ts', '/a/'], ['src/b.ts', '/b/'], ['src/c.ts', '/a/'], ['src/d.ts', '/b/']] as const) {
+      quiet.addUnresolved({ file, line: 1, reason: 'unread', level: 'info', meta: { cause: 'unread', prefix } });
+    }
+    const [none] = quiet.build().unresolved[0]?.meta?.['causes'] as Array<{ readonly differing?: unknown }>;
+    expect(none).not.toHaveProperty('differing');
+  });
+
   it('keeps a row that counts its own sites, one per thing it describes', () => {
     // One row per skipped test directory, each standing for its files: folding
     // them would lose which directory, and add a row's count to a count of rows.
@@ -217,15 +272,44 @@ describe('GraphBuilder', () => {
     ]);
   });
 
-  it('throws when an edge points at a node that was never added', () => {
+  it('leaves out an edge to a node that was never added, and names it in a row (R180)', () => {
     const b = builder();
+    b.addNode(node('a', { file: 'src/a.ts', line: 3 }));
+    b.addNode(node('b'));
+    b.addEdge(edge('a', 'b'));
+    b.addEdge(edge('a', 'missing', { file: 'src/a.ts', line: 7 }));
+    b.addEdge(edge('gone', 'a'));
+    const graph = b.build();
+    expect(graph.edges.map((e) => `${e.from}->${e.to}`)).toEqual(['a->b']);
+    expect(graph.unresolved).toEqual([
+      expect.objectContaining({
+        file: 'src/a.ts',
+        line: 3,
+        reason: EDGE_END_MISSING_REASON,
+        level: 'action',
+        symbol: 'a',
+        meta: { edge: { from: 'gone', type: 'calls', to: 'a' }, missing: ['gone'] },
+      }),
+      expect.objectContaining({
+        file: 'src/a.ts',
+        line: 7,
+        reason: EDGE_END_MISSING_REASON,
+        symbol: 'a',
+        meta: { edge: { from: 'a', type: 'calls', to: 'missing' }, missing: ['missing'] },
+      }),
+    ]);
+    expect(b.counts.edges).toBe(1);
+  });
+
+  it('throws when asked to, for a splice that has to read the repository again', () => {
+    const b = new GraphBuilder({ repo: 'orders', generatedAt: FIXED, dangling: 'throw' });
     b.addNode(node('a'));
     b.addEdge(edge('a', 'missing'));
     expect(() => b.build()).toThrow(DanglingEdgeError);
   });
 
   it('names the offending edges in the dangling error', () => {
-    const b = builder();
+    const b = new GraphBuilder({ repo: 'orders', generatedAt: FIXED, dangling: 'throw' });
     b.addNode(node('a'));
     b.addEdge(edge('a', 'missing'));
     try {

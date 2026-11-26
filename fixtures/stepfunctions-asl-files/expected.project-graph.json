@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:33.582Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:26:29.581Z",
   "services": [
     {
       "name": "circulation",
@@ -93,7 +93,21 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "borrowerId",
+            "line": 17
+          },
+          {
+            "field": "itemIds",
+            "line": 17
+          },
+          {
+            "field": "itemIds.length",
+            "line": 18
+          }
+        ]
       }
     },
     {
@@ -787,7 +801,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1050,7 +1065,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 17
+          }
+        ]
       }
     },
     {
@@ -1072,7 +1094,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/server.ts",
+            "line": 17
+          }
+        ]
       }
     },
     {
@@ -1879,6 +1908,18 @@
       }
     },
     {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 109,
+      "reason": "workflow-task-untimed",
+      "message": "loan-approval: AwaitLibrarianApproval waits on a task token handed back (.waitForTaskToken) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit",
+      "hint": "Give the task a TimeoutSeconds, or the state machine one.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/AwaitLibrarianApproval",
+      "meta": {
+        "waitsOn": "wait-for-task-token"
+      },
+      "service": "circulation"
+    },
+    {
       "service": "circulation",
       "file": "statemachine/loan-approval.asl.json",
       "line": 155,
@@ -1892,6 +1933,44 @@
     },
     {
       "file": "statemachine/loan-approval.asl.json",
+      "line": 155,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/ScoreBorrower",
+      "meta": {
+        "retries": []
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 166,
+      "reason": "workflow-task-untimed",
+      "message": "loan-approval: NotifyBorrower waits on the states job it starts (.sync) with no TimeoutSeconds, and the state machine has none: if the answer never comes, the execution waits until the service's own limit",
+      "hint": "Give the task a TimeoutSeconds, or the state machine one.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/NotifyBorrower",
+      "meta": {
+        "waitsOn": "sync:2"
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 206,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "loan-approval: LookUpBranchPolicy invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/LookUpBranchPolicy",
+      "meta": {
+        "retries": []
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
       "line": 206,
       "reason": "workflow-target-dynamic",
       "level": "info",
@@ -1901,6 +1980,19 @@
       "meta": {
         "field": "FunctionName",
         "written": "$.branch.policyFunction"
+      },
+      "service": "circulation"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 216,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "loan-approval: ApplyLateFeePolicy invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "circulation#statemachine/loan-approval.asl.json:loan-approval/ApplyLateFeePolicy",
+      "meta": {
+        "retries": []
       },
       "service": "circulation"
     },
@@ -1944,6 +2036,19 @@
       }
     },
     {
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 14,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "borrower-notifications: SendEmail invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendEmail",
+      "meta": {
+        "retries": []
+      },
+      "service": "notifications"
+    },
+    {
       "service": "notifications",
       "file": "workflows/borrower-notifications.asl.yaml",
       "line": 22,
@@ -1954,6 +2059,32 @@
       "meta": {
         "reference": "invoke:send-borrower-text"
       }
+    },
+    {
+      "file": "workflows/borrower-notifications.asl.yaml",
+      "line": 22,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "borrower-notifications: SendText invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "notifications#workflows/borrower-notifications.asl.yaml:borrower-notifications/SendText",
+      "meta": {
+        "retries": []
+      },
+      "service": "notifications"
+    },
+    {
+      "file": "workflows/overdue-reminders.asl.json",
+      "line": 27,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "overdue-reminders: SendReminder invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "notifications#workflows/overdue-reminders.asl.json:overdue-reminders/SendReminder",
+      "meta": {
+        "retries": []
+      },
+      "service": "notifications"
     },
     {
       "file": "workflows/overdue-reminders.asl.json",

@@ -1,0 +1,36 @@
+{
+  "settled": "1 consumer, all listed",
+  "channel": {
+    "id": "channel:order.created",
+    "loc": "src/orders/orders.service.ts:49",
+    "service": "orders",
+    "meta": {
+      "channelKind": "topic",
+      "adapters": [
+        "nestjs-kafka"
+      ],
+      "producers": 1,
+      "consumers": 1
+    }
+  },
+  "consumers": [
+    {
+      "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "adapter": "nestjs-kafka",
+        "decorator": "EventPattern",
+        "entryId": "entry:billing:event:order.created"
+      },
+      "reach": "alive",
+      "from": "event order.created",
+      "reads": [
+        "id",
+        "total"
+      ]
+    }
+  ],
+  "total": 1,
+  "complete": true
+}

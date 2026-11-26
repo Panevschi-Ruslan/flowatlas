@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T06:05:22.920Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:28.695Z",
   "services": [
     {
       "name": "lending",
@@ -534,7 +534,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -598,7 +599,8 @@
             }
           ],
           "returns": "{loanId:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

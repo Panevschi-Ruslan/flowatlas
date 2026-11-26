@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T14:07:42.989Z",
+  "configHash": "37faf70e2e78",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1397,
+      "packages": {
+        "name": "admin",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1389,
+      "packages": {
+        "name": "@shop/audit",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1400,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 36,
+      "edges": 24,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1430,
+      "packages": {
+        "name": "jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1317,
+      "packages": {
+        "name": "@shop/ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "metrics",
+      "repo": "./metrics",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1401,
+      "packages": {
+        "name": "metrics",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1406,
+      "packages": {
+        "name": "reports",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1365,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1371,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 12,
+    "linked": 12,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 11,
+    "called": 8,
+    "uncalled": [
+      "entry:catalog:http:GET:/reviews",
+      "entry:catalog:http:GET:/tags",
+      "entry:metrics:http:GET:/api/counters"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 58,
+    "edges": 35,
+    "types": 0,
+    "missed": 9,
+    "sites": 17,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 9
+  }
+}

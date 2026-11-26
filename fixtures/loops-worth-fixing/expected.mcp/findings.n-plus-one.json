@@ -7,6 +7,7 @@
       "service": "parcels",
       "loc": "src/parcels/parcels.service.ts:18",
       "message": "A `for-of` loop runs 2 database queries once per item: likely N+1.",
+      "precision": "medium",
       "rank": 1,
       "reach": {
         "waysIn": 3
@@ -19,6 +20,7 @@
       "service": "parcels",
       "loc": "src/parcels/handover.ts:43",
       "message": "A `for-of` loop runs 1 database query once per item: likely N+1.",
+      "precision": "medium",
       "rank": 2,
       "reach": {
         "waysIn": 1
@@ -31,6 +33,7 @@
       "service": "parcels",
       "loc": "src/parcels/parcels.service.ts:28",
       "message": "A `map` loop runs 1 database query once per item: likely N+1.",
+      "precision": "medium",
       "rank": 3,
       "reach": {
         "waysIn": 1

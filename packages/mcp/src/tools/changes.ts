@@ -17,6 +17,8 @@ import {
   type GapRef,
   type GraphDb,
   type LostJoin,
+  type SpecChange,
+  type SpecChangeLevel,
 } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -24,7 +26,7 @@ import { REVERSE_EDGES } from '../query/flow.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { loadObservedCounts, nodeSeen, type ObservedCounts } from '../query/observed.js';
 import { truncationMessage } from '../query/types.js';
-import { bound, callOf, commonInput, pagedNext, pageInput, READ_ONLY, respond, serviceInput, type ToolContext } from './common.js';
+import { bound, callOf, commonInput, completeOf, pagedNext, pageInput, READ_ONLY, respond, serviceInput, type ToolContext } from './common.js';
 
 /**
  * What a branch changed, as `flowatlas diff` last worked it out (P72).
@@ -115,6 +117,8 @@ export interface WhatChanged {
     lostJoins: number;
     /** Ways in whose flow changed (format 3). */
     flows: number;
+    /** API and message changes by their level from use, where the diff compared the documents (`--spec`, `check_change`; P402). */
+    api?: { errors: number; warnings: number; infos: number };
   };
   nodes: {
     added: string[];
@@ -124,6 +128,12 @@ export interface WhatChanged {
   types: { added: string[]; removed: string[]; changed: string[] };
   /** The ways in a change reaches; left out when `verdict` ranks them under `retest`. */
   entries?: ChangedEntry[];
+  /**
+   * Each API or message change a consumer feels or may feel, with its verdict
+   * from use (P390), in the words `flowatlas diff --spec` gives it, errors
+   * first (P402); the infos are counted under `counts.api`.
+   */
+  api?: ApiChangeSaid[];
   breaks: Array<{ message: string; edge: { from: string; to: string; type: string }; field: string }>;
   warnings: string[];
   /** Rows left past this page, over every list, and where the next page starts. */
@@ -139,6 +149,40 @@ export interface WhatChanged {
   retest?: RetestEntry[];
   newFindings?: NewFinding[];
 }
+
+/**
+ * One API or message change as the spec diff judged it by what the code on
+ * the other end does (P390): its level from use, the operation and field,
+ * and the verdict sentence `diff --spec` prints after `api break:`.
+ */
+export interface ApiChangeSaid {
+  level: SpecChangeLevel;
+  operation: string;
+  field?: string;
+  /** The verdict from use, or the document comparison's message where it was not judged by use. */
+  verdict: string;
+  /** Who ships first, where some consumer meets the change. */
+  deploy?: string;
+}
+
+const API_LEVELS: Readonly<Record<SpecChangeLevel, number>> = { error: 0, warning: 1, info: 2 };
+
+/** The level a change was given: by use where it was judged so, else by its kind and callers. */
+const apiLevel = (change: SpecChange): SpecChangeLevel => change.use?.level ?? change.level;
+
+/** The spec diff's changes a service is in: as the one that changed, or as a consumer of it. */
+const apiChangesOf = (report: DiffReport, service: string | undefined): SpecChange[] =>
+  (report.spec?.changes ?? [])
+    .filter((change) => service === undefined || change.service === service || change.callers.some((caller) => caller.service === service))
+    .sort((a, b) => API_LEVELS[apiLevel(a)] - API_LEVELS[apiLevel(b)] || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+
+const apiSaid = (change: SpecChange): ApiChangeSaid => ({
+  level: apiLevel(change),
+  operation: change.operation,
+  ...(change.field === null ? {} : { field: change.field }),
+  verdict: change.use?.verdict ?? change.message,
+  ...(change.use?.deployOrder === undefined ? {} : { deploy: change.use.deployOrder.said }),
+});
 
 /* ── The verdict (P96) ── */
 
@@ -398,6 +442,12 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
   if (scoped.breaks.length > 0) {
     unsafe.push(`${plural(scoped.breaks.length, 'new contract error')}${firstOf(scoped.breaks, (finding) => finding.message)}`);
   }
+  // An API or message change a consumer in the project feels, as `diff --fail-on-api-break` fails on it (P402).
+  const apiChanges = apiChangesOf(report, service);
+  const apiBreaks = apiChanges.filter((change) => apiLevel(change) === 'error');
+  if (apiBreaks.length > 0) {
+    unsafe.push(`${plural(apiBreaks.length, 'API change')} a consumer in the project feels, listed under api`);
+  }
   if (scoped.ruleBreaks.length > 0) {
     unsafe.push(
       `${plural(scoped.ruleBreaks.length, 'new violation')} of an architecture rule${firstOf(scoped.ruleBreaks, (item) => `${quoted(item.rule)}: ${item.message}`)}`,
@@ -514,6 +564,10 @@ export const verdictOf = (report: DiffReport, options: VerdictOptions = {}): Ver
   if (newFindings.length > 0) {
     because.push(`${plural(newFindings.length, 'new finding')}, listed under newFindings, which do not decide the verdict`);
   }
+  const apiToCheck = apiChanges.filter((change) => apiLevel(change) === 'warning');
+  if (apiToCheck.length > 0) {
+    because.push(`${plural(apiToCheck.length, 'API change')} to check, listed under api, which ${apiToCheck.length === 1 ? 'does' : 'do'} not decide the verdict`);
+  }
   return {
     verdict,
     because,
@@ -582,6 +636,8 @@ export const summariseChanges = (
       : entry;
 
   const scoped = scopeOf(report, service, options.serviceOf);
+  const apiChanges = apiChangesOf(report, service);
+  const apiFelt = apiChanges.filter((change) => apiLevel(change) !== 'info');
   const result: WhatChanged = {
     base: said(report.base),
     head: said(report.head),
@@ -595,6 +651,15 @@ export const summariseChanges = (
       gaps: { added: scoped.gapsAdded.length, removed: scoped.gapsRemoved.length },
       lostJoins: scoped.lost.length,
       flows: scoped.flows.length,
+      ...(report.spec === null || report.spec === undefined
+        ? {}
+        : {
+            api: {
+              errors: apiChanges.filter((change) => apiLevel(change) === 'error').length,
+              warnings: apiChanges.filter((change) => apiLevel(change) === 'warning').length,
+              infos: apiChanges.filter((change) => apiLevel(change) === 'info').length,
+            },
+          }),
     },
     nodes: {
       added: bounded(scoped.added),
@@ -607,6 +672,8 @@ export const summariseChanges = (
       changed: bounded(scoped.types.changed),
     },
     ...(options.verdict === undefined ? { entries: bounded([...scoped.entries.values()]).map(changedEntry) } : {}),
+    // A change no consumer feels is counted under counts.api, not listed.
+    ...(apiFelt.length === 0 ? {} : { api: bounded(apiFelt).map(apiSaid) }),
     breaks: bounded(scoped.breaks).map((finding) => ({ message: finding.message, edge: finding.edge, field: finding.field })),
     warnings: report.warnings.map((warning) => warning.message),
   };
@@ -746,7 +813,80 @@ export const diffState = (dbPath: string): { state: 'missing' | 'older' | 'fresh
   }
 };
 
+/* ── check_change (P387) ── */
+
+/** What `check_change` is asked: compare with a base ref in place of the built graph, read only these services, stop after this long. */
+export interface ChangeCheckInput {
+  base?: string;
+  services?: string[];
+  timeoutMs: number;
+}
+
+/**
+ * The working tree (or a base ref) compared with the built graph, as the
+ * command line worked it out: the same document `flowatlas diff` writes, the
+ * services it read from the working tree, and what it could not check.
+ */
+export interface ChangeCheck {
+  report: DiffReport;
+  /** The services read again for the comparison; every other one is the built graph's on both sides. */
+  read: string[];
+  /** What was not checked, each a sentence: a service not read, a file the build has no stamp for, a timeout. */
+  unchecked: string[];
+  ms: number;
+}
+
+/**
+ * Runs the comparison (P387). The server builds nothing itself: the command
+ * line that started it hands this in, and runs the build in a process of its
+ * own, stopped at `timeoutMs`.
+ */
+export type ChangeChecker = (input: ChangeCheckInput) => Promise<ChangeCheck | { error: string; unchecked?: string[] }>;
+
+/** How long a check runs when nobody says, and the most it may be asked for, in seconds. */
+export const CHECK_CHANGE_SECONDS = 120;
+export const CHECK_CHANGE_SECONDS_MAX = 600;
+
+/**
+ * A check's answer: the verdict and its reasons first, then what it rests on -
+ * calls and channel ends that lost what they joined (`vanishedTargets`), new
+ * contract errors (`breaks`), new findings and gaps, and the ways in the
+ * changed code reaches (`retest`) - with the services read and what was not
+ * checked, `complete` only when nothing was left out.
+ */
+export const checkChangeAnswer = (
+  check: ChangeCheck,
+  options: { service?: string; maxNodes: number; offset?: number; detail?: DetailLevel; db?: GraphDb },
+): object => {
+  const { db } = options;
+  const changes = summariseChanges(check.report, {
+    ...(options.service === undefined ? {} : { service: options.service }),
+    ...(db === undefined ? {} : { serviceOf: (id: string) => db.node(id)?.repo }),
+    maxNodes: options.maxNodes,
+    ...(options.offset === undefined ? {} : { offset: options.offset }),
+    ...(options.detail === undefined ? {} : { detail: options.detail }),
+    verdict: db === undefined ? {} : { db },
+  });
+  const { base, head, generatedAt: _generatedAt, verdict, because, truncated, nextOffset, warnings, ...rest } = changes;
+  const unchecked = [...check.unchecked, ...warnings];
+  return {
+    verdict,
+    because,
+    compared: `${head.label} against ${base.label}`,
+    read: check.read,
+    ms: check.ms,
+    ...rest,
+    ...(truncated === undefined ? {} : { truncated }),
+    ...(nextOffset === undefined ? {} : { nextOffset }),
+    ...completeOf([...unchecked.map((said) => `unchecked: ${said}`), truncated === undefined ? undefined : `page: ${truncated}`]),
+  };
+};
+
+/** How long a check is kept for the pages after its first. */
+const KEEP_CHECK_MS = 10 * 60_000;
+
 export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
+  let lastCheck: { key: string; at: number; checked: ChangeCheck } | undefined;
   server.registerTool(
     'what_changed',
     {
@@ -787,6 +927,57 @@ export const registerChanges = (server: McpServer, ctx: ToolContext): void => {
             { tool: 'what_changed', args, nextOffset: changes.nextOffset },
             input.verdict === true ? verdictNextOf(changes) : nextOf(changes),
           ),
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    'check_change',
+    {
+      title: 'Check the working tree',
+      description:
+        'Before committing: the working tree against the built graph (or a `base` ref): lost joins, new contract errors and findings, ways in the change reaches, what was not checked.',
+      inputSchema: {
+        base: z.string().optional(),
+        services: z.array(z.string()).optional(),
+        timeoutSeconds: z.number().int().min(10).max(CHECK_CHANGE_SECONDS_MAX).optional(),
+        service: serviceInput,
+        ...commonInput,
+        ...pageInput,
+      },
+      annotations: READ_ONLY,
+    },
+    async (input) => {
+      if (ctx.changeChecker === undefined) {
+        return respond({ error: 'check_change builds the changed services, which this server was started without; run flowatlas mcp with --config, or flowatlas check-change' });
+      }
+      const { detail, maxNodes, note } = bound(input);
+      // A later page reads the check the first page ran, rather than building again.
+      const key = JSON.stringify([input.base ?? null, input.services ?? null]);
+      const kept = (input.offset ?? 0) > 0 && lastCheck?.key === key && Date.now() - lastCheck.at < KEEP_CHECK_MS ? lastCheck.checked : undefined;
+      const checked =
+        kept ??
+        (await ctx.changeChecker({
+          ...(input.base === undefined ? {} : { base: input.base }),
+          ...(input.services === undefined ? {} : { services: input.services }),
+          timeoutMs: (input.timeoutSeconds ?? CHECK_CHANGE_SECONDS) * 1000,
+        }));
+      if (!('error' in checked)) lastCheck = { key, at: Date.now(), checked };
+      if ('error' in checked) return respond({ error: checked.error, ...(checked.unchecked === undefined ? {} : { unchecked: checked.unchecked }) });
+      const opened = ctx.handle.open();
+      const answer = checkChangeAnswer(checked, {
+        ...(input.service === undefined ? {} : { service: input.service }),
+        maxNodes,
+        offset: input.offset,
+        detail,
+        ...('db' in opened ? { db: opened.db } : {}),
+      }) as WhatChanged & { nextOffset?: number };
+      const args = { base: input.base, services: input.services, service: input.service, detail: input.detail, maxNodes };
+      return respond(
+        withNext(
+          { ...answer, ...(note === undefined ? {} : { note }) },
+          pagedNext({ tool: 'check_change', args, nextOffset: answer.nextOffset }, verdictNextOf(answer)),
         ),
       );
     },

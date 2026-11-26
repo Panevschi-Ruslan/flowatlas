@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:35.160Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T12:49:08.674Z",
   "services": [
     {
       "name": "api",
@@ -115,7 +115,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -138,7 +139,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -432,7 +434,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -454,7 +463,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3100,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -561,7 +577,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 30
+          }
+        ]
       }
     },
     {
@@ -592,7 +614,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 36
+          }
+        ]
       }
     },
     {
@@ -611,7 +639,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 28
+          }
+        ]
       }
     },
     {
@@ -630,7 +664,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total",
+            "line": 32
+          }
+        ]
       }
     },
     {
@@ -644,6 +684,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     }

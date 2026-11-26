@@ -1,4 +1,5 @@
 import {
+  isMessageTypeNode,
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   forwardedName,
@@ -93,7 +94,7 @@ export const joinChannelPatterns = (nodes: Map<string, GraphNode>, edges: Map<st
     .filter((node) => node.type === 'consumer' && node.meta?.[CHANNEL_PATTERN_META] !== undefined)
     .sort((a, b) => cmp(a.id, b.id));
   const matched = new Map<string, number>();
-  let fresh = [...nodes.values()].filter((node) => node.type === 'channel').sort((a, b) => cmp(a.id, b.id));
+  let fresh = [...nodes.values()].filter((node) => node.type === 'channel' && !isMessageTypeNode(node)).sort((a, b) => cmp(a.id, b.id));
   while (fresh.length > 0) {
     const created: GraphNode[] = [];
     for (const consumer of consumers) {

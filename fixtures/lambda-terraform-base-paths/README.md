@@ -15,6 +15,10 @@ Type-checked, never executed or deployed.
 The stage is recorded beside the route and not put in front of it: a caller
 reaches a stage through its invoke URL, which already carries it.
 
+Each route records where it is served (`servedAt`, P298): at the domain, the
+base path already in its path, and at the API's own execute-api address, at
+its stage, without the base path (`under`), which that address still serves.
+
 `kiosk`'s functions are deployed with `LIBRARY_API_URL = "https://api.library.example"`,
 and `catalogue` declares that setting under `baseUrlEnv`, so
 

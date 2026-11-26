@@ -1,0 +1,31 @@
+{
+  "entry": "entry:shop-api:http:GET:/api/orders",
+  "field": "status",
+  "reads": [],
+  "answer": {
+    "type": "type:shop-api#OrderSummary[]",
+    "reads": [
+      {
+        "field": "status",
+        "id": "shop-app#src/OrdersList.tsx:OrderRow",
+        "line": 6,
+        "call": "ui_api_call:shop-app#src/api.ts:19:58"
+      },
+      {
+        "field": "status",
+        "id": "shop-web#src/app/order-badge.component.ts:OrderBadgeComponent",
+        "line": 8,
+        "file": "src/app/order-badge.component.ts",
+        "call": "ui_api_call:shop-web#src/app/orders.service.ts:25:12"
+      }
+    ],
+    "missing": [],
+    "unused": []
+  },
+  "callers": 2,
+  "complete": true,
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-app#src/api.ts:19:58\", to: \"entry:shop-api:http:GET:/api/orders\", field: \"status\"})",
+    "check_contract({from: \"ui_api_call:shop-web#src/app/orders.service.ts:25:12\", to: \"entry:shop-api:http:GET:/api/orders\", field: \"status\"})"
+  ]
+}

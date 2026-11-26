@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "express-not-installed",
-  "generatedAt": "2026-10-16T15:10:43.683Z",
+  "generatedAt": "2026-11-23T14:34:54.213Z",
   "nodes": [
     {
       "id": "entry:express-not-installed:http:GET:/admin",
@@ -18,8 +18,7 @@
         "adapter": "express-routes",
         "registration": "router.get",
         "middlewareRead": true,
-        "handlerVia": "function",
-        "confidence": "heuristic"
+        "handlerVia": "function"
       }
     },
     {
@@ -37,8 +36,7 @@
         "adapter": "express-routes",
         "registration": "router.get",
         "middlewareRead": true,
-        "handlerVia": "function",
-        "confidence": "heuristic"
+        "handlerVia": "function"
       }
     },
     {
@@ -56,8 +54,7 @@
         "adapter": "express-routes",
         "registration": "videosRouter.get",
         "middlewareRead": true,
-        "handlerVia": "function",
-        "confidence": "heuristic"
+        "handlerVia": "function"
       }
     },
     {
@@ -75,8 +72,7 @@
         "adapter": "express-routes",
         "registration": "videosRouter.get",
         "middlewareRead": true,
-        "handlerVia": "function",
-        "confidence": "heuristic"
+        "handlerVia": "function"
       }
     },
     {
@@ -94,8 +90,7 @@
         "adapter": "express-routes",
         "registration": "app.get",
         "middlewareRead": true,
-        "handlerVia": "inline",
-        "confidence": "heuristic"
+        "handlerVia": "inline"
       }
     },
     {
@@ -118,7 +113,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -141,7 +137,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -173,7 +170,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -196,7 +194,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -216,7 +215,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 9000,
+            "file": "src/server.ts",
+            "line": 27
+          }
+        ]
       }
     }
   ],

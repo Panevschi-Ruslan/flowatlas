@@ -30,13 +30,14 @@ const listed = async (args: readonly string[]): Promise<string[]> => {
 describe('flowatlas mcp and the tools it lists (P201)', () => {
   it('lists those the project can answer, and every one with --all-tools', async () => {
     const auto = await listed(['--config', CONFIG]);
-    // The multi-repo graph has no observed file, no rules and no diff; the command hands the pattern tester in.
+    // The multi-repo graph has no observed file, no rules and no diff; the command hands the pattern tester and the change checker in (P387).
     expect(auto).toContain('test_pattern');
+    expect(auto).toContain('check_change');
     expect(auto).not.toContain('hot_paths');
     expect(auto).not.toContain('check_rules');
-    expect(auto).toHaveLength(19);
+    expect(auto).toHaveLength(20);
     const all = await listed(['--config', CONFIG, '--all-tools']);
-    expect(all).toHaveLength(26);
+    expect(all).toHaveLength(27);
     expect(all).toEqual(expect.arrayContaining(['hot_paths', 'check_rules', 'what_changed']));
   }, 60000);
 

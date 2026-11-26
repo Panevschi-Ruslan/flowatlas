@@ -1,0 +1,18 @@
+// The stock contract, shared by the server and its callers.
+syntax = "proto3";
+
+package stock;
+
+service StockService {
+  rpc GetLevel (LevelRequest) returns (Level);
+}
+
+message LevelRequest {
+  string product_id = 1;
+  int32 warehouse_id = 2;
+}
+
+message Level {
+  int32 units_left = 1;
+  bool back_order = 2;
+}

@@ -1,0 +1,43 @@
+{
+  "settled": "1 way in reaches it, all listed",
+  "target": {
+    "id": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+    "line": 67,
+    "reach": "alive",
+    "from": "bot_callback view_order_*"
+  },
+  "callers": [
+    {
+      "id": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
+      "type": "function",
+      "line": 28,
+      "reach": "alive",
+      "from": "bot_callback view_order_*",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "type:telegraf#Context",
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "id": "entry:staff-bot:bot_callback:view_order_*",
+          "loc": "src/staff-bot.ts:28",
+          "reach": "outside",
+          "edge": "handles"
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:staff-bot:bot_callback:view_order_*",
+      "line": 28,
+      "reach": "outside",
+      "hops": 2
+    }
+  ],
+  "complete": true
+}

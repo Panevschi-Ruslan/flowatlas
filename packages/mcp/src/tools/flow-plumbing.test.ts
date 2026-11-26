@@ -17,7 +17,7 @@ const CONFIG = join(ROOT, 'fixtures', 'multi-repo-plumbing', 'flowatlas.config.j
 let client: Client;
 
 const getFlow = async (entry: string): Promise<any> => {
-  const response = (await client.callTool({ name: 'get_flow', arguments: { entry } })) as { content: Array<{ text: string }> };
+  const response = (await client.callTool({ name: 'get_flow', arguments: { verbose: true, entry } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 

@@ -1,0 +1,59 @@
+{
+  "channel": {
+    "id": "channel:space:*:events",
+    "type": "channel",
+    "label": "space:*:events",
+    "loc": "src/spaces/spaces.service.ts:16",
+    "service": "docs-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin",
+      "type": "consumer",
+      "label": "AuditTrail.recordJoin",
+      "loc": "src/handlers/audit-trail.service.ts:34",
+      "service": "notify-worker",
+      "kind": "event",
+      "selectedIn": "AuditTrail.record",
+      "via": "map",
+      "endLine": 36,
+      "reach": "alive",
+      "from": "POST /spaces/:param/members (docs-api)"
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/notices.service.ts:Notices.digest",
+      "type": "consumer",
+      "label": "Notices.digest",
+      "loc": "src/handlers/notices.service.ts:12",
+      "service": "notify-worker",
+      "kind": "event",
+      "selectedIn": "SpaceEventsDispatcher.dispatch",
+      "via": "switch",
+      "endLine": 14,
+      "reach": "alive",
+      "from": "event space:*:events"
+    },
+    {
+      "id": "consumer:notify-worker#src/handlers/welcome.handlers.ts:WelcomeHandlers.greet",
+      "type": "consumer",
+      "label": "WelcomeHandlers.greet",
+      "loc": "src/handlers/welcome.handlers.ts:13",
+      "service": "notify-worker",
+      "kind": "event",
+      "selectedIn": "RegistryDispatcher.route",
+      "via": "decorator",
+      "endLine": 16,
+      "reach": "alive",
+      "from": "POST /spaces/:param/members (docs-api)"
+    }
+  ],
+  "total": 3,
+  "channelUsed": "channel:space:*:events",
+  "type": "MEMBER_JOINED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:space:*:events\", type: \"MEMBER_JOINED\"})",
+    "impact({symbol: \"consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin\"})",
+    "get_source({symbol: \"consumer:notify-worker#src/handlers/audit-trail.service.ts:AuditTrail.recordJoin\"})"
+  ]
+}

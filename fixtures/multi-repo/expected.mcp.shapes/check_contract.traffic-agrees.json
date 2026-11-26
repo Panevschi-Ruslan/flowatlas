@@ -1,5 +1,6 @@
 {
   "entry": "entry:orders:http:GET:/orders/:param",
+  "reads": [],
   "traffic": {
     "samples": 1,
     "window": {
@@ -14,6 +15,7 @@
     }
   },
   "callers": 2,
+  "complete": true,
   "next": [
     "check_contract({from: \"http_out:billing#src/invoices/invoices.service.ts:33:7\", to: \"entry:orders:http:GET:/orders/:param\"})",
     "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:33:12\", to: \"entry:orders:http:GET:/orders/:param\"})"

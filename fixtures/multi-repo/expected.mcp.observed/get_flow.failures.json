@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:orders:http:GET:/orders/:param",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:billing:http:POST:/invoices",
@@ -51,7 +57,8 @@
           "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
           "type": "method",
           "label": "InvoicesController.create",
-          "loc": "src/invoices/invoices.controller.ts:15"
+          "loc": "src/invoices/invoices.controller.ts:15",
+          "endLine": 18
         },
         "edge": {
           "type": "handles",
@@ -70,7 +77,8 @@
               "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
               "type": "method",
               "label": "InvoicesService.create",
-              "loc": "src/invoices/invoices.service.ts:30"
+              "loc": "src/invoices/invoices.service.ts:30",
+              "endLine": 43
             },
             "edge": {
               "type": "calls",
@@ -135,7 +143,8 @@
                           "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
                           "type": "method",
                           "label": "OrdersController.findOne",
-                          "loc": "src/orders/orders.controller.ts:25"
+                          "loc": "src/orders/orders.controller.ts:25",
+                          "endLine": 28
                         },
                         "edge": {
                           "type": "handles",
@@ -154,7 +163,8 @@
                               "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
                               "type": "method",
                               "label": "OrdersService.findOne",
-                              "loc": "src/orders/orders.service.ts:25"
+                              "loc": "src/orders/orders.service.ts:25",
+                              "endLine": 28
                             },
                             "edge": {
                               "type": "calls",
@@ -212,6 +222,7 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:billing:http:POST:/invoices\"})",
     "trace_for({entry: \"entry:billing:http:POST:/invoices\"})",

@@ -1,6 +1,6 @@
 import { existsSync, statSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
-import { SCHEMA_VERSION, loadConfig, type FlowatlasConfig } from '@flowatlas/core';
+import { SCHEMA_VERSION, loadConfig, schemaMismatchSaid, type FlowatlasConfig } from '@flowatlas/core';
 import { openGraphDb, type GraphDb } from '@flowatlas/linker';
 
 export interface SourceRoots {
@@ -23,8 +23,17 @@ export interface DbHandleOptions {
  * the next question sees the new graph, which is as fresh as anything needs to
  * be here.
  */
+/** Where `flowatlas pull` installs the team's graph, inside the output directory (P236). */
+export const PULLED_DIR = 'pulled';
+
 export class DbHandle implements SourceRoots {
   readonly path: string;
+  /**
+   * Called when an answer finds files it cites changed since the build, when
+   * the server was told to rebuild then (`mcp.rebuild: on-change`, P230);
+   * returns whether a rebuild was started or is under way.
+   */
+  onStale: (() => boolean) | undefined;
   readonly config: FlowatlasConfig | undefined;
   /** The configuration file read, when one was: what a configuration error names. */
   readonly configPath: string | undefined;
@@ -46,7 +55,10 @@ export class DbHandle implements SourceRoots {
       for (const service of loaded.config.services) {
         this.#repoDirs.set(service.name, loaded.repoDir(service));
       }
-      dbPath ??= resolve(loaded.outputDir, 'graph.db');
+      // No graph built here, and the team's pulled (P236): that one is asked.
+      const built = resolve(loaded.outputDir, 'graph.db');
+      const pulled = resolve(loaded.outputDir, PULLED_DIR, 'graph.db');
+      dbPath ??= !existsSync(built) && existsSync(pulled) ? pulled : built;
     }
     if (dbPath === undefined) throw new Error('neither a database nor a configuration was given');
     this.path = isAbsolute(dbPath) ? dbPath : resolve(dbPath);
@@ -108,7 +120,11 @@ export class DbHandle implements SourceRoots {
       const found = this.#db.schemaVersion();
       if (found !== SCHEMA_VERSION) {
         this.#close();
-        return { error: `schema-mismatch ${found} vs ${SCHEMA_VERSION}; run flowatlas build` };
+        // Older: rebuilt; newer: a newer flowatlas reads it, and this one says so rather than misread it (P370).
+        const said = schemaMismatchSaid(found);
+        // A server told to rebuild when the graph is behind (`mcp.rebuild: on-change`) rebuilds an older one now.
+        const rebuilding = found < SCHEMA_VERSION && this.onStale?.() === true;
+        return { error: `${said.message}. ${rebuilding ? 'A rebuild was started; ask again when it is done.' : said.hint}` };
       }
       this.#changed();
     }

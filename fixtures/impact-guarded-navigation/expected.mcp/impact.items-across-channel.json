@@ -1,0 +1,78 @@
+{
+  "target": {
+    "id": "store-api#src/items.service.ts:ItemsService.listByShop",
+    "type": "method",
+    "label": "ItemsService.listByShop",
+    "loc": "src/items.service.ts:6",
+    "service": "store-api",
+    "reach": "alive"
+  },
+  "acrossChannel": "shop:*:orders",
+  "entries": [
+    {
+      "id": "entry:store-api:http:PATCH:/api/orders/:param/status",
+      "type": "entry",
+      "label": "PATCH /api/orders/:param/status",
+      "loc": "src/orders.controller.ts:14",
+      "service": "store-api",
+      "kind": "http",
+      "reach": "dead",
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.setStatus"
+    },
+    {
+      "id": "entry:store-api:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "loc": "src/orders.controller.ts:9",
+      "service": "store-api",
+      "kind": "http",
+      "reach": "alive",
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.create"
+    },
+    {
+      "id": "entry:store-api:http:POST:/api/orders/:param/pay",
+      "type": "entry",
+      "label": "POST /api/orders/:param/pay",
+      "loc": "src/orders.controller.ts:19",
+      "service": "store-api",
+      "kind": "http",
+      "reach": "dead",
+      "via": "channel shop:*:orders",
+      "by": "store-api#src/orders.controller.ts:OrdersController.pay"
+    },
+    {
+      "id": "entry:store-web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "loc": "src/app/app.routes.ts:22",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "via": "channel shop:*:orders",
+      "by": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent"
+    }
+  ],
+  "total": 4,
+  "reached": 54,
+  "entriesByService": {
+    "store-api": 3,
+    "store-web": 1
+  },
+  "reachedByService": {
+    "store-api": 23,
+    "store-web": 22,
+    "store-bot": 9
+  },
+  "servicesWithoutEntry": [],
+  "channels": [
+    "channel:shop:*:closed",
+    "channel:shop:*:orders",
+    "channel:shop:*:paid"
+  ],
+  "complete": true,
+  "next": [
+    "impact({symbol: \"store-api#src/items.service.ts:ItemsService.listByShop\"})"
+  ]
+}

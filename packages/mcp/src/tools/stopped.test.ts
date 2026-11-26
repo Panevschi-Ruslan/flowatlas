@@ -72,7 +72,7 @@ const graph: ProjectGraph = {
 let client: Client;
 
 const call = async (name: string, args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+  const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 
@@ -117,17 +117,28 @@ describe('who_calls at the end of a chain', () => {
     expect(answer.next).not.toContain(`who_calls({symbol: ${JSON.stringify(ORPHAN)}})`);
   });
 
-  it('at the deepest walk, names the rows to ask on from instead of raising depth', async () => {
+  it('at the deepest depth, draws the tree that far and walks the rest of the chain to its end (P376, P379)', async () => {
     const answer = await call('who_calls', { symbol: CHAIN[0], depth: 16 });
-    expect(answer.stoppedBy).toEqual(['depth']);
-    expect(answer.truncated).toBe('1 more nodes past depth 16, the deepest; ask who_calls on an id in frontier');
-    expect(answer.frontier).toEqual([CHAIN[16]]);
-    expect(answer.next[0]).toBe(`who_calls({symbol: ${JSON.stringify(CHAIN[16])}, depth: 16})`);
+    expect(answer.stoppedBy).toBeUndefined();
+    expect(answer.frontier).toBeUndefined();
+    expect(answer.maybe.map((row: { id: string; hops: number }) => [row.id, row.hops])).toEqual([[CHAIN[19], 19]]);
+    expect(answer.next.some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
   });
 
-  it('says which limit left out more when both cut', async () => {
+  it('without depth, walks a chain longer than any depth to its end, and says no way in is above it (P376)', async () => {
+    const answer = await call('who_calls', { symbol: CHAIN[0] });
+    expect(answer.stoppedBy).toBeUndefined();
+    expect(answer.waysIn).toEqual([]);
+    // The chain's top, nineteen hops up, is code a call the reading did not follow may reach: a maybe row.
+    expect(answer.maybe.map((row: { id: string; hops: number }) => [row.id, row.hops])).toEqual([[CHAIN[19], 19]]);
+    expect(answer.waysInNone).toBe('no way in reaches this; the maybe rows stop at an unread call');
+    expect(answer.left).toContain('gaps: 1 chain stops at an unread call before any way in: the maybe row');
+    expect(answer.next.some((hint: string) => hint.startsWith('who_calls('))).toBe(false);
+  });
+
+  it('says maxNodes cut the tree, the depth being where it stops being drawn (P379)', async () => {
     const answer = await call('who_calls', { symbol: SERVICE, maxNodes: 1, depth: 1 });
-    expect(answer.stoppedBy).toEqual(['maxNodes', 'depth']);
+    expect(answer.stoppedBy).toEqual(['maxNodes']);
     expect(answer.truncated).toBe('2 more nodes past maxNodes 1; raise maxNodes or ask who_calls on a child id');
   });
 });
@@ -135,14 +146,14 @@ describe('who_calls at the end of a chain', () => {
 describe('impact with no way in', () => {
   it('says the callers may be behind a gap when something reaches it, and where to look', async () => {
     const answer = await call('impact', { symbol: SWEPT });
-    expect(answer.entries).toEqual([]);
+    // The chain ends at code nothing read calls, which an unread call could: a maybe row (P367), not an empty list.
+    expect(answer.entries.map((row: { id: string; reach: string }) => [row.id, row.reach])).toEqual([[ORPHAN, 'maybe']]);
+    expect(answer.maybe).toBe(1);
     expect(answer.reached).toBe(1);
     expect(answer.entriesNone).toBe('nothing in the graph reaches this from a way in; the callers may be behind a gap');
-    expect(answer.next).toEqual([
-      `who_calls({symbol: ${JSON.stringify(SWEPT)}, depth: 8})`,
-      'cant_follow({service: "shop"})',
-      'search({query: "src/jobs/sweep.ts", kinds: ["gaps"]})',
-    ]);
+    expect(answer.left).toEqual(['gaps: 1 chain stops at an unread call before any way in: the maybe row']);
+    // The maybe row is the chain's top: no deeper who_calls, only where its caller may hide.
+    expect(answer.next).toEqual(['cant_follow({service: "shop"})', 'search({query: "src/jobs/sweep.ts", kinds: ["gaps"]})']);
   });
 
   it('says nothing reaches it when nothing does', async () => {
@@ -153,7 +164,7 @@ describe('impact with no way in', () => {
 
   it('says nothing about it when a way in does reach it', async () => {
     const answer = await call('impact', { symbol: SERVICE });
-    expect(answer.entries.map((row: { id: string }) => row.id)).toEqual([ROUTE]);
+    expect(answer.entries.map((row: { id: string; reach?: string }) => [row.id, row.reach])).toEqual([[ROUTE, 'dead'], [ORPHAN, 'maybe']]);
     expect(answer.entriesNone).toBeUndefined();
   });
 });

@@ -1,0 +1,53 @@
+{
+  "settled": "1 field read and sent by none: missing",
+  "channel": "channel:desk_events",
+  "type": "HELP_REQUESTED",
+  "producers": [
+    {
+      "id": "producer:shop-api#src/desk/desk.service.ts:10:11",
+      "label": "event desk_events",
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /api/desks/:param/help",
+      "throughDead": true,
+      "sends": [
+        "type",
+        "deskNumber",
+        "note"
+      ]
+    }
+  ],
+  "consumers": [
+    {
+      "id": "consumer:ops-bot#src/notify/notify.service.ts:NotifyService.page",
+      "line": 20,
+      "kind": "event",
+      "reach": "dead",
+      "from": "POST /api/desks/:param/help (shop-api)",
+      "throughDead": true,
+      "reads": [
+        "deskId",
+        "note",
+        "type"
+      ]
+    }
+  ],
+  "missing": [
+    {
+      "field": "deskId",
+      "id": "ops-bot#src/notify/notify.service.ts:NotifyService.onDeskEvent",
+      "line": 16,
+      "guarded": true,
+      "effect": "returns early"
+    }
+  ],
+  "unused": [
+    {
+      "field": "deskNumber",
+      "sentBy": [
+        "producer:shop-api#src/desk/desk.service.ts:10:11"
+      ]
+    }
+  ],
+  "complete": true
+}

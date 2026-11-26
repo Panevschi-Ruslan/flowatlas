@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "unreadable-file",
-  "generatedAt": "2026-10-07T14:35:07.732Z",
+  "generatedAt": "2026-11-23T14:50:16.808Z",
   "nodes": [
     {
       "id": "entry:unreadable-file:http:GET:/orders",
@@ -37,7 +37,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {
@@ -79,7 +86,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],

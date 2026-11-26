@@ -1,0 +1,5 @@
+prompt: Who calls GET /api/orders/{orderId}, and what breaks if I change it?
+---
+flowatlas, from the graph of every repository (built just now): each answer below is what the call above it returns, complete unless it says otherwise. Call a tool only for what this does not say.
+who_calls({symbol: "entry:shop-api:http:GET:/api/orders/:param"}):
+{"settled":"1 way in reaches it, all listed","target":{"id":"entry:shop-api:http:GET:/api/orders/:param","loc":"src/orders/orders.controller.ts:10","reach":"alive"},"callers":[{"id":"ui_api_call:shop-web#src/app/orders-api.service.ts:17:12","label":"GET /api/orders/:param","kind":"http","reach":"alive","from":"screen /orders","edge":{"type":"hits","returns":"type:shop-web#OrderView"},"children":[{"id":"shop-web#src/app/orders-api.service.ts:OrdersApiService.getOrder","line":16,"reach":"alive","from":"screen /orders","edge":"calls"}]}],"waysIn":[{"id":"entry:shop-web:screen:/orders","reach":"outside","hops":5,"by":"shop-web#src/app/orders-page.component.ts:OrdersPageComponent"}],"complete":true}

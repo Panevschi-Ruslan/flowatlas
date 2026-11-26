@@ -1,0 +1,13 @@
+{
+  "id": "consumer:worker#src/projections/lifecycle.service.ts:LifecycleProjections.onClosed",
+  "type": "consumer",
+  "kind": "event",
+  "service": "worker",
+  "loc": "src/projections/lifecycle.service.ts:26",
+  "verdict": "alive",
+  "reason": "something publishes what it consumes",
+  "evidence": {
+    "via": "channel:order:*:closed"
+  },
+  "from": "event order:*:closed"
+}

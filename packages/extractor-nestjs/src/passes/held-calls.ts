@@ -34,7 +34,7 @@ const hopsOf = (scopes: readonly Scope[]): Map<Scope, Hop[]> => {
       const to = fn === undefined ? undefined : byDeclaration.get(fn.declaration);
       // A function that calls itself says nothing about the shape of the system.
       if (to !== undefined && to !== scope) found.push({ to, line: lineOf(call) });
-    });
+    }, scope.leaveOut);
     if (found.length > 0) hops.set(scope, found);
   }
   return hops;

@@ -1,3 +1,4 @@
+import { READ_PRINCIPALS } from '@flowatlas/aws';
 import { makeFunctionUrlEntryKey, type DeliveryTarget, type DeployedKind, type RouteTarget } from '@flowatlas/core';
 import type { Because, Instance, Value } from '../eval/values.js';
 import { argument, blockOrArgument, blocksNamed, entryOf, listed, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
@@ -326,25 +327,6 @@ const readListenerRule: ResourceReader[1] = (rule, reading) => {
 };
 
 // ----------------------------------------------------------- permissions
-
-/**
- * Principals whose invocations are read from the resources that make them:
- * routes, rules, subscriptions, queues, workflows, pipes, schedules, bucket
- * notifications, user pools, IoT rules, load balancers.
- */
-const READ_PRINCIPALS = new Set([
-  'apigateway.amazonaws.com',
-  'events.amazonaws.com',
-  'scheduler.amazonaws.com',
-  'sns.amazonaws.com',
-  'sqs.amazonaws.com',
-  'states.amazonaws.com',
-  'pipes.amazonaws.com',
-  's3.amazonaws.com',
-  'cognito-idp.amazonaws.com',
-  'iot.amazonaws.com',
-  'elasticloadbalancing.amazonaws.com',
-]);
 
 /** A permission for something none of the readers follows to run a function. */
 const readPermission: ResourceReader[1] = (permission, reading) => {

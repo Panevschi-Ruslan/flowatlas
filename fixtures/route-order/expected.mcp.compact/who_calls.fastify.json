@@ -1,0 +1,48 @@
+{
+  "settled": "2 ways in reach it, all listed",
+  "target": {
+    "id": "billing-api#src/invoices/invoices.controller.ts:InvoicesController.overdue",
+    "line": 16,
+    "reach": "alive",
+    "from": "GET /invoices/overdue"
+  },
+  "callers": [
+    {
+      "id": "entry:billing-api:http:GET:/invoices/overdue",
+      "loc": "src/invoices/invoices.controller.ts:16",
+      "reach": "alive",
+      "edge": {
+        "type": "handles",
+        "returns": "type:billing-api#Invoice[]"
+      },
+      "children": [
+        {
+          "id": "ui_api_call:shop-web#src/app/billing-api.service.ts:14:12",
+          "label": "GET /invoices/overdue",
+          "kind": "http",
+          "reach": "alive",
+          "from": "screen /dashboard",
+          "edge": {
+            "type": "hits",
+            "returns": "unknown[]"
+          }
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:billing-api:http:GET:/invoices/overdue",
+      "line": 16,
+      "reach": "alive",
+      "hops": 1
+    },
+    {
+      "id": "entry:shop-web:screen:/dashboard",
+      "reach": "outside",
+      "hops": 6,
+      "by": "shop-web#src/app/dashboard.component.ts:DashboardComponent"
+    }
+  ],
+  "complete": true
+}

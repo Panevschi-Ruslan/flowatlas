@@ -14,7 +14,7 @@
  *
  * Pure: a graph in, rows out. Nothing here reads a file or the database.
  */
-import { CONFIDENCE_RANK, type Confidence, type GraphEdge, type GraphNode, type ServiceCatalog } from '@flowatlas/core';
+import { CONFIDENCE_RANK, isMessageTypeNode, type Confidence, type GraphEdge, type GraphNode, type ServiceCatalog } from '@flowatlas/core';
 
 /** The graph an export reads: what `GraphDb.allNodes()` and `allEdges()` give back. */
 export interface ExportGraph {
@@ -191,11 +191,12 @@ export const exportModelOf = (graph: ExportGraph, services: readonly ExportServi
         add({ kind: 'invoke', from: from.repo, to: { kind: 'service', id: to.repo, label: to.repo, service: to.repo }, label: to.label }, edge);
         break;
       case 'emits':
-        if (to.type !== 'channel' || !known.has(from.repo)) break;
+        // A type of message on a channel is the channel's join said again (P358).
+        if (to.type !== 'channel' || isMessageTypeNode(to) || !known.has(from.repo)) break;
         add({ kind: 'publish', from: from.repo, to: { kind: 'channel', id: to.id, label: to.label }, label: to.label }, edge);
         break;
       case 'consumes':
-        if (from.type !== 'channel' || !known.has(to.repo)) break;
+        if (from.type !== 'channel' || isMessageTypeNode(from) || !known.has(to.repo)) break;
         add({ kind: 'consume', from: to.repo, to: { kind: 'channel', id: from.id, label: from.label }, label: from.label }, edge);
         break;
       case 'queries': {

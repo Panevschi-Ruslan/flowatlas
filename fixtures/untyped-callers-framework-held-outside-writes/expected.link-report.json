@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:18.760Z",
+  "configHash": "2ad437930b88",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1049,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "infra",
+      "repo": "./infra",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1195,
+      "packages": {
+        "name": "infra",
+        "runtime": [
+          "@aws-sdk/client-sqs",
+          "aws-cdk-lib",
+          "constructs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 1087,
+      "packages": {
+        "name": "shop-jobs",
+        "runtime": [
+          "bullmq",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1048,
+      "packages": {
+        "name": "stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 30,
+      "edges": 30,
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 1115
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 8,
+    "resolved": 8,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 0,
+    "noConsumers": [
+      "channel:notices",
+      "channel:outbox",
+      "channel:urgent"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 6,
+    "uncalled": [
+      "entry:catalog:http:GET:/recent"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "infra",
+      "file": "src/move.ts",
+      "line": 7,
+      "reason": "environment-not-set",
+      "message": "the call at src/move.ts:7 sends to the value of RESTOCK_URL; stock-move runs it and is not deployed with RESTOCK_URL, so where it sends from there is not known",
+      "hint": "Set RESTOCK_URL in the environment stock-move is deployed with, or correct the name the code reads.",
+      "symbol": "producer:infra#src/move.ts:7:9",
+      "meta": {
+        "function": "entry:infra:invoke:stock-move",
+        "variable": "RESTOCK_URL"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 62,
+    "edges": 46,
+    "types": 2,
+    "missed": 9,
+    "sites": 15,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 9
+  }
+}

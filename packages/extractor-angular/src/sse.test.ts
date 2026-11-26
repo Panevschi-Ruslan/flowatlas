@@ -71,6 +71,45 @@ const only = (graph: RepoGraph): GraphNode => {
   return stream;
 };
 
+/** The rows about a stream's address: a stream opened with no listener also says so (P359), which these cases are not about. */
+const addressRows = (graph: RepoGraph) => graph.unresolved.filter((row) => row.reason !== 'stream-handler-unread');
+
+/** The method each stream's frames arrive at, by the request that triggers it (P359). */
+const fed = (graph: RepoGraph): Array<[string, string]> =>
+  graph.edges
+    .filter((edge) => edge.type === 'triggers')
+    .map((edge): [string, string] => [edge.from, graph.edges.find((each) => each.type === 'handles' && each.from === edge.to)?.to ?? '?']);
+
+describe('the method a stream hands its frames to (P359)', () => {
+  it('is the method a listener written in place calls on this, or the method that registered it', () => {
+    const graph = extract(`
+  private source: EventSource | null = null;
+  open(): void {
+    this.source = new EventSource(\`\${environment.apiUrl}/events\`);
+    this.source.addEventListener('parcel', (frame) => this.onParcel(frame));
+    this.source.onmessage = (frame) => { console.log(frame); console.log(1); };
+  }
+  onParcel(frame: MessageEvent): void { void frame; }`);
+    const stream = only(graph).id;
+    expect(fed(graph).sort()).toEqual([
+      [stream, 'web#live.service.ts:LiveService.onParcel'],
+      [stream, 'web#live.service.ts:LiveService.open'],
+    ]);
+    expect(graph.nodes.find((node) => node.id === 'consumer:web#live.service.ts:LiveService.onParcel')).toMatchObject({
+      type: 'consumer',
+      kind: 'sse',
+      meta: { events: ['parcel'], entryId: null },
+    });
+    expect(graph.unresolved).toEqual([]);
+  });
+
+  it('says so where nothing listens', () => {
+    const graph = extract(`  open(): void { new EventSource(\`\${environment.apiUrl}/events\`); }`, { apiBaseEnv: ['apiUrl'] });
+    expect(fed(graph)).toEqual([]);
+    expect(graph.unresolved.map((row) => row.reason)).toEqual(['stream-handler-unread']);
+  });
+});
+
 describe('streams the browser subscribes to', () => {
   it('records a subscription as the one request it is', () => {
     const graph = extract(`
@@ -102,7 +141,7 @@ describe('streams the browser subscribes to', () => {
     const graph = extract(`  open(url: string): void { new EventSource(url); }`);
     const stream = only(graph);
     expect(stream.meta?.['path']).toBeNull();
-    expect(graph.unresolved.map((row) => row.reason)).toEqual(['api-path-dynamic']);
+    expect(addressRows(graph).map((row) => row.reason)).toEqual(['api-path-dynamic']);
     expect(graph.unresolved[0]?.hint).toContain('@flowatlas-calls GET /path');
     expect(graph.edges.find((edge) => edge.to === stream.id)?.confidence).toBe('heuristic');
   });
@@ -232,7 +271,7 @@ export class DashboardScreen {
     expect(graph.edges.find((edge) => edge.to === dashboard?.id)?.from).toBe(
       'web#live.service.ts:DashboardScreen.watch',
     );
-    expect(graph.unresolved).toEqual([]);
+    expect(addressRows(graph)).toEqual([]);
   });
 
   it('leaves a class of the repository’s own alone, whatever it is called', () => {
@@ -264,7 +303,7 @@ export class DashboardScreen {
       { apiBaseEnv: ['streamUrl'] },
     );
     expect(only(graph).meta?.['baseUrlEnv']).toBe('apiUrl');
-    expect(graph.unresolved).toEqual([
+    expect(addressRows(graph)).toEqual([
       {
         file: 'live.service.ts',
         line: 6,
@@ -281,6 +320,6 @@ export class DashboardScreen {
       { apiBaseEnv: ['apiUrl'] },
     );
     expect(only(graph).meta?.['baseUrlEnv']).toBe('apiUrl');
-    expect(graph.unresolved).toEqual([]);
+    expect(addressRows(graph)).toEqual([]);
   });
 });

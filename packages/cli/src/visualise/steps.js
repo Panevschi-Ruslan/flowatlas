@@ -1322,11 +1322,13 @@ const promptNodeSubject = (model, i, walk, seen) => {
   const fails = type === 'entry' ? promptFailsOf(model, i) : [];
   const access = type === 'entry' ? promptAccessOf(model, i) : undefined;
   const schedule = type === 'entry' ? scheduleOf(model, i) : null;
+  const notes = stepField(model, i, 'nt');
   const hits = type === 'entry' ? seen.entry(i) : 0;
   const failuresSeen = type === 'entry' ? seen.failures(i) : null;
   return {
     ...head,
     ...(schedule === null ? {} : { schedule: { expression: schedule.expression, ...(schedule.zone ? { zone: schedule.zone } : {}) } }),
+    ...(Array.isArray(notes) && notes.length > 0 ? { notes: notes.map(String) } : {}),
     ...(hits > 0 ? { hits, ...promptFiguresOf(seen.entryStats(i)) } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),
@@ -1560,6 +1562,16 @@ const promptFindingsOf = (model) => {
   }));
 };
 
+/** A service's findings counted rather than listed (P400): kind, severity, count and the call that lists them. */
+const promptCountedOf = (model, service) => {
+  const overview = model.data.overview;
+  if (!overview || !overview.counted) return [];
+  const { repos } = model.data.dicts;
+  return overview.counted
+    .filter(([, at]) => (typeof at === 'string' ? at : at >= 0 ? repos[at] : '') === service)
+    .map(([kind, , severity, count, call]) => ({ kind: overview.kinds[kind], severity, count, call }));
+};
+
 /** Whether a check row is a gap the reading missed, as core's `wasMissed`: not a note or a finding, and not one that says nothing. */
 const promptWasMissed = (model, r) => {
   const row = model.data.rows[r];
@@ -1590,7 +1602,8 @@ const promptServiceSubject = (model, service, limits) => {
   const out = others.flatMap((other) => promptCrossingsBetween(model, service, other).map((hop) => ({ ...hop, service: other })));
   const into = others.flatMap((other) => promptCrossingsBetween(model, other, service).map((hop) => ({ ...hop, service: other })));
 
-  const channels = positions.filter((i) => typeIs(i, 'channel'));
+  // A type of message on a channel (P358) is not one more channel, as the server says.
+  const channels = positions.filter((i) => typeIs(i, 'channel') && kinds[model.nodes[i][3]] !== 'message_type');
   const ends = (list, end, type) => list.some((k) => edgeTypes[model.edges[k][2]] === type && inService(model.edges[k][end]));
   const channelSteps = (list) => list.map((i) => promptPlaceOf(model, i, 1)).sort((a, b) => stepCmp(a.id, b.id));
   const publishes = channelSteps(channels.filter((i) => ends(model.incoming[i], 0, 'emits')));
@@ -1606,6 +1619,8 @@ const promptServiceSubject = (model, service, limits) => {
     });
   }
   const findings = [...byKind].map(([kind, list]) => ({ kind, count: list.length, top: list.slice(0, first) }));
+  // Counted, not listed, with the call that lists them (P400), as the server says them.
+  const counted = promptCountedOf(model, service);
 
   const accepted = new Set((model.data.accepted && model.data.accepted.rows) || []);
   const fileOf = (row) => (row[2] >= 0 ? files[row[2]] : '');
@@ -1631,7 +1646,7 @@ const promptServiceSubject = (model, service, limits) => {
       waysIn,
       crossingsOut: promptCrossingCounts(model, out, first),
       crossingsIn: promptCrossingCounts(model, into, first),
-      publishes, consumes, findings, gaps,
+      publishes, consumes, findings, ...(counted.length === 0 ? {} : { counted }), gaps,
     },
     gaps: [],
   };

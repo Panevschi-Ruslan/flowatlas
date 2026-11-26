@@ -1,10 +1,14 @@
+import type { Node as TsNode } from 'ts-morph';
 import type { ApplicationMap } from './applications.js';
 import type { FlowatlasConfig } from '../config.js';
 import type { Confidence } from '../model/edges.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
+import type { ListenPort } from '../listen-port.js';
+import type { ProxyReading } from '../proxy-rule.js';
 import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
+import type { ConventionsOf } from '../conventions.js';
 import type { Envelope } from '../envelope.js';
 import type { RequestReading } from '../request.js';
 import type { StatedSignature } from '../types/signatures.js';
@@ -182,4 +186,34 @@ export interface EntryAdapter {
    * in — get the same answer the ids carry, from the same reading.
    */
   applications?(ctx: ExtractContext): ApplicationMap | undefined;
+  /**
+   * The ports this adapter's server listens on, where the repository writes
+   * them (P250): the line that starts the server, or the framework's own
+   * configuration of its server. Optional, and asked of every adapter that
+   * applies; two answering for one line are one port.
+   */
+  listens?(ctx: ExtractContext): readonly ListenPort[];
+  /**
+   * The paths this adapter's server forwards to another server, where the
+   * framework's configuration writes them (P257): a rewrite to an address, a
+   * route rule that proxies. Optional, asked beside `listens` (`proxiesOf`).
+   */
+  proxies?(ctx: ExtractContext): ProxyReading;
+  /**
+   * What the framework's build would have written for the compiler before
+   * the repository is read (P240): aliases its generated tsconfig names, and
+   * names its files use with no import. Asked before the project is opened,
+   * of every adapter that applies, through the registry.
+   */
+  conventions?: ConventionsOf;
+  /**
+   * Whether a call written in the repository is one this adapter's ways in
+   * stand for (P399): a call through a table of handlers whose elements the
+   * adapter opened a way in each for (`route.handler(ctx, data)` in a bot's
+   * `callback_query` listener, one way in per prefix). A call walk draws no
+   * edge for such a call - each way in hands the update to its element's
+   * handler itself - and no gap, since nothing is left unread. Optional;
+   * asked only of calls a walk reads as calls through a table.
+   */
+  standsForCall?(call: TsNode): boolean;
 }

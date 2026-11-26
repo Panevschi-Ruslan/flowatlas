@@ -68,6 +68,32 @@ const unstated = (
   return undefined;
 };
 
+/**
+ * A missing type on a request for a procedure (P247). The caller's end is a
+ * client typed `any` - the tree it calls is not installed here - and the
+ * procedure's is an answer nothing types; each is fixed where a client of a
+ * tree or a procedure states it, not by a generic on a request.
+ */
+const procedureUntyped = (direction: Direction, side: 'sender' | 'receiver', subject: string): UncheckedNote => {
+  const caller = (direction === 'request') === (side === 'sender');
+  if (caller) {
+    return {
+      message:
+        direction === 'request'
+          ? `${subject} hands the procedure an input with no type`
+          : `${subject} reads what the procedure answers with no type`,
+      hint: 'Type the client from the tree it calls - the server\'s router type, from a shared package or a copy of it - so the call has a declared input and answer to compare.',
+    };
+  }
+  return {
+    message: direction === 'request' ? `${subject} declares no type for its input` : `${subject} answers with no type`,
+    hint:
+      direction === 'request'
+        ? 'Declare the input with .input(schema), so there is a shape to compare.'
+        : 'Give the procedure an .output(schema), or its resolver a return type, so there is a shape to compare.',
+  };
+};
+
 /** What is missing, and where to put it. `subject` names the symbol involved. */
 export const uncheckedNote = (
   reason: UncheckedReason,
@@ -76,7 +102,11 @@ export const uncheckedNote = (
   detail?: string,
   described = false,
   statusUnknown?: string,
+  procedure = false,
 ): UncheckedNote => {
+  if (procedure && (reason === 'no-type-on-sender' || reason === 'no-type-on-receiver')) {
+    return procedureUntyped(direction, reason === 'no-type-on-sender' ? 'sender' : 'receiver', subject);
+  }
   if (described && (reason === 'no-type-on-sender' || reason === 'no-type-on-receiver')) {
     const said = unstated(direction, reason === 'no-type-on-sender' ? 'sender' : 'receiver', subject, statusUnknown);
     if (said !== undefined) return said;
@@ -129,7 +159,16 @@ export const uncheckedNote = (
     // library is installed; in a clone nobody installed it is `any`, and a
     // comparison against `any` agrees with everything. So nothing is compared
     // and the sentence says why, rather than a verdict that compared nothing.
+    // A plain request to a procedure's REST route whose query is written in
+    // a way nothing reads (P256): the procedure's input is assembled from it,
+    // so what the call hands cannot be told.
     case 'procedure-input-by-name':
+      if (detail === 'query') {
+        return {
+          message: `${subject} reaches a procedure's REST route, whose input is assembled from the query of a GET, and writes its query in a way that is not read - a query string built elsewhere, or options handed by a name - so what it hands the procedure is not compared`,
+          hint: 'Write the query keys in the address, or in an object written in place under the client\'s query option (params, searchParams, query), so each key can be checked against the procedure\'s input.',
+        };
+      }
       return {
         message:
           detail === undefined
@@ -137,15 +176,60 @@ export const uncheckedNote = (
             : `${subject} takes ${detail}, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it`,
         hint: 'Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library\'s inference only yields where its package is installed.',
       };
+    // A procedure with no input schema takes nothing a caller could get wrong
+    // in shape: whatever is sent is not checked on the way in (P247).
+    case 'procedure-input-undeclared':
+      return {
+        message: `${subject} declares no input, so what the caller sends is not compared with anything`,
+        hint: 'Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here.',
+      };
+    // The schema is declared, and its type is the validation library's
+    // inference over it, which resolves only where that library is installed;
+    // in a clone nobody installed it is `any`, and a comparison against `any`
+    // agrees with everything (P247).
+    case 'procedure-input-unread':
+      return {
+        message:
+          detail === undefined
+            ? `${subject} declares an input whose type does not resolve here, so what the caller sends is not compared with it`
+            : `${subject} takes ${detail}, whose type does not resolve here, so what the caller sends is not compared with it`,
+        hint: "Install the service's dependencies before the build, so the validation library's inference gives the schema a shape; or write the input's type beside the schema.",
+      };
+    // The call names the procedure and hands its input to something else - a
+    // mutation hook's `mutate` - or writes none where it takes one (P247).
+    case 'procedure-input-not-at-call':
+      return {
+        message:
+          detail === 'later'
+            ? `${subject} hands the input to what the call returns, later, so what it sends is not read at the call`
+            : `${subject} writes no input at the call, so there is nothing to compare`,
+        hint:
+          detail === 'later'
+            ? 'Nothing to change: the input of a mutation hook or options object is handed to its mutate call, which this does not follow. A plain client call, `client.orders.place(input)`, is compared.'
+            : 'Nothing to change if the procedure takes none. Otherwise hand it its input at the call.',
+      };
     // The answer a client of a procedure gets is typed by inference from the
     // server's own tree, so both ends of it are one declaration. Comparing a
     // declaration with itself always agrees, which is the one verdict worse
-    // than none.
+    // than none. Through a hook or a query's options (P247) nothing at the call
+    // states the answer at all: the binding types it where it is read. A plain
+    // request to the procedure's route is compared with the output (P256).
     case 'procedure-output-inferred':
-      return {
-        message: `what ${subject} answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration`,
-        hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls.',
-      };
+      if (detail === 'callback') {
+        return {
+          message: `what ${subject} answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it`,
+          hint: 'Type the answer where it is read - the callback\'s parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads.',
+        };
+      }
+      return detail === 'hook'
+        ? {
+            message: `what ${subject} answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it`,
+            hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared.',
+          }
+        : {
+            message: `what ${subject} answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration`,
+            hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls.',
+          };
     case 'channel-without-producer':
       return {
         message: `${subject} is handled and nothing publishes to it`,

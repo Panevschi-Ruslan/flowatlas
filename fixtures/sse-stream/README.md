@@ -39,9 +39,19 @@ click Watch             web/src/app/orders.component.ts:13
     EventsController.stream                          api/src/orders/events.controller.ts:20
 ```
 
-The two never join into one edge, and that is the finding rather than a gap: what
-the route forwards onto its stream is decided by an rxjs pipeline, and drawing an
-edge across it would be a guess.
+The two never join into one edge: what the route forwards onto its stream is
+decided by an rxjs pipeline over a subject, and drawing an edge across it would
+be a guess. The route is marked as a stream (`meta.stream: "sse"`, from its
+`@Sse()`), and since no subscription to a channel is found in the code behind
+it, it carries a `stream-relay-unread` row rather than silence (P359). Where the
+route's own code subscribes, the channel is handed on to the screens - see
+`sse-relay-channels`.
+
+Each browser method that registers a listener for the frames is recorded as a
+`consumer` of `kind: "sse"` the request `triggers` (P359): `LiveEventsService.open`,
+`openWithToken` and `RememberedStreamService.open`, whose listeners are written
+in place. `StreamWrapperService` opens streams nothing listens to, which is a
+`stream-handler-unread` row at each.
 
 ## The browser — `web/src/app/`
 

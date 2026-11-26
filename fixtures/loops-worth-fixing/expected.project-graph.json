@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T05:29:47.634Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:38:02.733Z",
   "services": [
     {
       "name": "parcels",
@@ -870,7 +870,15 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "parcels#src/parcels/dispatch.ts:ParcelDispatch.claimAll",
+            "line": 14,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -889,7 +897,8 @@
             }
           ],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -908,7 +917,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -927,7 +937,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "length",
+            "in": "parcels#src/parcels/export.ts:ParcelExport.exportAll",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -946,7 +963,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -965,7 +983,15 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "parcels#src/parcels/handover.ts:ParcelHandover.holdAll",
+            "line": 26,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -984,7 +1010,8 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1003,7 +1030,15 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "parcels#src/parcels/dispatch.ts:ParcelDispatch.notifyAll",
+            "line": 21,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -1022,7 +1057,8 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1041,7 +1077,15 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "parcels#src/parcels/parcels.service.ts:ParcelsService.labelsFor",
+            "line": 19,
+            "why": "put inside another value"
+          }
+        ]
       }
     },
     {
@@ -1060,7 +1104,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1074,7 +1119,8 @@
         "signature": {
           "params": [],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1093,7 +1139,8 @@
             }
           ],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1107,7 +1154,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1121,7 +1169,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1140,7 +1189,8 @@
             }
           ],
           "returns": "unknown[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1416,7 +1466,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -2363,6 +2420,9 @@
       "to": "channel:sqs/parcel-exports",
       "type": "emits",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
       "file": "src/parcels/export.ts",
       "line": 15
     },
@@ -2371,6 +2431,9 @@
       "to": "channel:sqs/parcel-exports",
       "type": "emits",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
       "file": "src/parcels/export.ts",
       "line": 27
     }
@@ -2503,22 +2566,6 @@
           "entry:parcels:http:POST:/parcels/notify"
         ]
       },
-      "service": "parcels"
-    },
-    {
-      "file": "src/parcels/export.ts",
-      "line": 15,
-      "reason": "payload-type-unknown",
-      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
-      "symbol": "sqs/parcel-exports",
-      "service": "parcels"
-    },
-    {
-      "file": "src/parcels/export.ts",
-      "line": 27,
-      "reason": "payload-type-unknown",
-      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
-      "symbol": "sqs/parcel-exports",
       "service": "parcels"
     },
     {

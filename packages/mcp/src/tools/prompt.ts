@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
 import { withDocs } from '../query/docs.js';
+import { resolveChannelRef } from '../query/channel-ref.js';
 import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
 import { MAX_NEXT, withNext } from '../query/next.js';
 import { failuresSeenRef, type FailuresSeenRef } from '../query/fails.js';
@@ -27,7 +28,7 @@ import {
 import { nearNames } from './entries.js';
 import { READ_ONLY, withDb, type ToolContext } from './common.js';
 import { crossingsBetween } from './contract.js';
-import { rankedFindingsOf } from './findings.js';
+import { countedNotListed, countedOf, rankedFindingsOf } from './findings.js';
 import { loadContractBreaks } from '../query/contracts.js';
 import { ruleBreaksAt, rulesReportOf } from './rules.js';
 import { specOfNode } from './spec.js';
@@ -36,13 +37,22 @@ import { specOfNode } from './spec.js';
  * The node an id names: as it is, as a channel without its prefix, or as an
  * entry said aloud. Anything else is a list of near names, never a guess.
  */
-const subjectOf = (db: GraphDb, ref: string): { node: GraphNode; alsoAnswers?: string[] } | GraphNode[] => {
+const subjectOf = (db: GraphDb, ref: string): { node: GraphNode; alsoAnswers?: string[]; channelUsed?: string } | GraphNode[] => {
   const trimmed = ref.trim();
   const exact = db.node(trimmed) ?? db.node(`channel:${trimmed}`);
   if (exact !== undefined) return { node: exact };
   const entry = resolveEntryRef(db, trimmed);
-  if (isResolved(entry)) return { node: entry.node, ...(entry.alsoAnswers === undefined ? {} : { alsoAnswers: entry.alsoAnswers }) };
+  if (isResolved(entry)) {
+    return {
+      node: entry.node,
+      ...(entry.alsoAnswers === undefined ? {} : { alsoAnswers: entry.alsoAnswers }),
+      ...(entry.channelUsed === undefined ? {} : { channelUsed: entry.channelUsed }),
+    };
+  }
   if (entry.candidates.length > 0) return entry.candidates;
+  // A channel by a value it takes (`tenant:42:events`, P360), when nothing else answers to it.
+  const valued = resolveChannelRef(db, trimmed);
+  if (valued !== undefined) return 'candidates' in valued ? valued.candidates : { node: valued.node, ...(valued.channelUsed === undefined ? {} : { channelUsed: valued.channelUsed }) };
   return nearNames(db.search(trimmed, { limit: 200 }), trimmed, 5);
 };
 
@@ -113,15 +123,16 @@ const answer = (
   subject: PromptSubject,
   input: { maxSteps: number; maxChars: number },
   alsoAnswers?: string[],
-  extra: { docs?: unknown[]; failures?: FailuresSeenRef } = {},
+  extra: { docs?: unknown[]; failures?: FailuresSeenRef; channelUsed?: string } = {},
 ) => {
   const next = askNextOf(subject);
   const markdown = describeForPrompt(subject, { ...PROMPT_LIMITS, maxSteps: input.maxSteps, maxChars: input.maxChars });
-  const { docs, failures } = extra;
+  const { docs, failures, channelUsed } = extra;
   return withNext(
     {
       id,
       ...(alsoAnswers === undefined ? {} : { alsoAnswers }),
+      ...(channelUsed === undefined ? {} : { channelUsed }),
       markdown,
       ...(docs === undefined ? {} : { docs }),
       ...(failures === undefined ? {} : { failures }),
@@ -142,11 +153,14 @@ export const promptScopeContext = (db: GraphDb, dbPath: string, rules?: readonly
   let fresh: AnchoredUnresolvedRow[] | undefined;
   const rows = (): AnchoredUnresolvedRow[] => (fresh ??= acceptedSplitOf(db, db.allUnresolved(), readAccepted(dbPath)).fresh);
   let ranked: FindingRow[] | undefined;
+  const ofService = (service: string): FindingRow[] =>
+    (ranked ??= rankedFindingsOf(db, rows(), loadContractBreaks(dbPath), rules)).filter((row) => row.service === service);
   return {
     ...(counts === undefined ? {} : { counts }),
     crossings: (from, to) => crossingsBetween(db, from, to),
-    findings: (service) =>
-      (ranked ??= rankedFindingsOf(db, rows(), loadContractBreaks(dbPath), rules)).filter((row) => row.service === service).map(findingGapOf),
+    // Contract breaks at warning are counted with the call that lists them, as `findings` counts them (P400).
+    findings: (service) => ofService(service).filter((row) => !countedNotListed(row)).map(findingGapOf),
+    counted: (service) => countedOf(ofService(service), service),
     rows,
   };
 };
@@ -192,6 +206,65 @@ const scopedSubject = (
   return { id: subject.id, subject };
 };
 
+/** What `describe_for_prompt` is asked: the id, and how much the text may say. */
+export interface DescribeInput {
+  id: string;
+  scope?: PromptScopeName | undefined;
+  maxSteps: number;
+  maxChars: number;
+  withSpec?: boolean | undefined;
+}
+
+/**
+ * The answer `describe_for_prompt` gives (P67, P97), for the server and for
+ * `flowatlas explain` alike (P229): the Markdown, the id it is about, and
+ * `next`; or the candidates a name could mean; or an error saying why there
+ * is none. One function, so the terminal prints the text the tool returns.
+ */
+export const describeAnswer = (db: GraphDb, ctx: ToolContext, input: DescribeInput): object => {
+  const trimmed = input.id.trim();
+  if (isGapId(trimmed)) {
+    const check = checkOf(db, ctx, trimmed);
+    return check === undefined ? { error: `no rows answer to ${JSON.stringify(trimmed)}` } : answer(trimmed, check, input);
+  }
+  // A place as cant_follow and search name one, `file:line` or `service#file:line` (P122): the gap written there.
+  const place = db.node(trimmed) === undefined ? gapsAtPlace(db, trimmed) : [];
+  if (place.length === 1) {
+    const check = checkOf(db, ctx, place[0] as string);
+    if (check !== undefined) return answer(place[0] as string, check, input);
+  }
+  if (place.length > 1) {
+    return withNext({ candidates: place }, place.slice(0, MAX_NEXT).map((id) => `describe_for_prompt({id: ${JSON.stringify(id)}})`));
+  }
+  if (input.scope !== undefined && input.scope !== 'node') {
+    const scoped = scopedSubject(db, ctx, trimmed, input.scope);
+    if (scoped !== undefined && 'error' in scoped) {
+      return { ...scoped, next: (scoped.scopes ?? []).slice(0, MAX_NEXT).map((scope) => `describe_for_prompt({id: ${JSON.stringify(trimmed)}${scope === 'node' ? '' : `, scope: ${JSON.stringify(scope)}`}})`) };
+    }
+    if (scoped !== undefined) return answer(scoped.id, withRules(db, ctx, scoped.subject), input, undefined, withDocs(db, ctx.handle.path, scoped.id));
+  }
+  const found = subjectOf(db, input.id);
+  if (Array.isArray(found)) {
+    return found.length === 0
+      ? { error: `nothing matches ${JSON.stringify(input.id)}` }
+      : withNext(
+          { candidates: found.map((node) => projectDetail(node, 1)) },
+          found
+            .slice(0, MAX_NEXT)
+            .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
+        );
+  }
+  const counts = loadObservedCounts(ctx.handle.path);
+  const subject = withSpec(db, ctx, withRules(db, ctx, gatherPromptSubject(db, found.node, counts)), found.node, input.withSpec === true);
+  // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
+  const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
+  return answer(found.node.id, subject, input, found.alsoAnswers, {
+    ...(found.channelUsed === undefined ? {} : { channelUsed: found.channelUsed }),
+    ...withDocs(db, ctx.handle.path, found.node.id),
+    ...(compared === undefined ? {} : { failures: failuresSeenRef(compared) }),
+  });
+};
+
 export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'describe_for_prompt',
@@ -207,48 +280,6 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
       },
       annotations: READ_ONLY,
     },
-    (input) =>
-      withDb(ctx.handle, (db) => {
-        const trimmed = input.id.trim();
-        if (isGapId(trimmed)) {
-          const check = checkOf(db, ctx, trimmed);
-          return check === undefined ? { error: `no rows answer to ${JSON.stringify(trimmed)}` } : answer(trimmed, check, input);
-        }
-        // A place as cant_follow and search name one, `file:line` or `service#file:line` (P122): the gap written there.
-        const place = db.node(trimmed) === undefined ? gapsAtPlace(db, trimmed) : [];
-        if (place.length === 1) {
-          const check = checkOf(db, ctx, place[0] as string);
-          if (check !== undefined) return answer(place[0] as string, check, input);
-        }
-        if (place.length > 1) {
-          return withNext({ candidates: place }, place.slice(0, MAX_NEXT).map((id) => `describe_for_prompt({id: ${JSON.stringify(id)}})`));
-        }
-        if (input.scope !== undefined && input.scope !== 'node') {
-          const scoped = scopedSubject(db, ctx, trimmed, input.scope);
-          if (scoped !== undefined && 'error' in scoped) {
-            return { ...scoped, next: (scoped.scopes ?? []).slice(0, MAX_NEXT).map((scope) => `describe_for_prompt({id: ${JSON.stringify(trimmed)}${scope === 'node' ? '' : `, scope: ${JSON.stringify(scope)}`}})`) };
-          }
-          if (scoped !== undefined) return answer(scoped.id, withRules(db, ctx, scoped.subject), input, undefined, withDocs(db, ctx.handle.path, scoped.id));
-        }
-        const found = subjectOf(db, input.id);
-        if (Array.isArray(found)) {
-          return found.length === 0
-            ? { error: `nothing matches ${JSON.stringify(input.id)}` }
-            : withNext(
-                { candidates: found.map((node) => projectDetail(node, 1)) },
-                found
-                  .slice(0, MAX_NEXT)
-                  .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
-              );
-        }
-        const counts = loadObservedCounts(ctx.handle.path);
-        const subject = withSpec(db, ctx, withRules(db, ctx, gatherPromptSubject(db, found.node, counts)), found.node, input.withSpec === true);
-        // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
-        const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
-        return answer(found.node.id, subject, input, found.alsoAnswers, {
-          ...withDocs(db, ctx.handle.path, found.node.id),
-          ...(compared === undefined ? {} : { failures: failuresSeenRef(compared) }),
-        });
-      }),
+    (input) => withDb(ctx.handle, (db) => describeAnswer(db, ctx, input)),
   );
 };

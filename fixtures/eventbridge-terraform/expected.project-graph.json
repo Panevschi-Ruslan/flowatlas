@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:49:17.497Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:20:17.483Z",
   "services": [
     {
       "name": "circulation",
@@ -225,7 +225,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -244,7 +245,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -301,7 +303,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -594,6 +597,15 @@
         "deployedBy": "terraform",
         "api": "library-circulation",
         "declaredAs": "aws_apigatewayv2_route.request_hold",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "integration": "bus",
         "sends": "eventbridge/library/library.holds/HoldRequested",
         "adapter": "aws-lambda"
@@ -615,6 +627,15 @@
         "api": "library-circulation",
         "function": "library-create-loan",
         "declaredAs": "aws_apigatewayv2_route.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -634,6 +655,15 @@
         "api": "library-circulation",
         "function": "library-renew-loan",
         "declaredAs": "aws_apigatewayv2_route.renew_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -653,6 +683,15 @@
         "api": "library-circulation",
         "function": "library-record-return",
         "declaredAs": "aws_apigatewayv2_route.record_return",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -1664,6 +1703,20 @@
       "message": "publishLibraryEvent -> detailType",
       "hint": "The channel name cannot be read here. Annotate publishLibraryEvent with the channel it uses.",
       "symbol": "producer:circulation#src/lib/events.ts:15:9",
+      "service": "circulation"
+    },
+    {
+      "file": "statemachines/loan-review.asl.json",
+      "line": 5,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "loan-review: ReviewLoan invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "circulation#statemachines/loan-review.asl.json:loan-review/ReviewLoan",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
       "service": "circulation"
     }
   ]

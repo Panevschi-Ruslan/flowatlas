@@ -4,7 +4,8 @@
     "type": "method",
     "label": "ReminderJob.start",
     "loc": "src/jobs/reminder.job.ts:10",
-    "service": "storefront"
+    "service": "storefront",
+    "reach": "maybe"
   },
   "entries": [],
   "total": 0,
@@ -14,6 +15,7 @@
   "reachedByService": {},
   "servicesWithoutEntry": [],
   "channels": [],
+  "complete": true,
   "next": [
     "cant_follow({service: \"storefront\"})",
     "search({query: \"src/jobs/reminder.job.ts\", kinds: [\"gaps\"]})"

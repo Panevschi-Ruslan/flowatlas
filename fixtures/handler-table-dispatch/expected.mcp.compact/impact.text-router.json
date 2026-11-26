@@ -1,0 +1,33 @@
+{
+  "settled": "1 way in breaks, all listed",
+  "target": {
+    "id": "staff-bot#src/text-router.ts:TextRouter.route",
+    "line": 22,
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:staff-bot:bot_event:text",
+      "loc": "src/staff-bot.ts:52",
+      "reach": "outside"
+    }
+  ],
+  "total": 1,
+  "byKind": {
+    "bots": {
+      "staff-bot": [
+        "src/text-router.ts"
+      ]
+    }
+  },
+  "reached": 2,
+  "entriesByService": {
+    "staff-bot": 1
+  },
+  "reachedByService": {
+    "staff-bot": 2
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true
+}

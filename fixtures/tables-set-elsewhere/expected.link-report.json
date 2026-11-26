@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:01:25.196Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:50:00.335Z",
   "configHash": "07e82fc415fb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 29,
       "types": 3,
       "unresolved": 4,
-      "durationMs": 0,
+      "durationMs": 1098,
       "packages": {
         "name": "@fixture/tables-set-elsewhere-ratings",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 67,
       "types": 4,
       "unresolved": 4,
-      "durationMs": 0,
+      "durationMs": 1107,
       "packages": {
         "name": "@fixture/tables-set-elsewhere-recipes",
         "runtime": [

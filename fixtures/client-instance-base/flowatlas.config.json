@@ -1,0 +1,55 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "hosts": [
+        "billing.example.test"
+      ]
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_ORDERS_URL",
+        "VITE_BILLING_URL"
+      ],
+      "apiTarget": {
+        "VITE_ORDERS_URL": "orders",
+        "VITE_BILLING_URL": "billing"
+      }
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "vue",
+      "apiBaseEnv": [
+        "VITE_ORDERS_URL",
+        "VITE_BILLING_URL"
+      ],
+      "apiTarget": {
+        "VITE_ORDERS_URL": "orders",
+        "VITE_BILLING_URL": "billing"
+      }
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "apiBaseEnv": [
+        "apiUrl"
+      ],
+      "apiTarget": {
+        "apiUrl": "orders"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

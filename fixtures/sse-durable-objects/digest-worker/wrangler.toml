@@ -1,0 +1,13 @@
+# A plain worker: no router, its own fetch tells the paths apart.
+name = "digest-worker"
+main = "src/worker.ts"
+
+[durable_objects]
+bindings = [
+  { name = "DIGESTS", class_name = "DigestFeed" },
+  { name = "TEAM_FEEDS", class_name = "TeamFeed" },
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["DigestFeed", "TeamFeed"]

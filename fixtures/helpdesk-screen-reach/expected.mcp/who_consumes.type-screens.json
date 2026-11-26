@@ -1,0 +1,41 @@
+{
+  "channel": {
+    "id": "channel:desk:*:events",
+    "type": "channel",
+    "label": "desk:*:events",
+    "loc": "src/live/live.controller.ts:13",
+    "service": "desk-api"
+  },
+  "consumers": [
+    {
+      "id": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "type": "consumer",
+      "label": "onQueueEvent",
+      "loc": "src/live/useDeskEvents.ts:16",
+      "service": "console",
+      "kind": "sse",
+      "via": "if",
+      "reach": "alive",
+      "from": "screen /queue"
+    },
+    {
+      "id": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "type": "consumer",
+      "label": "onTicketEvent",
+      "loc": "src/live/useDeskEvents.ts:16",
+      "service": "console",
+      "kind": "sse",
+      "via": "if",
+      "reach": "alive",
+      "from": "screen /tickets/:param"
+    }
+  ],
+  "total": 2,
+  "type": "TICKET_ASSIGNED",
+  "complete": true,
+  "next": [
+    "who_emits({channel: \"channel:desk:*:events\", type: \"TICKET_ASSIGNED\"})",
+    "impact({symbol: \"consumer:console#src/screens/QueueScreen.tsx:onQueueEvent\"})",
+    "get_source({symbol: \"consumer:console#src/screens/QueueScreen.tsx:onQueueEvent\"})"
+  ]
+}

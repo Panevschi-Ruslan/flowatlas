@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:orders:http:GET:/orders/:param",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:orders:http:POST:/orders",
@@ -14,7 +20,8 @@
           "id": "orders#src/orders/orders.controller.ts:OrdersController.create",
           "type": "method",
           "label": "OrdersController.create",
-          "loc": "src/orders/orders.controller.ts:31"
+          "loc": "src/orders/orders.controller.ts:31",
+          "endLine": 34
         },
         "edge": {
           "type": "handles",
@@ -30,7 +37,8 @@
               "id": "orders#src/orders/orders.service.ts:OrdersService.create",
               "type": "method",
               "label": "OrdersService.create",
-              "loc": "src/orders/orders.service.ts:40"
+              "loc": "src/orders/orders.service.ts:40",
+              "endLine": 51
             },
             "edge": {
               "type": "calls",
@@ -102,7 +110,8 @@
                           "label": "InvoicesConsumer.onOrderCreated",
                           "loc": "src/invoices/invoices.consumer.ts:17",
                           "service": "billing",
-                          "kind": "event"
+                          "kind": "event",
+                          "endLine": 20
                         },
                         "edge": {
                           "type": "consumes",
@@ -114,7 +123,8 @@
                               "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
                               "type": "method",
                               "label": "InvoicesConsumer.onOrderCreated",
-                              "loc": "src/invoices/invoices.consumer.ts:17"
+                              "loc": "src/invoices/invoices.consumer.ts:17",
+                              "endLine": 20
                             },
                             "edge": {
                               "type": "handles",
@@ -130,7 +140,8 @@
                                   "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                                   "type": "method",
                                   "label": "InvoicesService.create",
-                                  "loc": "src/invoices/invoices.service.ts:30"
+                                  "loc": "src/invoices/invoices.service.ts:30",
+                                  "endLine": 43
                                 },
                                 "edge": {
                                   "type": "calls",
@@ -208,7 +219,18 @@
       "line": 63,
       "kind": "flow",
       "state": "changed"
+    },
+    {
+      "file": "docs/adr/0001-orders-are-idempotent.md",
+      "line": 5,
+      "kind": "mention",
+      "state": "ok",
+      "heading": "Decision"
     }
+  ],
+  "complete": false,
+  "left": [
+    "depth: ≥1 more nodes past depth 8; raise depth"
   ],
   "next": [
     "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",

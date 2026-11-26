@@ -22,7 +22,8 @@
       "label": "GET /invoices/:param",
       "loc": "src/invoices/invoices.controller.ts:26",
       "service": "billing",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/invoices/:id"
     },
     {
       "id": "entry:billing:http:POST:/invoices",
@@ -34,6 +35,7 @@
     }
   ],
   "total": 4,
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
     "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",

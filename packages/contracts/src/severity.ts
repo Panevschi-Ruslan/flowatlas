@@ -6,7 +6,7 @@
  * TypeScript, and less certainty can never make a verdict harsher than the
  * plain reading of the two declarations.
  */
-import type { FindingKind, Severity, StripImpact } from './types.js';
+import type { FindingKind, Severity, Side, StripImpact } from './types.js';
 
 const BY_KIND: Record<FindingKind, Severity> = {
   missing_required: 'error',
@@ -34,6 +34,10 @@ const SOFTENED_BY: ReadonlyMap<string, Severity> = new Map([
   // found to disagree, and the row says what was not done rather than claiming
   // a mismatch it never established.
   ['choice-too-wide', 'info'],
+  // A response header a caller reads that the procedure's output does not
+  // declare (P265): the procedure does not send it, and a middleware or the
+  // platform may.
+  ['header-not-declared', 'warning'],
 ]);
 
 /**
@@ -44,7 +48,11 @@ const SOFTENED_BY: ReadonlyMap<string, Severity> = new Map([
  * the route, and it removes the field before the handler runs. A field sent and
  * silently thrown away is not waste, it is data the sender believes arrived.
  */
-const HARDENED_BY: ReadonlyMap<string, Severity> = new Map([['whitelist-strip', 'warning']]);
+const HARDENED_BY: ReadonlyMap<string, Severity> = new Map([
+  ['whitelist-strip', 'warning'],
+  // The same pipe told to refuse rather than strip (P388): the request fails with 400.
+  ['whitelist-reject', 'error'],
+]);
 
 /**
  * A strip, by what it can cost.
@@ -74,18 +82,31 @@ const BY_IMPACT: Record<StripImpact, Severity> = {
   none: 'info',
 };
 
+/**
+ * The verdict an optionality disagreement starts from, by the end that may
+ * leave the field out (P384). A field the sender may leave out and the
+ * receiver requires is a request the receiver refuses or misreads: a warning.
+ * A field the receiver may go without and the sender always sends breaks
+ * nothing at run time; it says only that one declaration is looser than the
+ * other, so it is information and never a finding listed among the defects.
+ */
+const baseOf = (kind: FindingKind, optionalOn: Side | undefined): Severity =>
+  kind === 'optionality_mismatch' && optionalOn === 'receiver' ? 'info' : BY_KIND[kind];
+
 export const severityOf = (
   kind: FindingKind,
   rule: string | null,
   impact?: StripImpact,
+  optionalOn?: Side,
 ): Severity => {
-  const base = BY_KIND[kind];
+  const base = baseOf(kind, optionalOn);
   // `BY_KIND` and `BY_IMPACT` are keyed by a union this project declares, so the
   // compiler has already checked that every key exists and no other can be
   // asked. The two rule tables are keyed by a plain string, which is the shape
   // that answers for `constructor`, so they are `Map`s (R130).
   const hardest = rule === null ? undefined : HARDENED_BY.get(rule);
-  if (hardest !== undefined && impact !== undefined) {
+  // Only a strip is measured by what it can lose (P388): a field refused fails the request whatever the handler writes.
+  if (hardest !== undefined && impact !== undefined && rule === 'whitelist-strip') {
     // The impact refines the hardening, and like the hardening it may only
     // reach the level that rule is allowed to reach. Returning it outright
     // would let a measurement quietly soften a verdict the kind had made

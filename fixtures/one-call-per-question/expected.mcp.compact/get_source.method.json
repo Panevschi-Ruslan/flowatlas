@@ -1,0 +1,4 @@
+{
+  "text": "// shop-api#src/orders/orders.controller.ts:OrdersController.addNote src/orders/orders.controller.ts:38-45\n  @Post(':orderId/notes')\n  addNote(@Param('orderId') orderId: string, @Body() body: NoteBody): number {\n    const kept = this.notes.get(orderId) ?? [];\n    const text = body.pinned === true ? `[pinned] ${body.text}` : body.text;\n    kept.push(text);\n    this.notes.set(orderId, kept);\n    return kept.length;\n  }\n\n// next: who_calls({symbol: \"shop-api#src/orders/orders.controller.ts:OrdersController.addNote\"}) · impact({symbol: \"shop-api#src/orders/orders.controller.ts:OrdersController.addNote\"})",
+  "structuredContent": false
+}

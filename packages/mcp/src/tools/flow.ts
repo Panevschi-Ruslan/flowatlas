@@ -1,17 +1,81 @@
+import type { DetailLevel, GraphNode } from '@flowatlas/core';
+import type { GraphDb } from '@flowatlas/linker';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
-import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
+import { isResolved, resolveSymbol } from '../query/entry-ref.js';
+import { findPath, type PathResult } from '../query/path.js';
 import { withDocs } from '../query/docs.js';
 import { buildFlowTree, type FlowResult } from '../query/flow.js';
+import { endLineReader, markEndLines } from '../query/end-lines.js';
 import { failuresSeenRef, markFailsSeen } from '../query/fails.js';
 import { failuresSeen, figuresOf, loadObservedCounts, markObserved, nodeAmbiguous, nodeRow, sampledIn } from '../query/observed.js';
 import type { FlowNode } from '../query/types.js';
 import { nearNames } from './entries.js';
 import { MAX_NEXT, withNext, withTraceFor } from '../query/next.js';
-import { slimTree } from '../query/wire.js';
-import { bound, callOf, commonInput, READ_ONLY, withDb, type ToolContext } from './common.js';
+import { slimTree, type WireFlowNode, type WireNode } from '../query/wire.js';
+import { bound, callOf, commonInput, completeOf, READ_ONLY, withDb, type ToolContext } from './common.js';
 import { trafficDiffers } from './contract.js';
+import { landingsOf } from '../query/requests.js';
+import { MAX_ANSWER_CHARS } from '../capped.js';
+
+/**
+ * What `left` says of the steps the walk could not follow (P404): the first
+ * by name and why, and whether it lies on a request's way. A pilot's
+ * "unread: 1 step on the path could not be followed" beside a request
+ * already joined read as if the route might be wrong, and the agent searched
+ * and read to confirm it.
+ */
+const unreadSaid = (db: GraphDb, steps: ReadonlyArray<{ id: string; onRequestWay: boolean }>, requests: boolean): string | undefined => {
+  const [first] = steps;
+  if (first === undefined) return undefined;
+  const node = db.node(first.id);
+  const [row] = db.unresolvedFor(first.id);
+  const why = row === undefined ? (node === undefined ? 'not in the graph' : undefined) : row.reason;
+  const onWay = steps.filter((step) => step.onRequestWay).length;
+  const where = !requests ? '' : onWay === 0 ? `, off every request's way` : `, ${onWay === steps.length ? '' : `${onWay} of them `}on a request's way`;
+  return `unread: ${steps.length} step${steps.length === 1 ? '' : 's'} on the path could not be followed: ${node?.label ?? first.id}${why === undefined ? '' : ` (${why})`}${steps.length > 1 ? ` and ${steps.length - 1} more` : ''}${where}`;
+};
+
+/** How many rows a tree holds below its root, and how deep it goes. */
+const shapeOf = (row: WireFlowNode, depth = 0): { rows: number; deepest: number } =>
+  row.children.reduce(
+    (sum, child) => {
+      const inner = shapeOf(child, depth + 1);
+      return { rows: sum.rows + 1 + inner.rows, deepest: Math.max(sum.deepest, inner.deepest) };
+    },
+    { rows: 0, deepest: depth },
+  );
+
+/** The tree with every row deeper than `depth` steps left out. */
+const cutBelow = (row: WireFlowNode, depth: number, at = 0): WireFlowNode => ({
+  ...row,
+  children: at >= depth ? [] : row.children.map((child) => cutBelow(child, depth, at + 1)),
+});
+
+/**
+ * A flow's answer within `MAX_ANSWER_CHARS` (P404): past it, the deepest
+ * rows of the tree go first, a level at a time, and `requests` stays whole,
+ * so where the requests land is never what the cut takes. Said in `left`.
+ */
+export const flowWithin =(answer: Record<string, unknown> & { root: WireFlowNode }, most = MAX_ANSWER_CHARS): Record<string, unknown> => {
+  if (JSON.stringify(answer).length <= most) return answer;
+  const before = shapeOf(answer.root);
+  let root = answer.root;
+  for (let depth = before.deepest - 1; depth >= 1; depth -= 1) {
+    root = cutBelow(answer.root, depth);
+    if (JSON.stringify({ ...answer, root }).length <= most - 200) break;
+  }
+  const after = shapeOf(root);
+  if (after.rows === before.rows) return answer;
+  const left = Array.isArray(answer.left) ? (answer.left as string[]) : [];
+  return {
+    ...answer,
+    root,
+    complete: false,
+    left: [...left, `cap: ${before.rows - after.rows} rows deeper than ${after.deepest} steps cut, the answer held to ${most} characters${Array.isArray(answer.requests) ? '; requests lists every request' : ''}`],
+  };
+};
 
 /**
  * `next` with `check_contract({edge: entry})` second (P113), when traffic
@@ -33,6 +97,54 @@ const markViolations = (root: FlowNode, hops: ReadonlyMap<string, string[]>): vo
   };
   visit(root);
 };
+
+/**
+ * What a reader keeps on a node for itself (P382): how it found the node
+ * (`adapter`, `source`, `receiver`), the class or package it came through
+ * (`controller`, `package`), the path as written before parameters were
+ * named alike (`rawPath`), the entity a query reads (`entityType`, said by
+ * the row's type). None answers a question about the flow, and at detail 2
+ * every step paid for them.
+ */
+export const READER_META: ReadonlySet<string> = new Set(['adapter', 'controller', 'rawPath', 'source', 'package', 'receiver', 'entityType']);
+
+/** Whether an edge's types are the ones the step's signature already says, in order. */
+const sameTypes = (params: readonly unknown[] | undefined, signature: { params?: Array<{ type?: unknown }> } | undefined): boolean =>
+  params !== undefined &&
+  signature?.params !== undefined &&
+  params.length === signature.params.length &&
+  params.every((type, index) => type === signature.params?.[index]?.type);
+
+/**
+ * A detail-2 tree with each fact said once (P382): an edge's `params` and
+ * `returns` left out where the step it leads to says them in its signature,
+ * and the reader's own meta (`READER_META`) left out of every step: five
+ * trees came out 14% smaller, with nothing a question asks gone.
+ */
+export const withoutRepeats = (row: WireFlowNode): WireFlowNode => {
+  const node = row.node as WireNode & { meta?: Record<string, unknown> };
+  // The row's own `fails` and `guards` say what the meta's `fails` and `access.guards` do, in the walk's words.
+  const access = node.meta?.['access'] as Record<string, unknown> | undefined;
+  const said = (key: string): boolean =>
+    READER_META.has(key) ||
+    (key === 'fails' && row.fails !== undefined) ||
+    (key === 'access' && row.guards !== undefined && access !== undefined && Object.keys(access).every((part) => part === 'guards'));
+  const meta = node.meta === undefined ? undefined : Object.fromEntries(Object.entries(node.meta).filter(([key]) => !said(key)));
+  const signature = meta?.['signature'] as { params?: Array<{ type?: unknown }>; returns?: unknown } | undefined;
+  const edge = row.edge === undefined ? undefined : { ...row.edge };
+  if (edge !== undefined && sameTypes(edge.params, signature)) delete edge.params;
+  if (edge !== undefined && edge.returns !== undefined && edge.returns === signature?.returns) delete edge.returns;
+  const { meta: _meta, ...rest } = node;
+  return {
+    ...row,
+    node: (meta === undefined ? rest : Object.keys(meta).length === 0 ? rest : { ...rest, meta }) as WireNode,
+    ...(edge === undefined ? {} : { edge }),
+    children: row.children.map(withoutRepeats),
+  };
+};
+
+/** The tree as it goes out: slimmed, and at detail 2 each fact said once. */
+const treeOut = (root: FlowNode, detail: number): WireFlowNode => (detail >= 2 ? withoutRepeats(slimTree(root)) : slimTree(root));
 
 /**
  * What `get_flow` shows when nobody says (P92 D4): a tree, not a list, so fewer
@@ -70,14 +182,66 @@ const flowNext = (id: string, flow: FlowResult): string[] => {
   ].slice(0, MAX_NEXT);
 };
 
+/** The deepest a path search looks when it widens by itself: the last of `PATH_DEPTHS`. */
+const WIDEST_PATH = 24;
+
+/**
+ * `get_flow` with `to` (P229): the flow cut down to the shortest ways that
+ * reach `to`, from the entry or from any node, in the tree `get_flow` answers
+ * with. No path is said with how far was looked and how much was searched, and
+ * with the other way round when that holds, so the next call is the right one.
+ */
+const pathAnswer = (fromId: string, toId: string, path: PathResult, depth: number | undefined, detail: number) => {
+  const asked = depth === undefined ? {} : { depth };
+  const next = path.found
+    ? [callOf('describe_for_prompt', { id: toId }), callOf('impact', { symbol: toId }), callOf('get_flow', { entry: fromId })]
+    : path.reverse !== undefined
+      ? [callOf('get_flow', { entry: toId, to: fromId, ...asked })]
+      : path.depth < WIDEST_PATH
+        ? [callOf('get_flow', { entry: fromId, to: toId, depth: WIDEST_PATH })]
+        : [callOf('get_flow', { entry: fromId }), callOf('impact', { symbol: toId })];
+  return withNext(
+    {
+      root: treeOut(path.root, detail),
+      to: toId,
+      pathsFound: path.paths,
+      length: path.length,
+      searched: path.searched,
+      depth: path.depth,
+      unresolvedOnPath: path.unresolvedOnPath,
+      ...(path.left === 0 ? {} : { truncated: `${path.left} more nodes on a shortest path (raise maxNodes)`, stoppedBy: ['maxNodes'] }),
+      ...(path.found ? {} : { none: `no path within ${path.depth} steps; searched ${path.searched} nodes` }),
+      ...(path.reverse === undefined ? {} : { reverse: { ...path.reverse, note: `${toId} reaches ${fromId} instead` } }),
+    },
+    next,
+  );
+};
+
+/** One end of a path that named several nodes or none: the candidates, each as the call that takes it. */
+const endUnresolved = (
+  end: { candidates: GraphNode[] },
+  key: 'entry' | 'to',
+  said: string,
+  keep: Record<string, string>,
+  detail: DetailLevel,
+) =>
+  end.candidates.length > 0
+    ? withNext(
+        { [key]: said, candidates: end.candidates.map((node) => projectDetail(node, detail)) },
+        end.candidates.slice(0, MAX_NEXT).map((node) => callOf('get_flow', { ...keep, [key]: node.id })),
+      )
+    : { error: `nothing matches ${JSON.stringify(said)}`, [key]: said };
+
 export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'get_flow',
     {
       title: 'Trace an entry point',
-      description: 'One entry followed across repositories, as a call-order tree with guards.',
+      description:
+        'One entry followed across repositories, as a call-order tree with guards; with `to`, the shortest ways there. `stoppedBy` says what cut it and `crossingsLeft` the crossings to ask on.',
       inputSchema: {
-        entry: z.string().describe('"POST /orders" or an entry id'),
+        entry: z.string().describe('"POST /orders", an id or a name'),
+        to: z.string().optional(),
         depth: z.number().int().min(1).max(32).optional().describe('hops; default 8, +1 per workflow step'),
         detail: commonInput.detail,
         maxNodes: z.number().int().min(1).max(2000).default(FLOW_DEFAULTS.maxNodes),
@@ -88,7 +252,23 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
     (input) =>
       withDb(ctx.handle, (db) => {
         const { detail, maxNodes, note } = bound(input);
-        const ref = resolveEntryRef(db, input.entry);
+        if (input.to !== undefined) {
+          // A path may start anywhere, so both ends resolve as any tool resolves a name.
+          const from = resolveSymbol(db, input.entry);
+          const to = resolveSymbol(db, input.to);
+          if (!isResolved(from)) return endUnresolved(from, 'entry', input.entry, { to: input.to }, detail);
+          if (!isResolved(to)) return endUnresolved(to, 'to', input.to, { entry: input.entry }, detail);
+          const path = findPath(db, from.id, to.id, {
+            ...(input.depth === undefined ? {} : { depth: input.depth }),
+            maxNodes,
+            detail,
+          });
+          return { ...pathAnswer(from.id, to.id, path, input.depth, detail), ...(note === undefined ? {} : { note }) };
+        }
+        // Any symbol, the way who_calls and find_symbol take one (P377): an entry said aloud first,
+        // then a class, a method or a function by its id, `Class.method` or a short name that is
+        // the only best match; a name several nodes share answers the candidates.
+        const ref = resolveSymbol(db, input.entry);
 
         if (!isResolved(ref)) {
           if (ref.candidates.length > 0) {
@@ -97,10 +277,21 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
               ref.candidates.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
             );
           }
-          const near = nearNames(db.nodesByType('entry'), input.entry, 5);
+          // Near names of any node, entries first, so a misspelt route still finds its route.
+          const near = [...nearNames(db.nodesByType('entry'), input.entry, 5), ...nearNames(db.allNodes(), input.entry, 5)]
+            .filter((node, index, all) => all.findIndex((other) => other.id === node.id) === index)
+            .slice(0, 5);
           return withNext(
-            { error: `no entry matches ${JSON.stringify(input.entry)}`, suggestions: near.map((node) => projectDetail(node, detail)) },
-            near.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`),
+            {
+              error: `nothing matches ${JSON.stringify(input.entry)}`,
+              ...(near.length === 0 ? {} : { suggestions: near.map((node) => projectDetail(node, detail)) }),
+            },
+            near.length > 0
+              ? near.slice(0, MAX_NEXT).map((node) => `get_flow({entry: ${JSON.stringify(node.id)}})`)
+              : // A path is looked for among the routes, by any parameter name (P377); a name among every node.
+                input.entry.includes('/')
+                ? [callOf('search', { query: input.entry, kinds: ['routes'] })]
+                : [callOf('find_symbol', { query: input.entry })],
           );
         }
 
@@ -111,6 +302,8 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
           detail,
         });
         markViolations(flow.root, violatedHops(rulesReportOf(db, ctx)));
+        // Where each step's code ends, so a Read goes straight to it (P393).
+        markEndLines(flow.root, (id) => db.node(id), endLineReader(ctx.handle));
         const counts = loadObservedCounts(ctx.handle.path);
         if (counts !== undefined) {
           const seen = nodeRow(counts, ref.id);
@@ -125,18 +318,28 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
             flow.root.failures = failuresSeenRef(compared);
           }
         }
+        // Where each request the walk crossed lands, first (P404): the question a flow is most often asked.
+        const landed = landingsOf(db, (flow.requests ?? []).flatMap((id) => db.node(id) ?? []));
         return withNext(
-          {
-            root: slimTree(flow.root),
+          flowWithin({
+            ...landed,
+            root: treeOut(flow.root, detail),
             // The less specific routes that answer the same request (P94 D2).
             ...(ref.alsoAnswers === undefined ? {} : { alsoAnswers: ref.alsoAnswers }),
+            // A channel written with placeholders: the one it denotes (P360).
+            ...(ref.channelUsed === undefined ? {} : { channelUsed: ref.channelUsed }),
             unresolvedOnPath: flow.unresolvedOnPath,
             ...(flow.truncated === undefined ? {} : { truncated: flow.truncated, stoppedBy: flow.stoppedBy }),
             ...(flow.crossingsLeft === undefined ? {} : { crossingsLeft: flow.crossingsLeft }),
             // The pages that describe this flow (P120): a change here is one they must follow.
             ...withDocs(db, ctx.handle.path, ref.id),
+            // The whole flow, or what was cut or left unread on it (P364).
+            ...completeOf([
+              flow.truncated !== undefined && `${(flow.stoppedBy ?? []).join(', ') || 'cut'}: ${flow.truncated}`,
+              unreadSaid(db, flow.unreadSteps ?? [], landed.requests !== undefined),
+            ]),
             ...(note === undefined ? {} : { note }),
-          },
+          }),
           withDrift(
             withTraceFor(flowNext(ref.id, flow), ref.node, sampledIn(ctx.handle.path)),
             ref.id,

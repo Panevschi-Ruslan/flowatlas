@@ -1,0 +1,50 @@
+{
+  "kind": "answer-field-never-returned",
+  "rows": [
+    {
+      "kind": "answer-field-never-returned",
+      "id": "shop-app#src/api.ts:loadItem",
+      "from": "ui_api_call:shop-app#src/api.ts:35:44",
+      "to": "entry:shop-api:http:GET:/api/items/:param",
+      "service": "shop-app",
+      "loc": "src/api.ts:43",
+      "message": "`legacyCode` of the answer to GET /api/items/:param is read by loadItem and never returned: GET /api/items/:param answers ItemView (id, name, price, status)",
+      "precision": "high",
+      "evidence": "the route answers a shape read whole, and the field is not in it",
+      "fix": "return `legacyCode` from GET /api/items/:param, or stop reading it",
+      "seenBy": [
+        "/items/:param (shop-app)"
+      ],
+      "rank": 1,
+      "reach": {
+        "waysIn": 1
+      },
+      "next": "check_contract({from: \"ui_api_call:shop-app#src/api.ts:35:44\", to: \"entry:shop-api:http:GET:/api/items/:param\"})"
+    },
+    {
+      "kind": "answer-field-never-returned",
+      "id": "shop-web#src/app/item-page.component.ts:ItemPageComponent",
+      "from": "ui_api_call:shop-web#src/app/items.service.ts:28:12",
+      "to": "entry:shop-api:http:GET:/api/items/:param",
+      "service": "shop-web",
+      "loc": "src/app/item-page.component.ts:20",
+      "message": "`legacyCode` of the answer to GET /api/items/:param is read by ItemPageComponent and never returned: GET /api/items/:param answers ItemView (id, name, price, status)",
+      "precision": "high",
+      "evidence": "the route answers a shape read whole, and the field is not in it",
+      "fix": "return `legacyCode` from GET /api/items/:param, or stop reading it",
+      "rank": 2,
+      "next": "check_contract({from: \"ui_api_call:shop-web#src/app/items.service.ts:28:12\", to: \"entry:shop-api:http:GET:/api/items/:param\"})"
+    }
+  ],
+  "total": 2,
+  "heldBack": {
+    "answer-field-never-returned": {
+      "count": 4,
+      "why": "`promo` is read behind a check that it is there (loadItem, line 36): the client handles its absence"
+    }
+  },
+  "next": [
+    "check_contract({from: \"ui_api_call:shop-app#src/api.ts:35:44\", to: \"entry:shop-api:http:GET:/api/items/:param\"})",
+    "check_contract({from: \"ui_api_call:shop-web#src/app/items.service.ts:28:12\", to: \"entry:shop-api:http:GET:/api/items/:param\"})"
+  ]
+}

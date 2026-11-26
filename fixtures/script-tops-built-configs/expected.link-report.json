@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:47:24.601Z",
+  "configHash": "5cbd5499f486",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 769,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 10,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 795
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 4,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 4,
+    "uncalled": [
+      "entry:shop:http:GET:/deals"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 21,
+    "edges": 18,
+    "types": 0,
+    "missed": 4,
+    "sites": 9,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

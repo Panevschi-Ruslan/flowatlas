@@ -1,0 +1,13 @@
+{
+  "name": "dev-proxy-joins-legacy",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start"
+  },
+  "proxy": "http://localhost:3004",
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-scripts": "^5.0.1"
+  }
+}

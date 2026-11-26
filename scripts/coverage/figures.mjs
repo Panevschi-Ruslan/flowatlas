@@ -242,15 +242,146 @@ const unresolved = (doctor) => {
   };
 };
 
+/**
+ * A system of several repositories, one row per repository (P278).
+ *
+ * The question a system split across repositories is measured for is whether a
+ * caller in one of them reaches the way in another one serves, which no figure
+ * of the whole project can answer: a front end whose every request joined a
+ * route of its own repository and none of the back end's reads the same as one
+ * that joined the back end throughout. So each row counts what the
+ * repository's services serve and send, and how much of what they send landed
+ * in a different repository.
+ *
+ * `services` is the harness's `{ name, repo }` with `repo` relative to the
+ * target's directory, whose first segment is the repository's directory;
+ * `dirs` are those directories in the order the list gives them. A request is
+ * a `ui_api_call` or an `http_out`, joined when a `hits` or `http_calls` edge
+ * leaves it for an entry; a message is a `producer`, reaching another
+ * repository when the channel it emits to is consumed by a service of one.
+ */
+export const byRepository = ({ graph, services, dirs }) => {
+  const repositoryOf = new Map(
+    services.map((service) => [service.name, service.repo.split('/')[0]]),
+  );
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+  const out = new Map();
+  for (const edge of graph.edges) {
+    const list = out.get(edge.from) ?? [];
+    list.push(edge);
+    out.set(edge.from, list);
+  }
+  const consumersOf = (channelId) =>
+    (out.get(channelId) ?? [])
+      .filter((edge) => edge.type === 'consumes')
+      .map((edge) => nodes.get(edge.to))
+      .filter((node) => node !== undefined);
+  const rows = new Map(
+    dirs.map((dir) => [
+      dir,
+      {
+        dir,
+        services: [],
+        waysIn: 0,
+        requests: 0,
+        joined: 0,
+        joinedElsewhere: 0,
+        messages: 0,
+        messagesElsewhere: 0,
+      },
+    ]),
+  );
+  for (const service of services) rows.get(repositoryOf.get(service.name))?.services.push(service.name);
+  const reachedFrom = (node) =>
+    (out.get(node.id) ?? [])
+      .filter((edge) => edge.type === 'hits' || edge.type === 'http_calls')
+      .map((edge) => nodes.get(edge.to))
+      .filter((target) => target?.type === 'entry');
+  for (const node of graph.nodes) {
+    const row = rows.get(repositoryOf.get(node.repo));
+    if (row === undefined) continue;
+    const mine = repositoryOf.get(node.repo);
+    if (node.type === 'entry') row.waysIn += 1;
+    // A call read by both halves is one call, counted at its browser half
+    // with what either half reached (P292).
+    const twin = typeof node.meta?.[SAME_CALL] === 'string' ? nodes.get(node.meta[SAME_CALL]) : undefined;
+    if (node.type === 'http_out' && twin?.type === 'ui_api_call') continue;
+    if (node.type === 'ui_api_call' || node.type === 'http_out') {
+      row.requests += 1;
+      const reached = [...reachedFrom(node), ...(twin === undefined ? [] : reachedFrom(twin))];
+      if (reached.length > 0) row.joined += 1;
+      if (reached.some((target) => repositoryOf.get(target.repo) !== mine)) row.joinedElsewhere += 1;
+    }
+    if (node.type === 'producer') {
+      row.messages += 1;
+      const consumers = (out.get(node.id) ?? [])
+        .filter((edge) => edge.type === 'emits')
+        .flatMap((edge) => consumersOf(edge.to));
+      if (consumers.some((consumer) => repositoryOf.get(consumer.repo) !== mine)) {
+        row.messagesElsewhere += 1;
+      }
+    }
+  }
+  return [...rows.values()].map((row) => ({ ...row, services: row.services.sort() }));
+};
+
+/** The key a request names the other half of the same call under (P283). */
+const SAME_CALL = 'sameCall';
+
+/** The ids of the ways in each request reaches, by request id. */
+const joinedRequests = (graph) => {
+  const nodes = new Map(graph.nodes.map((node) => [node.id, node]));
+  const joined = new Set();
+  for (const edge of graph.edges) {
+    if ((edge.type === 'hits' || edge.type === 'http_calls') && nodes.get(edge.to)?.type === 'entry') joined.add(edge.from);
+  }
+  return joined;
+};
+
+/**
+ * The calls read by both halves of a full-stack application (P283): a
+ * `ui_api_call` and an `http_out` at one place, each naming the other under
+ * `meta.sameCall`. One call, so counted once (P292): `found` is the calls,
+ * `joined` those either half of which reached a way in, and `browserJoined`
+ * and `serviceJoined` how many of each side's halves did, which the counts
+ * of that side give back.
+ */
+export const pairedRequests = (graph) => {
+  const ids = new Set(graph.nodes.map((node) => node.id));
+  const joined = joinedRequests(graph);
+  const out = { found: 0, joined: 0, browserJoined: 0, serviceJoined: 0 };
+  for (const node of graph.nodes) {
+    const twin = node.meta?.[SAME_CALL];
+    if (node.type !== 'ui_api_call' || typeof twin !== 'string' || !ids.has(twin)) continue;
+    out.found += 1;
+    if (joined.has(node.id)) out.browserJoined += 1;
+    if (joined.has(twin)) out.serviceJoined += 1;
+    if (joined.has(node.id) || joined.has(twin)) out.joined += 1;
+  }
+  return out;
+};
+
+/**
+ * The requests of each kind, a call read by both halves counted once, in a
+ * row of its own (P292), so neither side's count holds it and the three add
+ * up to the calls found.
+ */
+const requestFigures = (graph, report) => {
+  const paired = pairedRequests(graph);
+  const less = (count, by) => Math.max(0, count - by);
+  return {
+    browser: { found: less(report.ui.total, paired.found), joined: less(report.ui.resolved, paired.browserJoined) },
+    service: { found: less(report.httpOut.total, paired.found), joined: less(report.httpOut.linked, paired.serviceJoined) },
+    paired: { found: paired.found, joined: paired.joined },
+  };
+};
+
 /** Everything the report prints about one measured state of one target. */
 export const figuresFrom = ({ graph, report, doctor }) => {
   const index = indexOf(graph);
   return {
     routes: routes(graph, index),
-    requests: {
-      browser: { found: report.ui.total, joined: report.ui.resolved },
-      service: { found: report.httpOut.total, joined: report.httpOut.linked },
-    },
+    requests: requestFigures(graph, report),
     channels: { found: report.channels.total, bothEnds: report.channels.linked },
     data: data(graph, index),
     screens: screens(graph),

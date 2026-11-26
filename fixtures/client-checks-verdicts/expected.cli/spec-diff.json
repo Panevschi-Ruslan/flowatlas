@@ -1,0 +1,568 @@
+{
+  "specDiffFormatVersion": 2,
+  "documents": {
+    "base": 2,
+    "head": 2
+  },
+  "changes": [
+    {
+      "kind": "request-property-became-required",
+      "level": "error",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items/search",
+      "field": "header.x-tenant",
+      "base": "string",
+      "head": "string",
+      "message": "GET /items/search: `header.x-tenant` could be left out in base and is required in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 14
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:30:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 30,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "request-property-became-required|catalog|GET /items/search|header.x-tenant",
+      "use": {
+        "direction": "breaking",
+        "why": "narrows the request: a caller must now send it",
+        "level": "error",
+        "verdict": "1 of 1 caller: sends header accept; no `header.x-tenant`",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:30:26",
+            "service": "dashboard",
+            "file": "src/api.ts",
+            "line": 30,
+            "how": "omits",
+            "said": "sends header accept; no `header.x-tenant`",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:dashboard:screen:/items/current",
+              "step": "way in",
+              "label": "/items/current",
+              "service": "dashboard",
+              "file": "src/App.tsx",
+              "line": 9
+            },
+            {
+              "id": "dashboard#src/ItemPage.tsx:ItemPage",
+              "step": "handler",
+              "label": "ItemPage",
+              "service": "dashboard",
+              "file": "src/ItemPage.tsx",
+              "line": 17
+            },
+            {
+              "id": "dashboard#src/api.ts:searchItems",
+              "step": "code",
+              "label": "searchItems",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 29
+            },
+            {
+              "id": "ui_api_call:dashboard#src/api.ts:30:26",
+              "step": "code",
+              "label": "GET /items/search",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 30
+            },
+            {
+              "id": "entry:catalog:http:GET:/items/search",
+              "step": "route",
+              "label": "GET /items/search",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.search",
+              "step": "handler",
+              "label": "ItemsController.search",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 14
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: send `header.x-tenant`, then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 14
+        }
+      }
+    },
+    {
+      "kind": "message-property-type-changed",
+      "level": "error",
+      "document": "catalog",
+      "format": "asyncapi",
+      "service": "catalog",
+      "operation": "send item.changed",
+      "field": "payload.kind",
+      "base": "'created' | 'updated'",
+      "head": "'archived' | 'created' | 'updated'",
+      "message": "send item.changed: `payload.kind` was `'created' | 'updated'` in base and is `'archived' | 'created' | 'updated'` in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.service.ts",
+        "line": 12
+      },
+      "callers": [
+        {
+          "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+          "service": "notifier",
+          "file": "src/notify.service.ts",
+          "line": 16,
+          "confidence": "marker",
+          "via": "consumes"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "message-property-type-changed|catalog|send item.changed|payload.kind",
+      "use": {
+        "direction": "breaking",
+        "why": "gains 'archived': a reader that handles every value meets one it does not know",
+        "level": "error",
+        "verdict": "1 of 1 consumer: switches over `kind`, line 18, exhaustively (its default proves no value is left): 'archived' is handled by no case",
+        "among": 1,
+        "readers": [
+          {
+            "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+            "service": "notifier",
+            "file": "src/notify.service.ts",
+            "line": 18,
+            "how": "reads",
+            "said": "switches over `kind`, line 18, exhaustively (its default proves no value is left): 'archived' is handled by no case",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:catalog:http:POST:/items",
+              "step": "way in",
+              "label": "POST /items",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.create",
+              "step": "handler",
+              "label": "ItemsController.create",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.service.ts:ItemsService.create",
+              "step": "code",
+              "label": "ItemsService.create",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 9
+            },
+            {
+              "id": "producer:catalog#src/items/items.service.ts:12:11",
+              "step": "publish",
+              "label": "event item.changed",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 12
+            },
+            {
+              "id": "channel:item.changed",
+              "step": "channel",
+              "label": "item.changed",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 12
+            },
+            {
+              "id": "consumer:notifier#src/notify.service.ts:NotifyService.onItemChanged",
+              "step": "consumer",
+              "label": "NotifyService.onItemChanged",
+              "service": "notifier",
+              "file": "src/notify.service.ts",
+              "line": 16
+            },
+            {
+              "id": "notifier#src/notify.service.ts:NotifyService.onItemChanged",
+              "step": "handler",
+              "label": "NotifyService.onItemChanged",
+              "service": "notifier",
+              "file": "src/notify.service.ts",
+              "line": 16
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "consumers",
+          "said": "consumers first: handle 'archived', then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.service.ts",
+          "line": 12
+        }
+      }
+    },
+    {
+      "kind": "message-property-type-changed",
+      "level": "error",
+      "document": "catalog",
+      "format": "asyncapi",
+      "service": "catalog",
+      "operation": "send item.changed#created",
+      "field": "payload.kind",
+      "base": "'created' | 'updated'",
+      "head": "'archived' | 'created' | 'updated'",
+      "message": "send item.changed#created: `payload.kind` was `'created' | 'updated'` in base and is `'archived' | 'created' | 'updated'` in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.service.ts",
+        "line": 12
+      },
+      "callers": [
+        {
+          "id": "consumer:notifier#src/notify.service.ts:NotifyService.announce",
+          "service": "notifier",
+          "file": "src/notify.service.ts",
+          "line": 19,
+          "confidence": "marker",
+          "via": "consumes"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "message-property-type-changed|catalog|send item.changed#created|payload.kind",
+      "use": {
+        "direction": "breaking",
+        "why": "gains 'archived': a reader that handles every value meets one it does not know",
+        "level": "error",
+        "verdict": "1 of 1 consumer: switches over `kind`, line 18, exhaustively (its default proves no value is left): 'archived' is handled by no case",
+        "among": 1,
+        "readers": [
+          {
+            "id": "consumer:notifier#src/notify.service.ts:NotifyService.announce",
+            "service": "notifier",
+            "file": "src/notify.service.ts",
+            "line": 18,
+            "how": "reads",
+            "said": "switches over `kind`, line 18, exhaustively (its default proves no value is left): 'archived' is handled by no case",
+            "level": "error"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:catalog:http:POST:/items",
+              "step": "way in",
+              "label": "POST /items",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.create",
+              "step": "handler",
+              "label": "ItemsController.create",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 9
+            },
+            {
+              "id": "catalog#src/items/items.service.ts:ItemsService.create",
+              "step": "code",
+              "label": "ItemsService.create",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 9
+            },
+            {
+              "id": "producer:catalog#src/items/items.service.ts:12:11",
+              "step": "publish",
+              "label": "event item.changed",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 12
+            },
+            {
+              "id": "channel:item.changed#created",
+              "step": "channel",
+              "label": "item.changed#created",
+              "service": "catalog",
+              "file": "src/items/items.service.ts",
+              "line": 12
+            },
+            {
+              "id": "consumer:notifier#src/notify.service.ts:NotifyService.announce",
+              "step": "consumer",
+              "label": "NotifyService.announce",
+              "service": "notifier",
+              "file": "src/notify.service.ts",
+              "line": 30
+            },
+            {
+              "id": "notifier#src/notify.service.ts:NotifyService.announce",
+              "step": "handler",
+              "label": "NotifyService.announce",
+              "service": "notifier",
+              "file": "src/notify.service.ts",
+              "line": 30
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "consumers",
+          "said": "consumers first: handle 'archived', then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.service.ts",
+          "line": 12
+        }
+      }
+    },
+    {
+      "kind": "response-property-type-changed",
+      "level": "warning",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items/{id}",
+      "field": "response.status",
+      "base": "'draft' | 'live'",
+      "head": "'draft' | 'live' | 'sold'",
+      "message": "GET /items/{id}: `response.status` was `'draft' | 'live'` in base and is `'draft' | 'live' | 'sold'` in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 19
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:18:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 18,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "response-property-type-changed|catalog|GET /items/{id}|response.status",
+      "use": {
+        "direction": "breaking",
+        "why": "gains 'sold': a reader that handles every value meets one it does not know",
+        "level": "warning",
+        "verdict": "1 of 1 caller: switches over `status`, line 6, with a default: 'sold' goes to it; whether that suits it is not read",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:18:26",
+            "service": "dashboard",
+            "file": "src/ItemPage.tsx",
+            "line": 6,
+            "how": "reads",
+            "said": "switches over `status`, line 6, with a default: 'sold' goes to it; whether that suits it is not read",
+            "level": "warning"
+          }
+        ],
+        "flows": [
+          [
+            {
+              "id": "entry:dashboard:screen:/items/current",
+              "step": "way in",
+              "label": "/items/current",
+              "service": "dashboard",
+              "file": "src/App.tsx",
+              "line": 9
+            },
+            {
+              "id": "dashboard#src/ItemPage.tsx:ItemPage",
+              "step": "handler",
+              "label": "ItemPage",
+              "service": "dashboard",
+              "file": "src/ItemPage.tsx",
+              "line": 17
+            },
+            {
+              "id": "dashboard#src/api.ts:fetchItem",
+              "step": "code",
+              "label": "fetchItem",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 17
+            },
+            {
+              "id": "ui_api_call:dashboard#src/api.ts:18:26",
+              "step": "code",
+              "label": "GET /items/:param",
+              "service": "dashboard",
+              "file": "src/api.ts",
+              "line": 18
+            },
+            {
+              "id": "entry:catalog:http:GET:/items/:param",
+              "step": "route",
+              "label": "GET /items/:param",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 19
+            },
+            {
+              "id": "catalog#src/items/items.controller.ts:ItemsController.find",
+              "step": "handler",
+              "label": "ItemsController.find",
+              "service": "catalog",
+              "file": "src/items/items.controller.ts",
+              "line": 19
+            }
+          ]
+        ],
+        "deployOrder": {
+          "first": "callers",
+          "said": "callers first: handle 'sold', then catalog"
+        },
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 19
+        }
+      }
+    },
+    {
+      "kind": "request-property-became-required",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "GET /items",
+      "field": "query.page",
+      "base": "string",
+      "head": "string",
+      "message": "GET /items: `query.page` could be left out in base and is required in head",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 24
+      },
+      "callers": [
+        {
+          "id": "ui_api_call:dashboard#src/api.ts:24:26",
+          "service": "dashboard",
+          "file": "src/api.ts",
+          "line": 24,
+          "confidence": "static",
+          "via": "hits"
+        }
+      ],
+      "public": null,
+      "note": null,
+      "confidence": "static",
+      "key": "request-property-became-required|catalog|GET /items|query.page",
+      "use": {
+        "direction": "breaking",
+        "why": "narrows the request: a caller must now send it",
+        "level": "info",
+        "verdict": "every caller sends `query.page`, among 1",
+        "among": 1,
+        "readers": [
+          {
+            "id": "ui_api_call:dashboard#src/api.ts:24:26",
+            "service": "dashboard",
+            "file": "src/api.ts",
+            "line": 24,
+            "how": "sends",
+            "said": "sends `query.page`",
+            "level": "info"
+          }
+        ],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 24
+        }
+      }
+    },
+    {
+      "kind": "response-property-type-changed",
+      "level": "info",
+      "document": "catalog",
+      "format": "openapi",
+      "service": "catalog",
+      "operation": "POST /items",
+      "field": "response.status",
+      "base": "'draft' | 'live'",
+      "head": "'draft' | 'live' | 'sold'",
+      "message": "POST /items: `response.status` was `'draft' | 'live'` in base and is `'draft' | 'live' | 'sold'` in head (no caller in this project)",
+      "place": {
+        "side": "base",
+        "file": "src/items/items.controller.ts",
+        "line": 9
+      },
+      "callers": [],
+      "public": null,
+      "note": "no caller in this project",
+      "confidence": "static",
+      "key": "response-property-type-changed|catalog|POST /items|response.status",
+      "use": {
+        "direction": "breaking",
+        "why": "gains 'sold': a reader that handles every value meets one it does not know",
+        "level": "info",
+        "verdict": "nothing in the 3 repositories read calls it",
+        "among": 0,
+        "readers": [],
+        "flows": [],
+        "anchor": {
+          "how": "same",
+          "file": "src/items/items.controller.ts",
+          "line": 9
+        }
+      }
+    }
+  ],
+  "summary": {
+    "errors": 3,
+    "warnings": 1,
+    "infos": 2,
+    "breaking": 6,
+    "uncalled": 1
+  },
+  "coverage": {
+    "consumers": 5,
+    "repositories": 3,
+    "said": "5 consumers in 3 repositories; consumers outside them unknown"
+  }
+}

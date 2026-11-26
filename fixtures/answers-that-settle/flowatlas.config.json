@@ -1,0 +1,36 @@
+{
+  "services": [
+    { "name": "rooms-api", "repo": "./rooms-api", "type": "nestjs", "baseUrlEnv": ["ROOMS_API_URL"] },
+    { "name": "notify-worker", "repo": "./notify-worker", "type": "nestjs" },
+    { "name": "chat-bot", "repo": "./chat-bot", "type": "nestjs" }
+  ],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "venue-bus",
+          "channelKind": "channel",
+          "producers": [
+            {
+              "receiverType": ["VenueBus"],
+              "method": "publish",
+              "channelArg": 0,
+              "payloadArg": 1,
+              "kind": "event"
+            }
+          ],
+          "subscribers": [
+            {
+              "receiverType": ["VenueBus"],
+              "method": "subscribe",
+              "channelArg": 0,
+              "handlerArg": 1,
+              "kind": "event"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "output": ".flowatlas"
+}

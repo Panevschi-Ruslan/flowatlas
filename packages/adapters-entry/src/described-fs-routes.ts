@@ -10,6 +10,7 @@ import {
   type RequestReadingDescription,
 } from '@flowatlas/core';
 import { fsAddressSpace, fsApplicationMap, readVerbFile, type FsRouter, type FsRouteVerb } from './fs-routes.js';
+import { sveltekitConventions, sveltekitRoutesOf } from './framework-conventions.js';
 import { readingOf } from './request-readings.js';
 import { handlerOfFunction, inlineHandlerOf, repoSources } from './shared.js';
 
@@ -26,6 +27,12 @@ export interface FsRoutesDescription {
   readonly name: string;
   readonly packages: readonly string[];
   readonly router: FsRouter;
+  /**
+   * The router as one repository moves it, where the framework lets the
+   * configuration say where its routes are (P251): SvelteKit's
+   * `kit.files.routes`. {@link router} where absent.
+   */
+  readonly routerOf?: (repoDir: string) => FsRouter;
   /** The exports that are ways in, and the verb each answers; the verbs' own names when absent. */
   readonly verbs?: ReadonlyMap<string, string>;
   /** Whether a route module that exports no way in is a page and says nothing. */
@@ -198,9 +205,12 @@ export const fsEntries = (
       label: application === undefined ? label : `${label} (${application})`,
       key,
       ...(handler === undefined ? {} : { handler }),
+      ...(verb.wrapperUnread === undefined ? {} : { handlerConfidence: 'heuristic' as const }),
       ...(own === undefined ? {} : { request: own }),
       file: verb.at.reached.file,
       line: verb.at.reached.line,
+      // What the export was built through, in front of the handler (P269).
+      ...(verb.wrapping === undefined ? {} : { wrapping: verb.wrapping }),
       meta: {
         method: verb.method,
         path: verb.path,
@@ -211,6 +221,7 @@ export const fsEntries = (
         ...(application === undefined ? {} : { application }),
         handlerVia: verb.handlerVia,
         ...(verb.bodyRead ? {} : { handlerBodyRead: false }),
+        ...(verb.wrapperUnread === undefined ? {} : { wrapperUnread: verb.wrapperUnread }),
         ...reachMeta(verb.at),
       },
     };
@@ -225,7 +236,8 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
   const request = readingOf(description.request);
   const files = (ctx: ExtractContext): string[] =>
     [...repoSources(ctx)].map((source) => normalizeFilePath(source.getFilePath(), ctx.repoDir));
-  const applicationsOf = (ctx: ExtractContext) => fsApplicationMap(files(ctx), [description.router]);
+  const routerOf = (ctx: ExtractContext): FsRouter => description.routerOf?.(ctx.repoDir) ?? description.router;
+  const applicationsOf = (ctx: ExtractContext) => fsApplicationMap(files(ctx), [routerOf(ctx)]);
   const fileRequests = new Map(
     [...(description.files ?? new Map<string, FsRouteExports>())].flatMap(([name, own]) =>
       own.request === undefined ? [] : [[name, readingOf(own.request)] as const],
@@ -245,9 +257,10 @@ export const fsRoutesAdapter = (description: FsRoutesDescription): EntryAdapter 
       const collected = fsEntries(ctx, description.name, request);
 
       const space = fsAddressSpace(applicationsOf(ctx));
+      const router = routerOf(ctx);
       for (const sourceFile of repoSources(ctx)) {
         const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
-        const address = space.addressOf(file, description.router);
+        const address = space.addressOf(file, router);
         if (address === null) continue;
         const own = exportsOf(file, description);
         const verbs = own?.verbs ?? description.verbs;
@@ -369,10 +382,15 @@ export const REMIX_REQUEST: RequestReadingDescription = {
   ],
 };
 
-export const sveltekitRoutesAdapter = fsRoutesAdapter({
+const sveltekitFsRoutes = fsRoutesAdapter({
   name: 'sveltekit-routes',
   packages: ['@sveltejs/kit'],
   router: SVELTEKIT_ROUTES,
+  // Under `kit.files.routes` where the configuration moves them (P251).
+  routerOf: (repoDir) => {
+    const root = sveltekitRoutesOf(repoDir);
+    return root === SVELTEKIT_ROUTES.root ? SVELTEKIT_ROUTES : { ...SVELTEKIT_ROUTES, root };
+  },
   files: new Map([
     ['+page.server', SVELTEKIT_PAGE],
     [
@@ -392,6 +410,9 @@ export const sveltekitRoutesAdapter = fsRoutesAdapter({
     answers: SVELTEKIT_ANSWERS,
   },
 });
+
+/** SvelteKit's routes, and `$lib` and `kit.alias` as `svelte-kit sync` would write them (P240). */
+export const sveltekitRoutesAdapter: EntryAdapter = { ...sveltekitFsRoutes, conventions: sveltekitConventions };
 
 export const remixRoutesAdapter = fsRoutesAdapter({
   name: 'remix-routes',

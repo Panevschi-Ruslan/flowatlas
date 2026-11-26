@@ -43,6 +43,12 @@ export type AddressPart =
        */
       readonly forms?: readonly string[];
       /**
+       * The kind of deployed thing the part names, as a deployment spells it
+       * (`queue`, `topic`, `table`...), where it names one: what a grant of
+       * the function that runs the call bounds, where the part is not read (P272).
+       */
+      readonly names?: string;
+      /**
        * An element of a list that writes nothing here is no element at all,
        * rather than an address nobody could read: a condition a transaction
        * checks names a table under a kind of entry that writes nothing (P55).
@@ -141,6 +147,12 @@ export interface CallPattern {
   exchangeArg?: number;
   /** Index of the argument naming one unit of work, for transports that have them. */
   nameArg?: number;
+  /**
+   * Where the unit of work is named when it is not one plain argument, tried
+   * in order: a scheduler's `upsertJobScheduler(id, repeat, { name, data })`
+   * names its job inside the template it repeats (P267). Asked before `nameArg`.
+   */
+  name?: readonly NameLocator[];
   /**
    * Decorator on the constructor parameter that names the channel, for
    * transports where the receiver is bound to one channel rather than the call

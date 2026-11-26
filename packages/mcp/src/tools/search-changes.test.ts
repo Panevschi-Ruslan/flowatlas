@@ -117,7 +117,7 @@ let client: Client;
 let dbPath: string;
 
 const call = async (name: string, args: Record<string, unknown> = {}): Promise<any> => {
-  const response = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }> };
+  const response = (await client.callTool({ name, arguments: { verbose: true, ...args } })) as { content: Array<{ text: string }> };
   return JSON.parse(response.content[0]!.text);
 };
 
@@ -142,7 +142,9 @@ beforeAll(async () => {
   );
   saveAccepted(dbPath, [{ reason: 'db-receiver-name-only', note: 'known; read by name', acceptedAt: FIXED }]);
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-  await createFlowatlasServer({ dbPath }).connect(serverSide);
+  // Every tool listed: these questions are about the calls an answer names, which a
+  // server on a database alone would trim to the tools it lists (P360).
+  await createFlowatlasServer({ dbPath, allTools: true }).connect(serverSide);
   client = new Client({ name: 'test', version: '0' });
   await client.connect(clientSide);
 });
@@ -228,7 +230,7 @@ describe('search', () => {
     const found = await call('search', { query: 'coupon' });
     expect(Object.keys(found.results)).toEqual(['fails']);
     expect(found.results.fails).toEqual([
-      { id: ROUTE, type: 'entry', label: 'POST /orders', exception: 'CouponRejectedError', status: 422, sites: 1, service: 'orders' },
+      { id: ROUTE, type: 'entry', label: 'POST /orders', exception: 'CouponRejectedError', status: 422, sites: 1, service: 'orders', reach: 'alive' },
     ]);
     expect(found.next[0]).toBe(`get_flow({entry: ${JSON.stringify(ROUTE)}})`);
     expect((await call('search', { query: '422', kinds: ['fails'] })).counts).toEqual({ fails: 1 });

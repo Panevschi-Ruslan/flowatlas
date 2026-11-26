@@ -1,0 +1,32 @@
+{
+  "kind": "status-never-answered",
+  "rows": [
+    {
+      "kind": "status-never-answered",
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+      "to": "entry:orders-api:http:POST:/orders/:param/cancel",
+      "service": "web",
+      "loc": "src/app/order-panel.component.ts:43",
+      "message": "OrderPanelComponent.cancel branches on 410 from POST /orders/:param/cancel, which never answers 410: it answers 404, 409",
+      "precision": "high",
+      "evidence": "every failure of the route was read with its status and nothing behind it left unread; statuses a proxy or the framework may answer (400, 401, 403, 408, 413, 429, 5xx) are not judged",
+      "fix": "branch on what the route answers (404, 409), or make it answer 410",
+      "rank": 1,
+      "next": "get_flow({entry: \"entry:orders-api:http:POST:/orders/:param/cancel\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "the configuration module in src/app.module.ts validates the settings with a schema, which may give it a default"
+    },
+    "status-never-answered": {
+      "count": 1,
+      "why": "POST /orders/:param/refund throws HttpException, whose status is not read"
+    }
+  },
+  "next": [
+    "get_flow({entry: \"entry:orders-api:http:POST:/orders/:param/cancel\"})"
+  ]
+}

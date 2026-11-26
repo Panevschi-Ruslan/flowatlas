@@ -1,3 +1,5 @@
+import { WORDS_SQL } from './words.js';
+
 /**
  * The shape of a graph database, as one string.
  *
@@ -15,8 +17,10 @@
  * for; a reader says what an older layout lacks rather than refusing it.
  *
  * 2 stores each row's kind and a finding's risk on `unresolved` (P208).
+ * 3 stores every name's words in `words`, an FTS5 table (P383); a reader of an
+ * older database indexes them in memory on its first search.
  */
-export const GRAPH_DB_FORMAT_VERSION = 2;
+export const GRAPH_DB_FORMAT_VERSION = 3;
 
 export const SCHEMA_SQL = `-- Projection of the project graph, rebuilt from scratch on every build.
 -- The JSON graph stays the canonical artefact; this exists so that questions
@@ -98,4 +102,6 @@ CREATE INDEX idx_nodes_label     ON nodes(label);
 CREATE INDEX idx_nodes_service   ON nodes(service);
 CREATE INDEX idx_types_hash      ON types(structural_hash);
 CREATE INDEX idx_unresolved_reason ON unresolved(reason);
+
+${WORDS_SQL}
 `;

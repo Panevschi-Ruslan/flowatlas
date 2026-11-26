@@ -1,0 +1,15 @@
+<nav>
+  @for (item of items(); track item.route) {
+    <a [routerLink]="item.route">{{ item.label }}</a>
+  }
+  <section *ngFor="let section of sections()">
+    <h3>{{ section.name }}</h3>
+    <a *ngFor="let link of section.links" routerLink="{{ link.route }}">{{ link.label }}</a>
+  </section>
+  @for (entry of pinned; track entry.route) {
+    <button (click)="router.navigate([entry.route])">{{ entry.label }}</button>
+  }
+  @for (item of remote$ | async; track item.path) {
+    <a [routerLink]="item.path">more</a>
+  }
+</nav>

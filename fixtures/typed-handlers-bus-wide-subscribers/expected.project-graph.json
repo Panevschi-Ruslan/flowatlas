@@ -1,0 +1,3735 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T21:21:02.629Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "bot",
+      "repo": "./bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "bot",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "RelayController"
+        ],
+        "providers": [
+          "Bot"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "bot#src/bot/bot.ts:Bot",
+      "type": "provider",
+      "label": "Bot",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "type": "method",
+      "label": "Bot.handleOrderReady",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:bot#OrderReadyEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "label",
+            "line": 16,
+            "guarded": true
+          },
+          {
+            "field": "orderId",
+            "line": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "bot#src/bot/bot.ts:Bot.handlePlaced",
+      "type": "method",
+      "label": "Bot.handlePlaced",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:bot#OrderPlacedEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 28
+          }
+        ]
+      }
+    },
+    {
+      "id": "bot#src/bot/bot.ts:Bot.handleRefund",
+      "type": "method",
+      "label": "Bot.handleRefund",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:bot#OrderCancelledEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 34
+          }
+        ]
+      }
+    },
+    {
+      "id": "bot#src/bot/bot.ts:Bot.handleStatus",
+      "type": "method",
+      "label": "Bot.handleStatus",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:bot#OrderEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 22
+          }
+        ]
+      }
+    },
+    {
+      "id": "bot#src/bot/bot.ts:Bot.log",
+      "type": "method",
+      "label": "Bot.log",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:bot#BotEvent"
+            }
+          ],
+          "returns": "string"
+        },
+        "markers": [
+          {
+            "name": "Consumes",
+            "args": [
+              "order_updates"
+            ]
+          }
+        ],
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": "bot#src/events/relay.controller.ts:RelayController",
+      "type": "provider",
+      "label": "RelayController",
+      "repo": "bot",
+      "file": "src/events/relay.controller.ts",
+      "line": 13,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "bot#src/events/relay.controller.ts:RelayController.relay",
+      "type": "method",
+      "label": "RelayController.relay",
+      "repo": "bot",
+      "file": "src/events/relay.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "type:bot#RelayBody"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": [
+          {
+            "field": "message",
+            "line": 19
+          },
+          {
+            "field": "message.type",
+            "line": 21,
+            "switched": {
+              "has": "default",
+              "cases": [
+                "'ORDER_READY'",
+                "'STATUS_CHANGED'",
+                "'ORDER_CANCELLED'",
+                "'ORDER_REFUNDED'"
+              ],
+              "line": 21
+            }
+          },
+          {
+            "field": "message.label",
+            "in": "bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "line": 16,
+            "when": [
+              "ORDER_READY"
+            ]
+          },
+          {
+            "field": "message.orderId",
+            "in": "bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "line": 16,
+            "when": [
+              "ORDER_READY"
+            ]
+          },
+          {
+            "field": "message.orderId",
+            "in": "bot#src/bot/bot.ts:Bot.handleRefund",
+            "line": 34,
+            "when": [
+              "ORDER_REFUNDED"
+            ]
+          },
+          {
+            "field": "message.orderId",
+            "in": "bot#src/bot/bot.ts:Bot.handleStatus",
+            "line": 22,
+            "when": [
+              "STATUS_CHANGED",
+              "ORDER_CANCELLED"
+            ]
+          },
+          {
+            "field": "message.type",
+            "in": "bot#src/bot/bot.ts:Bot.log",
+            "line": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": "channel:desk_alerts",
+      "type": "channel",
+      "label": "desk_alerts",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "shop-bus"
+        ],
+        "producers": 2,
+        "consumers": 4
+      }
+    },
+    {
+      "id": "channel:desk_alerts#DESK_CLOSED",
+      "type": "channel",
+      "label": "desk_alerts#DESK_CLOSED",
+      "repo": "shop",
+      "file": "src/desk/desk.service.ts",
+      "line": 14,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:desk_alerts",
+        "messageType": "DESK_CLOSED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/desk/desk.service.ts:14",
+              "text": "type: 'DESK_CLOSED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:desk_alerts#HELP_REQUESTED",
+      "type": "channel",
+      "label": "desk_alerts#HELP_REQUESTED",
+      "repo": "shop",
+      "file": "src/desk/desk.service.ts",
+      "line": 10,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:desk_alerts",
+        "messageType": "HELP_REQUESTED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/desk/desk.service.ts:10",
+              "text": "type: 'HELP_REQUESTED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "shop",
+              "loc": "src/notify/notify.service.ts:19",
+              "text": "private static readonly RELEVANT = new Set(['HELP_REQUESTED', 'ORDER_READY']);",
+              "why": "HELP_REQUESTED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order_updates",
+      "type": "channel",
+      "label": "order_updates",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "shop-bus"
+        ],
+        "producers": 5,
+        "consumers": 10
+      }
+    },
+    {
+      "id": "channel:order_updates#ORDER_CANCELLED",
+      "type": "channel",
+      "label": "order_updates#ORDER_CANCELLED",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 18,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:order_updates",
+        "messageType": "ORDER_CANCELLED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:18",
+              "text": "type: 'ORDER_CANCELLED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:order_updates#ORDER_PLACED",
+      "type": "channel",
+      "label": "order_updates#ORDER_PLACED",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:order_updates",
+        "messageType": "ORDER_PLACED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:22",
+              "text": "type: 'ORDER_PLACED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:order_updates#ORDER_READY",
+      "type": "channel",
+      "label": "order_updates#ORDER_READY",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:order_updates",
+        "messageType": "ORDER_READY",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:10",
+              "text": "type: 'ORDER_READY'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 1,
+          "open": [
+            {
+              "service": "shop",
+              "loc": "src/notify/notify.service.ts:19",
+              "text": "private static readonly RELEVANT = new Set(['HELP_REQUESTED', 'ORDER_READY']);",
+              "why": "ORDER_READY is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:order_updates#ORDER_REFUNDED",
+      "type": "channel",
+      "label": "order_updates#ORDER_REFUNDED",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:order_updates",
+        "messageType": "ORDER_REFUNDED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:26",
+              "text": "type: 'ORDER_REFUNDED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:order_updates#STATUS_CHANGED",
+      "type": "channel",
+      "label": "order_updates#STATUS_CHANGED",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 14,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:order_updates",
+        "messageType": "STATUS_CHANGED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "shop",
+              "loc": "src/orders/orders.service.ts:14",
+              "text": "type: 'STATUS_CHANGED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [
+            {
+              "service": "bot",
+              "loc": "src/events/relay.controller.ts:24",
+              "text": "'STATUS_CHANGED'",
+              "why": "STATUS_CHANGED is written here; the graph read no choice of it"
+            }
+          ],
+          "openCount": 1
+        },
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "type": "consumer",
+      "label": "Bot.handleOrderReady",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_READY",
+            "consumer": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+            "via": "switch",
+            "line": 22,
+            "file": "src/events/relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "type": "consumer",
+      "label": "Bot.handlePlaced",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_PLACED",
+            "consumer": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+            "via": "parameter",
+            "line": 27
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "type": "consumer",
+      "label": "Bot.handleRefund",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "selectionDiffers": "its parameter's type says ORDER_CANCELLED; the code that calls it does so for ORDER_REFUNDED",
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_REFUNDED",
+            "consumer": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+            "via": "switch",
+            "line": 27,
+            "file": "src/events/relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "type": "consumer",
+      "label": "Bot.handleStatus",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_CANCELLED",
+            "consumer": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+            "via": "switch",
+            "line": 25,
+            "file": "src/events/relay.controller.ts"
+          },
+          {
+            "type": "STATUS_CHANGED",
+            "consumer": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+            "via": "switch",
+            "line": 25,
+            "file": "src/events/relay.controller.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:bot#src/bot/bot.ts:Bot.log",
+      "type": "consumer",
+      "label": "Bot.log",
+      "repo": "bot",
+      "file": "src/bot/bot.ts",
+      "line": 38,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "Consumes",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+      "type": "consumer",
+      "label": "DeskWatcher.archive",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 32,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "selectedBy": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+        "messageTypes": [
+          "DESK_CLOSED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "type": "consumer",
+      "label": "DeskWatcher.onModuleInit",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "subscribe",
+        "entryId": "entry:shop:event:desk_alerts",
+        "subscriptions": [
+          {
+            "line": 23,
+            "column": 39,
+            "through": "this.bus.subscribe"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "DESK_CLOSED",
+            "consumer": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+            "via": "if",
+            "line": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "type": "consumer",
+      "label": "AuditFeed.onModuleInit",
+      "repo": "shop",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "all",
+        "entryId": null,
+        "everyChannelOf": "shop-bus",
+        "subscriptions": [
+          {
+            "line": 23,
+            "column": 5,
+            "through": "AuditFeed.all"
+          }
+        ],
+        "selectionUnread": "this.kept.has(evt.type) tests the type against a set the code does not write out."
+      }
+    },
+    {
+      "id": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "consumer",
+      "label": "MetricsService.count",
+      "repo": "shop",
+      "file": "src/notify/metrics.service.ts",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "all",
+        "entryId": null,
+        "everyChannelOf": "shop-bus",
+        "subscriptions": [
+          {
+            "line": 17,
+            "column": 5,
+            "through": "MetricsService.all"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_PLACED",
+            "consumer": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+            "via": "if",
+            "line": 22
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "type": "consumer",
+      "label": "NotifyService.onModuleInit",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 24,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "decorator": "all",
+        "entryId": null,
+        "everyChannelOf": "shop-bus",
+        "subscriptions": [
+          {
+            "line": 24,
+            "column": 5,
+            "through": "NotifyService.all"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "HELP_REQUESTED",
+            "consumer": "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+            "via": "switch",
+            "line": 35
+          },
+          {
+            "type": "ORDER_READY",
+            "consumer": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+            "via": "switch",
+            "line": 38
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+      "type": "consumer",
+      "label": "NotifyService.pageStaff",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 46,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "selectedBy": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "messageTypes": [
+          "HELP_REQUESTED"
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "type": "consumer",
+      "label": "NotifyService.pingCustomer",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 51,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "selectedBy": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "messageTypes": [
+          "ORDER_READY"
+        ]
+      }
+    },
+    {
+      "id": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "type": "consumer",
+      "label": "StreamController.stream",
+      "repo": "shop",
+      "file": "src/stream/stream.controller.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "relay": "entry:shop:http:GET:/events/stream",
+        "entryId": "entry:shop:event:order_updates",
+        "decorator": "subscribe",
+        "subscriptions": [
+          {
+            "line": 15,
+            "column": 43,
+            "through": "this.bus.subscribe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "consumer",
+      "label": "PickupBoard",
+      "repo": "web",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 14,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subscriptions": [
+          {
+            "line": 14,
+            "column": 24,
+            "through": "EventSource.message"
+          }
+        ],
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_CANCELLED",
+            "consumer": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+            "via": "if",
+            "line": 17
+          },
+          {
+            "type": "ORDER_READY",
+            "consumer": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+            "via": "if",
+            "line": 16
+          }
+        ],
+        "routes": [
+          "entry:shop:http:GET:/events/stream"
+        ]
+      }
+    },
+    {
+      "id": "entry:bot:http:POST:/events/relay",
+      "type": "entry",
+      "label": "POST /events/relay",
+      "repo": "bot",
+      "file": "src/events/relay.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/events/relay",
+        "rawPath": "/events/relay",
+        "controller": "RelayController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:event:desk_alerts",
+      "type": "entry",
+      "label": "event desk_alerts",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "pattern": "desk_alerts",
+        "adapter": "shop-bus"
+      }
+    },
+    {
+      "id": "entry:shop:event:order_updates",
+      "type": "entry",
+      "label": "event order_updates",
+      "repo": "shop",
+      "file": "src/stream/stream.controller.ts",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "pattern": "order_updates",
+        "adapter": "shop-bus"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/events/stream",
+      "type": "entry",
+      "label": "GET /events/stream",
+      "repo": "shop",
+      "file": "src/stream/stream.controller.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/events/stream",
+        "rawPath": "/events/stream",
+        "controller": "StreamController",
+        "decorators": [
+          {
+            "name": "Sse",
+            "args": [
+              "stream"
+            ]
+          }
+        ],
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ],
+        "relays": [
+          "channel:order_updates"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/desks/:param/close",
+      "type": "entry",
+      "label": "POST /desks/:param/close",
+      "repo": "shop",
+      "file": "src/desk/desk.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/desks/:param/close",
+        "rawPath": "/desks/:id/close",
+        "controller": "DeskController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/desks/:param/help",
+      "type": "entry",
+      "label": "POST /desks/:param/help",
+      "repo": "shop",
+      "file": "src/desk/desk.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/desks/:param/help",
+        "rawPath": "/desks/:id/help",
+        "controller": "DeskController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/cancel",
+        "rawPath": "/orders/:id/cancel",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/:param/ready",
+      "type": "entry",
+      "label": "POST /orders/:param/ready",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/ready",
+        "rawPath": "/orders/:id/ready",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "label": "POST /orders/:param/refund",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/refund",
+        "rawPath": "/orders/:id/refund",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/:param/status",
+      "type": "entry",
+      "label": "POST /orders/:param/status",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/status",
+        "rawPath": "/orders/:id/status",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "producer:shop#src/desk/desk.service.ts:10:5",
+      "type": "producer",
+      "label": "event desk_alerts",
+      "repo": "shop",
+      "file": "src/desk/desk.service.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "HELP_REQUESTED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shop#src/desk/desk.service.ts:14:5",
+      "type": "producer",
+      "label": "event desk_alerts",
+      "repo": "shop",
+      "file": "src/desk/desk.service.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "DESK_CLOSED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/orders.service.ts:10:5",
+      "type": "producer",
+      "label": "event order_updates",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_READY"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/orders.service.ts:14:5",
+      "type": "producer",
+      "label": "event order_updates",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "STATUS_CHANGED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/orders.service.ts:18:5",
+      "type": "producer",
+      "label": "event order_updates",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_CANCELLED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/orders.service.ts:22:5",
+      "type": "producer",
+      "label": "event order_updates",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_PLACED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/orders.service.ts:26:5",
+      "type": "producer",
+      "label": "event order_updates",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "shop-bus",
+        "channelVia": "literal",
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_REFUNDED"
+        ],
+        "discriminator": "type"
+      }
+    },
+    {
+      "id": "repo:bot",
+      "type": "repo",
+      "label": "bot",
+      "repo": "bot",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 11,
+          "skippedExternalCalls": {
+            "rxjs": 8
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "react": 2
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "DeskController",
+          "StreamController"
+        ],
+        "providers": [
+          "EventsService",
+          "OrdersService",
+          "DeskService",
+          "NotifyService",
+          "AuditFeed",
+          "MetricsService",
+          "DeskWatcher"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop#src/bus/events.service.ts:EventsService",
+      "type": "provider",
+      "label": "EventsService",
+      "repo": "shop",
+      "file": "src/bus/events.service.ts",
+      "line": 18,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/bus/events.service.ts:EventsService.all",
+      "type": "method",
+      "label": "EventsService.all",
+      "repo": "shop",
+      "file": "src/bus/events.service.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{scopeId:string;data:unknown}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "method",
+      "label": "EventsService.publish",
+      "repo": "shop",
+      "file": "src/bus/events.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/bus/events.service.ts:EventsService.relayToBot",
+      "type": "method",
+      "label": "EventsService.relayToBot",
+      "repo": "shop",
+      "file": "src/bus/events.service.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "markers": [
+          {
+            "name": "CallsService",
+            "args": [
+              "bot",
+              "POST /events/relay"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/bus/events.service.ts:EventsService.subscribe",
+      "type": "method",
+      "label": "EventsService.subscribe",
+      "repo": "shop",
+      "file": "src/bus/events.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/desk/desk-watcher.service.ts:DeskWatcher",
+      "type": "provider",
+      "label": "DeskWatcher",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+      "type": "method",
+      "label": "DeskWatcher.archive",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskNumber",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.log",
+      "type": "method",
+      "label": "DeskWatcher.log",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "line",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "type": "method",
+      "label": "DeskWatcher.onModuleInit",
+      "repo": "shop",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop#src/desk/desk.controller.ts:DeskController",
+      "type": "provider",
+      "label": "DeskController",
+      "repo": "shop",
+      "file": "src/desk/desk.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/desk/desk.controller.ts:DeskController.close",
+      "type": "method",
+      "label": "DeskController.close",
+      "repo": "shop",
+      "file": "src/desk/desk.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop#src/desk/desk.controller.ts:DeskController.help",
+      "type": "method",
+      "label": "DeskController.help",
+      "repo": "shop",
+      "file": "src/desk/desk.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop#src/desk/desk.service.ts:DeskService",
+      "type": "provider",
+      "label": "DeskService",
+      "repo": "shop",
+      "file": "src/desk/desk.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/desk/desk.service.ts:DeskService.close",
+      "type": "method",
+      "label": "DeskService.close",
+      "repo": "shop",
+      "file": "src/desk/desk.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "deskNumber",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/desk/desk.service.ts:DeskService.requestHelp",
+      "type": "method",
+      "label": "DeskService.requestHelp",
+      "repo": "shop",
+      "file": "src/desk/desk.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "deskId",
+              "type": "string"
+            },
+            {
+              "name": "deskNumber",
+              "type": "number"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/notify/audit-feed.service.ts:AuditFeed",
+      "type": "provider",
+      "label": "AuditFeed",
+      "repo": "shop",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/notify/audit-feed.service.ts:AuditFeed.keep",
+      "type": "method",
+      "label": "AuditFeed.keep",
+      "repo": "shop",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "types",
+              "type": "string[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "type": "method",
+      "label": "AuditFeed.onModuleInit",
+      "repo": "shop",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop#src/notify/audit-feed.service.ts:AuditFeed.record",
+      "type": "method",
+      "label": "AuditFeed.record",
+      "repo": "shop",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "type",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/notify/metrics.service.ts:MetricsService",
+      "type": "provider",
+      "label": "MetricsService",
+      "repo": "shop",
+      "file": "src/notify/metrics.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "method",
+      "label": "MetricsService.count",
+      "repo": "shop",
+      "file": "src/notify/metrics.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "raw",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "type",
+            "line": 22
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/notify/metrics.service.ts:MetricsService.onModuleInit",
+      "type": "method",
+      "label": "MetricsService.onModuleInit",
+      "repo": "shop",
+      "file": "src/notify/metrics.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "shop#src/notify/notify.service.ts:NotifyService",
+      "type": "provider",
+      "label": "NotifyService",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 17,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/notify/notify.service.ts:NotifyService.dispatch",
+      "type": "method",
+      "label": "NotifyService.dispatch",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "raw",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "type": "method",
+      "label": "NotifyService.onModuleInit",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+      "type": "method",
+      "label": "NotifyService.pageStaff",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "evt",
+              "type": "type:shop#Evt"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "type": "method",
+      "label": "NotifyService.pingCustomer",
+      "repo": "shop",
+      "file": "src/notify/notify.service.ts",
+      "line": 51,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "scopeId",
+              "type": "string"
+            },
+            {
+              "name": "evt",
+              "type": "type:shop#Evt"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "method",
+      "label": "OrdersController.place",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 11
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.controller.ts:OrdersController.ready",
+      "type": "method",
+      "label": "OrdersController.ready",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{label:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "label",
+            "line": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "method",
+      "label": "OrdersController.refund",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.controller.ts:OrdersController.status",
+      "type": "method",
+      "label": "OrdersController.status",
+      "repo": "shop",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "{status:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "status",
+            "line": 21
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.service.ts:OrdersService.changeStatus",
+      "type": "method",
+      "label": "OrdersService.changeStatus",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.service.ts:OrdersService.markReady",
+      "type": "method",
+      "label": "OrdersService.markReady",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "label",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "method",
+      "label": "OrdersService.refund",
+      "repo": "shop",
+      "file": "src/orders/orders.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/stream/stream.controller.ts:StreamController",
+      "type": "provider",
+      "label": "StreamController",
+      "repo": "shop",
+      "file": "src/stream/stream.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/stream/stream.controller.ts:StreamController.stream",
+      "type": "method",
+      "label": "StreamController.stream",
+      "repo": "shop",
+      "file": "src/stream/stream.controller.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@nestjs/common#MessageEvent"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20",
+      "type": "ui_api_call",
+      "label": "GET /events/stream",
+      "repo": "web",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 13,
+      "kind": "sse",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_URL}/events/stream",
+        "path": "/events/stream",
+        "baseUrlEnv": "VITE_SHOP_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "EventSource",
+        "via": "template-env",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "web#src/main.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "web",
+      "file": "src/main.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "ui_component",
+      "label": "PickupBoard",
+      "repo": "web",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "bot#src/events/relay.controller.ts:RelayController",
+      "to": "bot#src/bot/bot.ts:Bot",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/events/relay.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "bot#src/events/relay.controller.ts:RelayController.relay",
+      "to": "bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:bot#OrderReadyEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/relay.controller.ts",
+      "line": 23
+    },
+    {
+      "from": "bot#src/events/relay.controller.ts:RelayController.relay",
+      "to": "bot#src/bot/bot.ts:Bot.handleRefund",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:bot#OrderCancelledEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/relay.controller.ts",
+      "line": 28
+    },
+    {
+      "from": "bot#src/events/relay.controller.ts:RelayController.relay",
+      "to": "bot#src/bot/bot.ts:Bot.handleStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:bot#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/relay.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "bot#src/events/relay.controller.ts:RelayController.relay",
+      "to": "bot#src/bot/bot.ts:Bot.log",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:bot#BotEvent"
+      ],
+      "returns": "string",
+      "file": "src/events/relay.controller.ts",
+      "line": 20
+    },
+    {
+      "from": "channel:desk_alerts",
+      "to": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23
+    },
+    {
+      "from": "channel:desk_alerts",
+      "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 23,
+      "meta": {
+        "via": "every-channel"
+      }
+    },
+    {
+      "from": "channel:desk_alerts",
+      "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/metrics.service.ts",
+      "line": 17,
+      "meta": {
+        "via": "every-channel"
+      }
+    },
+    {
+      "from": "channel:desk_alerts",
+      "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/notify.service.ts",
+      "line": 24,
+      "meta": {
+        "via": "every-channel"
+      }
+    },
+    {
+      "from": "channel:desk_alerts#DESK_CLOSED",
+      "to": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:desk_alerts#HELP_REQUESTED",
+      "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/notify.service.ts",
+      "line": 35,
+      "meta": {
+        "selectedBy": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/bot/bot.ts",
+      "line": 14
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/bot/bot.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/bot/bot.ts",
+      "line": 32
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/bot/bot.ts",
+      "line": 20
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.log",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/bot/bot.ts",
+      "line": 38
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 23,
+      "meta": {
+        "via": "every-channel"
+      }
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/metrics.service.ts",
+      "line": 17,
+      "meta": {
+        "via": "every-channel"
+      }
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/notify.service.ts",
+      "line": 24,
+      "meta": {
+        "via": "every-channel"
+      }
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/stream/stream.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "channel:order_updates",
+      "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 14,
+      "meta": {
+        "via": "sse",
+        "route": "entry:shop:http:GET:/events/stream",
+        "call": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_CANCELLED",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/events/relay.controller.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_CANCELLED",
+      "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 17,
+      "meta": {
+        "selectedBy": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_PLACED",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/bot/bot.ts",
+      "line": 27,
+      "meta": {
+        "selectedBy": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+        "via": "parameter"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_PLACED",
+      "to": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/metrics.service.ts",
+      "line": 22,
+      "meta": {
+        "selectedBy": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_READY",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/events/relay.controller.ts",
+      "line": 22,
+      "meta": {
+        "selectedBy": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_READY",
+      "to": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/notify/notify.service.ts",
+      "line": 38,
+      "meta": {
+        "selectedBy": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_READY",
+      "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 16,
+      "meta": {
+        "selectedBy": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+        "via": "if"
+      }
+    },
+    {
+      "from": "channel:order_updates#ORDER_REFUNDED",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/events/relay.controller.ts",
+      "line": 27,
+      "meta": {
+        "selectedBy": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "channel:order_updates#STATUS_CHANGED",
+      "to": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "type": "consumes",
+      "confidence": "marker",
+      "file": "src/events/relay.controller.ts",
+      "line": 25,
+      "meta": {
+        "selectedBy": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+        "via": "switch"
+      }
+    },
+    {
+      "from": "consumer:bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "to": "bot#src/bot/bot.ts:Bot.handleOrderReady",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:bot#OrderReadyEvent"
+      ],
+      "returns": "string",
+      "file": "src/bot/bot.ts",
+      "line": 14
+    },
+    {
+      "from": "consumer:bot#src/bot/bot.ts:Bot.handlePlaced",
+      "to": "bot#src/bot/bot.ts:Bot.handlePlaced",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:bot#OrderPlacedEvent"
+      ],
+      "returns": "string",
+      "file": "src/bot/bot.ts",
+      "line": 26
+    },
+    {
+      "from": "consumer:bot#src/bot/bot.ts:Bot.handleRefund",
+      "to": "bot#src/bot/bot.ts:Bot.handleRefund",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:bot#OrderCancelledEvent"
+      ],
+      "returns": "string",
+      "file": "src/bot/bot.ts",
+      "line": 32
+    },
+    {
+      "from": "consumer:bot#src/bot/bot.ts:Bot.handleStatus",
+      "to": "bot#src/bot/bot.ts:Bot.handleStatus",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:bot#OrderEvent"
+      ],
+      "returns": "string",
+      "file": "src/bot/bot.ts",
+      "line": 20
+    },
+    {
+      "from": "consumer:bot#src/bot/bot.ts:Bot.log",
+      "to": "bot#src/bot/bot.ts:Bot.log",
+      "type": "handles",
+      "confidence": "marker",
+      "params": [
+        "type:bot#BotEvent"
+      ],
+      "returns": "string",
+      "file": "src/bot/bot.ts",
+      "line": 38
+    },
+    {
+      "from": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+      "to": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 32
+    },
+    {
+      "from": "consumer:shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "to": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23
+    },
+    {
+      "from": "consumer:shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "to": "shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 23
+    },
+    {
+      "from": "consumer:shop#src/notify/metrics.service.ts:MetricsService.count",
+      "to": "shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/notify/metrics.service.ts",
+      "line": 17
+    },
+    {
+      "from": "consumer:shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "to": "shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/notify/notify.service.ts",
+      "line": 24
+    },
+    {
+      "from": "consumer:shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+      "to": "shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:shop#Evt"
+      ],
+      "returns": "void",
+      "file": "src/notify/notify.service.ts",
+      "line": 46
+    },
+    {
+      "from": "consumer:shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "to": "shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:shop#Evt"
+      ],
+      "returns": "void",
+      "file": "src/notify/notify.service.ts",
+      "line": 51
+    },
+    {
+      "from": "consumer:shop#src/stream/stream.controller.ts:StreamController.stream",
+      "to": "shop#src/stream/stream.controller.ts:StreamController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:@nestjs/common#MessageEvent",
+      "file": "src/stream/stream.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "to": "web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 14
+    },
+    {
+      "from": "entry:bot:http:POST:/events/relay",
+      "to": "bot#src/events/relay.controller.ts:RelayController.relay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:bot#RelayBody"
+      ],
+      "returns": "string",
+      "file": "src/events/relay.controller.ts",
+      "line": 17,
+      "meta": {
+        "body": "type:bot#RelayBody"
+      }
+    },
+    {
+      "from": "entry:shop:event:desk_alerts",
+      "to": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:shop:event:order_updates",
+      "to": "shop#src/stream/stream.controller.ts:StreamController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:@nestjs/common#MessageEvent",
+      "file": "src/stream/stream.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:shop:http:GET:/events/stream",
+      "to": "shop#src/stream/stream.controller.ts:StreamController.stream",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:@nestjs/common#MessageEvent",
+      "file": "src/stream/stream.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:shop:http:POST:/desks/:param/close",
+      "to": "shop#src/desk/desk.controller.ts:DeskController.close",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/desks/:param/help",
+      "to": "shop#src/desk/desk.controller.ts:DeskController.help",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk.controller.ts",
+      "line": 9,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders",
+      "to": "shop#src/orders/orders.controller.ts:OrdersController.place",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string}"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9,
+      "meta": {
+        "body": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/:param/cancel",
+      "to": "shop#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 24,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/:param/ready",
+      "to": "shop#src/orders/orders.controller.ts:OrdersController.ready",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{label:string}"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{label:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/:param/refund",
+      "to": "shop#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/:param/status",
+      "to": "shop#src/orders/orders.controller.ts:OrdersController.status",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{status:string}"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{id:string}",
+        "body": "{status:string}"
+      }
+    },
+    {
+      "from": "producer:shop#src/desk/desk.service.ts:10:5",
+      "to": "channel:desk_alerts",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;deskNumber:number}"
+      ],
+      "file": "src/desk/desk.service.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:shop#src/desk/desk.service.ts:10:5",
+      "to": "channel:desk_alerts#HELP_REQUESTED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/desk/desk.service.ts",
+      "line": 10,
+      "params": [
+        "{type:string;deskNumber:number}"
+      ]
+    },
+    {
+      "from": "producer:shop#src/desk/desk.service.ts:14:5",
+      "to": "channel:desk_alerts",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;deskNumber:number}"
+      ],
+      "file": "src/desk/desk.service.ts",
+      "line": 14
+    },
+    {
+      "from": "producer:shop#src/desk/desk.service.ts:14:5",
+      "to": "channel:desk_alerts#DESK_CLOSED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/desk/desk.service.ts",
+      "line": 14,
+      "params": [
+        "{type:string;deskNumber:number}"
+      ]
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:10:5",
+      "to": "channel:order_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;label:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:10:5",
+      "to": "channel:order_updates#ORDER_READY",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10,
+      "params": [
+        "{type:string;orderId:string;label:string}"
+      ]
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:14:5",
+      "to": "channel:order_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string;status:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:14:5",
+      "to": "channel:order_updates#STATUS_CHANGED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 14,
+      "params": [
+        "{type:string;orderId:string;status:string}"
+      ]
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:18:5",
+      "to": "channel:order_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:18:5",
+      "to": "channel:order_updates#ORDER_CANCELLED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 18,
+      "params": [
+        "{type:string;orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:22:5",
+      "to": "channel:order_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:22:5",
+      "to": "channel:order_updates#ORDER_PLACED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22,
+      "params": [
+        "{type:string;orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:26:5",
+      "to": "channel:order_updates",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "{type:string;orderId:string}"
+      ],
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "producer:shop#src/orders/orders.service.ts:26:5",
+      "to": "channel:order_updates#ORDER_REFUNDED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26,
+      "params": [
+        "{type:string;orderId:string}"
+      ]
+    },
+    {
+      "from": "shop#src/bus/events.service.ts:EventsService.publish",
+      "to": "shop#src/bus/events.service.ts:EventsService.relayToBot",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/bus/events.service.ts",
+      "line": 24
+    },
+    {
+      "from": "shop#src/desk/desk-watcher.service.ts:DeskWatcher",
+      "to": "shop#src/bus/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 20
+    },
+    {
+      "from": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "to": "shop#src/bus/events.service.ts:EventsService.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23
+    },
+    {
+      "from": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "to": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.archive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 26
+    },
+    {
+      "from": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.onModuleInit",
+      "to": "shop#src/desk/desk-watcher.service.ts:DeskWatcher.log",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 27
+    },
+    {
+      "from": "shop#src/desk/desk.controller.ts:DeskController",
+      "to": "shop#src/desk/desk.service.ts:DeskService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk/desk.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "shop#src/desk/desk.controller.ts:DeskController.close",
+      "to": "shop#src/desk/desk.service.ts:DeskService.close",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "shop#src/desk/desk.controller.ts:DeskController.help",
+      "to": "shop#src/desk/desk.service.ts:DeskService.requestHelp",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#src/desk/desk.service.ts:DeskService",
+      "to": "shop#src/bus/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk/desk.service.ts",
+      "line": 7
+    },
+    {
+      "from": "shop#src/desk/desk.service.ts:DeskService.close",
+      "to": "producer:shop#src/desk/desk.service.ts:14:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/desk.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#src/desk/desk.service.ts:DeskService.close",
+      "to": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#src/desk/desk.service.ts:DeskService.requestHelp",
+      "to": "producer:shop#src/desk/desk.service.ts:10:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/desk.service.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/desk/desk.service.ts:DeskService.requestHelp",
+      "to": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/desk/desk.service.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/notify/audit-feed.service.ts:AuditFeed",
+      "to": "shop#src/bus/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "to": "shop#src/bus/events.service.ts:EventsService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{scopeId:string;data:unknown}",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 23
+    },
+    {
+      "from": "shop#src/notify/audit-feed.service.ts:AuditFeed.onModuleInit",
+      "to": "shop#src/notify/audit-feed.service.ts:AuditFeed.record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 26
+    },
+    {
+      "from": "shop#src/notify/metrics.service.ts:MetricsService",
+      "to": "shop#src/bus/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/notify/metrics.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#src/notify/metrics.service.ts:MetricsService.onModuleInit",
+      "to": "shop#src/bus/events.service.ts:EventsService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{scopeId:string;data:unknown}",
+      "file": "src/notify/metrics.service.ts",
+      "line": 17
+    },
+    {
+      "from": "shop#src/notify/metrics.service.ts:MetricsService.onModuleInit",
+      "to": "shop#src/notify/metrics.service.ts:MetricsService.count",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/notify/metrics.service.ts",
+      "line": 17
+    },
+    {
+      "from": "shop#src/notify/notify.service.ts:NotifyService",
+      "to": "shop#src/bus/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/notify/notify.service.ts",
+      "line": 21
+    },
+    {
+      "from": "shop#src/notify/notify.service.ts:NotifyService.dispatch",
+      "to": "shop#src/notify/notify.service.ts:NotifyService.pageStaff",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:shop#Evt"
+      ],
+      "returns": "void",
+      "file": "src/notify/notify.service.ts",
+      "line": 36
+    },
+    {
+      "from": "shop#src/notify/notify.service.ts:NotifyService.dispatch",
+      "to": "shop#src/notify/notify.service.ts:NotifyService.pingCustomer",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:shop#Evt"
+      ],
+      "returns": "void",
+      "file": "src/notify/notify.service.ts",
+      "line": 39
+    },
+    {
+      "from": "shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "to": "shop#src/bus/events.service.ts:EventsService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{scopeId:string;data:unknown}",
+      "file": "src/notify/notify.service.ts",
+      "line": 24
+    },
+    {
+      "from": "shop#src/notify/notify.service.ts:NotifyService.onModuleInit",
+      "to": "shop#src/notify/notify.service.ts:NotifyService.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/notify/notify.service.ts",
+      "line": 28
+    },
+    {
+      "from": "shop#src/orders/orders.controller.ts:OrdersController",
+      "to": "shop#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "shop#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "shop#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "shop#src/orders/orders.controller.ts:OrdersController.place",
+      "to": "shop#src/orders/orders.service.ts:OrdersService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#src/orders/orders.controller.ts:OrdersController.ready",
+      "to": "shop#src/orders/orders.service.ts:OrdersService.markReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "shop#src/orders/orders.controller.ts:OrdersController.refund",
+      "to": "shop#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 31
+    },
+    {
+      "from": "shop#src/orders/orders.controller.ts:OrdersController.status",
+      "to": "shop#src/orders/orders.service.ts:OrdersService.changeStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService",
+      "to": "shop#src/bus/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 7
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "producer:shop#src/orders/orders.service.ts:18:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 18
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.changeStatus",
+      "to": "producer:shop#src/orders/orders.service.ts:14:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.changeStatus",
+      "to": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.markReady",
+      "to": "producer:shop#src/orders/orders.service.ts:10:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.markReady",
+      "to": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.place",
+      "to": "producer:shop#src/orders/orders.service.ts:22:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.place",
+      "to": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 22
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.refund",
+      "to": "producer:shop#src/orders/orders.service.ts:26:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "shop#src/orders/orders.service.ts:OrdersService.refund",
+      "to": "shop#src/bus/events.service.ts:EventsService.publish",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string",
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/orders/orders.service.ts",
+      "line": 26
+    },
+    {
+      "from": "shop#src/stream/stream.controller.ts:StreamController",
+      "to": "shop#src/bus/events.service.ts:EventsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stream/stream.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/stream/stream.controller.ts:StreamController.stream",
+      "to": "shop#src/bus/events.service.ts:EventsService.subscribe",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "src/stream/stream.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20",
+      "to": "consumer:web#src/screens/PickupBoard.tsx:PickupBoard",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20",
+      "to": "entry:shop:http:GET:/events/stream",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 13,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "web#src/screens/PickupBoard.tsx:PickupBoard",
+      "to": "ui_api_call:web#src/screens/PickupBoard.tsx:13:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/PickupBoard.tsx",
+      "line": 13
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#MessageEvent": {
+      "name": "MessageEvent",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "7c36b84675182fbc",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:bot#BotEvent": {
+      "name": "BotEvent",
+      "kind": "union",
+      "declaredIn": "bot#src/bot/bot-events.ts",
+      "structuralHash": "db49c76ac162acbe",
+      "members": [
+        "type:bot#OrderReadyEvent",
+        "type:bot#OrderPlacedEvent",
+        "type:bot#OrderCancelledEvent"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:bot#OrderCancelledEvent": {
+      "name": "OrderCancelledEvent",
+      "kind": "object",
+      "declaredIn": "bot#src/bot/bot-events.ts",
+      "structuralHash": "0c0dc88403d83c4f",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'ORDER_CANCELLED'",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:bot#OrderEvent": {
+      "name": "OrderEvent",
+      "kind": "object",
+      "declaredIn": "bot#src/bot/bot-events.ts",
+      "structuralHash": "e86473e1ba071c04",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:bot#OrderPlacedEvent": {
+      "name": "OrderPlacedEvent",
+      "kind": "object",
+      "declaredIn": "bot#src/bot/bot-events.ts",
+      "structuralHash": "1f2479b3328f2c77",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'ORDER_PLACED'",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:bot#OrderReadyEvent": {
+      "name": "OrderReadyEvent",
+      "kind": "object",
+      "declaredIn": "bot#src/bot/bot-events.ts",
+      "structuralHash": "320dc64fd4d991f2",
+      "fields": [
+        {
+          "name": "type",
+          "type": "'ORDER_READY'",
+          "optional": false
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:bot#RelayBody": {
+      "name": "RelayBody",
+      "kind": "object",
+      "declaredIn": "bot#src/events/relay.controller.ts",
+      "structuralHash": "557ad68a97de7e75",
+      "fields": [
+        {
+          "name": "channel",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "scopeId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "message",
+          "type": "type:bot#OrderEvent",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:shop#Evt": {
+      "name": "Evt",
+      "kind": "object",
+      "declaredIn": "shop#src/notify/notify.service.ts",
+      "structuralHash": "3a86c01bd3f8c301",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "deskNumber",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/bot/bot.ts",
+      "line": 33,
+      "reason": "message-type-differs",
+      "level": "info",
+      "hint": "The parameter's type says ORDER_CANCELLED; the code that calls it does so for ORDER_REFUNDED (src/events/relay.controller.ts:27). The caller's choice is drawn.",
+      "symbol": "Bot.handleRefund",
+      "service": "bot"
+    },
+    {
+      "file": "src/desk/desk-watcher.service.ts",
+      "line": 23,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "DeskWatcher.onModuleInit",
+      "service": "shop"
+    },
+    {
+      "file": "src/notify/audit-feed.service.ts",
+      "line": 25,
+      "reason": "message-type-unread",
+      "level": "info",
+      "hint": "this.kept.has(evt.type) tests the type against a set the code does not write out. So which handler takes which type of message here is not drawn.",
+      "symbol": "AuditFeed.onModuleInit",
+      "service": "shop"
+    },
+    {
+      "file": "src/stream/stream.controller.ts",
+      "line": 15,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The listener does more than delegate, so the chain stops at the method that registered it.",
+      "symbol": "StreamController.stream",
+      "service": "shop"
+    }
+  ]
+}

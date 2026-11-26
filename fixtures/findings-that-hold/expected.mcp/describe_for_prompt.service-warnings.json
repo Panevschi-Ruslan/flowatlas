@@ -1,0 +1,9 @@
+{
+  "id": "back-office",
+  "markdown": "# Service: back-office\n\n`back-office` — service\n\nRead from the source by flowatlas, without running it. Steps are in call order; a best guess is a join it inferred, not one the code proves.\n\n## Ways in · 2\n\n- http · 2: `entry:back-office:http:POST:/admin/stores`, `entry:back-office:http:POST:/events/builds`\n\n## Calls into other services · 1\n\n- stores-api · 1: `http_out:back-office#src/stores.client.ts:28:34` http_calls `entry:stores-api:http:POST:/stores`\n\n## Called from other services · 20\n\n- stores-api · 20: `producer:stores-api#src/builds/builds.service.ts:10:11` emits `consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildDone`; `producer:stores-api#src/builds/builds.service.ts:10:11` emits `consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildRetry`; `producer:stores-api#src/builds/builds.service.ts:10:11` emits `consumer:back-office#src/builds/build-bot.ts:BuildBot.handleBuildStatus` …\n\n## Channels\n\n- consumes `channel:build_updates`\n\n## Findings · 1\n\n- contract-break · 1\n  - `src/stores.client.ts:28`: sender back-office sends `priceTier` as `string`; receiver stores-api declares it `number` — `http_out:back-office#src/stores.client.ts:28:34`\n- contract-break at warning · 7, counted, not listed: `findings({kind: \"contract-break\", severity: \"warning\", service: \"back-office\"})`\n\n## Ask next\n\n- `findings({service: \"back-office\"})`\n- `dead({service: \"back-office\"})`\n- `list_entries({service: \"back-office\"})`\n",
+  "next": [
+    "findings({service: \"back-office\"})",
+    "dead({service: \"back-office\"})",
+    "list_entries({service: \"back-office\"})"
+  ]
+}

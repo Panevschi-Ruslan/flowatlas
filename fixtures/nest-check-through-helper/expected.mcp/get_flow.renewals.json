@@ -40,7 +40,8 @@
           "id": "lending#src/desk/desk.controller.ts:DeskController.renew",
           "type": "method",
           "label": "DeskController.renew",
-          "loc": "src/desk/desk.controller.ts:20"
+          "loc": "src/desk/desk.controller.ts:20",
+          "endLine": 25
         },
         "edge": {
           "type": "handles",
@@ -57,7 +58,8 @@
               "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
               "type": "method",
               "label": "LibrarianAuth.verify",
-              "loc": "src/auth/librarian-auth.ts:13"
+              "loc": "src/auth/librarian-auth.ts:13",
+              "endLine": 18
             },
             "edge": {
               "type": "calls",
@@ -74,7 +76,8 @@
               "id": "lending#src/desk/loans.service.ts:LoansService.renew",
               "type": "method",
               "label": "LoansService.renew",
-              "loc": "src/desk/loans.service.ts:16"
+              "loc": "src/desk/loans.service.ts:16",
+              "endLine": 18
             },
             "edge": {
               "type": "calls",
@@ -118,6 +121,7 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:lending:http:POST:/desk/renewals\"})",
     "impact({symbol: \"entry:lending:http:POST:/desk/renewals\"})",

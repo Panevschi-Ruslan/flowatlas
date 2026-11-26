@@ -1,14 +1,26 @@
-unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=6 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 2 to act on · missed: 3 · notes: 0 · findings: 3
+unresolved: 6 to act on · missed: 3 · notes: 0 · findings: 7
   1 missed place static reading cannot see, folded into 1 row
-  3 findings: 3 likely N+1s
+  7 findings: 3 likely N+1s, 2 queues read with no redrive, 1 batch reporting failures its handler never returns, 1 redrive after too few receives
+  queue-redrive-missing (finding): 2 rows
+    A queue a function reads has no redrive policy, so a message that always fails is received again and again until it expires, and is then lost. Give the queue a dead-letter queue.
+      returns/infra/queues.tf:27  library-reminders is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give aws_sqs_queue.reminders a dead-letter queue, with a maxReceiveCount of at least 5.
+      returns/infra/queues.tf:31  library-hold-requests is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+        ↳ Give aws_sqs_queue.hold_requests a dead-letter queue, with a maxReceiveCount of at least 5.
+  batch-failures-unreported (finding): 1 row
+    Return { batchItemFailures } from the handler, or use a batch helper that builds it.
+      returns/infra/mappings.tf:1  aws_lambda_event_source_mapping.process_returns says library-process-return reports the messages of a batch that failed (ReportBatchItemFailures), and its handler never returns batchItemFailures: every batch counts as a success, and a failed message is deleted
   environment-not-set: 1 row
     Set RETURNS_QUEUE_URL in the environment library-bulk-return is deployed with, or correct the name the code reads.
       returns/src/lib/returns-queue.ts:17  the call at src/lib/returns-queue.ts:17 sends to the value of RETURNS_QUEUE_URL; library-bulk-return runs it and is not deployed with RETURNS_QUEUE_URL, so where it sends from there is not known
   environment-value-unread: 1 row
     The variable files set it differently (infra/env/dev.tfvars, infra/env/prod.tfvars). Choose the environment to read under services[].infra.vars.
       returns/src/returns/process-return.ts:28  the call at src/returns/process-return.ts:28 sends to the value of AUDIT_QUEUE_URL, which library-process-return is deployed with as a value depending on var.audit_queue_url, and that is not read: var.audit_queue_url is "https://sqs.eu-west-1.amazonaws.com/111122223333/library-audit-dev" in infra/env/dev.tfvars and "https://sqs.eu-west-1.amazonaws.com/444455556666/library-audit" in infra/env/prod.tfvars
+  queue-receives-few (finding): 1 row
+    Set maxReceiveCount to at least 5.
+      returns/infra/queues.tf:1  aws_sqs_queue.returns hands a message of library-returns to its dead-letter queue after 4 receives, under the 5 the platform recommends: a throttled or briefly failing function gets too few retries
   query-in-loop (finding): 3 rows
     Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
       returns/src/returns/bulk-return.ts:10  A `for-of` loop runs 1 publish once per item: likely N+1.  (2 ways in)
@@ -25,10 +37,17 @@ desync: none
 
 contracts: no errors, 0 excused, 5 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 2 now, +2)
+baseline: missing (0 accepted, 6 now, +6)
   no baseline at <root>/fixtures/sqs-sns-terraform/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  batch-failures-unreported: 0 → 1 (+1)
   environment-not-set: 0 → 1 (+1)
   environment-value-unread: 0 → 1 (+1)
-  new (2):
+  queue-receives-few: 0 → 1 (+1)
+  queue-redrive-missing: 0 → 2 (+2)
+  new (6):
+    returns|infra/mappings.tf|consumer:returns#infra/mappings.tf:aws_lambda_event_source_mapping.process_returns|batch-failures-unreported
+    returns|infra/queues.tf|channel:sqs/library-hold-requests|queue-redrive-missing
+    returns|infra/queues.tf|channel:sqs/library-reminders|queue-redrive-missing
+    returns|infra/queues.tf|channel:sqs/library-returns|queue-receives-few
     returns|src/lib/returns-queue.ts|producer:returns#src/lib/returns-queue.ts:17:9|environment-not-set
     returns|src/returns/process-return.ts|producer:returns#src/returns/process-return.ts:28:11|environment-value-unread

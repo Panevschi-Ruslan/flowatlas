@@ -1,0 +1,8 @@
+{
+  "name": "worker",
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.2",
+    "get-port": "^7.1.0"
+  }
+}

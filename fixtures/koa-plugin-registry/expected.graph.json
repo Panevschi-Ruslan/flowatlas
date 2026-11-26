@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "koa-plugin-registry",
-  "generatedAt": "2026-10-08T07:27:08.683Z",
+  "generatedAt": "2026-11-23T14:37:03.901Z",
   "nodes": [
     {
       "id": "entry:koa-plugin-registry:http:GET:/auth/passkey",
@@ -109,7 +109,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -128,7 +129,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -147,7 +149,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -166,7 +169,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -185,7 +189,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {

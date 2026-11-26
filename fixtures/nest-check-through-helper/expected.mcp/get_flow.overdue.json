@@ -27,7 +27,8 @@
           "id": "lending#src/desk/desk.controller.ts:DeskController.overdue",
           "type": "method",
           "label": "DeskController.overdue",
-          "loc": "src/desk/desk.controller.ts:39"
+          "loc": "src/desk/desk.controller.ts:39",
+          "endLine": 43
         },
         "edge": {
           "type": "handles",
@@ -43,7 +44,8 @@
               "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
               "type": "method",
               "label": "LibrarianAuth.verify",
-              "loc": "src/auth/librarian-auth.ts:13"
+              "loc": "src/auth/librarian-auth.ts:13",
+              "endLine": 18
             },
             "edge": {
               "type": "calls",
@@ -60,7 +62,8 @@
               "id": "lending#src/desk/desk.controller.ts:DeskController.reject",
               "type": "method",
               "label": "DeskController.reject",
-              "loc": "src/desk/desk.controller.ts:52"
+              "loc": "src/desk/desk.controller.ts:52",
+              "endLine": 55
             },
             "edge": {
               "type": "calls",
@@ -77,7 +80,8 @@
               "id": "lending#src/desk/loans.service.ts:LoansService.overdue",
               "type": "method",
               "label": "LoansService.overdue",
-              "loc": "src/desk/loans.service.ts:24"
+              "loc": "src/desk/loans.service.ts:24",
+              "endLine": 26
             },
             "edge": {
               "type": "calls",
@@ -118,6 +122,7 @@
     ]
   },
   "unresolvedOnPath": 0,
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:lending:http:GET:/desk/overdue\"})",
     "impact({symbol: \"entry:lending:http:GET:/desk/overdue\"})",

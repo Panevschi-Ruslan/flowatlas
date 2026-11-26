@@ -1,0 +1,104 @@
+{
+  "settled": "3 ways in break, all listed; more beyond a channel, counted in throughChannels; 1 component file in web on the way, all listed in components",
+  "target": {
+    "id": "shop-api#src/orders/orders.service.ts:OrdersService.findOne",
+    "line": 15,
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:shop-api:event:packing_events",
+      "line": 25,
+      "reach": "alive",
+      "by": "shop-api#src/orders/receipts.service.ts:Receipts.onEvent"
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/orders/:param",
+      "line": 9,
+      "reach": "alive",
+      "by": "shop-api#src/orders/orders.controller.ts:OrdersController.findOne",
+      "rowsVia": 1
+    },
+    {
+      "id": "entry:web:screen:/orders/:param",
+      "reach": "outside",
+      "via": "GET /api/orders/:param (shop-api)",
+      "by": "web#src/screens/OrderPage.tsx:OrderPage"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "consumers": {
+      "shop-api": [
+        "src/orders/receipts.service.ts"
+      ]
+    },
+    "screens": {
+      "web": [
+        "src/screens/OrderPage.tsx"
+      ]
+    }
+  },
+  "changing": [
+    "entry:shop-api:http:GET:/api/orders/:param"
+  ],
+  "components": {
+    "web": [
+      "src/main.tsx"
+    ]
+  },
+  "reached": 25,
+  "entriesByService": {
+    "shop-api": 2,
+    "web": 1
+  },
+  "throughChannels": [
+    {
+      "consumer": "consumer:shop-api#src/orders/receipts.service.ts:Receipts.onEvent",
+      "channels": [
+        "packing_events"
+      ],
+      "ways": 3,
+      "sample": [
+        {
+          "id": "entry:shop-api:http:POST:/api/orders/:param/cancel",
+          "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+        },
+        {
+          "id": "entry:shop-api:http:POST:/api/orders/:param/delay",
+          "by": "shop-api#src/orders/orders.controller.ts:OrdersController.delay"
+        },
+        {
+          "id": "entry:shop-api:http:POST:/api/orders/:param/ready",
+          "by": "shop-api#src/orders/orders.controller.ts:OrdersController.ready"
+        }
+      ]
+    },
+    {
+      "consumer": "consumer:shop-api#src/orders/receipts.service.ts:Receipts.print",
+      "channels": [
+        {
+          "channel": "packing_events",
+          "type": "ORDER_READY"
+        }
+      ],
+      "ways": 1,
+      "sample": [
+        {
+          "id": "entry:shop-api:http:POST:/api/orders/:param/ready",
+          "by": "shop-api#src/orders/orders.controller.ts:OrdersController.ready"
+        }
+      ]
+    }
+  ],
+  "reachedByService": {
+    "shop-api": 21,
+    "web": 4
+  },
+  "servicesWithoutEntry": [],
+  "channels": [
+    "channel:packing_events",
+    "channel:packing_events#ORDER_READY"
+  ],
+  "complete": true
+}

@@ -1,0 +1,34 @@
+{
+  "settled": "1 way in breaks, all listed",
+  "target": {
+    "id": "angular-basic#src/app/profile.component.ts:ProfileComponent",
+    "type": "ui_component",
+    "line": 4,
+    "kind": "standalone",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:angular-basic:screen:/profile",
+      "reach": "outside"
+    }
+  ],
+  "total": 1,
+  "byKind": {
+    "screens": {
+      "angular-basic": [
+        "src/app/profile.component.ts"
+      ]
+    }
+  },
+  "reached": 1,
+  "entriesByService": {
+    "angular-basic": 1
+  },
+  "reachedByService": {
+    "angular-basic": 1
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true
+}

@@ -1,0 +1,35 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "express",
+      "baseUrlEnv": ["VITE_API_URL", "ORDERS_URL"]
+    },
+    {
+      "name": "edge",
+      "repo": "./apps/edge",
+      "type": "express",
+      "baseUrlEnv": ["LEDGER_URL"]
+    },
+    {
+      "name": "catalog",
+      "repo": "./apps/catalog",
+      "type": "express",
+      "baseUrlEnv": ["VITE_CATALOG_URL", "CATALOG_URL"]
+    },
+    {
+      "name": "web",
+      "repo": "./apps/web",
+      "type": "react",
+      "apiBaseEnv": ["VITE_API_URL", "VITE_CATALOG_URL"],
+      "apiTarget": { "VITE_API_URL": "api", "VITE_CATALOG_URL": "catalog" }
+    },
+    {
+      "name": "worker",
+      "repo": "./apps/worker",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

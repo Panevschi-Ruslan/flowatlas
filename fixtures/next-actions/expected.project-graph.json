@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:37:24.509Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:44:54.930Z",
   "services": [
     {
       "name": "shop",
@@ -61,6 +61,22 @@
       }
     },
     {
+      "id": "entry:shop:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop",
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "pages-directory",
+        "screens": [
+          "OrdersPage"
+        ]
+      }
+    },
+    {
       "id": "repo:shop",
       "type": "repo",
       "label": "shop",
@@ -83,7 +99,17 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
       }
     },
     {
@@ -310,6 +336,17 @@
       "confidence": "static",
       "file": "app/actions/orders.ts",
       "line": 28
+    },
+    {
+      "from": "entry:shop:screen:/orders",
+      "to": "shop#app/orders/page.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "meta": {
+        "route": "/orders"
+      }
     },
     {
       "from": "shop#app/actions/orders.ts:action archiveOrder@22",

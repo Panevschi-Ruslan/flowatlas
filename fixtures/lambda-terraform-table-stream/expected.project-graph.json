@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:49:45.496Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:42.933Z",
   "services": [
     {
       "name": "shop",
@@ -273,6 +273,15 @@
         "api": "shop-returns",
         "function": "shop-returns-cancel-order",
         "declaredAs": "aws_apigatewayv2_route.cancel_order",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-returns"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -292,6 +301,15 @@
         "api": "shop-returns",
         "function": "shop-returns-clear-orders",
         "declaredAs": "aws_apigatewayv2_route.clear_orders",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop-returns"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -422,6 +440,15 @@
         "api": "shop",
         "function": "shop-track-click",
         "declaredAs": "aws_apigatewayv2_route.track_click",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -441,6 +468,15 @@
         "api": "shop",
         "function": "shop-place-order",
         "declaredAs": "aws_apigatewayv2_route.place_order",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -866,7 +902,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -885,7 +922,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1155,7 +1193,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1193,7 +1232,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1963,10 +2003,6 @@
       "hint": "The definition chooses this at run time, so no edge is drawn for it. Nothing to fix here.",
       "symbol": "shop#infra/main.tf:shop-fulfil-order/ArchiveSomewhere",
       "adapter": "aws-lambda",
-      "meta": {
-        "field": "TableName",
-        "written": "$.archiveTable"
-      },
       "service": "shop"
     }
   ]

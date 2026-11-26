@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:06:27.036Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T21:20:33.095Z",
   "services": [
     {
       "name": "api",
@@ -177,6 +177,10 @@
         "signature": {
           "params": [],
           "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
         }
       }
     },
@@ -196,7 +200,14 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 45,
+            "why": "handed to this.events.next"
+          }
+        ]
       }
     },
     {
@@ -262,7 +273,8 @@
             }
           ],
           "returns": "MessageEvent<any>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -297,7 +309,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -352,6 +365,37 @@
       }
     },
     {
+      "id": "channel:depot:*:events#ORDER_CANCELED",
+      "type": "channel",
+      "label": "depot:*:events#ORDER_CANCELED",
+      "repo": "api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "kind": "message_type",
+      "meta": {
+        "channel": "channel:depot:*:events",
+        "messageType": "ORDER_CANCELED",
+        "discriminator": "type",
+        "channelKind": "channel",
+        "nameWritten": {
+          "sent": [
+            {
+              "service": "api",
+              "loc": "src/orders/orders.service.ts:17",
+              "text": "type: 'ORDER_CANCELED'"
+            }
+          ],
+          "sentCount": 1,
+          "onlyAtSends": true,
+          "defined": 0,
+          "open": [],
+          "openCount": 0
+        },
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
       "id": "consumer:api#src/events/event-bus.service.ts:EventBus.receive",
       "type": "consumer",
       "label": "EventBus.receive",
@@ -364,6 +408,66 @@
         "adapter": "house-bus",
         "decorator": "pSubscribe",
         "entryId": "entry:api:event:depot:*:events"
+      }
+    },
+    {
+      "id": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "consumer",
+      "label": "LiveEventsService.open",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 30,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subjects": [
+          "LiveEventsService.events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "type": "consumer",
+      "label": "LiveEventsService.openWithToken",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 47,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subjects": [
+          "LiveEventsService.events"
+        ]
+      }
+    },
+    {
+      "id": "consumer:web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "consumer",
+      "label": "RememberedStreamService.open",
+      "repo": "web",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 37,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subjects": [
+          "RememberedStreamService.frames"
+        ]
       }
     },
     {
@@ -398,7 +502,12 @@
             "args": []
           }
         ],
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "stream": "sse",
+        "streamFrom": "decorator",
+        "streamEvents": [
+          "message"
+        ]
       }
     },
     {
@@ -429,7 +538,11 @@
         "kind": "event",
         "adapter": "house-bus",
         "channelVia": "template",
-        "method": "publish"
+        "method": "publish",
+        "messageTypes": [
+          "ORDER_CANCELED"
+        ],
+        "discriminator": "type"
       }
     },
     {
@@ -452,7 +565,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -583,8 +703,10 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "api"
       }
     },
@@ -768,7 +890,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-orders"
+        "selector": "app-orders",
+        "unreferenced": true
       }
     },
     {
@@ -1182,6 +1305,30 @@
       "line": 30
     },
     {
+      "from": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 30
+    },
+    {
+      "from": "consumer:web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 47
+    },
+    {
+      "from": "consumer:web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "to": "web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 37
+    },
+    {
       "from": "entry:api:event:depot:*:events",
       "to": "api#src/events/event-bus.service.ts:EventBus.receive",
       "type": "handles",
@@ -1236,6 +1383,17 @@
       "line": 16
     },
     {
+      "from": "producer:api#src/orders/orders.service.ts:16:11",
+      "to": "channel:depot:*:events#ORDER_CANCELED",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "params": [
+        "type:api#DepotEvent"
+      ]
+    },
+    {
       "from": "ui_action:web#src/app/orders.component.ts:13:13",
       "to": "web#src/app/orders.component.ts:OrdersComponent.watch",
       "type": "handles",
@@ -1261,6 +1419,14 @@
     },
     {
       "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
+      "to": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 30
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:29:20",
       "to": "entry:api:http:GET:/depots/:param/events",
       "type": "hits",
       "confidence": "static",
@@ -1270,6 +1436,14 @@
         "via": "api-target",
         "targetService": "api"
       }
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:46:20",
+      "to": "consumer:web#src/app/live-events.service.ts:LiveEventsService.openWithToken",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 47
     },
     {
       "from": "ui_api_call:web#src/app/live-events.service.ts:46:20",
@@ -1298,6 +1472,14 @@
         "via": "api-target",
         "targetService": "api"
       }
+    },
+    {
+      "from": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
+      "to": "consumer:web#src/app/remembered-stream.service.ts:RememberedStreamService.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/remembered-stream.service.ts",
+      "line": 37
     },
     {
       "from": "ui_api_call:web#src/app/remembered-stream.service.ts:63:5@36:20",
@@ -1549,6 +1731,27 @@
       "hint": "The channel name cannot be read here. Annotate EventBus.listenTo with the channel it uses.",
       "symbol": "EventBus.listenTo -> pattern",
       "service": "api"
+    },
+    {
+      "file": "src/orders/events.controller.ts",
+      "line": 18,
+      "reason": "stream-relay-unread",
+      "level": "info",
+      "message": "This route streams server-sent events, and no subscription to a channel was found in the code behind it.",
+      "hint": "What reaches the stream is decided by code not read as a subscription (a pipeline over a subject, a request handed to an object of its own). Annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /depots/:param/events",
+      "service": "api"
+    },
+    {
+      "file": "src/app/live-events.service.ts",
+      "line": 30,
+      "reason": "stream-handler-unread",
+      "level": "info",
+      "sites": 5,
+      "message": "The frames of this stream are pushed into LiveEventsService.events, and nothing in this repository was read subscribing to it.",
+      "hint": "Subscribe through the service that holds the subject (a field it exposes, a getter, or the subject itself), with .subscribe(…) after any .pipe(…).",
+      "symbol": "LiveEventsService.open",
+      "service": "web"
     },
     {
       "file": "src/app/stream-wrapper.service.ts",

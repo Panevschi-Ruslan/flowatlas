@@ -234,8 +234,10 @@ describe('a handler re-exported through a namespace or `export … from` (R168)'
       runFlow(route, { config: namespacedConfig, format: 'json' }, { out: (text) => void (out += text), err: () => undefined });
       return (JSON.parse(out) as { unresolvedOnPath: unknown }).unresolvedOnPath;
     };
-    expect(counted('POST /loans')).toBe(1);
-    expect(counted('POST /returns')).toBe(0);
+    // Each path also passes what its queue's settings say (P389): the loans queue has no redrive policy, and the
+    // returns queue has none either and is mapped as reporting batch failures its handler never returns.
+    expect(counted('POST /loans')).toBe(2);
+    expect(counted('POST /returns')).toBe(2);
   });
 });
 

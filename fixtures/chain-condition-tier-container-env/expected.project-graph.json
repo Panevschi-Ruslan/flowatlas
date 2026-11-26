@@ -1,0 +1,1265 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:16:45.303Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "primary",
+      "repo": "./primary",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "east",
+      "repo": "./east",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "west",
+      "repo": "./west",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "archive",
+      "repo": "./archive",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "archive#src/app.ts:GET /exports@6",
+      "type": "function",
+      "label": "GET /exports@6",
+      "repo": "archive",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "billing#src/app.ts:GET /invoices@6",
+      "type": "function",
+      "label": "GET /invoices@6",
+      "repo": "billing",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:billing#BILLING_PORT",
+      "type": "config_key",
+      "label": "BILLING_PORT",
+      "repo": "billing",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "key": "BILLING_PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:inventory#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "inventory",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:jobs#ARCHIVE_URL",
+      "type": "config_key",
+      "label": "ARCHIVE_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "key": "ARCHIVE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:jobs#EAST_URL",
+      "type": "config_key",
+      "label": "EAST_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "key": "EAST_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:jobs#NODE_ENV",
+      "type": "config_key",
+      "label": "NODE_ENV",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 2,
+      "meta": {
+        "key": "NODE_ENV",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:jobs#PRIMARY_URL",
+      "type": "config_key",
+      "label": "PRIMARY_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "key": "PRIMARY_URL",
+        "source": "process.env",
+        "fallback": true
+      }
+    },
+    {
+      "id": "config_key:jobs#WEST_URL",
+      "type": "config_key",
+      "label": "WEST_URL",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "key": "WEST_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "east#src/app.ts:GET /regions@6",
+      "type": "function",
+      "label": "GET /regions@6",
+      "repo": "east",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "entry:archive:http:GET:/exports",
+      "type": "entry",
+      "label": "GET /exports",
+      "repo": "archive",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/exports",
+        "rawPath": "/exports",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices",
+      "type": "entry",
+      "label": "GET /invoices",
+      "repo": "billing",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/invoices",
+        "rawPath": "/invoices",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:east:http:GET:/regions",
+      "type": "entry",
+      "label": "GET /regions",
+      "repo": "east",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/regions",
+        "rawPath": "/regions",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:inventory:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "inventory",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:primary:http:GET:/primary-only",
+      "type": "entry",
+      "label": "GET /primary-only",
+      "repo": "primary",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/primary-only",
+        "rawPath": "/primary-only",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:west:http:GET:/regions",
+      "type": "entry",
+      "label": "GET /regions",
+      "repo": "west",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/regions",
+        "rawPath": "/regions",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:west:http:GET:/west-only",
+      "type": "entry",
+      "label": "GET /west-only",
+      "repo": "west",
+      "file": "src/app.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/west-only",
+        "rawPath": "/west-only",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:11:31",
+      "type": "http_out",
+      "label": "GET /west-only",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "${PRIMARY_URL}/west-only",
+        "path": "/west-only",
+        "baseUrlEnv": "PRIMARY_URL",
+        "baseUrlAlso": [
+          "EAST_URL",
+          "WEST_URL",
+          "ARCHIVE_URL"
+        ],
+        "baseUrlAlsoTiers": [
+          [
+            "EAST_URL",
+            "WEST_URL"
+          ],
+          [
+            "ARCHIVE_URL"
+          ]
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "west"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:14:34",
+      "type": "http_out",
+      "label": "GET /exports",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "meta": {
+        "method": "GET",
+        "url": "${PRIMARY_URL}/exports",
+        "path": "/exports",
+        "baseUrlEnv": "PRIMARY_URL",
+        "baseUrlAlso": [
+          "EAST_URL",
+          "WEST_URL",
+          "ARCHIVE_URL"
+        ],
+        "baseUrlAlsoTiers": [
+          [
+            "EAST_URL",
+            "WEST_URL"
+          ],
+          [
+            "ARCHIVE_URL"
+          ]
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "archive"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:17:34",
+      "type": "http_out",
+      "label": "GET /primary-only",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "method": "GET",
+        "url": "${PRIMARY_URL}/primary-only",
+        "path": "/primary-only",
+        "baseUrlEnv": "PRIMARY_URL",
+        "baseUrlAlso": [
+          "EAST_URL",
+          "WEST_URL",
+          "ARCHIVE_URL"
+        ],
+        "baseUrlAlsoTiers": [
+          [
+            "EAST_URL",
+            "WEST_URL"
+          ],
+          [
+            "ARCHIVE_URL"
+          ]
+        ],
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "primary"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:20:28",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8080/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8080",
+        "targetService": "inventory"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:23:37",
+      "type": "http_out",
+      "label": "GET /items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": "http://inventory:4000/items",
+        "path": "/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "inventory:4000",
+        "targetService": "inventory"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:26:31",
+      "type": "http_out",
+      "label": "GET /invoices",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8081/invoices",
+        "path": "/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8081",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/calls.ts:8:30",
+      "type": "http_out",
+      "label": "GET /regions",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "${PRIMARY_URL}/regions",
+        "path": "/regions",
+        "baseUrlEnv": "PRIMARY_URL",
+        "baseUrlAlso": [
+          "EAST_URL",
+          "WEST_URL",
+          "ARCHIVE_URL"
+        ],
+        "baseUrlAlsoTiers": [
+          [
+            "EAST_URL",
+            "WEST_URL"
+          ],
+          [
+            "ARCHIVE_URL"
+          ]
+        ],
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "inventory#src/app.ts:GET /items@6",
+      "type": "function",
+      "label": "GET /items@6",
+      "repo": "inventory",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:exportsList",
+      "type": "function",
+      "label": "exportsList",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:invoices",
+      "type": "function",
+      "label": "invoices",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:items",
+      "type": "function",
+      "label": "items",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:itemsInNetwork",
+      "type": "function",
+      "label": "itemsInNetwork",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:mirrorBase",
+      "type": "function",
+      "label": "mirrorBase",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:primaryOnly",
+      "type": "function",
+      "label": "primaryOnly",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:regions",
+      "type": "function",
+      "label": "regions",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/calls.ts:westOnly",
+      "type": "function",
+      "label": "westOnly",
+      "repo": "jobs",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "primary#src/app.ts:GET /primary-only@6",
+      "type": "function",
+      "label": "GET /primary-only@6",
+      "repo": "primary",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "repo:archive",
+      "type": "repo",
+      "label": "archive",
+      "repo": "archive",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4204,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 10,
+            "setting": "BILLING_PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:east",
+      "type": "repo",
+      "label": "east",
+      "repo": "east",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4202,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:inventory",
+      "type": "repo",
+      "label": "inventory",
+      "repo": "inventory",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 10,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:primary",
+      "type": "repo",
+      "label": "primary",
+      "repo": "primary",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4201,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:west",
+      "type": "repo",
+      "label": "west",
+      "repo": "west",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4203,
+            "file": "src/app.ts",
+            "line": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "west#src/app.ts:GET /regions@6",
+      "type": "function",
+      "label": "GET /regions@6",
+      "repo": "west",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "west#src/app.ts:GET /west-only@10",
+      "type": "function",
+      "label": "GET /west-only@10",
+      "repo": "west",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:archive:http:GET:/exports",
+      "to": "archive#src/app.ts:GET /exports@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:billing:http:GET:/invoices",
+      "to": "billing#src/app.ts:GET /invoices@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:east:http:GET:/regions",
+      "to": "east#src/app.ts:GET /regions@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:inventory:http:GET:/items",
+      "to": "inventory#src/app.ts:GET /items@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:primary:http:GET:/primary-only",
+      "to": "primary#src/app.ts:GET /primary-only@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:west:http:GET:/regions",
+      "to": "west#src/app.ts:GET /regions@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:west:http:GET:/west-only",
+      "to": "west#src/app.ts:GET /west-only@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:11:31",
+      "to": "entry:west:http:GET:/west-only",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 11,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "west",
+        "chosenAmong": [
+          "PRIMARY_URL (primary)",
+          "EAST_URL (east)",
+          "WEST_URL (west)",
+          "ARCHIVE_URL (archive)"
+        ]
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:14:34",
+      "to": "entry:archive:http:GET:/exports",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 14,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "archive",
+        "chosenAmong": [
+          "PRIMARY_URL (primary)",
+          "EAST_URL (east)",
+          "WEST_URL (west)",
+          "ARCHIVE_URL (archive)"
+        ]
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:17:34",
+      "to": "entry:primary:http:GET:/primary-only",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 17,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "primary"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:20:28",
+      "to": "entry:inventory:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 20,
+      "meta": {
+        "via": "host",
+        "targetService": "inventory",
+        "listensAt": "src/app.ts:10 (PORT from inventory/.env (inventory)), published as 8080 by docker-compose.yml"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:23:37",
+      "to": "entry:inventory:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 23,
+      "meta": {
+        "via": "host",
+        "targetService": "inventory",
+        "listensAt": "src/app.ts:10 (PORT from inventory/.env (inventory)), in the container inventory (docker-compose.yml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/calls.ts:26:31",
+      "to": "entry:billing:http:GET:/invoices",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/calls.ts",
+      "line": 26,
+      "meta": {
+        "via": "host",
+        "targetService": "billing",
+        "listensAt": "src/app.ts:10 (BILLING_PORT from billing/Dockerfile (billing)), published as 8081 by docker-compose.yml"
+      }
+    },
+    {
+      "from": "jobs#src/calls.ts:exportsList",
+      "to": "http_out:jobs#src/calls.ts:14:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/calls.ts:exportsList",
+      "to": "jobs#src/calls.ts:mirrorBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/calls.ts:invoices",
+      "to": "http_out:jobs#src/calls.ts:26:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 26
+    },
+    {
+      "from": "jobs#src/calls.ts:items",
+      "to": "http_out:jobs#src/calls.ts:20:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 20
+    },
+    {
+      "from": "jobs#src/calls.ts:itemsInNetwork",
+      "to": "http_out:jobs#src/calls.ts:23:37",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 23
+    },
+    {
+      "from": "jobs#src/calls.ts:mirrorBase",
+      "to": "config_key:jobs#ARCHIVE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 5
+    },
+    {
+      "from": "jobs#src/calls.ts:mirrorBase",
+      "to": "config_key:jobs#EAST_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 5
+    },
+    {
+      "from": "jobs#src/calls.ts:mirrorBase",
+      "to": "config_key:jobs#PRIMARY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 5
+    },
+    {
+      "from": "jobs#src/calls.ts:mirrorBase",
+      "to": "config_key:jobs#WEST_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 5
+    },
+    {
+      "from": "jobs#src/calls.ts:primaryOnly",
+      "to": "http_out:jobs#src/calls.ts:17:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/calls.ts:primaryOnly",
+      "to": "jobs#src/calls.ts:mirrorBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 17
+    },
+    {
+      "from": "jobs#src/calls.ts:regions",
+      "to": "http_out:jobs#src/calls.ts:8:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/calls.ts:regions",
+      "to": "jobs#src/calls.ts:mirrorBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/calls.ts:westOnly",
+      "to": "http_out:jobs#src/calls.ts:11:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/calls.ts",
+      "line": 11
+    },
+    {
+      "from": "jobs#src/calls.ts:westOnly",
+      "to": "jobs#src/calls.ts:mirrorBase",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/calls.ts",
+      "line": 11
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-types-unmatched",
+      "level": "info",
+      "message": "Nothing here is a value of any type the express-routes reader names, so none of its routes were read.",
+      "hint": "Ordinary where express is a dependency and no route is declared on it. If this repository does serve routes, they are declared somewhere this reader does not look — a file-system convention, which another reader here may have read already, or a framework of its own in front of this one.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "jobs"
+    },
+    {
+      "file": "src/calls.ts",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "jobs"
+    },
+    {
+      "service": "jobs",
+      "file": "src/calls.ts",
+      "line": 8,
+      "reason": "ambiguous-route-target",
+      "message": "the request's base is one of PRIMARY_URL (primary) and EAST_URL (east) and WEST_URL (west) and ARCHIVE_URL (archive), read from the first of them that is set, a condition nobody settles choosing among the later ones, and east and west each serve GET /regions",
+      "hint": "Read the base from one setting, or annotate the call with @CallsService naming the service it reaches.",
+      "symbol": "http_out:jobs#src/calls.ts:8:30"
+    }
+  ]
+}

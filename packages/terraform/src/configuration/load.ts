@@ -56,6 +56,28 @@ export interface Configuration {
 /** Arguments of a module call that configure the call rather than feed the module. */
 const CALL_META = new Set(['source', 'version', 'count', 'for_each', 'providers', 'depends_on']);
 
+/** A provider as a reference names it: `aws`, `aws.west`. */
+const providerNamed = (expression: Expression): string | undefined => {
+  if (expression.type === 'variable') return expression.name;
+  if (expression.type === 'traversal' && expression.source.type === 'variable' && expression.steps.length === 1 && expression.steps[0]?.kind === 'attr') {
+    return `${expression.source.name}.${expression.steps[0].name}`;
+  }
+  return undefined;
+};
+
+/** A module call's `providers = { aws = aws.west }`, by the child's name for each (P298). */
+const providersHanded = (block: Block): ReadonlyMap<string, string> => {
+  const written = attributeOf(block.body, 'providers')?.expression;
+  const handed = new Map<string, string>();
+  if (written?.type !== 'object') return handed;
+  for (const item of written.items) {
+    const key = item.key.type === 'literal' && typeof item.key.value === 'string' ? item.key.value : providerNamed(item.key);
+    const value = providerNamed(item.value);
+    if (key !== undefined && value !== undefined) handed.set(key, value);
+  }
+  return handed;
+};
+
 /** Where a module's blocks come from, shared by every instance of it. */
 interface ModuleSource {
   /** Repo-relative directory the blocks are declared in. */
@@ -68,6 +90,8 @@ interface ModuleSource {
   readonly resources: ReadonlyMap<string, Block>;
   readonly calls: ReadonlyMap<string, Block>;
   readonly terraform: readonly Block[];
+  /** `provider` blocks, by the name a resource names one with: `aws`, `aws.west` for an alias (P294). */
+  readonly providers: ReadonlyMap<string, Block>;
   /** The description it was built from, when it is a described module. */
   readonly described?: InfraModuleConfig;
 }
@@ -121,6 +145,7 @@ const sourceOf = (dir: string, files: readonly HclFile[], described?: InfraModul
   const resources = new Map<string, Block>();
   const calls = new Map<string, Block>();
   const terraform: Block[] = [];
+  const providers = new Map<string, Block>();
   for (const file of files) {
     for (const block of file.body.blocks) {
       const [first, second] = block.labels;
@@ -141,10 +166,14 @@ const sourceOf = (dir: string, files: readonly HclFile[], described?: InfraModul
         calls.set(first, block);
       } else if (block.type === 'terraform') {
         terraform.push(block);
+      } else if (block.type === 'provider' && first !== undefined) {
+        const alias = attributeOf(block.body, 'alias');
+        const named = alias === undefined ? undefined : templateText(alias.expression);
+        providers.set(named === undefined ? first : `${first}.${named}`, block);
       }
     }
   }
-  return { dir, variables, locals, outputs, outputSites, resources, calls, terraform, ...(described === undefined ? {} : { described }) };
+  return { dir, variables, locals, outputs, outputSites, resources, calls, terraform, providers, ...(described === undefined ? {} : { described }) };
 };
 
 /** The identity of a state backend, as both sides of a remote-state read spell it. */
@@ -246,6 +275,7 @@ class Context {
       resources,
       calls: new Map(),
       terraform: [],
+      providers: new Map(),
       described: description,
     };
     this.#described.set(description, source);
@@ -333,6 +363,13 @@ class Module implements ModuleInstance {
     /** Where the call that created a described module is written. */
     readonly site: Position | undefined,
     readonly depth: number,
+    /** The module whose call created this one; `undefined` for a root module. */
+    readonly parent: Module | undefined = undefined,
+    /**
+     * The call's `providers = { aws = aws.west }`: the parent's provider each
+     * name of this module's stands for (P298).
+     */
+    readonly handedProviders: ReadonlyMap<string, string> = new Map(),
   ) {}
 
   get dir(): string {
@@ -590,6 +627,8 @@ class Module implements ModuleInstance {
               inputs,
               resolved.described === undefined ? undefined : block.pos,
               this.depth + 1,
+              this,
+              providersHanded(block),
             );
             modules.push(child);
             return { kind: 'module', module: child };
@@ -668,6 +707,23 @@ class Module implements ModuleInstance {
     if (this.root === undefined) return undefined;
     const fallback = this.source.variables.get(name)?.default;
     return fallback === undefined ? undefined : { expression: fallback, scope: { module: this } };
+  }
+
+  provider(name: string): ReadonlyMap<string, Value> | undefined {
+    // This module's own block; else the provider of the calling module its
+    // call's `providers` map names, or the same name there - which is how
+    // Terraform hands a child its providers (P298).
+    const block = this.source.providers.get(name);
+    if (block !== undefined) {
+      const entries = new Map<string, Value>();
+      for (const attribute of block.body.attributes) entries.set(attribute.name, evaluate(attribute.expression, { module: this }));
+      return entries;
+    }
+    if (this.parent === undefined) return this.root === undefined || this.root === this ? undefined : this.root.provider(name);
+    const handed = this.handedProviders.get(name);
+    // An aliased provider is only ever handed over; the default one is inherited too.
+    if (handed === undefined && name.includes('.')) return undefined;
+    return this.parent.provider(handed ?? name);
   }
 
   readFile(path: string): string | undefined {

@@ -29,6 +29,7 @@ export const BEST_GUESS_REASONS: ReadonlySet<string> = new Set([
   'route-api-guessed',
   'workflow-named-by-file',
   'environment-from-files',
+  'channel-from-grant',
 ]);
 
 /** What traffic said of the best guesses, for the summary line and the JSON. */

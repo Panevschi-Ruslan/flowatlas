@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:58.455Z",
+  "configHash": "88469d944ef5",
+  "services": [
+    {
+      "name": "cms",
+      "repo": "./cms",
+      "type": "strapi",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 21,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 1386,
+      "packages": {
+        "name": "cms",
+        "runtime": [
+          "@shop/strapi-plugin-notes",
+          "@strapi/strapi",
+          "@studio/strapi-plugin-printer",
+          "strapi-plugin-colors",
+          "strapi-plugin-map-view",
+          "strapi-plugin-maps",
+          "strapi-plugin-pins"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 39,
+      "edges": 24,
+      "types": 2,
+      "unresolved": 19,
+      "durationMs": 1446,
+      "packages": {
+        "name": "key-reads-places-webpack-plugins-console",
+        "runtime": [
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "poller",
+      "repo": "./poller",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 26,
+      "edges": 24,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1382,
+      "packages": {
+        "name": "poller",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 12,
+    "linked": 12,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 13,
+    "called": 12,
+    "uncalled": [
+      "entry:cms:http:PUT:/pins/settings"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 85,
+    "edges": 55,
+    "types": 2,
+    "missed": 25,
+    "sites": 25,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 25
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-types",
-  "generatedAt": "2026-10-16T15:12:10.524Z",
+  "generatedAt": "2026-11-23T14:44:48.946Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -216,7 +216,8 @@
         "signature": {
           "params": [],
           "returns": "type:nest-types#Category[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -235,7 +236,8 @@
             }
           ],
           "returns": "type:nest-types#Status"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -249,7 +251,8 @@
         "signature": {
           "params": [],
           "returns": "type:nest-types#A"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -263,7 +266,8 @@
         "signature": {
           "params": [],
           "returns": "type:nest-types#L0"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -277,7 +281,8 @@
         "signature": {
           "params": [],
           "returns": "type:nest-types#Shape2"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -441,7 +446,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 46
+          }
+        ]
       }
     },
     {
@@ -460,7 +471,14 @@
             }
           ],
           "returns": "type:nest-types#Order"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "in": "nest-types#src/orders/orders.service.ts:OrdersService.create",
+            "line": 33
+          }
+        ]
       }
     },
     {
@@ -479,7 +497,8 @@
             }
           ],
           "returns": "type:nest-types#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -498,7 +517,8 @@
             }
           ],
           "returns": "type:nest-types#Paginated<type:nest-types#Order>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -512,7 +532,8 @@
         "signature": {
           "params": [],
           "returns": "type:nest-types#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -535,7 +556,15 @@
             }
           ],
           "returns": "type:nest-types#Order"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "in": "nest-types#src/orders/orders.service.ts:OrdersService.update",
+            "line": 38,
+            "why": "handed to Object.assign"
+          }
+        ]
       }
     },
     {
@@ -791,7 +820,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

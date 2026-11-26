@@ -1,0 +1,28 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_API_URL",
+        "VITE_JOBS_URL"
+      ],
+      "apiTarget": {
+        "VITE_API_URL": "api",
+        "VITE_JOBS_URL": "jobs"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

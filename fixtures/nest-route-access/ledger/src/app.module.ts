@@ -6,7 +6,8 @@ import { extraProviders } from './entries/extra';
 
 /**
  * Providers assembled from an array declared elsewhere, which is read, and
- * from a call, which is not: a `module-providers-unread` row says so.
+ * from a call whose function builds its list at run time, which is not: a
+ * `module-providers-unread` row says so.
  */
 @Module({
   controllers: [EntriesController],

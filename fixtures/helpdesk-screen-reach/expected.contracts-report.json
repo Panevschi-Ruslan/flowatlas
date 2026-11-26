@@ -1,0 +1,220 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T14:36:19.551Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+        "to": "consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:15:11|emits|consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "string",
+        "symbol": "desk-api#src/tickets/tickets.service.ts:TicketsService.assign"
+      },
+      "receiver": {
+        "service": "desk-api",
+        "typeId": "string",
+        "symbol": "desk-api#src/live/live.controller.ts:LiveController.events"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+        "to": "consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:19:11|emits|consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "string",
+        "symbol": "desk-api#src/tickets/tickets.service.ts:TicketsService.close"
+      },
+      "receiver": {
+        "service": "desk-api",
+        "typeId": "string",
+        "symbol": "desk-api#src/live/live.controller.ts:LiveController.events"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+        "to": "consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:23:11|emits|consumer:desk-api#src/live/live.controller.ts:LiveController.events",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "desk-api",
+        "typeId": "string",
+        "symbol": "desk-api#src/tickets/tickets.service.ts:TicketsService.reopen"
+      },
+      "receiver": {
+        "service": "desk-api",
+        "typeId": "string",
+        "symbol": "desk-api#src/live/live.controller.ts:LiveController.events"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+        "to": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:15:11|emits|consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+        "to": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:15:11|emits|consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:15:11",
+        "to": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:15:11|emits|consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+        "to": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:19:11|emits|consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+        "to": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:19:11|emits|consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:19:11",
+        "to": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:19:11|emits|consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+        "to": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:23:11|emits|consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/ArchivePanel.tsx:onArchiveEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+        "to": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:23:11|emits|consumer:console#src/screens/QueueScreen.tsx:onQueueEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/QueueScreen.tsx:onQueueEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "producer:desk-api#src/tickets/tickets.service.ts:23:11",
+        "to": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+        "type": "emits"
+      },
+      "edgeKey": "producer:desk-api#src/tickets/tickets.service.ts:23:11|emits|consumer:console#src/screens/TicketScreen.tsx:onTicketEvent",
+      "direction": "payload",
+      "reason": "no-type-on-receiver",
+      "message": "consumer:console#src/screens/TicketScreen.tsx:onTicketEvent declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+        "to": "entry:desk-api:http:GET:/desks/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:console#src/live/useDeskEvents.ts:15:20|hits|entry:desk-api:http:GET:/desks/:param/events",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "console#src/live/useDeskEvents.ts:useDeskEvents declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:console#src/live/useDeskEvents.ts:15:20",
+        "to": "entry:desk-api:http:GET:/desks/:param/events",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:console#src/live/useDeskEvents.ts:15:20|hits|entry:desk-api:http:GET:/desks/:param/events",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "console#src/live/useDeskEvents.ts:useDeskEvents declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 3,
+    "hash_differs": 0,
+    "unchecked": 11,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -1,0 +1,6 @@
+mutation RenameProduct($id: String!, $title: String!) {
+  renameProduct(id: $id, title: $title) {
+    id
+    title
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:10.269Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:18.626Z",
   "configHash": "7ae9fc79441a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 503,
+      "durationMs": 837,
       "packages": {
         "name": "lending-library-catalogue",
         "runtime": [],
@@ -30,7 +30,7 @@
       "edges": 6,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 501,
+      "durationMs": 818,
       "packages": {
         "name": "lending-library-kiosk",
         "runtime": [],

@@ -1,4 +1,6 @@
-import type { GraphNode } from '@flowatlas/core';
+import { frameworkCallOf, frameworkCallSaid, isMessageTypeNode, UNREFERENCED_META, type GraphNode } from '@flowatlas/core';
+import { messageTypeFacts, unreachedHandler, unselectedSaid } from './message-types.js';
+import { botCodeBehind, botFilesOf } from './bots.js';
 import type { GraphDb } from '../db/reader.js';
 import type { LinkReport } from '../report.js';
 import { matchesRoutePattern } from '../route-audit.js';
@@ -25,6 +27,13 @@ export const EXTERNALLY_TRIGGERED = [
   // nothing in the graph reaching it still says nothing about whether anything
   // does.
   'invoke',
+  // A task runs on a schedule, from code that names it, and from a command
+  // or a development endpoint a person uses; only the first two are read (P258).
+  'task',
+  // A screen is shown at its address to whoever opens it - a typed address, a
+  // bookmark, a link in a mail - as well as through the links the reading
+  // followed, so no link landing on it says nothing about whether it is used (P363).
+  'screen',
 ] as const;
 
 /** Findings the DI resolver records when it cannot say what a token means. */
@@ -45,7 +54,7 @@ export const ENTRY_CLASS_NAMES = ['actionable', 'stream', 'infrastructure', 'dec
 export type EntryClassName = (typeof ENTRY_CLASS_NAMES)[number];
 
 /** What kind of infrastructure a route is, for the line that counts them. */
-export type InfrastructureRole = 'probe' | 'webhook' | 'callback' | 'discovery' | 'configured';
+export type InfrastructureRole = 'probe' | 'webhook' | 'callback' | 'discovery' | 'configured' | 'bot';
 
 /**
  * How sure a row is that nothing reaches the route.
@@ -113,8 +122,16 @@ export interface DeadEvidence {
   callers?: number;
   caller?: string;
   missing?: 'consumer' | 'producer' | 'both';
+  /** The addresses the router shows it at (P363). */
+  routedAt?: string[];
+  /** How many links and navigations the reading followed land on it (P363). */
+  links?: number;
   unresolvedInjects?: number;
   classReached?: true;
+  /** Its name is written nowhere in its repository but where it is declared, so no unread call could name it (P370). */
+  unreferenced?: true;
+  /** The framework calls it by itself, or a hook of it (P399): `startup (onModuleInit)`. */
+  framework?: string;
   via?: string;
   seen?: { count: number; lastSeen: string | null; window: string };
   neverSeen?: { window: string; confidence: NeverSeenConfidence };
@@ -344,6 +361,7 @@ const ROLE_REASONS: Readonly<Record<InfrastructureRole, string>> = {
   callback: 'looks like a callback a provider redirects to; whoever sends it there is outside the project',
   discovery: 'a well-known address, asked for by clients outside the project',
   configured: 'named infrastructure under dead.infrastructure; its callers are outside the project',
+  bot: "hands its request to a bot's code: the bot's webhook, posted to by the bot's platform from outside the project",
 };
 
 const infrastructureRow = (role: InfrastructureRole, why: string): RouteClass => ({
@@ -528,6 +546,8 @@ interface RouteContext {
   readonly options: DeadOptions;
   nearMissesOf(id: string): NearMiss[];
   oneOffsOf(route: GraphNode): OneOff[];
+  /** The bot's code a route hands its request to, as impact reads a bot's webhook (P396, P400). */
+  botCodeOf(route: GraphNode): GraphNode | undefined;
 }
 
 const routeContext = (db: GraphDb, report: LinkReport | undefined, options: DeadOptions): RouteContext => {
@@ -535,9 +555,11 @@ const routeContext = (db: GraphDb, report: LinkReport | undefined, options: Dead
   // rather than re-matched here, so the command and the report agree.
   const nearMissed = report?.routes.nearMissed ?? {};
   let unjoined: Unjoined[] | undefined;
+  let bots: ReadonlySet<string> | undefined;
   return {
     db,
     options,
+    botCodeOf: (route) => botCodeBehind(db, route, (bots ??= botFilesOf(db))),
     nearMissesOf: (id) =>
       (Object.hasOwn(nearMissed, id) ? (nearMissed[id] ?? []) : []).slice(0, NEAR_MISSES_NAMED).flatMap((callId) => {
         const call = db.node(callId);
@@ -585,11 +607,48 @@ const routeVerdict = (
   return { verdict: couldHit.length > 0 ? 'likely-dead' : 'dead', evidence };
 };
 
+/** The verbs a request carrying something is sent with: a bot's platform posts its updates. */
+const SENT_VERBS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH']);
+
+/**
+ * A route nothing in the project calls, and nothing its address or names say
+ * explains, whose handler hands the request to a bot's code within a few
+ * calls (P400): the bot's webhook, reached from the bot's platform, as
+ * `impact` counts it a bot (P396). So `dead`, `list_entries` and `impact`
+ * agree. Any other class stands as it was.
+ */
+const botWebhookOf = (context: RouteContext, route: GraphNode, found: RouteClass): RouteClass => {
+  if (found.class !== 'actionable' || route.kind !== 'http') return found;
+  if (!SENT_VERBS.has(routeFactsOf(route).method.toUpperCase())) return found;
+  const bot = context.botCodeOf(route);
+  if (bot === undefined) return found;
+  return { class: 'infrastructure', role: 'bot', why: `hands its request to ${bot.label}${bot.file === undefined ? '' : ` (${bot.file})`}`, reason: ROLE_REASONS.bot };
+};
+
 /** One route nothing calls, as a row: its class, why, and its verdict with the evidence. */
 const routeRow = (context: RouteContext, node: GraphNode): DeadEntry => {
   const { db, options } = context;
+  // Never reached whoever asks for it, inside the project or out (P385): a
+  // route registered before it in the same router answers every request for
+  // it, so no public caller or near miss makes it less dead.
+  const shadowedBy = node.meta?.['shadowedBy'];
+  if (typeof shadowedBy === 'string') {
+    const first = splitKey(keyOf(shadowedBy));
+    return {
+      id: node.id,
+      service: node.repo,
+      kind: node.kind ?? 'http',
+      key: keyOf(node.id),
+      ...located(node),
+      reason: `never reached: ${first.method} ${first.path}, registered before it in the same router, answers every request for it`,
+      class: 'actionable',
+      why: `registered after ${shadowedBy}`,
+      confidence: 'dead',
+      verdict: 'dead',
+    };
+  }
   const handler = db.edgesFrom(node.id, ['handles']).map((edge) => db.node(edge.to)?.label).find((label) => label !== undefined);
-  const found = classifyRoute(routeFactsOf(node, handler), options);
+  const found = botWebhookOf(context, node, classifyRoute(routeFactsOf(node, handler), options));
   const couldHit = context.nearMissesOf(node.id);
   const oneOff = found.class === 'actionable' ? context.oneOffsOf(node) : [];
   const { verdict, evidence } = routeVerdict(found, couldHit, oneOff);
@@ -711,6 +770,20 @@ export const deadEntries = (
     if (excluded.has(node.kind ?? '')) continue;
     rows.push(routeRow(context, node));
   }
+  // GraphQL fields no request selects (P232). A field resolver is reached only
+  // through a selection under a field returning its type, so it is reached as
+  // soon as any such field is: listing one nobody selects by name would be
+  // wrong for every client that selects it through a fragment this never read (D4).
+  const fields = db.nodesByType('entry', 'graphql');
+  const selected = (entry: GraphNode): boolean => db.edgesTo(entry.id, ['http_calls', 'hits']).length > 0;
+  const returned = new Set(
+    fields.filter(selected).map((entry) => `${entry.repo}#${String(entry.meta?.['returns'] ?? '').replace(/[[\]!]/g, '')}`),
+  );
+  for (const node of fields) {
+    if (!inService(node, options.service) || selected(node)) continue;
+    if (node.meta?.['field'] === true && returned.has(`${node.repo}#${String(node.meta?.['type'] ?? '')}`)) continue;
+    rows.push(routeRow(context, node));
+  }
   for (const channel of report?.channels.noProducers ?? []) {
     for (const edge of db.edgesFrom(channel, ['consumes'])) {
       const consumer = db.node(edge.to);
@@ -830,6 +903,17 @@ export const deadChannels = (
     });
   }
   for (const id of report.channels.noProducers) record(id, 'producer', () => ({ said: 'no producer in any repo', streams: false }));
+  // A type of message published on a channel whose consumers choose by type, and chosen by none (P358).
+  for (const id of report.channels.unselectedTypes ?? []) {
+    const node = db.node(id);
+    if (node === undefined) continue;
+    const answered = messageTypeAnswer(db, node);
+    const facts = messageTypeFacts(db, node);
+    const producers = servicesOf(db, facts.producers.map((producer) => producer.id));
+    const consumers = servicesOf(db, facts.receivers.map((receiver) => receiver.consumer.id));
+    if (options.service !== undefined && ![...producers, ...consumers].includes(options.service)) continue;
+    rows.set(id, { id, producers, consumers, reason: answered.reason, verdict: answered.verdict, evidence: answered.evidence });
+  }
 
   const traffic = trafficFor(db, options);
   return [...rows.values()]
@@ -902,6 +986,11 @@ const providerAnswer = (db: GraphDb, context: ProviderContext, provider: GraphNo
   if (injectors.length > 0) return { verdict: 'alive', reason: 'injected', evidence: aliveBy(injectors) };
   const reaching = (context.owners.get(provider.id) ?? []).flatMap((method) => db.edgesTo(method, METHOD_CALLERS));
   if (reaching.length > 0) return { verdict: 'alive', reason: 'its methods are reached', evidence: aliveBy(reaching) };
+  // A class the framework builds and calls a hook of (P399): its reader marks the hook only where a module registers it.
+  const hook = (context.owners.get(provider.id) ?? []).map((method) => frameworkCallOf(db.node(method))).find((call) => call !== undefined);
+  if (hook !== undefined) {
+    return { verdict: 'alive', reason: `the framework builds it and calls its ${hook.hook} at ${hook.when}`, evidence: { framework: frameworkCallSaid(hook) } };
+  }
 
   const unresolved = context.unresolvedInjects.get(provider.repo) ?? 0;
   // A class no module even registers is not built by the container at all, so
@@ -957,16 +1046,33 @@ export const deadProviders = (db: GraphDb, options: DeadOptions = {}): DeadProvi
  */
 const methodAnswer = (db: GraphDb, context: ProviderContext, method: GraphNode): Answered => {
   const reaching = db.edgesTo(method.id, METHOD_CALLERS);
+  // Handed work only by routes a route registered before each answers in
+  // their place (P385): it never runs.
+  const shadowed = reaching.filter((edge) => typeof db.node(edge.from)?.meta?.['shadowedBy'] === 'string');
+  if (reaching.length > 0 && shadowed.length === reaching.length) {
+    const routes = shadowed.map((edge) => db.node(edge.from)?.label ?? edge.from).sort(byId);
+    return {
+      verdict: 'dead',
+      reason: `handles only ${routes.join(', ')}, which a route registered before ${routes.length === 1 ? 'it' : 'each'} in the same router answers in ${routes.length === 1 ? 'its' : 'their'} place`,
+      evidence: aliveBy(reaching),
+    };
+  }
   if (reaching.length > 0) return { verdict: 'alive', reason: 'called', evidence: aliveBy(reaching) };
+  // A lifecycle hook of a class the framework builds (P399): the framework is its caller.
+  const framework = frameworkCallOf(method);
+  if (framework !== undefined) return { verdict: 'alive', reason: `the framework calls it at ${framework.when}`, evidence: { framework: frameworkCallSaid(framework) } };
   const owner = ownerOf(method.id);
   const holder = owner === undefined ? undefined : db.node(owner);
   if (holder === undefined) return { verdict: 'likely-dead', reason: 'nothing calls it; it belongs to no class the graph holds', evidence: {} };
   const used = providerAnswer(db, context, holder);
   if (used.verdict === 'alive' || used.verdict === 'unknown') {
+    const unreferenced = method.meta?.[UNREFERENCED_META] === true;
     return {
       verdict: 'likely-dead',
-      reason: `nothing calls it, though its class is ${used.verdict === 'alive' ? 'used' : 'reached from outside'}: a call through a receiver the reading could not type may`,
-      evidence: { classReached: true, ...(used.evidence.outside === undefined ? {} : { outside: used.evidence.outside }) },
+      reason: unreferenced
+        ? `nothing calls it, though its class is ${used.verdict === 'alive' ? 'used' : 'reached from outside'}, and its name is written nowhere else in its repository`
+        : `nothing calls it, though its class is ${used.verdict === 'alive' ? 'used' : 'reached from outside'}: a call through a receiver the reading could not type may`,
+      evidence: { classReached: true, ...(unreferenced ? { unreferenced: true as const } : {}), ...(used.evidence.outside === undefined ? {} : { outside: used.evidence.outside }) },
     };
   }
   return { verdict: used.verdict, reason: `nothing calls it and its class is not reached (${used.reason})`, evidence: used.evidence };
@@ -1027,6 +1133,14 @@ const ENTRY_CALLERS = ['http_calls', 'hits', 'triggers', 'consumes', 'calls'] as
 
 const entryAnswer = (db: GraphDb, report: LinkReport | undefined, context: RouteContext, entry: GraphNode): Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> => {
   const kind = entry.kind ?? '';
+  if (kind === 'screen') {
+    const links = db.edgesFrom(entry.id, ['handles']).flatMap((edge) => linksTo(db, edge.to));
+    return {
+      verdict: 'unknown',
+      reason: `a screen is opened at its address from outside the graph; ${links.length === 0 ? 'no link to it was read' : `${links.length} link${links.length === 1 ? '' : 's'} read land${links.length === 1 ? 's' : ''} on it`}`,
+      evidence: { outside: kind, links: links.length },
+    };
+  }
   if ((EXTERNALLY_TRIGGERED as readonly string[]).includes(kind)) {
     return { verdict: 'unknown', reason: `a ${kind} way in is triggered from outside the graph`, evidence: { outside: kind } };
   }
@@ -1053,13 +1167,62 @@ const entryAnswer = (db: GraphDb, report: LinkReport | undefined, context: Route
   return { verdict: 'unknown', reason: `nothing in the graph reaches it, and a ${kind || 'way in'} of this kind is not judged`, evidence: {} };
 };
 
-const channelAnswer = (db: GraphDb, report: LinkReport | undefined, channel: GraphNode): Answered => {
+/**
+ * A type of message on a channel (P358): alive when something publishes it
+ * and live code selects it. Published and selected by nothing is `dead` where
+ * every consumer of the channel chooses by type and `unknown` where one takes
+ * every type alike or was not read; selected and published by nothing read is
+ * `dead`, or `unknown` where a publish on the channel has a type not read.
+ */
+const messageTypeAnswer = (db: GraphDb, type: GraphNode): Answered => {
+  const facts = messageTypeFacts(db, type);
+  const live = facts.selectors.filter((selector) => selector.unreached === undefined);
+  if (facts.producers.length > 0) {
+    if (live.length > 0) return { verdict: 'alive', reason: 'published and selected', evidence: aliveBy(facts.producers.map((producer) => ({ from: producer.id }))) };
+    const said = unselectedSaid(facts);
+    return {
+      verdict: said?.sureness === 'unsure' ? 'unknown' : 'dead',
+      reason: said?.said ?? `no code selects ${facts.value}`,
+      evidence: { missing: 'consumer', ...(facts.channel === undefined ? {} : { via: facts.channel.id }) },
+    };
+  }
+  const unread = facts.unreadProducers.length;
+  return {
+    verdict: unread > 0 ? 'unknown' : 'dead',
+    reason:
+      `nothing read publishes ${facts.value}` +
+      (unread === 0 ? '' : `; ${unread} publish${unread === 1 ? '' : 'es'} on ${facts.channel?.label ?? 'its channel'} send${unread === 1 ? 's' : ''} a type not read`),
+    evidence: { missing: 'producer', ...(facts.channel === undefined ? {} : { via: facts.channel.id }) },
+  };
+};
+
+/**
+ * A consumer (P358): `dead` when its handler's class is built by nothing, and
+ * otherwise as the channels it consumes are - alive when one is published.
+ */
+const consumerAnswer = (db: GraphDb, report: LinkReport | undefined, consumer: GraphNode, silent: SilentChannels = () => deadChannels(db, report)): Answered => {
+  const unreached = unreachedHandler(db, consumer);
+  if (unreached !== undefined) return { verdict: 'dead', reason: unreached, evidence: {} };
+  const channels = db.edgesTo(consumer.id, ['consumes']).flatMap((edge) => db.node(edge.from) ?? []);
+  const answers = channels.map((channel) => ({ channel, answered: channelAnswer(db, report, channel, silent) }));
+  const published = answers.find(({ channel }) => db.edgesTo(channel.id, ['emits']).length > 0);
+  if (published !== undefined) return { verdict: 'alive', reason: 'something publishes what it consumes', evidence: { via: published.channel.id } };
+  const [first] = answers;
+  if (first === undefined) return { verdict: 'unknown', reason: 'it consumes no channel the graph holds', evidence: {} };
+  return { verdict: first.answered.verdict === 'alive' ? 'unknown' : first.answered.verdict, reason: first.answered.reason, evidence: { ...first.answered.evidence, via: first.channel.id } };
+};
+
+/** The channels missing an end, as `deadChannels` lists them: read once by a judge that asks of many channels. */
+type SilentChannels = () => readonly DeadChannel[];
+
+const channelAnswer = (db: GraphDb, report: LinkReport | undefined, channel: GraphNode, silent: SilentChannels = () => deadChannels(db, report)): Answered => {
+  if (isMessageTypeNode(channel)) return messageTypeAnswer(db, channel);
   const producers = db.edgesTo(channel.id, ['emits']);
   const consumers = db.edgesFrom(channel.id, ['consumes']);
   if (producers.length > 0 && consumers.length > 0) {
     return { verdict: 'alive', reason: 'published and consumed', evidence: aliveBy(producers) };
   }
-  const row = deadChannels(db, report).find((found) => found.id === channel.id);
+  const row = silent().find((found) => found.id === channel.id);
   if (row !== undefined) return { verdict: row.verdict, reason: row.reason, evidence: row.evidence };
   return {
     verdict: 'dead',
@@ -1108,44 +1271,134 @@ export const deadVerdict = (
   report: LinkReport | undefined,
   id: string,
   options: DeadOptions = {},
-): DeadAnswer | undefined => {
-  const node = db.node(id);
-  if (node === undefined) return undefined;
+): DeadAnswer | undefined => deadJudge(db, report, options)(id);
+
+/** The node types `dead` judges; any other is answered `unknown` without a look. */
+export const JUDGED_TYPES: readonly string[] = ['entry', 'channel', 'provider', 'method', 'function', 'consumer', 'ui_component'];
+
+/**
+ * `deadVerdict` for many nodes of one graph (P364): what every verdict reads
+ * of the whole graph (the routes' near misses, the classes' modules and
+ * injects, the channels missing an end, the traffic) is read once, on first
+ * need, and each node is then judged by the same functions. An answer that
+ * says whether each of its rows runs asks this once per row.
+ */
+export const deadJudge = (
+  db: GraphDb,
+  report: LinkReport | undefined,
+  options: DeadOptions = {},
+): ((id: string) => DeadAnswer | undefined) => {
   const context = routeContext(db, report, options);
-  const providers = (): ProviderContext => providerContext(db);
-  const statically: Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> =
-    node.type === 'entry'
-      ? entryAnswer(db, report, context, node)
-      : node.type === 'channel'
-        ? channelAnswer(db, report, node)
-        : node.type === 'provider'
-          ? node.kind === 'controller'
-            ? controllerAnswer(db, report, context, providers(), node)
-            : providerAnswer(db, providers(), node)
-          : node.type === 'method'
-            ? methodAnswer(db, providers(), node)
-            : node.type === 'function'
-              ? functionAnswer(db, node)
-              : { verdict: 'unknown', reason: `dead judges ways in, channels, classes, methods and functions, not a ${node.type}`, evidence: {} };
-  const answered = withTraffic(statically, node.id, trafficFor(db, options));
+  let providerFacts: ProviderContext | undefined;
+  const providers = (): ProviderContext => (providerFacts ??= providerContext(db));
+  let silentRows: readonly DeadChannel[] | undefined;
+  const silent: SilentChannels = () => (silentRows ??= deadChannels(db, report));
+  let traffic: { overlay: TrafficOverlay | undefined } | undefined;
+  return (id) => {
+    const node = db.node(id);
+    if (node === undefined) return undefined;
+    const statically: Answered & Partial<Pick<DeadEntry, 'class' | 'role'>> =
+      node.type === 'entry'
+        ? entryAnswer(db, report, context, node)
+        : node.type === 'channel'
+          ? channelAnswer(db, report, node, silent)
+          : node.type === 'provider'
+            ? node.kind === 'controller'
+              ? controllerAnswer(db, report, context, providers(), node)
+              : providerAnswer(db, providers(), node)
+            : node.type === 'method'
+              ? methodAnswer(db, providers(), node)
+              : node.type === 'function'
+                ? functionAnswer(db, node)
+                : node.type === 'consumer'
+                  ? consumerAnswer(db, report, node, silent)
+                  : node.type === 'ui_component'
+                    ? componentAnswer(db, node)
+                    : { verdict: 'unknown', reason: `dead judges ways in, channels, consumers, classes, components, methods and functions, not a ${node.type}`, evidence: {} };
+    traffic ??= { overlay: trafficFor(db, options) };
+    const answered = withTraffic(statically, node.id, traffic.overlay);
+    return {
+      id: node.id,
+      type: node.type,
+      ...(node.kind === undefined ? {} : { kind: node.kind }),
+      ...(node.repo === '' ? {} : { service: node.repo }),
+      ...located(node),
+      verdict: answered.verdict,
+      reason: answered.reason,
+      ...(answered.class === undefined ? {} : { class: answered.class }),
+      ...(answered.role === undefined ? {} : { role: answered.role }),
+      evidence: answered.evidence ?? {},
+    };
+  };
+};
+
+/** The links and navigations that land on a screen's component: every edge into it but its screens' own. */
+const linksTo = (db: GraphDb, component: string): Array<{ from: string }> =>
+  db.edgesTo(component, ['handles', 'calls', 'triggers']).filter((edge) => {
+    const from = db.node(edge.from);
+    return !(from?.type === 'entry' && from.kind === 'screen');
+  });
+
+/**
+ * A component the router shows (P363): alive, at the addresses its screens
+ * are mounted at, whether or not a link the reading followed lands on it -
+ * the router shows it to whoever opens the address. Undefined where no
+ * screen shows it.
+ */
+const routedAnswer = (db: GraphDb, component: GraphNode): Answered | undefined => {
+  const screens = db
+    .edgesTo(component.id, ['handles'])
+    .flatMap((edge) => db.node(edge.from) ?? [])
+    .filter((node) => node.type === 'entry' && node.kind === 'screen')
+    .sort((a, b) => byId(a.id, b.id));
+  const [first] = screens;
+  if (first === undefined) return undefined;
+  const at = screens.map((screen) => screen.label);
+  const links = linksTo(db, component.id).length;
   return {
-    id: node.id,
-    type: node.type,
-    ...(node.kind === undefined ? {} : { kind: node.kind }),
-    ...(node.repo === '' ? {} : { service: node.repo }),
-    ...located(node),
-    verdict: answered.verdict,
-    reason: answered.reason,
-    ...(answered.class === undefined ? {} : { class: answered.class }),
-    ...(answered.role === undefined ? {} : { role: answered.role }),
-    evidence: answered.evidence ?? {},
+    verdict: 'alive',
+    reason: `routed at ${at.join(', ')}; ${links === 0 ? 'no link to it was read' : `${links} link${links === 1 ? '' : 's'} read land${links === 1 ? 's' : ''} on it`}`,
+    evidence: { via: first.id, routedAt: at, links },
+  };
+};
+
+/**
+ * A component (P363): alive where the router shows it or a link, a
+ * navigation or a parent that renders it by its tag reaches it (P370: an
+ * Angular template's tags are read against the components' selectors, as
+ * JSX's are); otherwise `likely-dead`, since a component handed on as a
+ * value (a dialog opened with it, an outlet made with it) is rendered by
+ * nothing the graph draws, and with `unreferenced` where its name is written
+ * nowhere else in its repository, so nothing could hand it on.
+ */
+const componentAnswer = (db: GraphDb, component: GraphNode): Answered => {
+  const routed = routedAnswer(db, component);
+  if (routed !== undefined) return routed;
+  const reaching = linksTo(db, component.id);
+  if (reaching.length > 0) return { verdict: 'alive', reason: 'a link, a navigation or a parent reaches it', evidence: aliveBy(reaching) };
+  if (component.meta?.[UNREFERENCED_META] === true) {
+    return {
+      verdict: 'likely-dead',
+      reason: 'no route shows it, no link lands on it and no template renders it, and its name is written nowhere else in its repository',
+      evidence: { unreferenced: true },
+    };
+  }
+  return {
+    verdict: 'likely-dead',
+    reason: 'no route shows it, no link the reading followed lands on it and no template read renders it; code that hands it on as a value may',
+    evidence: {},
   };
 };
 
 /** A function is reached by a call; one nothing calls may be imported by code the reading did not follow. */
 const functionAnswer = (db: GraphDb, fn: GraphNode): Answered => {
+  const routed = routedAnswer(db, fn);
+  if (routed !== undefined) return routed;
   const reaching = db.edgesTo(fn.id, METHOD_CALLERS);
   if (reaching.length > 0) return { verdict: 'alive', reason: 'called', evidence: aliveBy(reaching) };
+  // A hook of a class the framework builds, drawn as a function by the reading that drew it (P399).
+  const framework = frameworkCallOf(fn);
+  if (framework !== undefined) return { verdict: 'alive', reason: `the framework calls it at ${framework.when}`, evidence: { framework: frameworkCallSaid(framework) } };
   return { verdict: 'likely-dead', reason: 'nothing calls it; an import the reading did not follow may', evidence: {} };
 };
 

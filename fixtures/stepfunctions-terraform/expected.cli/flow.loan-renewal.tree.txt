@@ -52,4 +52,4 @@
                   -> RejectLoan [Pass]                                  lending/statemachine/loan-approval.asl.json:152
                     -> LoanRejected [Fail]                              lending/statemachine/loan-approval.asl.json:159
             -> RenewalComplete [Succeed]                                lending/statemachine/loan-renewal.asl.json:149
-unresolved on this path: 1
+unresolved on this path: 9

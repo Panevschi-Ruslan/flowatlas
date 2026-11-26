@@ -54,7 +54,7 @@ const asked = async (server: ReturnType<typeof createFlowatlasServer>): Promise<
   await server.connect(serverSide);
   const client = new Client({ name: 'close-test', version: '0' });
   await client.connect(clientSide);
-  const answer = (await client.callTool({ name: 'list_entries', arguments: {} })) as { content: Array<{ text: string }> };
+  const answer = (await client.callTool({ name: 'list_entries', arguments: { verbose: true } })) as { content: Array<{ text: string }> };
   expect(answer.content[0]?.text).toContain('GET /carts');
   return client;
 };

@@ -1,0 +1,165 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T14:50:10.261Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:20:10@11:12",
+        "to": "entry:catalog:http:GET:/latest",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:20:10@11:12|hits|entry:catalog:http:GET:/latest",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/api.ts:latestProducts declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:20:10@11:12",
+        "to": "entry:catalog:http:GET:/latest",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:20:10@11:12|hits|entry:catalog:http:GET:/latest",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /latest@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:24:10@11:12",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:24:10@11:12|hits|entry:stock:http:GET:/levels",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/api.ts:stockLevels declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:24:10@11:12",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:24:10@11:12|hits|entry:stock:http:GET:/levels",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /levels@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:33:10@11:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:33:10@11:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/api.ts:catalogUp declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:33:10@11:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:33:10@11:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/api.ts:catalogUp declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:38:10@11:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:38:10@11:12|hits|entry:stock:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/api.ts:stockUp declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:38:10@11:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:38:10@11:12|hits|entry:stock:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/api.ts:stockUp declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:50:35@11:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:50:35@11:12|hits|entry:catalog:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/api.ts:catalogBoard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:50:35@11:12",
+        "to": "entry:catalog:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:50:35@11:12|hits|entry:catalog:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/api.ts:catalogBoard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:52:33@11:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:52:33@11:12|hits|entry:stock:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/api.ts:stockBoard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/api.ts:52:33@11:12",
+        "to": "entry:stock:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/api.ts:52:33@11:12|hits|entry:stock:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/api.ts:stockBoard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 12,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

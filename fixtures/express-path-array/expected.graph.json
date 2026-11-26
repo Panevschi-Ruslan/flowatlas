@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "express-path-array",
-  "generatedAt": "2026-10-08T09:12:32.815Z",
+  "generatedAt": "2026-11-23T14:34:55.011Z",
   "nodes": [
     {
       "id": "entry:express-path-array:http:GET:/api/i/:param",
@@ -113,7 +113,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -136,7 +137,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -158,7 +160,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 9100,
+            "file": "src/server.ts",
+            "line": 10
+          }
+        ]
       }
     }
   ],

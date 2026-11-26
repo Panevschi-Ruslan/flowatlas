@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:55.663Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:45:51.652Z",
   "services": [
     {
       "name": "api",
@@ -514,7 +514,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -535,7 +542,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -582,7 +596,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 43
+          }
+        ]
       }
     },
     {
@@ -601,7 +621,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 33
+          }
+        ]
       }
     },
     {
@@ -620,7 +646,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 28
+          }
+        ]
       }
     }
   ],

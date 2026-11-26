@@ -1,15 +1,35 @@
 import { normalizePath, PARAM_PLACEHOLDER, UNREAD_SPAN, wasRead, type GraphNode } from '@flowatlas/core';
 import { cmp } from './order.js';
+import { registeredFirst, routerOf } from './route-order.js';
 
 export interface RouteMatch {
   entry: GraphNode;
-  /** Ids of the routes that were beaten on specificity, when any were. */
+  /** Ids of the routes that were beaten on specificity, or on registration order and specificity both, when any were. */
   runnersUp?: string[];
   /**
    * The settings whose part of the route's address was taken as empty, when the
    * route answered only because it was (R144). See {@link assumedMountOf}.
    */
   mountAssumed?: readonly string[];
+  /** How the route was chosen over others that answer too, where any do (P385). See {@link RouteChoice}. */
+  choice?: RouteChoice;
+}
+
+/**
+ * How one route was chosen among several that answer a request (P385), for
+ * the edge to say.
+ *
+ * `shadows`: routes that spell the address out as far or further, which a
+ * router trying routes in order never reaches because this one is registered
+ * first in the same router. `orderUnread`: routes of such a router whose order
+ * against this one was not read - two files, two receivers, two controllers
+ * whose place was not read - so the request may land there instead; the join
+ * is then a guess.
+ */
+export interface RouteChoice {
+  note: string;
+  shadows?: string[];
+  orderUnread?: string[];
 }
 
 export interface RouteMiss {
@@ -282,8 +302,10 @@ const methodAnswers = (routeMethod: string, requestMethod: string): boolean => {
  *
  * Wildcards first, then holes, then how many segments are spelled out — which
  * only ever separates two wildcard routes, since two routes that answer the same
- * request and hold no wildcard are the same length. That is the order every
- * router this tool reads tries its routes in.
+ * request and hold no wildcard are the same length. That is the order a router
+ * that ranks its routes tries them in (Fastify's, the file routers, the
+ * front-end routers). A router that tries routes in the order they are
+ * registered is decided by that order first, where it was read (P385).
  */
 const specificityOf = (routePath: string): [number, number, number] => {
   const segments = segmentsOf(routePath);
@@ -303,10 +325,24 @@ const moreSpecific = (a: readonly number[], b: readonly number[]): number => {
 /**
  * Finds the route that answers a request.
  *
- * When two routes answer and one spells out a segment the other leaves open,
- * the spelled-out one wins: that is what every router this tool reads does, and
- * refusing to choose there would lose a real edge. A genuine tie is a different
- * matter, since which route answers then depends on registration order, and the
+ * ## Which of two routes answers (P385)
+ *
+ * Two kinds of router answer differently. Express, Koa's router, Hono and
+ * NestJS on its default adapter try routes in the order they are registered
+ * and the first that matches answers, so `GET /orders/:id` registered above
+ * `GET /orders/latest` takes every request for `/orders/latest`. Fastify's,
+ * the file routers, the front-end routers - and NestJS on Fastify or with
+ * `routeResolutionStrategy: 'specificity'` - rank routes by how much each
+ * spells out. So routes of one router whose order was read
+ * (`registeredFirst`) are decided by it first: a route registered after
+ * another that answers too is out, whatever it spells out, and the match says
+ * which routes it shadows. Among what is left, the spelled-out one wins, and
+ * where a route it was preferred to is one whose order against it was not
+ * read, the match says so and the join is a guess. A route for every verb or
+ * under a wildcard is never put first by its order: that is how a check is
+ * installed in front of other routes, and it hands the request on.
+ *
+ * A genuine tie that no read order settles is a different matter, and the
  * honest answer is that it cannot be told from here.
  *
  * A route beaten by a catch-all's own margin is not a runner-up. The note a
@@ -394,9 +430,21 @@ export const matchRoute = (
   if (matching.length === 1) return matched(matching[0] as GraphNode);
   if (matching.length === 0) return { reason: 'not-found', candidates: [] };
 
-  const ranked = matching.map((entry) => specificityOf(answers.get(entry)?.path ?? ''));
+  const rankOf = (entry: GraphNode): [number, number, number] => specificityOf(answers.get(entry)?.path ?? '');
+  // A router that tries routes in the order they are registered answers with
+  // the first of them (P385): a route registered after another of the same
+  // router that answers too is never reached for this request, whatever it
+  // spells out. Taken out before specificity decides among the rest, which
+  // are routers that rank, or routes whose order against each other was not
+  // read.
+  const beaten = new Set(
+    matching.filter((later) => matching.some((earlier) => earlier !== later && inOrder(earlier) && inOrder(later) && registeredFirst(earlier, later) === 'a')),
+  );
+  const contending = matching.filter((entry) => !beaten.has(entry));
+
+  const ranked = contending.map(rankOf);
   const winning = ranked.reduce((best, rank) => (moreSpecific(rank, best) < 0 ? rank : best));
-  const best = matching.filter((_, index) => moreSpecific(ranked[index] as number[], winning) === 0);
+  const best = contending.filter((_, index) => moreSpecific(ranked[index] as number[], winning) === 0);
   if (best.length > 1) {
     const applications = [...new Set(best.map(applicationOf))].sort();
     return {
@@ -405,13 +453,71 @@ export const matchRoute = (
       ...(applications.length > 1 ? { applications } : {}),
     };
   }
-  return matched(
-    best[0] as GraphNode,
-    matching
-      .filter((entry, index) => entry !== best[0] && (ranked[index] as number[])[0] === winning[0])
-      .map((entry) => entry.id)
-      .sort(),
+  const winner = best[0] as GraphNode;
+  const runnersUp = contending.filter((entry, index) => entry !== winner && (ranked[index] as number[])[0] === winning[0]);
+  // Registered after the winner and less specific too: beaten both ways.
+  const behind = [...beaten].filter((entry) => moreSpecific(rankOf(entry), winning) > 0 && rankOf(entry)[0] === winning[0] && registeredFirst(winner, entry) === 'a');
+  const choice = choiceOf(
+    winner,
+    [...runnersUp, ...behind],
+    [...beaten].filter((entry) => moreSpecific(rankOf(entry), winning) <= 0),
   );
+  return {
+    ...matched(winner, [...runnersUp, ...behind].map((entry) => entry.id).sort()),
+    ...(choice === undefined ? {} : { choice }),
+  };
+};
+
+/**
+ * A route an order of registration may decide for: one verb, no wildcard.
+ *
+ * A route for every verb or under a wildcard is how a check is put in front
+ * of other routes (`router.all('*', auth)`), and it hands the request on more
+ * often than it answers it, so registering one first is not read as it
+ * answering first.
+ */
+const inOrder = (entry: GraphNode): boolean =>
+  String(entry.meta?.['method'] ?? '').toUpperCase() !== 'ALL' && !segmentsOf(String(entry.meta?.['path'] ?? '')).includes('*');
+
+const listed = (entries: readonly GraphNode[]): string =>
+  entries
+    .map((entry) => entry.id)
+    .sort(cmp)
+    .join(', ');
+
+/** ` on OrdersController`, or ` (OrdersController is registered before OrderExportsController)`. */
+const routersSaid = (winner: GraphNode, others: readonly GraphNode[]): string => {
+  const ours = routerOf(winner);
+  const theirs = [...new Set(others.map(routerOf))].filter((router) => router !== ours).sort(cmp);
+  return theirs.length === 0 ? ` on ${ours}` : ` (${ours} is registered before ${theirs.join(' and ')})`;
+};
+
+/**
+ * What the edge says about how its route was chosen (P385): over routes
+ * registered after it in the same router that spell the address out as far or
+ * further; over routes whose order against it was not read; over routes
+ * registered after it; or for being more specific, in a router that ranks.
+ */
+const choiceOf = (winner: GraphNode, runnersUp: readonly GraphNode[], shadows: readonly GraphNode[]): RouteChoice | undefined => {
+  const unread = runnersUp.filter((entry) => inOrder(entry) && registeredFirst(entry, winner) === 'unread');
+  const after = runnersUp.filter((entry) => !unread.includes(entry) && registeredFirst(winner, entry) === 'a');
+  const ranked = runnersUp.filter((entry) => !unread.includes(entry) && !after.includes(entry));
+  const said = [
+    shadows.length === 0
+      ? ''
+      : `answers before ${listed(shadows)}, registered after it${routersSaid(winner, shadows)}: the router tries routes in the order they are registered, so ${shadows.length === 1 ? 'that route is' : 'those routes are'} never reached by this request`,
+    unread.length === 0
+      ? ''
+      : `chosen over ${listed(unread)} for being more specific; the router tries routes in the order they are registered and which comes first is not read, so the request may land there`,
+    after.length === 0 ? '' : `chosen over ${listed(after)}, registered after it${routersSaid(winner, after)}`,
+    ranked.length === 0 ? '' : `chosen over ${listed(ranked)} for being more specific, as the router ranks routes`,
+  ].filter((part) => part !== '');
+  if (said.length === 0) return undefined;
+  return {
+    note: said.join('; '),
+    ...(shadows.length === 0 ? {} : { shadows: shadows.map((entry) => entry.id).sort(cmp) }),
+    ...(unread.length === 0 ? {} : { orderUnread: unread.map((entry) => entry.id).sort(cmp) }),
+  };
 };
 
 /**
@@ -547,8 +653,51 @@ export const couldReach = (method: string | null | undefined, partialPath: strin
   return spellingsOf(routePath, route.meta?.['rawPath']).some((spelling) => partialShapeOf(partialPath).test(spelling.path));
 };
 
+/**
+ * The catch-all a request read in part reaches whatever its unread part holds
+ * (P279): `GET /api/integrations/:param/add${…}` and `/api/integrations/*`.
+ *
+ * A catch-all answers every address under its prefix, so where the segments
+ * before the first hole are read and spell the prefix out, and the request
+ * goes on past it, the route answers - unless a route of the same routes that
+ * spells its address out could answer too, which only the unread part would
+ * decide, or two catch-alls tie on the longest prefix. Undefined then, and
+ * the request stays unjoined with its row. The join rests on a path read in
+ * part, so it is drawn `heuristic` as every such join is.
+ */
+export const catchAllBehind = (method: string, partialPath: string, routes: readonly GraphNode[], from?: string): GraphNode | undefined => {
+  if (wasRead(partialPath) || !saysSomething(partialPath)) return undefined;
+  const asked = normalizePath(partialPath).split('/').filter((segment) => segment.length > 0);
+  const firstHole = asked.findIndex((segment) => segment.includes(UNREAD_SPAN));
+  const read = asked.slice(0, firstHole);
+  const answering = routes.filter((route) => {
+    if (route.type !== 'entry' || route.kind !== 'http' || route.meta?.['contributes'] !== undefined) return false;
+    if (!methodAnswers(String(route.meta?.['method'] ?? ''), method)) return false;
+    return wasRead(String(route.meta?.['path'] ?? ''));
+  });
+  // The caller's own application's routes, where it has any, as `matchRoute` reads them.
+  const own = from === undefined ? [] : answering.filter((route) => applicationOf(route) === from);
+  const candidates = own.length === 0 ? answering : own;
+  const catchAlls = candidates.flatMap((route) => {
+    const segments = segmentsOf(String(route.meta?.['path'] ?? ''));
+    const prefix = segments.slice(0, -1);
+    if (segments[segments.length - 1] !== '*' || prefix.includes('*')) return [];
+    if (prefix.length > read.length || asked.length <= prefix.length) return [];
+    const spelled = prefix.every((segment, at) => {
+      const other = read[at] ?? '';
+      return segment.includes(PARAM_PLACEHOLDER) ? true : other !== PARAM_PLACEHOLDER && segment.toLowerCase() === other.toLowerCase();
+    });
+    return spelled ? [{ route, length: prefix.length }] : [];
+  });
+  if (catchAlls.length === 0) return undefined;
+  if (candidates.some((route) => !segmentsOf(String(route.meta?.['path'] ?? '')).includes('*') && couldReach(method, partialPath, route))) return undefined;
+  const longest = Math.max(...catchAlls.map((each) => each.length));
+  const best = catchAlls.filter((each) => each.length === longest);
+  return best.length === 1 ? best[0]?.route : undefined;
+};
+
 /** A segment that stands for a value: a route's hole, a request's read-as-a-value, a wildcard. */
-const isHole = (segment: string): boolean => segment.startsWith(':') || segment === '*';
+const isHole =(segment: string): boolean => segment.startsWith(':') || segment === '*';
 
 const sameSegment = (route: string, asked: string): boolean =>
   isHole(route) || isHole(asked) || route.toLowerCase() === asked.toLowerCase();

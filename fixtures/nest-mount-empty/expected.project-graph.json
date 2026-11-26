@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:29:33.895Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:27:08.522Z",
   "services": [
     {
       "name": "api",
@@ -55,7 +55,8 @@
         "signature": {
           "params": [],
           "returns": "string[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -74,7 +75,22 @@
             }
           ],
           "returns": "string"
-        }
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:api#API_CONTEXT_PATH",
+      "type": "config_key",
+      "label": "API_CONTEXT_PATH",
+      "repo": "api",
+      "file": "src/config.ts",
+      "line": 8,
+      "meta": {
+        "key": "API_CONTEXT_PATH",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
       }
     },
     {
@@ -145,7 +161,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 14
+          }
+        ]
       }
     },
     {
@@ -186,6 +209,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",
@@ -207,6 +231,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal"
@@ -227,6 +252,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": null,
         "client": "fetch",
         "via": "literal",

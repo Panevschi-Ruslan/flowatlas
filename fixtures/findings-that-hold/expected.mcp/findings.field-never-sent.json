@@ -1,0 +1,46 @@
+{
+  "kind": "field-never-sent",
+  "rows": [
+    {
+      "kind": "field-never-sent",
+      "id": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+      "to": "channel:build_updates#JOB_QUEUED",
+      "service": "back-office",
+      "loc": "src/builds/build-bot.ts:15",
+      "message": "`priority` is read by BuildBot.handleJobQueued on build_updates (JOB_QUEUED) and sent by none of its publishers",
+      "precision": "high",
+      "evidence": "every sender on the crossing and every reader of it was read",
+      "rank": 1,
+      "next": "check_contract({channel: \"channel:build_updates#JOB_QUEUED\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "message-type-unselected": {
+      "count": 1,
+      "why": "handleFeed chooses ALERT_RAISED, and 1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+    },
+    "type-never-published": {
+      "count": 1,
+      "why": "1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+    },
+    "config-not-set": {
+      "count": 1,
+      "why": "no deployment file of back-office was read: its settings may be set where the reading does not look"
+    },
+    "field-never-sent": {
+      "count": 1,
+      "why": "`attempt` is compared under a type said two ways (BuildBot.handleBuildRetry: its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED)"
+    },
+    "answer-field-never-returned": {
+      "count": 3,
+      "why": "1: what GET /categories/tree answers is not a shape read, so the fields its clients read were not compared; 2: `changesFromPrevious` is read behind a check that it is there (changeSummary, line 27): the client handles its absence"
+    }
+  },
+  "warnings": {
+    "contract-break": 7
+  },
+  "next": [
+    "check_contract({channel: \"channel:build_updates#JOB_QUEUED\"})"
+  ]
+}

@@ -7,10 +7,12 @@ import {
   type Risk,
   type RowKind,
   type ServiceSummary,
+  type SettingNames,
   type TypeEntry,
   type UnresolvedLevel,
 } from '@flowatlas/core';
 import type { LinkReport } from '../report.js';
+import { insertWordsOf, nodeWordsRow, queryWordsOf, searchWordsIn, typeWordsRow, WORDS_SQL, type WordHit } from './words.js';
 
 export interface TraverseOptions {
   from: string | readonly string[];
@@ -218,6 +220,8 @@ const once = (result: TraverseResult): TraverseResult => {
 export class GraphDb {
   readonly #db: Database.Database;
   readonly #tables = new Map<string, ReadonlySet<string>>();
+  /** Where the words of every name are: this database, or one in memory for a database written before P383. */
+  #words: Database.Database | undefined;
 
   constructor(path: string, options: { readonly?: boolean } = {}) {
     this.#db = new Database(path, { readonly: options.readonly ?? true, fileMustExist: true });
@@ -242,6 +246,16 @@ export class GraphDb {
       | { value: string }
       | undefined;
     return row === undefined ? [] : (JSON.parse(row.value) as ServiceSummary[]);
+  }
+
+  /**
+   * The names each service's deployment files set (P388), where the build
+   * recorded them; undefined for a database written before, or where the
+   * configuration turns reading those files off.
+   */
+  settingNames(): Record<string, SettingNames> | undefined {
+    const row = this.#db.prepare('SELECT value FROM meta WHERE key = ?').get('setting_names') as { value: string } | undefined;
+    return row === undefined ? undefined : (JSON.parse(row.value) as Record<string, SettingNames>);
   }
 
   node(id: string): GraphNode | undefined {
@@ -386,6 +400,39 @@ export class GraphDb {
   }
 
   /**
+   * Nodes and types by the words of a query (P383): "where is the order
+   * cancelled" finds `POST /orders/:id/cancel` and `OrdersClient.cancel`. Each
+   * hit says which of the query's words it holds; the most words in the name
+   * first, then in all, then BM25. `words` is what was asked for, stop words
+   * dropped, empty when nothing was.
+   */
+  searchWords(text: string, options: { limit?: number } = {}): { words: string[]; hits: WordHit[] } {
+    const words = queryWordsOf(text);
+    return { words, hits: searchWordsIn(this.#wordIndex(), words, options.limit ?? 50) };
+  }
+
+  /** Whether the words were stored with the graph, rather than indexed in memory on the first search. */
+  wordsStored(): boolean {
+    return this.#db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'words'").get() !== undefined;
+  }
+
+  /** The words table: this database's, or, for one written before it was stored, built in memory once by the same code. */
+  #wordIndex(): Database.Database {
+    if (this.#words !== undefined) return this.#words;
+    if (this.wordsStored()) return (this.#words = this.#db);
+    const memory = new Database(':memory:');
+    memory.exec(WORDS_SQL);
+    const insert = insertWordsOf(memory);
+    memory.transaction(() => {
+      for (const node of this.#db.prepare('SELECT * FROM nodes').all() as NodeRow[]) insert(nodeWordsRow(toNode(node), node.service));
+      for (const type of this.#db.prepare('SELECT id, name, repo, declared_in FROM types').all() as Array<{ id: string; name: string; repo: string | null; declared_in: string | null }>) {
+        insert(typeWordsRow(type.id, { name: type.name, declaredIn: type.declared_in ?? '' }, type.repo));
+      }
+    })();
+    return (this.#words = memory);
+  }
+
+  /**
    * Walks the graph outward or backward from one or more nodes.
    *
    * The path each row was reached by is carried along, which is what stops a
@@ -520,7 +567,17 @@ export class GraphDb {
     };
   }
 
+  /**
+   * The database whole, as one file at `path` (P236): its write-ahead log
+   * folded in, which a copy of the file alone can miss. What a team's bundle
+   * carries.
+   */
+  copyTo(path: string): void {
+    this.#db.prepare('VACUUM INTO ?').run(path);
+  }
+
   close(): void {
+    if (this.#words !== undefined && this.#words !== this.#db) this.#words.close();
     this.#db.close();
   }
 }

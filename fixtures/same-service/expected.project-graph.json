@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T06:06:51.860Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:47:13.642Z",
   "services": [
     {
       "name": "site",
@@ -45,6 +45,22 @@
       }
     },
     {
+      "id": "entry:site:screen:/things",
+      "type": "entry",
+      "label": "/things",
+      "repo": "site",
+      "file": "app/things/page.tsx",
+      "line": 4,
+      "kind": "screen",
+      "meta": {
+        "path": "/things",
+        "by": "pages-directory",
+        "screens": [
+          "ThingsPage"
+        ]
+      }
+    },
+    {
       "id": "http_out:site#lib/things-client.ts:10:24",
       "type": "http_out",
       "label": "GET /api/things",
@@ -57,7 +73,10 @@
         "path": "/api/things",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:10:24",
+        "targetService": "site"
       }
     },
     {
@@ -77,7 +96,10 @@
         "bodyFrom": "literal",
         "bodyKeys": [
           "name"
-        ]
+        ],
+        "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:15:24",
+        "targetService": "site"
       }
     },
     {
@@ -93,7 +115,10 @@
         "path": "/api/things/:param",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:21:24",
+        "targetService": "site"
       }
     },
     {
@@ -119,7 +144,17 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "package.json",
+            "line": 1,
+            "setting": "PORT",
+            "default": true
+          }
+        ],
+        "ownOrigin": true
       }
     },
     {
@@ -133,7 +168,8 @@
         "signature": {
           "params": [],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -152,7 +188,14 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [],
+        "fieldsUnread": [
+          {
+            "line": 9,
+            "why": "handed to saveThing"
+          }
+        ]
       }
     },
     {
@@ -316,9 +359,18 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "site#app/things/page.tsx:ThingsPage",
+            "line": 7,
+            "why": "handed back from a function with no name to find its callers by"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:10:24",
         "targetService": "site"
       }
     },
@@ -341,9 +393,18 @@
         "bodyKeys": [
           "name"
         ],
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "site#app/things/page.tsx:ThingsPage",
+            "line": 10,
+            "why": "handed back from a function with no name to find its callers by"
+          }
+        ],
         "package": null,
         "client": "fetch",
         "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:15:24",
         "targetService": "site"
       }
     },
@@ -362,9 +423,18 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
+        "answerUnread": [
+          {
+            "in": "site#app/things/page.tsx:ThingsPage",
+            "line": 13,
+            "why": "handed back from a function with no name to find its callers by"
+          }
+        ],
         "package": null,
         "client": "fetch",
-        "via": "literal"
+        "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:21:24"
       }
     }
   ],
@@ -391,6 +461,44 @@
       "line": 8,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:screen:/things",
+      "to": "site#app/things/page.tsx:ThingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/things/page.tsx",
+      "line": 4,
+      "meta": {
+        "route": "/things"
+      }
+    },
+    {
+      "from": "http_out:site#lib/things-client.ts:10:24",
+      "to": "entry:site:http:GET:/api/things",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "lib/things-client.ts",
+      "line": 10,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "http_out:site#lib/things-client.ts:15:24",
+      "to": "entry:site:http:POST:/api/things",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "lib/things-client.ts",
+      "line": 15,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
       }
     },
     {

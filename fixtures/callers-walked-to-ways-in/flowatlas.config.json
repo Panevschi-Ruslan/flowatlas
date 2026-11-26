@@ -1,0 +1,13 @@
+{
+  "services": [
+    { "name": "stock-api", "repo": "./stock-api", "type": "nestjs" },
+    {
+      "name": "store-web",
+      "repo": "./store-web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "stock-api" }
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-client-wrapper",
-  "generatedAt": "2026-10-17T06:05:56.336Z",
+  "generatedAt": "2026-11-24T20:17:49.310Z",
   "nodes": [
     {
       "id": "config_key:nest-client-wrapper#BILLING_URL",
@@ -12,7 +12,8 @@
       "line": 15,
       "meta": {
         "key": "BILLING_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -599,7 +600,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     }
   ],

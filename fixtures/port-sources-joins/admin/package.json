@@ -1,0 +1,11 @@
+{
+  "name": "port-sources-joins-admin",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ng serve"
+  },
+  "dependencies": {
+    "@angular/core": "^19.0.0"
+  }
+}

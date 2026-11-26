@@ -1,0 +1,2140 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:21:26.613Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "staff-bot",
+      "repo": "./staff-bot",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:staff-bot#SHOP_API_URL",
+      "type": "config_key",
+      "label": "SHOP_API_URL",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 20,
+      "meta": {
+        "key": "SHOP_API_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/orders/active",
+      "type": "entry",
+      "label": "GET /api/orders/active",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/active",
+        "rawPath": "/api/orders/active",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/reports/:param",
+      "type": "entry",
+      "label": "GET /api/reports/:param",
+      "repo": "shop-api",
+      "file": "src/reports.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports/:param",
+        "rawPath": "/api/reports/:kind",
+        "controller": "ReportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:GET:/api/stock",
+      "type": "entry",
+      "label": "GET /api/stock",
+      "repo": "shop-api",
+      "file": "src/stock.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/stock",
+        "rawPath": "/api/stock",
+        "controller": "StockController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "entry",
+      "label": "PATCH /api/orders/status",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/api/orders/status",
+        "rawPath": "/api/orders/status",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:staff-bot:bot_callback:set_status_*",
+      "type": "entry",
+      "label": "bot_callback set_status_*",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 27,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "set_status_*",
+        "adapter": "telegraf-calls",
+        "trigger": "'callback_query'",
+        "updateClass": "StaffBot",
+        "registration": "action",
+        "updateType": "callback_query",
+        "selectedBy": "prefix set_status_",
+        "callbackData": {
+          "regex": "^set_status_",
+          "flags": ""
+        },
+        "handlerVia": "table"
+      }
+    },
+    {
+      "id": "entry:staff-bot:bot_callback:view_order_*",
+      "type": "entry",
+      "label": "bot_callback view_order_*",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 28,
+      "kind": "bot_callback",
+      "meta": {
+        "key": "view_order_*",
+        "adapter": "telegraf-calls",
+        "trigger": "'callback_query'",
+        "updateClass": "StaffBot",
+        "registration": "action",
+        "updateType": "callback_query",
+        "selectedBy": "prefix view_order_",
+        "callbackData": {
+          "regex": "^view_order_",
+          "flags": ""
+        },
+        "handlerVia": "table"
+      }
+    },
+    {
+      "id": "entry:staff-bot:bot_command:help",
+      "type": "entry",
+      "label": "bot_command help",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 50,
+      "kind": "bot_command",
+      "meta": {
+        "key": "help",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "command.name",
+        "updateClass": "StaffBot",
+        "handlerVia": "table"
+      }
+    },
+    {
+      "id": "entry:staff-bot:bot_command:orders",
+      "type": "entry",
+      "label": "bot_command orders",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 50,
+      "kind": "bot_command",
+      "meta": {
+        "key": "orders",
+        "adapter": "telegraf-calls",
+        "registration": "command",
+        "trigger": "command.name",
+        "updateClass": "StaffBot",
+        "handlerVia": "table"
+      }
+    },
+    {
+      "id": "entry:staff-bot:bot_event:callback_query",
+      "type": "entry",
+      "label": "bot_event callback_query",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 43,
+      "kind": "bot_event",
+      "meta": {
+        "key": "callback_query",
+        "adapter": "telegraf-calls",
+        "registration": "on",
+        "trigger": "'callback_query'",
+        "updateClass": "StaffBot",
+        "handlerVia": "inline",
+        "splitByTable": "src/staff-bot.ts:26"
+      }
+    },
+    {
+      "id": "entry:staff-bot:bot_event:text",
+      "type": "entry",
+      "label": "bot_event text",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 52,
+      "kind": "bot_event",
+      "meta": {
+        "key": "text",
+        "adapter": "telegraf-calls",
+        "registration": "on",
+        "trigger": "'text'",
+        "updateClass": "StaffBot",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "http_out:staff-bot#src/staff.api.ts:20:43",
+      "type": "http_out",
+      "label": "GET /api/orders/active",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 20,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_API_URL}/api/orders/active",
+        "path": "/api/orders/active",
+        "baseUrlEnv": "SHOP_API_URL",
+        "responseType": "type:staff-bot#ActiveOrder[]",
+        "bodyType": null,
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "http_out:staff-bot#src/staff.api.ts:25:26",
+      "type": "http_out",
+      "label": "PATCH /api/orders/status",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 25,
+      "meta": {
+        "method": "PATCH",
+        "url": "${SHOP_API_URL}/api/orders/status",
+        "path": "/api/orders/status",
+        "baseUrlEnv": "SHOP_API_URL",
+        "responseType": null,
+        "bodyType": "{orderId:string;status:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId",
+          "status"
+        ],
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "http_out:staff-bot#src/staff.api.ts:29:43",
+      "type": "http_out",
+      "label": "GET /api/stock",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 29,
+      "meta": {
+        "method": "GET",
+        "url": "${SHOP_API_URL}/api/stock",
+        "path": "/api/stock",
+        "baseUrlEnv": "SHOP_API_URL",
+        "responseType": "{items:number}",
+        "bodyType": null,
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "kiosk#js/kiosk.js:kiosk.js:top",
+      "type": "function",
+      "label": "kiosk.js:top",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 21
+    },
+    {
+      "id": "kiosk#js/kiosk.js:openScreen",
+      "type": "function",
+      "label": "openScreen",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "kiosk#js/kiosk.js:showReport",
+      "type": "function",
+      "label": "showReport",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "kiosk#js/kiosk.js:showStock",
+      "type": "function",
+      "label": "showStock",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "repo:kiosk",
+      "type": "repo",
+      "label": "kiosk",
+      "repo": "kiosk",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 5,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:staff-bot",
+      "type": "repo",
+      "label": "staff-bot",
+      "repo": "staff-bot",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 4,
+          "skippedExternalCalls": {
+            "telegraf": 15,
+            "@nestjs/axios": 3,
+            "@nestjs/config": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "telegraf-calls",
+            "entry-registries"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "ReportsController",
+          "StockController"
+        ],
+        "providers": [
+          "OrdersService",
+          "ReportsService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders.controller.ts:OrdersController.active",
+      "type": "method",
+      "label": "OrdersController.active",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;summary:string}[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "type": "method",
+      "label": "OrdersController.setStatus",
+      "repo": "shop-api",
+      "file": "src/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{orderId:string;status:string}"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 15
+          },
+          {
+            "field": "status",
+            "line": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop-api",
+      "file": "src/orders.service.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders.service.ts:OrdersService.listActive",
+      "type": "method",
+      "label": "OrdersService.listActive",
+      "repo": "shop-api",
+      "file": "src/orders.service.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;summary:string}[]"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders.service.ts:OrdersService.setStatus",
+      "type": "method",
+      "label": "OrdersService.setStatus",
+      "repo": "shop-api",
+      "file": "src/orders.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/reports.controller.ts:ReportsController",
+      "type": "provider",
+      "label": "ReportsController",
+      "repo": "shop-api",
+      "file": "src/reports.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/reports.controller.ts:ReportsController.build",
+      "type": "method",
+      "label": "ReportsController.build",
+      "repo": "shop-api",
+      "file": "src/reports.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/reports.service.ts:ReportsService",
+      "type": "provider",
+      "label": "ReportsService",
+      "repo": "shop-api",
+      "file": "src/reports.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/reports.service.ts:ReportsService.build",
+      "type": "method",
+      "label": "ReportsService.build",
+      "repo": "shop-api",
+      "file": "src/reports.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/reports.service.ts:ReportsService.daily",
+      "type": "method",
+      "label": "ReportsService.daily",
+      "repo": "shop-api",
+      "file": "src/reports.service.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/stock-report.ts:stockReport",
+      "type": "function",
+      "label": "stockReport",
+      "repo": "shop-api",
+      "file": "src/stock-report.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/stock.controller.ts:StockController",
+      "type": "provider",
+      "label": "StockController",
+      "repo": "shop-api",
+      "file": "src/stock.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/stock.controller.ts:StockController.count",
+      "type": "method",
+      "label": "StockController.count",
+      "repo": "shop-api",
+      "file": "src/stock.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{items:number}"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "ui_component",
+      "label": "OrdersToolbar",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 17,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/OrdersToolbar.tsx:reload",
+      "type": "function",
+      "label": "reload",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/orders-api.ts:countStock",
+      "type": "function",
+      "label": "countStock",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/orders-api.ts:loadReport",
+      "type": "function",
+      "label": "loadReport",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/orders-api.ts:markReady",
+      "type": "function",
+      "label": "markReady",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "staff-bot",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "staff-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "staff-bot",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "staff-bot#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "staff-bot",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "StaffBot",
+          "StaffApi",
+          "TextRouter"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "staff-bot#src/replies.ts:replyHelp",
+      "type": "function",
+      "label": "replyHelp",
+      "repo": "staff-bot",
+      "file": "src/replies.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/replies.ts:replyStock",
+      "type": "function",
+      "label": "replyStock",
+      "repo": "staff-bot",
+      "file": "src/replies.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            },
+            {
+              "name": "api",
+              "type": "type:staff-bot#StaffApi"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot",
+      "type": "provider",
+      "label": "StaffBot",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 24,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor",
+      "type": "method",
+      "label": "StaffBot.buttonsFor",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 80,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:staff-bot#ActiveOrder"
+            }
+          ],
+          "returns": "type:telegraf#InlineButton[]"
+        },
+        "callbackButtons": [
+          {
+            "data": "view_order_${…}",
+            "at": "src/staff-bot.ts:82"
+          },
+          {
+            "data": "set_status_${…}",
+            "at": "src/staff-bot.ts:83"
+          },
+          {
+            "data": "archive_order_${…}",
+            "at": "src/staff-bot.ts:84"
+          }
+        ]
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.commands",
+      "type": "method",
+      "label": "StaffBot.commands",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:staff-bot#SlashCommand[]"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.handleStatus",
+      "type": "method",
+      "label": "StaffBot.handleStatus",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 62,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            },
+            {
+              "name": "data",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+      "type": "method",
+      "label": "StaffBot.listOrders",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 72,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit",
+      "type": "method",
+      "label": "StaffBot.onModuleInit",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "frameworkCalls": {
+          "hook": "onModuleInit",
+          "when": "startup"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.setup",
+      "type": "method",
+      "label": "StaffBot.setup",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bot",
+              "type": "type:telegraf#Telegraf"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+      "type": "method",
+      "label": "StaffBot.showOrder",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 67,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            },
+            {
+              "name": "data",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:bot_callback set_status_*@27",
+      "type": "function",
+      "label": "bot_callback set_status_*@27",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            },
+            {
+              "name": "d",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
+      "type": "function",
+      "label": "bot_callback view_order_*@28",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            },
+            {
+              "name": "d",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:on callback_query@43",
+      "type": "function",
+      "label": "on callback_query@43",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff-bot.ts:on text@52",
+      "type": "function",
+      "label": "on text@52",
+      "repo": "staff-bot",
+      "file": "src/staff-bot.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff.api.ts:StaffApi",
+      "type": "provider",
+      "label": "StaffApi",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders",
+      "type": "method",
+      "label": "StaffApi.getActiveOrders",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:staff-bot#ActiveOrder[]"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff.api.ts:StaffApi.getStock",
+      "type": "method",
+      "label": "StaffApi.getStock",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{items:number}"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/staff.api.ts:StaffApi.setStatus",
+      "type": "method",
+      "label": "StaffApi.setStatus",
+      "repo": "staff-bot",
+      "file": "src/staff.api.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "staff-bot#src/text-router.ts:TextRouter",
+      "type": "provider",
+      "label": "TextRouter",
+      "repo": "staff-bot",
+      "file": "src/text-router.ts",
+      "line": 18,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "staff-bot#src/text-router.ts:TextRouter.route",
+      "type": "method",
+      "label": "TextRouter.route",
+      "repo": "staff-bot",
+      "file": "src/text-router.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:telegraf#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/OrdersToolbar.tsx:27:15",
+      "type": "ui_action",
+      "label": "onClick={refresh}",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 27,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "refresh",
+        "component": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/OrdersToolbar.tsx:28:15",
+      "type": "ui_action",
+      "label": "onClick={ready}",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 28,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "ready",
+        "component": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/OrdersToolbar.tsx:29:15",
+      "type": "ui_action",
+      "label": "onClick={stock}",
+      "repo": "shop-web",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "stock",
+        "component": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#js/kiosk.js:2:10",
+      "type": "ui_api_call",
+      "label": "GET /api/reports/daily",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/api/reports/daily",
+        "path": "/api/reports/daily",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "shop.example.test",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#js/kiosk.js:6:10",
+      "type": "ui_api_call",
+      "label": "GET /api/stock",
+      "repo": "kiosk",
+      "file": "js/kiosk.js",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://shop.example.test/api/stock",
+        "path": "/api/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "shop.example.test",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+      "type": "ui_api_call",
+      "label": "PATCH /api/orders/status",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "${VITE_SHOP_API_URL}/api/orders/status",
+        "path": "/api/orders/status",
+        "baseUrlEnv": "VITE_SHOP_API_URL",
+        "responseType": null,
+        "bodyType": "{orderId:string;status:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "orderId",
+          "status"
+        ],
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+      "type": "ui_api_call",
+      "label": "GET /api/stock",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_API_URL}/api/stock",
+        "path": "/api/stock",
+        "baseUrlEnv": "VITE_SHOP_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [
+          {
+            "field": "items",
+            "in": "shop-web#src/orders-api.ts:countStock",
+            "line": 17
+          }
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+      "type": "ui_api_call",
+      "label": "GET /api/reports/daily",
+      "repo": "shop-web",
+      "file": "src/orders-api.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_SHOP_API_URL}/api/reports/daily",
+        "path": "/api/reports/daily",
+        "baseUrlEnv": "VITE_SHOP_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "answerRead": [],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop-api:http:GET:/api/orders/active",
+      "to": "shop-api#src/orders.controller.ts:OrdersController.active",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{id:string;summary:string}[]",
+      "file": "src/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/reports/:param",
+      "to": "shop-api#src/reports.controller.ts:ReportsController.build",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/reports.controller.ts",
+      "line": 8,
+      "meta": {
+        "params": "{kind:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:GET:/api/stock",
+      "to": "shop-api#src/stock.controller.ts:StockController.count",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "{items:number}",
+      "file": "src/stock.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:shop-api:http:PATCH:/api/orders/status",
+      "to": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string;status:string}"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "body": "{orderId:string;status:string}"
+      }
+    },
+    {
+      "from": "entry:staff-bot:bot_callback:set_status_*",
+      "to": "staff-bot#src/staff-bot.ts:bot_callback set_status_*@27",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 27
+    },
+    {
+      "from": "entry:staff-bot:bot_callback:view_order_*",
+      "to": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 28
+    },
+    {
+      "from": "entry:staff-bot:bot_command:help",
+      "to": "staff-bot#src/replies.ts:replyHelp",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/replies.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:staff-bot:bot_command:orders",
+      "to": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:telegraf#Context"
+      ],
+      "returns": "void",
+      "file": "src/staff-bot.ts",
+      "line": 72
+    },
+    {
+      "from": "entry:staff-bot:bot_event:callback_query",
+      "to": "staff-bot#src/staff-bot.ts:on callback_query@43",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 43
+    },
+    {
+      "from": "entry:staff-bot:bot_event:text",
+      "to": "staff-bot#src/staff-bot.ts:on text@52",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 52
+    },
+    {
+      "from": "http_out:staff-bot#src/staff.api.ts:20:43",
+      "to": "entry:shop-api:http:GET:/api/orders/active",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 20,
+      "returns": "type:staff-bot#ActiveOrder[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "http_out:staff-bot#src/staff.api.ts:25:26",
+      "to": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 25,
+      "params": [
+        "{orderId:string;status:string}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "http_out:staff-bot#src/staff.api.ts:29:43",
+      "to": "entry:shop-api:http:GET:/api/stock",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 29,
+      "returns": "{items:number}",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "kiosk#js/kiosk.js:kiosk.js:top",
+      "to": "kiosk#js/kiosk.js:openScreen",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "any",
+      "file": "js/kiosk.js",
+      "line": 21
+    },
+    {
+      "from": "kiosk#js/kiosk.js:openScreen",
+      "to": "kiosk#js/kiosk.js:showReport",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "js/kiosk.js",
+      "line": 17,
+      "meta": {
+        "via": "table"
+      }
+    },
+    {
+      "from": "kiosk#js/kiosk.js:openScreen",
+      "to": "kiosk#js/kiosk.js:showStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "js/kiosk.js",
+      "line": 17,
+      "meta": {
+        "via": "table"
+      }
+    },
+    {
+      "from": "kiosk#js/kiosk.js:showReport",
+      "to": "ui_api_call:kiosk#js/kiosk.js:2:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 2
+    },
+    {
+      "from": "kiosk#js/kiosk.js:showStock",
+      "to": "ui_api_call:kiosk#js/kiosk.js:6:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/orders.controller.ts:OrdersController",
+      "to": "shop-api#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/orders.controller.ts:OrdersController.active",
+      "to": "shop-api#src/orders.service.ts:OrdersService.listActive",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{id:string;summary:string}[]",
+      "file": "src/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shop-api#src/orders.controller.ts:OrdersController.setStatus",
+      "to": "shop-api#src/orders.service.ts:OrdersService.setStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "shop-api#src/reports.controller.ts:ReportsController",
+      "to": "shop-api#src/reports.service.ts:ReportsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/reports.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/reports.controller.ts:ReportsController.build",
+      "to": "shop-api#src/reports.service.ts:ReportsService.build",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/reports.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shop-api#src/reports.service.ts:ReportsService.build",
+      "to": "shop-api#src/reports.service.ts:ReportsService.daily",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/reports.service.ts",
+      "line": 19,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals daily"
+      }
+    },
+    {
+      "from": "shop-api#src/reports.service.ts:ReportsService.build",
+      "to": "shop-api#src/stock-report.ts:stockReport",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/reports.service.ts",
+      "line": 26,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals stock"
+      }
+    },
+    {
+      "from": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "to": "shop-web#src/OrdersToolbar.tsx:reload",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 20,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals refresh"
+      }
+    },
+    {
+      "from": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "to": "shop-web#src/orders-api.ts:countStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 20,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals stock"
+      }
+    },
+    {
+      "from": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "to": "shop-web#src/orders-api.ts:markReady",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 20,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals ready"
+      }
+    },
+    {
+      "from": "shop-web#src/OrdersToolbar.tsx:reload",
+      "to": "shop-web#src/orders-api.ts:loadReport",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 9
+    },
+    {
+      "from": "shop-web#src/orders-api.ts:countStock",
+      "to": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 16
+    },
+    {
+      "from": "shop-web#src/orders-api.ts:loadReport",
+      "to": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 5
+    },
+    {
+      "from": "shop-web#src/orders-api.ts:markReady",
+      "to": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 11
+    },
+    {
+      "from": "staff-bot#src/replies.ts:replyStock",
+      "to": "staff-bot#src/staff.api.ts:StaffApi.getStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{items:number}",
+      "file": "src/replies.ts",
+      "line": 12
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot",
+      "to": "staff-bot#src/staff.api.ts:StaffApi",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 32
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot",
+      "to": "staff-bot#src/text-router.ts:TextRouter",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/staff-bot.ts",
+      "line": 33
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot.handleStatus",
+      "to": "staff-bot#src/staff.api.ts:StaffApi.setStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/staff-bot.ts",
+      "line": 63
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+      "to": "staff-bot#src/staff-bot.ts:StaffBot.buttonsFor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:staff-bot#ActiveOrder"
+      ],
+      "returns": "type:telegraf#InlineButton[]",
+      "file": "src/staff-bot.ts",
+      "line": 75,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 74
+        }
+      }
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot.listOrders",
+      "to": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:staff-bot#ActiveOrder[]",
+      "file": "src/staff-bot.ts",
+      "line": 73
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot.onModuleInit",
+      "to": "staff-bot#src/staff-bot.ts:StaffBot.setup",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:telegraf#Telegraf"
+      ],
+      "returns": "void",
+      "file": "src/staff-bot.ts",
+      "line": 38
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot.setup",
+      "to": "staff-bot#src/staff-bot.ts:StaffBot.commands",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:staff-bot#SlashCommand[]",
+      "file": "src/staff-bot.ts",
+      "line": 49
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+      "to": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:staff-bot#ActiveOrder[]",
+      "file": "src/staff-bot.ts",
+      "line": 68
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:bot_callback set_status_*@27",
+      "to": "staff-bot#src/staff-bot.ts:StaffBot.handleStatus",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:telegraf#Context",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/staff-bot.ts",
+      "line": 27
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:bot_callback view_order_*@28",
+      "to": "staff-bot#src/staff-bot.ts:StaffBot.showOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:telegraf#Context",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/staff-bot.ts",
+      "line": 28
+    },
+    {
+      "from": "staff-bot#src/staff-bot.ts:on text@52",
+      "to": "staff-bot#src/text-router.ts:TextRouter.route",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:telegraf#Context"
+      ],
+      "returns": "void",
+      "file": "src/staff-bot.ts",
+      "line": 52
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi",
+      "to": "staff-bot#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 15
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi",
+      "to": "staff-bot#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 16
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders",
+      "to": "config_key:staff-bot#SHOP_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 20
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi.getActiveOrders",
+      "to": "http_out:staff-bot#src/staff.api.ts:20:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 20
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi.getStock",
+      "to": "config_key:staff-bot#SHOP_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 29
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi.getStock",
+      "to": "http_out:staff-bot#src/staff.api.ts:29:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 29
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi.setStatus",
+      "to": "config_key:staff-bot#SHOP_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 25
+    },
+    {
+      "from": "staff-bot#src/staff.api.ts:StaffApi.setStatus",
+      "to": "http_out:staff-bot#src/staff.api.ts:25:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/staff.api.ts",
+      "line": 25
+    },
+    {
+      "from": "staff-bot#src/text-router.ts:TextRouter",
+      "to": "staff-bot#src/staff.api.ts:StaffApi",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/text-router.ts",
+      "line": 20
+    },
+    {
+      "from": "staff-bot#src/text-router.ts:TextRouter.route",
+      "to": "staff-bot#src/replies.ts:replyStock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:telegraf#Context",
+        "type:staff-bot#StaffApi"
+      ],
+      "returns": "void",
+      "file": "src/text-router.ts",
+      "line": 25,
+      "meta": {
+        "via": "table",
+        "selectedBy": "equals stock"
+      }
+    },
+    {
+      "from": "ui_action:shop-web#src/OrdersToolbar.tsx:27:15",
+      "to": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 27
+    },
+    {
+      "from": "ui_action:shop-web#src/OrdersToolbar.tsx:28:15",
+      "to": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 28
+    },
+    {
+      "from": "ui_action:shop-web#src/OrdersToolbar.tsx:29:15",
+      "to": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/OrdersToolbar.tsx",
+      "line": 29
+    },
+    {
+      "from": "ui_api_call:kiosk#js/kiosk.js:2:10",
+      "to": "entry:shop-api:http:GET:/api/reports/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 2,
+      "meta": {
+        "via": "host",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#js/kiosk.js:6:10",
+      "to": "entry:shop-api:http:GET:/api/stock",
+      "type": "hits",
+      "confidence": "static",
+      "file": "js/kiosk.js",
+      "line": 6,
+      "meta": {
+        "via": "host",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/orders-api.ts:11:9",
+      "to": "entry:shop-api:http:PATCH:/api/orders/status",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 11,
+      "params": [
+        "{orderId:string;status:string}"
+      ],
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/orders-api.ts:16:24",
+      "to": "entry:shop-api:http:GET:/api/stock",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/orders-api.ts:5:24",
+      "to": "entry:shop-api:http:GET:/api/reports/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders-api.ts",
+      "line": 5,
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "types": {
+    "type:staff-bot#ActiveOrder": {
+      "name": "ActiveOrder",
+      "kind": "object",
+      "declaredIn": "staff-bot#src/staff.api.ts",
+      "structuralHash": "9b565db15f17d420",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "summary",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:staff-bot#SlashCommand": {
+      "name": "SlashCommand",
+      "kind": "object",
+      "declaredIn": "staff-bot#src/staff-bot.ts",
+      "structuralHash": "3da22a2f4a1fa15d",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "run",
+          "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:staff-bot#StaffApi": {
+      "name": "StaffApi",
+      "kind": "object",
+      "declaredIn": "staff-bot#src/staff.api.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:telegraf#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "telegraf",
+      "structuralHash": "f378978f363fc2c7",
+      "meta": {
+        "declKind": "external",
+        "package": "telegraf"
+      }
+    },
+    "type:telegraf#InlineButton": {
+      "name": "InlineButton",
+      "kind": "external",
+      "declaredIn": "telegraf",
+      "structuralHash": "e50be8beb8c89f61",
+      "meta": {
+        "declKind": "external",
+        "package": "telegraf"
+      }
+    },
+    "type:telegraf#Telegraf": {
+      "name": "Telegraf",
+      "kind": "external",
+      "declaredIn": "telegraf",
+      "structuralHash": "fd2724d3f06867eb",
+      "meta": {
+        "declKind": "external",
+        "package": "telegraf"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/reports.service.ts",
+      "line": 26,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "1 of 3 elements of the table is not read (a spread or a value from elsewhere); the 2 read are followed. Write the elements out to make every edge visible.",
+      "symbol": "ReportsService.build -> builder.build",
+      "meta": {
+        "cause": "table-rows-unread"
+      },
+      "service": "shop-api"
+    },
+    {
+      "file": "src/OrdersToolbar.tsx",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop-web"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 10,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports HttpModule",
+      "service": "staff-bot"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 10,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports ConfigModule",
+      "service": "staff-bot"
+    }
+  ]
+}

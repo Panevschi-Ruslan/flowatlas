@@ -1,0 +1,30 @@
+{
+  "kind": "cors-header-not-allowed",
+  "rows": [
+    {
+      "kind": "cors-header-not-allowed",
+      "id": "ui_api_call:web#src/app/orders-api.service.ts:23:12",
+      "to": "entry:orders-api:http:POST:/orders/:param/cancel",
+      "message": "OrdersApiService.cancel (POST /orders/:param/cancel) sets x-request-id, which orders-api's CORS does not allow (it allows authorization, content-type): the browser's preflight fails",
+      "precision": "high",
+      "evidence": "the service enables CORS at src/main.ts:9, for a browser on another origin, and the setting was read",
+      "fix": "add x-request-id to allowedHeaders, or leave allowedHeaders out to allow what the browser asks for",
+      "rank": 1,
+      "next": "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:23:12\"})"
+    }
+  ],
+  "total": 1,
+  "heldBack": {
+    "config-not-set": {
+      "count": 1,
+      "why": "the configuration module in src/app.module.ts validates the settings with a schema, which may give it a default"
+    },
+    "status-never-answered": {
+      "count": 1,
+      "why": "POST /orders/:param/refund throws HttpException, whose status is not read"
+    }
+  },
+  "next": [
+    "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:23:12\"})"
+  ]
+}

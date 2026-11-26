@@ -1,5 +1,6 @@
 {
   "entry": "entry:gateway:http:POST:/orders/:param/refund",
+  "reads": [],
   "traffic": {
     "samples": 2,
     "window": {
@@ -12,6 +13,7 @@
     ]
   },
   "callers": 1,
+  "complete": true,
   "next": [
     "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:95:12\", to: \"entry:gateway:http:POST:/orders/:param/refund\"})"
   ]

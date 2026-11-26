@@ -1,0 +1,11 @@
+{
+  "services": [
+    { "name": "desk", "repo": "./desk", "type": "react" },
+    { "name": "sites", "repo": "./sites", "type": "nextjs" },
+    { "name": "catalog", "repo": "./catalog", "type": "nextjs" },
+    { "name": "stand", "repo": "./stand", "type": "sveltekit" },
+    { "name": "panel", "repo": "./panel", "type": "vue" },
+    { "name": "console", "repo": "./console", "type": "angular" }
+  ],
+  "output": ".flowatlas"
+}

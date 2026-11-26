@@ -61,7 +61,7 @@ describe('reading the triggers out of a template', () => {
     expect(of('open = !open').line).toBeGreaterThan(0);
     expect(of('sumbit()').kind).toBe('click');
     expect(of('pick(order)').handlers).toEqual([
-      { kind: 'method', method: 'pick', args: ['order'] },
+      { kind: 'method', method: 'pick', args: ['order'], reads: [{ root: 'order', steps: [], text: 'order' }] },
     ]);
   });
 

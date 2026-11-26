@@ -113,7 +113,9 @@
     "bot_callback",
     "bot_event",
     "scene_step",
-    "invoke"
+    "invoke",
+    "task",
+    "screen"
   ],
   "unresolvedInjects": 0
 }

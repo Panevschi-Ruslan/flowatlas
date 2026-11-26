@@ -1,4 +1,10 @@
 {
+  "requests": [
+    {
+      "route": "entry:orders:http:GET:/orders/:param",
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    }
+  ],
   "root": {
     "node": {
       "id": "entry:gateway:http:GET:/orders/:param",
@@ -14,7 +20,8 @@
           "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
           "type": "method",
           "label": "OrdersController.findOne",
-          "loc": "src/orders/orders.controller.ts:30"
+          "loc": "src/orders/orders.controller.ts:30",
+          "endLine": 33
         },
         "edge": {
           "type": "handles",
@@ -30,7 +37,8 @@
               "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
               "type": "method",
               "label": "OrdersClient.fetchOne",
-              "loc": "src/clients/orders.client.ts:32"
+              "loc": "src/clients/orders.client.ts:32",
+              "endLine": 34
             },
             "edge": {
               "type": "calls",
@@ -86,7 +94,8 @@
                           "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
                           "type": "method",
                           "label": "OrdersController.findOne",
-                          "loc": "src/orders/orders.controller.ts:25"
+                          "loc": "src/orders/orders.controller.ts:25",
+                          "endLine": 28
                         },
                         "edge": {
                           "type": "handles",
@@ -102,7 +111,8 @@
                               "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
                               "type": "method",
                               "label": "OrdersService.findOne",
-                              "loc": "src/orders/orders.service.ts:25"
+                              "loc": "src/orders/orders.service.ts:25",
+                              "endLine": 28
                             },
                             "edge": {
                               "type": "calls",
@@ -168,6 +178,7 @@
       "state": "ok"
     }
   ],
+  "complete": true,
   "next": [
     "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
     "check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:33:12\", to: \"entry:orders:http:GET:/orders/:param\"})",

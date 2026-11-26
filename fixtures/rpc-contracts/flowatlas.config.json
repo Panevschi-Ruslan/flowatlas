@@ -1,0 +1,34 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "baseUrlEnv": ["ORDERS_URL"]
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "baseUrlEnv": ["BILLING_URL"]
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "baseUrlEnv": ["LEDGER_URL"]
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs"
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "angular",
+      "apiTarget": { "BILLING_API": "billing" }
+    }
+  ],
+  "output": ".flowatlas"
+}

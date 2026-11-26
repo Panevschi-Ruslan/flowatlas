@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:28:56.774Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:36:21.701Z",
   "services": [
     {
       "name": "api",
@@ -32,7 +32,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -51,7 +52,13 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "text",
+            "line": 30
+          }
+        ]
       }
     },
     {
@@ -70,7 +77,13 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "text",
+            "line": 36
+          }
+        ]
       }
     },
     {
@@ -81,6 +94,26 @@
       "file": "src/admin/admin.routes.ts",
       "line": 28,
       "kind": "function"
+    },
+    {
+      "id": "api#src/admin/reports.routes.ts:GET /daily@12",
+      "type": "function",
+      "label": "GET /daily@12",
+      "repo": "api",
+      "file": "src/admin/reports.routes.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "Response"
+        },
+        "fieldsRead": []
+      }
     },
     {
       "id": "api#src/app.module.ts:AppModule",
@@ -106,7 +139,10 @@
       "label": "ApiKeyGuard",
       "repo": "api",
       "file": "src/auth/api-key.guard.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "fieldsRead": []
+      }
     },
     {
       "id": "api#src/orders/orders.controller.ts:OrdersController",
@@ -140,7 +176,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -159,7 +196,8 @@
             }
           ],
           "returns": "type:api#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -251,7 +289,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -270,7 +309,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -289,7 +329,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -308,7 +349,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -327,7 +369,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -346,7 +389,8 @@
             }
           ],
           "returns": "Response"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -365,7 +409,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -417,7 +462,8 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -456,6 +502,26 @@
       "file": "src/worker.ts",
       "line": 34,
       "kind": "function"
+    },
+    {
+      "id": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "consumer",
+      "label": "LiveEventsService.open",
+      "repo": "web",
+      "file": "src/app/live-events.service.ts",
+      "line": 27,
+      "kind": "sse",
+      "meta": {
+        "kind": "sse",
+        "client": "EventSource",
+        "events": [
+          "message"
+        ],
+        "entryId": null,
+        "subjects": [
+          "LiveEventsService.events"
+        ]
+      }
     },
     {
       "id": "entry:api:http:ALL:/api/*",
@@ -606,6 +672,24 @@
       }
     },
     {
+      "id": "entry:api:http:GET:/daily",
+      "type": "entry",
+      "label": "GET /daily",
+      "repo": "api",
+      "file": "src/admin/reports.routes.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/daily",
+        "rawPath": "/daily",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
       "id": "entry:api:http:GET:/health",
       "type": "entry",
       "label": "GET /health",
@@ -748,7 +832,7 @@
           "classes": 4,
           "skippedExternalCalls": {
             "@nestjs/common": 1,
-            "hono": 23
+            "hono": 24
           }
         },
         "bootstrap": "src/main.ts",
@@ -758,7 +842,14 @@
             "nestjs-http",
             "hono-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 17
+          }
+        ]
       }
     },
     {
@@ -851,6 +942,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": null,
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "api"
@@ -944,7 +1036,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-orders"
+        "selector": "app-orders",
+        "unreferenced": true
       }
     },
     {
@@ -1105,6 +1198,14 @@
       "returns": "unknown",
       "file": "src/worker.ts",
       "line": 52
+    },
+    {
+      "from": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "to": "web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 27
     },
     {
       "from": "entry:api:http:ALL:/api/*",
@@ -1292,6 +1393,18 @@
         "scope": "global",
         "layer": "middleware",
         "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/daily",
+      "to": "api#src/admin/reports.routes.ts:GET /daily@12",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string",
+      "file": "src/admin/reports.routes.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true
       }
     },
     {
@@ -1506,6 +1619,14 @@
     },
     {
       "from": "ui_api_call:web#src/app/live-events.service.ts:26:20",
+      "to": "consumer:web#src/app/live-events.service.ts:LiveEventsService.open",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/live-events.service.ts",
+      "line": 27
+    },
+    {
+      "from": "ui_api_call:web#src/app/live-events.service.ts:26:20",
       "to": "entry:api:http:GET:/api/depots/:param/stream",
       "type": "hits",
       "confidence": "static",
@@ -1661,25 +1782,14 @@
   },
   "unresolved": [
     {
-      "file": "package.json",
-      "line": 1,
-      "reason": "entry-http-routes-unplaced",
+      "service": "api",
+      "file": "src/worker.ts",
+      "line": 27,
+      "reason": "stream-relay-unread",
       "level": "info",
-      "message": "11 of 12 routes the hono-routes reader read could be placed at an address; the other 1 could not, so the ways in recorded here are a part of what this service serves rather than the whole of it.",
-      "hint": "Each of the 1 has a row of its own above, naming the application whose base could not be read. Until those are answered, a question this graph answers about which ways in exist is answered short.",
-      "symbol": "hono-routes",
-      "adapter": "hono-routes",
-      "service": "api"
-    },
-    {
-      "file": "src/admin/reports.routes.ts",
-      "line": 12,
-      "reason": "route-mount-unread",
-      "message": "app is mounted somewhere this cannot read, so /daily is not the path it is served at.",
-      "hint": "Mount the application at a literal path, or declare its routes on the application that is served.",
-      "symbol": "GET /daily",
-      "adapter": "hono-routes",
-      "service": "api"
+      "message": "A browser holds this route open as a stream of server-sent events, and nothing in the code behind it was read as relaying a channel onto it.",
+      "hint": "Where the stream is answered by code of the route's own, subscribe there with a client a broker description reads; or annotate the handler with @Consumes('<channel>').",
+      "symbol": "GET /api/depots/:param/stream"
     },
     {
       "file": "src/worker.ts",
@@ -1701,6 +1811,16 @@
       "symbol": "app.get(pathFor('stats'))",
       "adapter": "hono-routes",
       "service": "api"
+    },
+    {
+      "file": "src/app/live-events.service.ts",
+      "line": 27,
+      "reason": "stream-handler-unread",
+      "level": "info",
+      "message": "The frames of this stream are pushed into LiveEventsService.events, and nothing in this repository was read subscribing to it.",
+      "hint": "Subscribe through the service that holds the subject (a field it exposes, a getter, or the subject itself), with .subscribe(…) after any .pipe(…).",
+      "symbol": "LiveEventsService.open",
+      "service": "web"
     }
   ]
 }

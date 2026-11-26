@@ -13,6 +13,8 @@ export interface CompactNode {
   label: string;
   /** `file:line`, from L1. */
   loc?: string;
+  /** Where its declaration ends, read from the checkout, where it holds a body (P393). */
+  endLine?: number;
   service?: string;
   kind?: string;
   /** From L2. */
@@ -24,6 +26,16 @@ export interface CompactNode {
    * under, where its subtree is written (P92). A walk expands each node once.
    */
   seenAt?: string;
+  /** Whether it runs, where it is reached from, how many ways in, and whether that walk was cut (P364, `ways-in.ts`). */
+  reach?: 'alive' | 'maybe' | 'unreached' | 'dead' | 'outside';
+  from?: string;
+  ways?: number;
+  walkCut?: true;
+  /** On a `maybe` row: the unread call that could reach it, and the code its chain stops at (P367). */
+  gap?: string;
+  behind?: string;
+  /** On a `maybe` row: the name to search for and the repository to search, to confirm it (P393). */
+  confirm?: { grep: string; repo: string };
 }
 
 /** How one node was reached. */
@@ -73,6 +85,17 @@ export interface GuardRef {
   via?: string;
   /** The decorator on the handler or its class that switches this check off for it. */
   skippedBy?: string;
+  /**
+   * The service the check belongs to, where it is not the guarded node's own:
+   * a router's check in front of a subgraph's field (P245).
+   */
+  service?: string;
+  /**
+   * The parts of what the node answers the check is for, where it is not the
+   * whole of it: fields with no handler of their own the node answers (P252).
+   * On a step, the ones the request asks it for.
+   */
+  for?: string[];
 }
 
 /** A decorator on a handler or its class that lets a request past a check (P76). */

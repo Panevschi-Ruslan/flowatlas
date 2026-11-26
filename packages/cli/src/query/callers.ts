@@ -1,117 +1,6 @@
-import { ENTRY_KINDS, type DetailLevel, type GraphNode } from '@flowatlas/core';
-import type { GraphDb } from '@flowatlas/linker';
-import {
-  DEFAULT_FLOW_DEPTH,
-  REVERSE_EDGES,
-  projectDetail,
-  projectEdge,
-  truncationMessage,
-  walkBack,
-  type FlowNode,
-} from '@flowatlas/mcp';
-
-export interface CallerOptions {
-  /**
-   * Hops to follow back. Absent, the walk goes the usual eight and one more per
-   * step of every workflow it climbs through (`walkBack`), so a handler a
-   * workflow invokes is followed up to whatever starts the workflow.
-   */
-  depth?: number;
-  maxNodes: number;
-  detail: DetailLevel;
-  /** Keep only the entry points, hung straight off the target. */
-  entriesOnly?: boolean;
-}
-
-export interface Callers {
-  root: FlowNode;
-  /** Entry points the target can be reached from, each named once. */
-  entries: GraphNode[];
-  /** How many nodes reach it at all, so "no entries" is not "nothing". */
-  reached: number;
-  /** Every service the walk touched, the target's own included. */
-  services: string[];
-  /**
-   * Services the walk reached without finding an entry point in them.
-   *
-   * A change is visible in these too. Reporting only the entry points would say
-   * "one entry, in this service" about a chain that crosses into another and
-   * stops there, which reads as "nothing outside this service" and is not.
-   */
-  withoutEntry: string[];
-  truncated?: string;
-}
+import { ENTRY_KINDS, type GraphNode } from '@flowatlas/core';
 
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-
-/**
- * Everything that reaches a symbol, as a tree growing back towards its callers.
- *
- * The walk is the linker's, read the other way round, and the path it carries
- * on every row is what the tree is rebuilt from; nothing here re-implements a
- * traversal. Each child is something that calls its parent, so the root is the
- * thing that would change and the leaves are the ways in.
- */
-export const callersOf = (db: GraphDb, target: GraphNode, options: CallerOptions): Callers => {
-  const traverse = (maxDepth: number) =>
-    db.traverse({ from: target.id, direction: 'in', edgeTypes: REVERSE_EDGES, maxDepth, maxNodes: options.maxNodes });
-  const walk = options.depth === undefined ? walkBack(DEFAULT_FLOW_DEPTH, traverse) : traverse(options.depth);
-
-  const root: FlowNode = { node: projectDetail(target, options.detail), children: [] };
-  const byPath = new Map<string, FlowNode>([[target.id, root]]);
-  const entries = new Map<string, GraphNode>();
-  const reached = new Set<string>();
-  const services = new Set<string>([target.repo]);
-  const entryServices = new Set<string>();
-
-  for (const row of walk.rows) {
-    if (row.depth === 0) continue;
-    reached.add(row.id);
-
-    const segments = row.path.split('>');
-    const parent = byPath.get(segments.slice(0, -1).join('>'));
-    const node = db.node(row.id);
-    if (parent === undefined || node === undefined) continue;
-    services.add(node.repo);
-    if (node.type === 'entry') {
-      entries.set(node.id, node);
-      entryServices.add(node.repo);
-    }
-
-    // The edge is stored pointing the way the call runs, so it is looked up
-    // from the callee back to this caller rather than the other way about.
-    const edge = db
-      .edgesTo(segments[segments.length - 2] as string, row.edgeType === null ? undefined : [row.edgeType])
-      .find((candidate) => candidate.from === row.id);
-
-    const flow: FlowNode = {
-      node: projectDetail(node, options.detail),
-      ...(edge === undefined ? {} : { edge: projectEdge(edge, options.detail) }),
-      children: [],
-    };
-    byPath.set(row.path, flow);
-    parent.children.push(flow);
-  }
-
-  const sorted = [...entries.values()].sort((a, b) => cmp(a.id, b.id));
-  if (options.entriesOnly === true) {
-    root.children = sorted.map((entry) => ({
-      node: projectDetail(entry, options.detail),
-      children: [],
-    }));
-  }
-
-  return {
-    root,
-    entries: sorted,
-    reached: reached.size,
-    services: [...services].sort(cmp),
-    withoutEntry: [...services].filter((name) => !entryServices.has(name)).sort(cmp),
-    // The walk stopped at the limit rather than at the end, and only says that
-    // much, so the count is reported as a floor rather than invented.
-    ...(walk.truncated ? { truncated: truncationMessage(1, false, { limit: 'maxNodes', at: options.maxNodes, tool: 'impact' }) } : {}),
-  };
-};
 
 /** Singular and plural, since a summary that says "1 entries" reads as a bug. */
 const KIND_LABEL: Record<string, [string, string]> = {
@@ -124,6 +13,8 @@ const KIND_LABEL: Record<string, [string, string]> = {
   rpc: ['rpc entry', 'rpc entries'],
   cron: ['cron job', 'cron jobs'],
   workflow: ['workflow', 'workflows'],
+  task: ['task', 'tasks'],
+  screen: ['screen', 'screens'],
 };
 
 export interface ReachableGroup {

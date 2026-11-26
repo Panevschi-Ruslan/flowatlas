@@ -1,0 +1,11 @@
+name: deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: helmfile -f deploy/helmfile.yaml apply
+      - run: kubectl apply -k orders/deploy

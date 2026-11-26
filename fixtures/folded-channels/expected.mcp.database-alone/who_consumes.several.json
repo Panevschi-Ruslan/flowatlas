@@ -1,0 +1,31 @@
+{
+  "error": "\"order:{id}:{state}\" fits 4 channels; ask for one of them",
+  "suggestions": [
+    {
+      "id": "channel:order:*:*:archived",
+      "type": "channel",
+      "label": "order:*:*:archived"
+    },
+    {
+      "id": "channel:order:*:closed",
+      "type": "channel",
+      "label": "order:*:closed"
+    },
+    {
+      "id": "channel:order:*:on-hold",
+      "type": "channel",
+      "label": "order:*:on-hold"
+    },
+    {
+      "id": "channel:order:*:opened",
+      "type": "channel",
+      "label": "order:*:opened"
+    }
+  ],
+  "next": [
+    "who_consumes({channel: \"channel:order:*:*:archived\"})",
+    "who_consumes({channel: \"channel:order:*:closed\"})",
+    "who_consumes({channel: \"channel:order:*:on-hold\"})",
+    "who_consumes({channel: \"channel:order:*:opened\"})"
+  ]
+}

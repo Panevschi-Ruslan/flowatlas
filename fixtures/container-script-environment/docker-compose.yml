@@ -1,0 +1,15 @@
+include:
+  - deploy/catalog.compose.yaml
+services:
+  orders:
+    build: ./orders
+    environment:
+      - PORT
+    ports:
+      - "8201:3300"
+  billing:
+    build: ./billing
+    environment:
+      BILLING_PORT:
+    ports:
+      - "8202:3000"

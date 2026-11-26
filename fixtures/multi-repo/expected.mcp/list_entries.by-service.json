@@ -6,7 +6,8 @@
       "label": "GET /a/:param",
       "loc": "src/aliases/current-aliases.controller.ts:11",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/a/:slug"
     },
     {
       "id": "entry:orders:http:GET:/orders/:param",
@@ -14,7 +15,8 @@
       "label": "GET /orders/:param",
       "loc": "src/orders/orders.controller.ts:25",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id"
     },
     {
       "id": "entry:orders:http:GET:/orders/latest",
@@ -38,10 +40,12 @@
       "label": "POST /orders/:param/archive",
       "loc": "src/orders/orders.controller.ts:42",
       "service": "orders",
-      "kind": "http"
+      "kind": "http",
+      "rawPath": "/orders/:id/archive"
     }
   ],
   "total": 5,
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:orders:http:GET:/a/:param\"})",
     "describe_for_prompt({id: \"entry:orders:http:GET:/a/:param\"})",

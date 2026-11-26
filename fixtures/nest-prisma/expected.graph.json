@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-prisma",
-  "generatedAt": "2026-10-07T14:34:26.706Z",
+  "generatedAt": "2026-11-23T14:44:22.342Z",
   "nodes": [
     {
       "id": "db_query:nest-prisma#src/orders/orders.service.ts:12:12",
@@ -202,7 +202,8 @@
         "signature": {
           "params": [],
           "returns": "type:@prisma/client#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -216,7 +217,8 @@
         "signature": {
           "params": [],
           "returns": "type:@prisma/client#Order[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -235,7 +237,8 @@
             }
           ],
           "returns": "type:@prisma/client#Order"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -411,7 +414,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

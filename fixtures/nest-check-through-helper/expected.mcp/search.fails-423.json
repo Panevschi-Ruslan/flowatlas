@@ -11,7 +11,8 @@
         "label": "DELETE /desk/holds/:param",
         "exception": "toHttpError",
         "sites": 1,
-        "service": "lending"
+        "service": "lending",
+        "reach": "dead"
       },
       {
         "id": "entry:lending:http:POST:/desk/renewals",
@@ -19,10 +20,12 @@
         "label": "POST /desk/renewals",
         "exception": "toHttpError",
         "sites": 1,
-        "service": "lending"
+        "service": "lending",
+        "reach": "dead"
       }
     ]
   },
+  "complete": true,
   "next": [
     "get_flow({entry: \"entry:lending:http:DELETE:/desk/holds/:param\"})",
     "describe_for_prompt({id: \"entry:lending:http:DELETE:/desk/holds/:param\"})",

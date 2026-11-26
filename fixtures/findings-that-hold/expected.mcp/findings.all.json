@@ -1,0 +1,120 @@
+{
+  "counts": {
+    "field-never-sent": 1,
+    "answer-field-never-returned": 1,
+    "type-never-published": 1,
+    "contract-break": 1,
+    "message-type-unselected": 1
+  },
+  "top": {
+    "field-never-sent": [
+      {
+        "kind": "field-never-sent",
+        "id": "back-office#src/builds/build-bot.ts:BuildBot.handleJobQueued",
+        "to": "channel:build_updates#JOB_QUEUED",
+        "service": "back-office",
+        "loc": "src/builds/build-bot.ts:15",
+        "message": "`priority` is read by BuildBot.handleJobQueued on build_updates (JOB_QUEUED) and sent by none of its publishers",
+        "precision": "high",
+        "evidence": "every sender on the crossing and every reader of it was read",
+        "rank": 1,
+        "next": "check_contract({channel: \"channel:build_updates#JOB_QUEUED\"})"
+      }
+    ],
+    "answer-field-never-returned": [
+      {
+        "kind": "answer-field-never-returned",
+        "id": "shop-web#src/screens/StorePage.tsx:StorePage",
+        "from": "ui_api_call:shop-web#src/screens/StorePage.tsx:14:26",
+        "to": "entry:stores-api:http:GET:/stores/:param",
+        "service": "shop-web",
+        "loc": "src/screens/StorePage.tsx:45",
+        "message": "`rating` of the answer to GET /stores/:param is read by StorePage and never returned: GET /stores/:param answers StoreCard (id, name, address)",
+        "precision": "high",
+        "evidence": "the route answers a shape read whole, and the field is not in it",
+        "fix": "return `rating` from GET /stores/:param, or stop reading it",
+        "rank": 1,
+        "next": "check_contract({from: \"ui_api_call:shop-web#src/screens/StorePage.tsx:14:26\", to: \"entry:stores-api:http:GET:/stores/:param\"})"
+      }
+    ],
+    "type-never-published": [
+      {
+        "kind": "type-never-published",
+        "id": "channel:shop:*:events#ORDER_REFUNDED",
+        "to": "channel:shop:*:events",
+        "service": "shop-web",
+        "loc": "src/screens/AuditLog.tsx:17",
+        "message": "handleLive handles ORDER_REFUNDED, which nothing publishes on the 2 channels it receives (shop:*:events, shop:*:orders); their 4 publish(es) send ALERT_RAISED, AUDIT_ENTRY_CREATED, ORDER_PLACED, ORDER_SHIPPED",
+        "precision": "high",
+        "evidence": "every channel it receives was read, and every publish on each says the type it sends",
+        "seenBy": [
+          "POST /shops/:param/alerts/:param (stores-api)",
+          "POST /shops/:param/audit/:param (stores-api)",
+          "POST /shops/:param/orders/:param (stores-api)"
+        ],
+        "rank": 1,
+        "reach": {
+          "waysIn": 3
+        },
+        "next": "who_emits({channel: \"channel:shop:*:events\"})"
+      }
+    ],
+    "contract-break": [
+      {
+        "kind": "contract-break",
+        "id": "http_out:back-office#src/stores.client.ts:28:34",
+        "to": "entry:stores-api:http:POST:/stores",
+        "service": "back-office",
+        "loc": "src/stores.client.ts:28",
+        "message": "sender back-office sends `priceTier` as `string`; receiver stores-api declares it `number`",
+        "severity": "error",
+        "precision": "high",
+        "rank": 1,
+        "reach": {
+          "callers": 1
+        },
+        "next": "check_contract({from: \"http_out:back-office#src/stores.client.ts:28:34\", to: \"entry:stores-api:http:POST:/stores\"})"
+      }
+    ],
+    "message-type-unselected": [
+      {
+        "kind": "message-type-unselected",
+        "id": "producer:stores-api#src/orders/orders.service.ts:15:11",
+        "service": "stores-api",
+        "loc": "src/orders/orders.service.ts:15",
+        "message": "no code that runs selects ORDER_SHIPPED on shop:*:orders: 2 consumers choose other types (handleFeed, handleLive)",
+        "precision": "medium",
+        "rank": 1,
+        "next": "get_source({symbol: \"producer:stores-api#src/orders/orders.service.ts:15:11\"})"
+      }
+    ]
+  },
+  "heldBack": {
+    "message-type-unselected": {
+      "count": 1,
+      "why": "handleFeed chooses ALERT_RAISED, and 1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+    },
+    "type-never-published": {
+      "count": 1,
+      "why": "1 subscription(s) behind GET /shops/:param/feed name a channel not read"
+    },
+    "config-not-set": {
+      "count": 1,
+      "why": "no deployment file of back-office was read: its settings may be set where the reading does not look"
+    },
+    "field-never-sent": {
+      "count": 1,
+      "why": "`attempt` is compared under a type said two ways (BuildBot.handleBuildRetry: its parameter's type says BUILD_RETRIED; the code that calls it does so for BUILD_FAILED)"
+    },
+    "answer-field-never-returned": {
+      "count": 3,
+      "why": "1: what GET /categories/tree answers is not a shape read, so the fields its clients read were not compared; 2: `changesFromPrevious` is read behind a check that it is there (changeSummary, line 27): the client handles its absence"
+    }
+  },
+  "warnings": {
+    "contract-break": 7
+  },
+  "next": [
+    "findings({kind: \"contract-break\", severity: \"warning\"})"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "target": {
+    "id": "market-web#src/app/shop-events.service.ts:ShopEventsService.connect",
+    "type": "method",
+    "label": "ShopEventsService.connect",
+    "loc": "src/app/shop-events.service.ts:19",
+    "service": "market-web",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:market-web:screen:/history",
+      "type": "entry",
+      "label": "/history",
+      "loc": "src/app/app.routes.ts:12",
+      "service": "market-web",
+      "kind": "screen",
+      "reach": "outside",
+      "by": "market-web#src/app/history-page.component.ts:HistoryPageComponent"
+    },
+    {
+      "id": "entry:market-web:screen:/staff",
+      "type": "entry",
+      "label": "/staff",
+      "loc": "src/app/app.routes.ts:16",
+      "service": "market-web",
+      "kind": "screen",
+      "reach": "outside",
+      "by": "market-web#src/app/staff-board.component.ts:StaffBoardComponent"
+    }
+  ],
+  "total": 2,
+  "byKind": {
+    "screens": {
+      "market-web": [
+        "src/app/history-page.component.ts",
+        "src/app/staff-board.component.ts"
+      ]
+    }
+  },
+  "reached": 11,
+  "entriesByService": {
+    "market-web": 2
+  },
+  "reachedByService": {
+    "market-web": 11
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:market-web:screen:/history\"})",
+    "describe_for_prompt({id: \"entry:market-web:screen:/history\"})",
+    "impact({symbol: \"entry:market-web:screen:/history\"})"
+  ]
+}

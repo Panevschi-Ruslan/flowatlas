@@ -1,0 +1,4 @@
+{
+  "extends": "@shop/tsconfig",
+  "include": ["src", "../../../shared-contracts/src/**/*.ts"]
+}

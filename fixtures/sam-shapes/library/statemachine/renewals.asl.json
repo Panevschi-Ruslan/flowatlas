@@ -1,0 +1,15 @@
+{
+  "Comment": "Renews a loan by placing a hold for the next reader.",
+  "StartAt": "PlaceHold",
+  "States": {
+    "PlaceHold": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${HoldArn}",
+        "Payload.$": "$"
+      },
+      "End": true
+    }
+  }
+}

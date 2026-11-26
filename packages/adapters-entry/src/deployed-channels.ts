@@ -21,6 +21,8 @@ import {
   CHANNEL_PATTERN_META,
   ENVELOPE_META,
   ENVIRONMENT_META,
+  GRANTS_META,
+  type GrantValue,
   makeChannelId,
   makeEntryId,
   makeEntryReference,
@@ -160,7 +162,13 @@ const notMatchedOn = (delivery: DeployedDelivery): string[] => {
   ].sort();
 };
 
-const confidenceOf = (delivery: DeployedDelivery): Confidence => (delivery.meta?.['disabled'] === true ? 'heuristic' : 'static');
+/**
+ * How far an edge out of a delivery can be trusted: a disabled delivery
+ * delivers nothing today, and one declared under a condition the files do not
+ * settle may not be deployed at all (P57).
+ */
+const confidenceOf = (delivery: DeployedDelivery): Confidence =>
+  delivery.meta?.['disabled'] === true || delivery.meta?.['conditional'] !== undefined ? 'heuristic' : 'static';
 
 /**
  * A consumer node for a delivery that takes messages from a channel.
@@ -636,6 +644,9 @@ export const environmentMeta = (fn: DeployedFunction): Record<string, unknown> =
       written: setting.written,
       ...(value === undefined ? {} : { value }),
       ...(setting.names === undefined ? {} : { kind: setting.names.kind }),
+      ...(setting.imported === undefined ? {} : { imported: setting.imported }),
+      ...(setting.path === undefined ? {} : { path: setting.path }),
+      ...(setting.referenced === true ? { referenced: true } : {}),
       ...(setting.unread === undefined
         ? {}
         : {
@@ -646,4 +657,25 @@ export const environmentMeta = (fn: DeployedFunction): Record<string, unknown> =
     };
   }
   return { [ENVIRONMENT_META]: values };
+};
+
+/** What a function's deployment grants it, as the graph keeps it on its entry (P272). */
+export const grantsMeta = (fn: DeployedFunction): Record<string, unknown> => {
+  if (fn.grants === undefined || fn.grants.length === 0) return {};
+  const values: GrantValue[] = fn.grants.map((grant) => ({
+    kind: grant.kind,
+    ...(grant.name === undefined ? {} : { name: grant.name }),
+    ...(grant.any === undefined ? {} : { any: grant.any }),
+    ...(grant.unread === undefined ? {} : { unread: grant.unread }),
+    by: grant.by,
+  }));
+  const seen = new Set<string>();
+  return {
+    [GRANTS_META]: values.filter((value) => {
+      const key = JSON.stringify(value);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }),
+  };
 };

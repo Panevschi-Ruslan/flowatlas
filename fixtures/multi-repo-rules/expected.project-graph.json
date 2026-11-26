@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T11:31:42.416Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:17:31.737Z",
   "services": [
     {
       "name": "gateway",
@@ -87,7 +87,17 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 31
+          },
+          {
+            "field": "orderId",
+            "line": 31
+          }
+        ]
       }
     },
     {
@@ -106,7 +116,21 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 19
+          },
+          {
+            "field": "total.amount",
+            "line": 19
+          },
+          {
+            "field": "id",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -137,7 +161,24 @@
             }
           ],
           "returns": "type:billing#InvoiceDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 19
+          },
+          {
+            "field": "orderId",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 20
+          },
+          {
+            "field": "amount",
+            "in": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+            "line": 21
+          }
+        ]
       }
     },
     {
@@ -156,7 +197,8 @@
             }
           ],
           "returns": "type:billing#InvoiceDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -809,7 +851,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "line": 16
+          }
+        ]
       }
     },
     {
@@ -1071,7 +1119,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1090,7 +1139,19 @@
             }
           ],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "total.amount",
+            "in": "gateway#src/clients/payments.client.ts:PaymentsClient.charge",
+            "line": 35
+          },
+          {
+            "field": "total.currency",
+            "in": "gateway#src/clients/payments.client.ts:PaymentsClient.charge",
+            "line": 36
+          }
+        ]
       }
     },
     {
@@ -1109,7 +1170,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1128,7 +1190,19 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:gateway#InvoiceDto>"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+            "line": 34
+          },
+          {
+            "field": "total.amount",
+            "in": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+            "line": 35
+          }
+        ]
       }
     },
     {
@@ -1147,7 +1221,14 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<unknown>"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "id",
+            "in": "gateway#src/clients/payments.client.ts:PaymentsClient.pay",
+            "line": 24
+          }
+        ]
       }
     },
     {
@@ -1166,7 +1247,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1185,7 +1267,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1204,7 +1287,8 @@
             }
           ],
           "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1390,7 +1474,8 @@
             }
           ],
           "returns": "{target:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1421,7 +1506,8 @@
             }
           ],
           "returns": "{target:string}"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1472,7 +1558,8 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1491,7 +1578,24 @@
             }
           ],
           "returns": "type:@fx/contracts#OrderDto"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "customerId",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 43
+          },
+          {
+            "field": "total.amount",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 45
+          },
+          {
+            "field": "total.currency",
+            "in": "orders#src/orders/orders.service.ts:OrdersService.create",
+            "line": 46
+          }
+        ]
       }
     },
     {
@@ -1510,7 +1614,8 @@
             }
           ],
           "returns": "type:@fx/contracts#OrderDto"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1524,7 +1629,8 @@
         "signature": {
           "params": [],
           "returns": "type:@fx/contracts#OrderDto[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -1661,7 +1767,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/main.ts",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -1687,7 +1800,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -1712,7 +1832,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1783,12 +1910,14 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "pathChoices": [
           "/orders/:param/hold",
           "/orders/:param/resume"
         ],
+        "sendsJson": true,
         "targetService": "gateway"
       }
     },
@@ -1827,6 +1956,7 @@
         "baseUrlEnv": null,
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": null
       }
@@ -1868,6 +1998,7 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": null
       }
@@ -1887,6 +2018,7 @@
         "baseUrlEnv": null,
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": null
       }
@@ -1906,6 +2038,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:web#OrderDto",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "gateway"
@@ -1926,6 +2059,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -1945,6 +2079,7 @@
         "baseUrlEnv": "ordersUrl",
         "responseType": "type:web#OrderDto",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "targetService": "orders"
@@ -1965,6 +2100,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "unknown",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env"
       }
@@ -1986,8 +2122,10 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
+        "sendsJson": true,
         "targetService": "gateway"
       }
     },
@@ -2006,6 +2144,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:web#OrderDto",
         "bodyType": null,
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "guessed": true,
@@ -2029,12 +2168,14 @@
         "bodyType": "object",
         "bodyFrom": "literal",
         "bodyKeys": [],
+        "answerRead": [],
         "package": "@angular/common/http",
         "via": "template-env",
         "pathChoices": [
           "/orders/:param/refund",
           "/orders/:param/ship"
         ],
+        "sendsJson": true,
         "targetService": "gateway"
       }
     },
@@ -2064,7 +2205,8 @@
           "returns": "void"
         },
         "standalone": true,
-        "selector": "app-checkout"
+        "selector": "app-checkout",
+        "unreferenced": true
       }
     },
     {
@@ -3951,6 +4093,15 @@
     },
     {
       "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 59,
+      "reason": "dynamic-http-url",
+      "message": "GET /orders/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:59:12"
+    },
+    {
+      "service": "gateway",
       "file": "src/clients/payments.client.ts",
       "line": 24,
       "reason": "unknown-base-url-env",
@@ -4002,6 +4153,15 @@
       "message": "target service gateway has no route GET /orders/:param/receipt",
       "hint": "Route renamed? Check gateway's controllers, or annotate the method with /** @flowatlas-calls GET /orders/:param/receipt */.",
       "symbol": "ui_api_call:web#src/app/orders-api.service.ts:26:12"
+    },
+    {
+      "service": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 48,
+      "reason": "api-path-dynamic",
+      "message": "GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/app/orders-api.service.ts:48:12"
     },
     {
       "service": "web",

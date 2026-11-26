@@ -1,0 +1,70 @@
+{
+  "channel": {
+    "id": "channel:order_updates",
+    "type": "channel",
+    "label": "order_updates",
+    "loc": "src/orders/orders.service.ts:11",
+    "service": "shop-api",
+    "meta": {
+      "channelKind": "channel",
+      "adapters": [
+        "event-bus"
+      ],
+      "producers": 2,
+      "consumers": 1
+    }
+  },
+  "consumers": [
+    {
+      "id": "consumer:ops-bot#src/events/events.controller.ts:EventsController.receive",
+      "type": "consumer",
+      "label": "EventsController.receive",
+      "loc": "src/events/events.controller.ts:10",
+      "service": "ops-bot",
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "event-bus",
+        "decorator": "Consumes",
+        "entryId": null,
+        "discriminator": "type",
+        "selects": [
+          {
+            "type": "ORDER_CANCELLED",
+            "consumer": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderCancelled",
+            "via": "switch",
+            "line": 16
+          },
+          {
+            "type": "ORDER_READY",
+            "consumer": "consumer:ops-bot#src/bot/bot.service.ts:BotService.handleOrderReady",
+            "via": "switch",
+            "line": 14
+          }
+        ]
+      },
+      "endLine": 21,
+      "reach": "dead",
+      "from": "POST /events/orders",
+      "throughDead": true,
+      "reads": [
+        "label",
+        "orderId",
+        "reason",
+        "type"
+      ]
+    }
+  ],
+  "total": 1,
+  "types": [
+    "ORDER_CANCELLED",
+    "ORDER_READY"
+  ],
+  "complete": true,
+  "next": [
+    "who_consumes({channel: \"channel:order_updates\", type: \"ORDER_CANCELLED\"})",
+    "who_emits({channel: \"channel:order_updates\"})",
+    "impact({symbol: \"consumer:ops-bot#src/events/events.controller.ts:EventsController.receive\"})",
+    "get_source({symbol: \"consumer:ops-bot#src/events/events.controller.ts:EventsController.receive\"})"
+  ]
+}

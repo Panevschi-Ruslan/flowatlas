@@ -1,0 +1,12 @@
+{
+  "services": [
+    { "name": "jobs", "repo": "./jobs", "type": "express" },
+    { "name": "portal", "repo": "./portal", "type": "nestjs" },
+    { "name": "orders", "repo": "./orders", "type": "express", "baseUrlEnv": ["ORDERS_URL"] },
+    { "name": "legacy", "repo": "./legacy", "type": "express", "baseUrlEnv": ["LEGACY_URL"] },
+    { "name": "archive", "repo": "./archive", "type": "express", "baseUrlEnv": ["LEGACY_URL"] },
+    { "name": "shop", "repo": "./shop", "type": "nextjs" },
+    { "name": "api", "repo": "./api", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

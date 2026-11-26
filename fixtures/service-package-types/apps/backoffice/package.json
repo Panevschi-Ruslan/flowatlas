@@ -1,0 +1,12 @@
+{
+  "name": "@shop/backoffice",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "^3.11.0",
+    "@shop/api": "workspace:^",
+    "@shop/formatting": "workspace:^",
+    "graphql": "^16.9.0",
+    "react": "^19.0.0"
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:34:37.009Z",
+  "configHash": "0b5657709b73",
+  "services": [
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 991,
+      "packages": {
+        "name": "shop-billing",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1039,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 25,
+      "edges": 18,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 1053,
+      "packages": {
+        "name": "shop-jobs",
+        "runtime": [
+          "bullmq",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 17,
+      "edges": 15,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1020
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 3,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 6,
+    "resolved": 5,
+    "unresolved": 1,
+    "byReason": {
+      "api-path-partly-read": 1
+    }
+  },
+  "channels": {
+    "total": 3,
+    "linked": 0,
+    "noConsumers": [
+      "channel:emails",
+      "channel:invoices",
+      "channel:reports"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 4,
+    "uncalled": [
+      "entry:catalog:http:GET:/",
+      "entry:catalog:http:POST:/"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/billing.js",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com/live/invoices names its API by an id no file holds; it is taken as shop-billing of billing, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (live in the workspace production), so the stage live is taken as one of its, and the request as one for /invoices on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/billing.js:3:10"
+    },
+    {
+      "service": "web",
+      "file": "js/billing.js",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://b4c5d6e7f8.execute-api.eu-west-1.amazonaws.com/sandbox/invoices names its API by an id no file holds; it is taken as shop-billing of billing, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (sandbox where none is given), so the stage sandbox is taken as one of its, and the request as one for /invoices on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/billing.js:7:10"
+    }
+  ],
+  "totals": {
+    "nodes": 56,
+    "edges": 48,
+    "types": 0,
+    "missed": 6,
+    "sites": 12,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 6
+  }
+}

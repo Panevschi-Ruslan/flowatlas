@@ -1,0 +1,101 @@
+{
+  "target": {
+    "id": "shop-web#src/orders-api.ts:markReady",
+    "type": "function",
+    "label": "markReady",
+    "loc": "src/orders-api.ts:10",
+    "service": "shop-web",
+    "reach": "unreached",
+    "from": "none",
+    "requests": [
+      {
+        "route": "entry:shop-api:http:PATCH:/api/orders/status",
+        "by": "shop-api#src/orders.controller.ts:OrdersController.setStatus"
+      }
+    ]
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "shop-web#src/OrdersToolbar.tsx:OrdersToolbar",
+        "type": "ui_component",
+        "label": "OrdersToolbar",
+        "loc": "src/OrdersToolbar.tsx:17",
+        "kind": "function",
+        "endLine": 32,
+        "reach": "unreached",
+        "from": "none"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "void"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "ui_action:shop-web#src/OrdersToolbar.tsx:27:15",
+            "type": "ui_action",
+            "label": "onClick={refresh}",
+            "loc": "src/OrdersToolbar.tsx:27",
+            "kind": "event"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static"
+          },
+          "topOfChain": true,
+          "gapsInFile": 1,
+          "children": []
+        },
+        {
+          "node": {
+            "id": "ui_action:shop-web#src/OrdersToolbar.tsx:28:15",
+            "type": "ui_action",
+            "label": "onClick={ready}",
+            "loc": "src/OrdersToolbar.tsx:28",
+            "kind": "event"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static"
+          },
+          "topOfChain": true,
+          "gapsInFile": 1,
+          "children": []
+        },
+        {
+          "node": {
+            "id": "ui_action:shop-web#src/OrdersToolbar.tsx:29:15",
+            "type": "ui_action",
+            "label": "onClick={stock}",
+            "loc": "src/OrdersToolbar.tsx:29",
+            "kind": "event"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static"
+          },
+          "topOfChain": true,
+          "gapsInFile": 1,
+          "children": []
+        }
+      ]
+    }
+  ],
+  "waysIn": [],
+  "waysInNone": "no way in reaches this; the components on the way (components) call it",
+  "components": {
+    "shop-web": [
+      "src/OrdersToolbar.tsx"
+    ]
+  },
+  "complete": true,
+  "next": [
+    "impact({symbol: \"shop-web#src/orders-api.ts:markReady\"})",
+    "get_source({symbol: \"shop-web#src/orders-api.ts:markReady\"})"
+  ]
+}

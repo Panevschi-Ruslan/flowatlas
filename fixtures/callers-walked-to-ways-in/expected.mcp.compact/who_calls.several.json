@@ -1,0 +1,86 @@
+{
+  "settled": "3 ways in reach it, all listed",
+  "answers": [
+    {
+      "asked": "stock-api#src/stock/stock.service.ts:StockService.reserve",
+      "target": {
+        "id": "stock-api#src/stock/stock.service.ts:StockService.reserve",
+        "line": 17,
+        "reach": "alive",
+        "from": "POST /checkout"
+      },
+      "callers": [
+        {
+          "id": "stock-api#src/checkout/checkout.service.ts:CheckoutService.place",
+          "line": 9,
+          "reach": "alive",
+          "from": "POST /checkout",
+          "edge": {
+            "type": "calls",
+            "params": [
+              "string",
+              "number"
+            ],
+            "returns": "void"
+          }
+        }
+      ]
+    },
+    {
+      "asked": "stock-api#src/stock/stock.service.ts:StockService.restock",
+      "target": {
+        "id": "stock-api#src/stock/stock.service.ts:StockService.restock",
+        "line": 25,
+        "reach": "alive",
+        "from": "cron StockJobs.nightly"
+      },
+      "callers": [
+        {
+          "id": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+          "line": 10,
+          "reach": "alive",
+          "from": "cron StockJobs.nightly",
+          "edge": {
+            "type": "calls",
+            "params": [
+              "string"
+            ],
+            "returns": "void"
+          }
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:stock-api:cron:StockJobs.nightly",
+      "line": 10,
+      "reach": "outside",
+      "hops": 2,
+      "by": "stock-api#src/stock/stock.jobs.ts:StockJobs.nightly",
+      "reaches": [
+        "StockService.restock"
+      ]
+    },
+    {
+      "id": "entry:stock-api:http:POST:/checkout",
+      "line": 8,
+      "reach": "alive",
+      "hops": 3,
+      "by": "stock-api#src/checkout/checkout.controller.ts:CheckoutController.place",
+      "reaches": [
+        "StockService.reserve"
+      ]
+    },
+    {
+      "id": "entry:store-web:screen:/checkout",
+      "reach": "outside",
+      "hops": 8,
+      "by": "store-web#src/app/checkout.component.ts:CheckoutComponent",
+      "reaches": [
+        "StockService.reserve"
+      ]
+    }
+  ],
+  "complete": true
+}

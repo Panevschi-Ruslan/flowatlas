@@ -1,0 +1,52 @@
+{
+  "$comment": "Hand labels for one coverage target: copy to labels/<target name>.json, which is gitignored because it names other people's files, and the report of that target gains a section 'Against the hand labels'. Write every label from the source, before looking at what the graph says: a label copied from the tool's output agrees with the tool and measures nothing. `file` is relative to the target's directory - the clone, or for a target of several repositories the repository's `name` and then the path inside it - and `line` is where the call expression starts. `text` is a piece of that line; it is optional and worth writing, because a label whose text has moved is followed to the nearest line holding it and one whose text is gone is reported as a site not found instead of being judged at the wrong line. `column` picks one of two calls on a line. `kind` is your own word for the sort of call (browser, service, producer, graphql...): the report groups by it. `expect` is the way in the call reaches, spelled `<kind> <key>` - `http GET /api/orders/:id` (any spelling of a parameter), `graphql Mutation.placeOrder`, `rpc orders.get`, `event order.placed`, `invoke checkout`, `channel <queue or topic>` with `job` beside it for a queue of named jobs - or a list of them when one call reaches several, or `none` for a call outside the system that must join nothing, or `unread-ok` for a call nothing can know statically, where a row is the right answer. `why` is free text for the next person to check the label. scripts/coverage/labels.mjs holds the rules.",
+  "target": "example-monorepo",
+  "labels": [
+    {
+      "file": "apps/web/src/cart/cart.api.ts",
+      "line": 14,
+      "text": "http.get<Cart>('/api/cart')",
+      "kind": "browser",
+      "expect": "http GET /api/cart",
+      "why": "the cart page loads the cart from the api's CartController.get"
+    },
+    {
+      "file": "apps/web/src/orders/orders.api.ts",
+      "line": 22,
+      "text": "http.post(`/api/orders/${id}/cancel`",
+      "kind": "browser",
+      "expect": "http POST /api/orders/:id/cancel"
+    },
+    {
+      "file": "apps/web/src/checkout/checkout.graphql.ts",
+      "line": 9,
+      "text": "useMutation(PLACE_ORDER)",
+      "kind": "graphql",
+      "expect": "graphql Mutation.placeOrder"
+    },
+    {
+      "file": "apps/api/src/orders/orders.service.ts",
+      "line": 51,
+      "text": "this.mail.add('order-confirmation'",
+      "kind": "producer",
+      "expect": "channel mail",
+      "job": "order-confirmation"
+    },
+    {
+      "file": "apps/api/src/billing/payments.client.ts",
+      "line": 30,
+      "text": "fetch('https://payments.example.com/v1/charges'",
+      "kind": "service",
+      "expect": "none",
+      "why": "the payment provider: outside the system"
+    },
+    {
+      "file": "apps/web/src/plugins/plugin-host.ts",
+      "line": 18,
+      "text": "fetch(plugin.endpoint",
+      "kind": "browser",
+      "expect": "unread-ok",
+      "why": "the address is whatever an installed plugin declares at run time"
+    }
+  ]
+}

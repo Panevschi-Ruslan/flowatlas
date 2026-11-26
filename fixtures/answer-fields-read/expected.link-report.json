@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T21:18:27.782Z",
+  "configHash": "f405e38e97b1",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 4,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 957,
+      "packages": {
+        "name": "answer-fields-read-shop-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-app",
+      "repo": "./shop-app",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 17,
+      "edges": 11,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 804,
+      "packages": {
+        "name": "answer-fields-read-shop-app",
+        "runtime": [
+          "@tanstack/react-query",
+          "axios",
+          "react",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 16,
+      "edges": 12,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 815,
+      "packages": {
+        "name": "answer-fields-read-shop-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 6,
+    "resolved": 6,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 4,
+    "called": 4,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 9,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 46,
+    "edges": 33,
+    "types": 9,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

@@ -1,0 +1,1447 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:17:39.068Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "accounts",
+      "repo": "./accounts",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "accounts#src/app.ts:GET /balances@6",
+      "type": "function",
+      "label": "GET /balances@6",
+      "repo": "accounts",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "admin#src/app.ts:GET /users@6",
+      "type": "function",
+      "label": "GET /users@6",
+      "repo": "admin",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "api#src/app.ts:GET /carts@6",
+      "type": "function",
+      "label": "GET /carts@6",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "billing#src/app.ts:GET /invoices@6",
+      "type": "function",
+      "label": "GET /invoices@6",
+      "repo": "billing",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "catalog#src/app.ts:GET /products@6",
+      "type": "function",
+      "label": "GET /products@6",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "config_key:accounts#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "accounts",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:admin#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "admin",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:api#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:billing#BILLING_PORT",
+      "type": "config_key",
+      "label": "BILLING_PORT",
+      "repo": "billing",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "BILLING_PORT",
+        "source": "process.env",
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:catalog#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:jobs#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "jobs",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:ledger#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "ledger",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:orders#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "config_key:stock#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
+      "id": "entry:accounts:http:GET:/balances",
+      "type": "entry",
+      "label": "GET /balances",
+      "repo": "accounts",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/balances",
+        "rawPath": "/balances",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:admin:http:GET:/users",
+      "type": "entry",
+      "label": "GET /users",
+      "repo": "admin",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/users",
+        "rawPath": "/users",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/carts",
+      "type": "entry",
+      "label": "GET /carts",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/carts",
+        "rawPath": "/carts",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:billing:http:GET:/invoices",
+      "type": "entry",
+      "label": "GET /invoices",
+      "repo": "billing",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/invoices",
+        "rawPath": "/invoices",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:GET:/runs",
+      "type": "entry",
+      "label": "GET /runs",
+      "repo": "jobs",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/runs",
+        "rawPath": "/runs",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:ledger:http:GET:/entries",
+      "type": "entry",
+      "label": "GET /entries",
+      "repo": "ledger",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/entries",
+        "rawPath": "/entries",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/levels",
+      "type": "entry",
+      "label": "GET /levels",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/levels",
+        "rawPath": "/levels",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:10:31",
+      "type": "http_out",
+      "label": "GET /balances",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": "http://accounts/balances",
+        "path": "/balances",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "accounts",
+        "targetService": "accounts"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:3:29",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 3,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8201/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8201",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:4:31",
+      "type": "http_out",
+      "label": "GET /invoices",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 4,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8202/invoices",
+        "path": "/invoices",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8202",
+        "targetService": "billing"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:5:31",
+      "type": "http_out",
+      "label": "GET /products",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8203/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8203",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:6:29",
+      "type": "http_out",
+      "label": "GET /levels",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4700/levels",
+        "path": "/levels",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4700",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:7:30",
+      "type": "http_out",
+      "label": "GET /entries",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4710/entries",
+        "path": "/entries",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4710",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:8:28",
+      "type": "http_out",
+      "label": "GET /carts",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4800/carts",
+        "path": "/carts",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4800",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:web#src/app.ts:9:27",
+      "type": "http_out",
+      "label": "GET /runs",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4810/runs",
+        "path": "/runs",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4810",
+        "targetService": "jobs"
+      }
+    },
+    {
+      "id": "jobs#src/app.ts:GET /runs@6",
+      "type": "function",
+      "label": "GET /runs@6",
+      "repo": "jobs",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "ledger#src/app.ts:GET /entries@6",
+      "type": "function",
+      "label": "GET /entries@6",
+      "repo": "ledger",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /orders@6",
+      "type": "function",
+      "label": "GET /orders@6",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "repo:accounts",
+      "type": "repo",
+      "label": "accounts",
+      "repo": "accounts",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "BILLING_PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/app.ts:GET /levels@6",
+      "type": "function",
+      "label": "GET /levels@6",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "web#src/app.ts:balances",
+      "type": "function",
+      "label": "balances",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/app.ts:carts",
+      "type": "function",
+      "label": "carts",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/app.ts:entries",
+      "type": "function",
+      "label": "entries",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/app.ts:invoices",
+      "type": "function",
+      "label": "invoices",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/app.ts:levels",
+      "type": "function",
+      "label": "levels",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/app.ts:orders",
+      "type": "function",
+      "label": "orders",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/app.ts:products",
+      "type": "function",
+      "label": "products",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/app.ts:runs",
+      "type": "function",
+      "label": "runs",
+      "repo": "web",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:accounts:http:GET:/balances",
+      "to": "accounts#src/app.ts:GET /balances@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:admin:http:GET:/users",
+      "to": "admin#src/app.ts:GET /users@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/carts",
+      "to": "api#src/app.ts:GET /carts@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:billing:http:GET:/invoices",
+      "to": "billing#src/app.ts:GET /invoices@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/app.ts:GET /products@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:GET:/runs",
+      "to": "jobs#src/app.ts:GET /runs@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:ledger:http:GET:/entries",
+      "to": "ledger#src/app.ts:GET /entries@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/app.ts:GET /orders@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/levels",
+      "to": "stock#src/app.ts:GET /levels@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:10:31",
+      "to": "entry:accounts:http:GET:/balances",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "via": "host",
+        "targetService": "accounts"
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:3:29",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/app.ts",
+      "line": 3,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/app.ts:9 (PORT from docker-compose.yml (orders)), published as 8201 by docker-compose.yml"
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:4:31",
+      "to": "entry:billing:http:GET:/invoices",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/app.ts",
+      "line": 4,
+      "meta": {
+        "via": "host",
+        "targetService": "billing"
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:5:31",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/app.ts",
+      "line": 5,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/app.ts:9 (PORT from deploy/catalog.compose.yaml (catalog)), published as 8203 by deploy/catalog.compose.yaml"
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:6:29",
+      "to": "entry:stock:http:GET:/levels",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/app.ts:9 (PORT from Makefile)"
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:7:30",
+      "to": "entry:ledger:http:GET:/entries",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/app.ts",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "ledger",
+        "listensAt": "src/app.ts:9 (PORT from Makefile)"
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:8:28",
+      "to": "entry:api:http:GET:/carts",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/app.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "api",
+        "listensAt": "src/app.ts:9 (PORT from scripts/run-api.sh)"
+      }
+    },
+    {
+      "from": "http_out:web#src/app.ts:9:27",
+      "to": "entry:jobs:http:GET:/runs",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "jobs",
+        "listensAt": "src/app.ts:9 (PORT from scripts/run-jobs.sh)"
+      }
+    },
+    {
+      "from": "web#src/app.ts:balances",
+      "to": "http_out:web#src/app.ts:10:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 10
+    },
+    {
+      "from": "web#src/app.ts:carts",
+      "to": "http_out:web#src/app.ts:8:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 8
+    },
+    {
+      "from": "web#src/app.ts:entries",
+      "to": "http_out:web#src/app.ts:7:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 7
+    },
+    {
+      "from": "web#src/app.ts:invoices",
+      "to": "http_out:web#src/app.ts:4:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 4
+    },
+    {
+      "from": "web#src/app.ts:levels",
+      "to": "http_out:web#src/app.ts:6:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6
+    },
+    {
+      "from": "web#src/app.ts:orders",
+      "to": "http_out:web#src/app.ts:3:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 3
+    },
+    {
+      "from": "web#src/app.ts:products",
+      "to": "http_out:web#src/app.ts:5:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 5
+    },
+    {
+      "from": "web#src/app.ts:runs",
+      "to": "http_out:web#src/app.ts:9:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "accounts",
+      "file": "k8s/accounts.yaml",
+      "line": 32,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "k8s/accounts.yaml routes accounts:80 to port 7100 of accounts's containers, but accounts's code reads its port from PORT (src/app.ts:9), which the Secret accounts-ports (its key http, k8s/accounts-ports.yaml) gives, and a secret's value is never read",
+      "hint": "Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server 7100. A request to accounts:80 is still joined to accounts by the file.",
+      "symbol": "accounts:80:7100",
+      "meta": {
+        "routed": 80,
+        "container": 7100,
+        "listens": [
+          3000
+        ]
+      }
+    },
+    {
+      "service": "admin",
+      "file": "scripts/run-admin.sh",
+      "line": 3,
+      "reason": "server-start-unread",
+      "level": "info",
+      "message": "scripts/run-admin.sh:3 starts shop-admin with PORT=4820, but admin/dist/cli.js is not in the repository (what a build writes is not read), so where admin listens when started that way is not known",
+      "hint": "Start the server from its source (node, tsx) in the script, or give admin the port in a file its code loads.",
+      "symbol": "scripts/run-admin.sh:3"
+    },
+    {
+      "service": "billing",
+      "file": "docker-compose.yml",
+      "line": 15,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "docker-compose.yml publishes port 3000 of billing (billing) as 8202, but billing's code reads its port from BILLING_PORT (src/app.ts:9), which the container's environment does not give",
+      "hint": "Map the published port to the port the server listens on (8202:<that port>), or check that the container's environment gives the server 3000. A request to localhost:8202 is still joined to billing by the file.",
+      "symbol": "billing:8202:3000",
+      "meta": {
+        "published": 8202,
+        "container": 3000,
+        "listens": []
+      }
+    }
+  ]
+}

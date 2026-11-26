@@ -1,0 +1,15 @@
+-> TicketsService.acknowledge                       store-api/src/tickets.service.ts:6
+  -> HooksController.chat                           store-api/src/hooks.controller.ts:9
+    @  POST /api/hooks/chat                         store-api/src/hooks.controller.ts:9
+  -> TicketsController.ack                          store-api/src/tickets.controller.ts:8
+    @  POST /api/tickets/:param/ack                 store-api/src/tickets.controller.ts:8
+      => store-web ^  POST /api/tickets/:param/ack  store-web/src/app/ticket-board.service.ts:13
+        -> TicketBoardService.acknowledge           store-web/src/app/ticket-board.service.ts:12
+          -> TicketBoardComponent.routeAction       store-web/src/app/ticket-board.component.ts:20
+            %  TicketBoardComponent                 store-web/src/app/ticket-board.component.ts:6
+              %  /board                             store-web/src/app/app.routes.ts:23
+Reachable from: 2 http entries (store-api), 1 screen (store-web)
+Could break:
+  POST /api/hooks/chat (store-api)  outside, by HooksController.chat src/hooks.controller.ts:9
+  POST /api/tickets/:param/ack (store-api)  alive, by TicketsController.ack src/tickets.controller.ts:8
+  /board (store-web)  outside, via POST /api/tickets/:param/ack (store-api), by TicketBoardComponent src/app/ticket-board.component.ts:6

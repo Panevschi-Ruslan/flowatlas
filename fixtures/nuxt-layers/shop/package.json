@@ -1,0 +1,9 @@
+{
+  "name": "layered-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "brand-layer": "workspace:*",
+    "nuxt": "^4.1.0"
+  }
+}

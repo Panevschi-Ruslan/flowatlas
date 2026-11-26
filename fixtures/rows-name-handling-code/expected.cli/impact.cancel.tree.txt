@@ -1,0 +1,16 @@
+-> OrdersService.cancel                               shop-api/src/orders/orders.service.ts:17
+  -> StaffBot.handleCallbackQuery                     shop-api/src/bot/staff-bot.service.ts:15
+    -> POST /bot/staff/webhook@16                     shop-api/src/worker.ts:16
+      @  POST /bot/staff/webhook                      shop-api/src/worker.ts:16
+  -> OrdersController.cancel                          shop-api/src/orders/orders.controller.ts:21
+    @  PATCH /api/orders/:param/cancel                shop-api/src/orders/orders.controller.ts:21
+      => shop-web ^  PATCH /api/orders/:param/cancel  shop-web/src/app/orders.client.ts:13
+        -> OrdersClient.cancel                        shop-web/src/app/orders.client.ts:12
+          -> OrderDetailComponent.cancel              shop-web/src/app/order-detail.component.ts:20
+            %  OrderDetailComponent                   shop-web/src/app/order-detail.component.ts:7
+              %  /orders/:param                       shop-web/src/app/app.routes.ts:8
+Reachable from: 2 http entries (shop-api), 1 screen (shop-web)
+Could break:
+  PATCH /api/orders/:param/cancel (shop-api)  alive, by OrdersController.cancel src/orders/orders.controller.ts:21
+  POST /bot/staff/webhook (shop-api)  outside, by StaffBot.handleCallbackQuery src/bot/staff-bot.service.ts:15
+  /orders/:param (shop-web)  outside, via PATCH /api/orders/:param/cancel (shop-api), by OrderDetailComponent src/app/order-detail.component.ts:7

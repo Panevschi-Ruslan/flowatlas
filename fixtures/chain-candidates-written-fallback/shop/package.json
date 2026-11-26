@@ -1,0 +1,13 @@
+{
+  "name": "chain-candidates-written-fallback-shop",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}

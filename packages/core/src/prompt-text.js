@@ -761,15 +761,16 @@ const promptServiceSections = (subject) => {
       ...(view.publishes.length === 0 ? [] : [`- publishes ${promptIds(view.publishes, 8)}`]),
       ...(view.consumes.length === 0 ? [] : [`- consumes ${promptIds(view.consumes, 8)}`]),
     ]),
-    ...promptSection(
-      `Findings · ${total(view.findings)}`,
-      view.findings.flatMap((item) => [
+    ...promptSection(`Findings · ${total(view.findings)}`, [
+      ...view.findings.flatMap((item) => [
         `- ${item.kind} · ${item.count}`,
         ...item.top.map(
           (gap) => `  - ${gap.loc === undefined ? '' : `${promptCode(gap.loc)}: `}${gap.message}${gap.id === undefined ? '' : ` — ${promptCode(gap.id)}`}`,
         ),
       ]),
-    ),
+      // Counted, not listed, as the findings tool counts them (P400): the call lists them.
+      ...(view.counted ?? []).map((item) => `- ${item.kind} at ${item.severity} · ${item.count}, counted, not listed: ${promptCode(item.call)}`),
+    ]),
     ...promptSection(
       'Most common gaps',
       view.gaps.map(
@@ -826,6 +827,8 @@ export const renderPrompt = (subject, limits = PROMPT_LIMITS) => {
   const body = [
     ...head,
     ...(isCheck && subject.task === 'close' ? promptSection('Task', promptTaskLines(subject)) : []),
+    // What the comment above it says about why (P234), in the author's words.
+    ...promptSection('Why', (subject.notes ?? []).map((note) => `- ${note}`)),
     ...promptSection('In front of it', promptAccessLines(subject.access)),
     ...(fails.length === 0 ? [] : promptSection(`Can fail with ${promptFailChips(fails).join(' · ')}`, promptFailLines(fails, bounds))),
     ...(subject.failuresSeen === undefined

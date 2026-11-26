@@ -1,0 +1,14 @@
+%  OrdersPage                                    web/src/OrdersPage.tsx:5
+  ^  query Orders /graphql                       web/src/OrdersPage.tsx:6
+    => orders @  Query.orders                    orders/src/resolvers.ts:5
+      -> Query.orders@5                          orders/src/resolvers.ts:5
+        -> listOrders                            orders/src/orders.ts:9
+    => gateway @  POST /graphql                  gateway/src/main.ts:10
+      => customers @  POST /graphql              customers/src/app.module.ts:10
+      => orders @  POST /                        orders/src/index.ts:10
+    => orders @  Order.customer                  orders/src/resolvers.ts:13
+      -> Order.customer@13                       orders/src/resolvers.ts:13
+    => customers @  Customer.__resolveReference  customers/src/customers/customers.resolver.ts:21
+      -> CustomersResolver.resolveReference      customers/src/customers/customers.resolver.ts:21
+        -> CustomersService.byId                 customers/src/customers/customers.service.ts:9
+unresolved on this path: 1

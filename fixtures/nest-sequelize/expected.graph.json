@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-sequelize",
-  "generatedAt": "2026-10-07T14:34:30.999Z",
+  "generatedAt": "2026-11-23T14:44:36.057Z",
   "nodes": [
     {
       "id": "db_query:nest-sequelize#src/invoices/invoices.service.ts:13:12",
@@ -223,7 +223,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -237,7 +238,8 @@
         "signature": {
           "params": [],
           "returns": "unknown[]"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -251,7 +253,8 @@
         "signature": {
           "params": [],
           "returns": "number"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -409,7 +412,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:51:07.455Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T13:36:20.700Z",
   "services": [
     {
       "name": "returns",
@@ -75,6 +75,20 @@
       }
     },
     {
+      "id": "config_key:returns#EVENT_BUS_NAME",
+      "type": "config_key",
+      "label": "EVENT_BUS_NAME",
+      "repo": "returns",
+      "file": "src/returns/process-return.ts",
+      "line": 13,
+      "meta": {
+        "key": "EVENT_BUS_NAME",
+        "source": "process.env",
+        "fallback": true,
+        "moduleLevel": true
+      }
+    },
+    {
       "id": "config_key:returns#ITEM_RETURNED_TOPIC_ARN",
       "type": "config_key",
       "label": "ITEM_RETURNED_TOPIC_ARN",
@@ -83,7 +97,8 @@
       "line": 24,
       "meta": {
         "key": "ITEM_RETURNED_TOPIC_ARN",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -95,7 +110,8 @@
       "line": 20,
       "meta": {
         "key": "RETURNS_QUEUE_URL",
-        "source": "process.env"
+        "source": "process.env",
+        "fallback": true
       }
     },
     {
@@ -162,6 +178,15 @@
         "api": "library-returns",
         "function": "library-record-return",
         "declaredAs": "aws_api_gateway_method.record_return",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-returns"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -181,6 +206,15 @@
         "api": "library-returns",
         "function": "library-bulk-return",
         "declaredAs": "aws_api_gateway_method.bulk_return",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-returns"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -294,7 +328,7 @@
               {
                 "environment": "RETURNS_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ],
                 "otherwise": "library-returns"
@@ -433,7 +467,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -471,7 +506,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     }
   ],
@@ -813,6 +849,32 @@
     }
   },
   "unresolved": [
+    {
+      "file": "infra/functions.tf",
+      "line": 49,
+      "reason": "queue-redrive-missing",
+      "message": "library-returns is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.returns a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-returns",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-returns"
+      },
+      "service": "returns"
+    },
+    {
+      "file": "infra/functions.tf",
+      "line": 53,
+      "reason": "queue-redrive-missing",
+      "message": "library-priority-returns is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost",
+      "hint": "Give aws_sqs_queue.priority_returns a dead-letter queue, with a maxReceiveCount of at least 5.",
+      "symbol": "channel:sqs/library-priority-returns",
+      "adapter": "aws-lambda",
+      "meta": {
+        "queue": "library-priority-returns"
+      },
+      "service": "returns"
+    },
     {
       "file": "src/returns/bulk-return.ts",
       "line": 7,

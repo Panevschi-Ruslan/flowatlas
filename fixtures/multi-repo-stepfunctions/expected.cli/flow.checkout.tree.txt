@@ -39,4 +39,4 @@
                           -> subjectOf                                    members/src/handlers/send-notice.ts:6
         (again) CheckoutRefused [Fail]
       -> CheckoutRefused [Fail]                                           circulation/statemachine/checkout.asl.json:117
-unresolved on this path: 0
+unresolved on this path: 4

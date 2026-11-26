@@ -192,12 +192,23 @@ const pathTest = (wanted: string | null | undefined): FieldTest => {
   };
 };
 
+/**
+ * Reasons a narrower reason was split off, by the reason an entry names: an
+ * entry accepting the broader one accepts the narrower too, so a decision
+ * written before the split still holds (P401: the one open write among
+ * guarded ones was a `route-unguarded` row before).
+ */
+const ALSO_ACCEPTS: Readonly<Record<string, readonly string[]>> = {
+  'route-unguarded': ['route-unguarded-among-guarded'],
+};
+
 /** One entry with its file glob and route pattern compiled. */
 const compileEntry = (entry: GapLike): FieldTest => {
   const service = entry.service ?? undefined;
   const file = fileTest(entry.file);
   const path = pathTest(entry.path);
-  return (gap) => entry.reason === gap.reason && fits(service, gap.service) && file(gap) && path(gap);
+  const also = ALSO_ACCEPTS[entry.reason] ?? [];
+  return (gap) => (entry.reason === gap.reason || also.includes(gap.reason)) && fits(service, gap.service) && file(gap) && path(gap);
 };
 
 /** How the rows of one surface fall, once accepted entries are matched against them. */

@@ -1,6 +1,6 @@
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
-import type { GraphEdge, ProjectGraph } from '@flowatlas/core';
+import { DEPLOYMENT_SETTING_FINDINGS, DEPLOYMENT_SETTING_NOTES, type GraphEdge, type ProjectGraph } from '@flowatlas/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildProject } from './build.js';
 import { runImpact } from './impact.js';
@@ -65,7 +65,9 @@ describe('a step that sends', () => {
   });
 
   it('leaves no row saying a send is not joined', () => {
-    expect(graph.unresolved.map((row) => row.reason)).toEqual(['workflow-named-by-file']);
+    // What the deployment's settings say against the code is its own (P389), and no row about a send.
+    const settings = new Set([...DEPLOYMENT_SETTING_FINDINGS, ...DEPLOYMENT_SETTING_NOTES]);
+    expect(graph.unresolved.map((row) => row.reason).filter((reason) => !settings.has(reason))).toEqual(['workflow-named-by-file']);
   });
 });
 
@@ -77,7 +79,11 @@ describe('impact without --depth', () => {
       { config: join(dir, 'flowatlas.config.json'), format: 'json', entriesOnly: true },
       { out: (text) => (out += text), err: () => undefined, tty: false },
     );
-    expect((JSON.parse(out) as { entries: string[] }).entries).toContain('entry:members:http:POST:/checkouts');
+    // The tool's answer (P370): rows by id. The route publishes the event a rule hands to the workflow, so it lies
+    // beyond that channel, counted apart (P372); the workflow it starts is a row.
+    const answer = JSON.parse(out) as { entries: Array<{ id: string }>; throughChannels: Array<{ sample: Array<{ id: string }> }> };
+    expect(answer.entries.map((row) => row.id)).toContain('entry:circulation:workflow:circulation-checkout');
+    expect(answer.throughChannels.flatMap((row) => row.sample.map((way) => way.id))).toContain('entry:members:http:POST:/checkouts');
   });
 });
 

@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The billing of a shop, deployed by rain from its pipeline.
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: acme
+  Stage:
+    Type: String
+    Default: dev
+
+Resources:
+  InvoiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  Invoices:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Prefix}-${Stage}-invoices
+
+  Invoice:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-invoice
+      Runtime: nodejs20.x
+      Handler: invoice.handler
+      Role: !GetAtt InvoiceRole.Arn
+      Code: ../src
+
+  InvoicesMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt Invoices.Arn
+      FunctionName: !Ref Invoice
+
+Outputs:
+  InvoicesQueueName:
+    Value: !GetAtt Invoices.QueueName

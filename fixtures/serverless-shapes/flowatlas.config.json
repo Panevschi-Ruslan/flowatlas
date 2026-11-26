@@ -1,0 +1,6 @@
+{
+  "services": [
+    { "name": "members", "repo": "./members", "type": "lambda", "infra": { "options": { "stage": "prod" } } }
+  ],
+  "output": ".flowatlas"
+}

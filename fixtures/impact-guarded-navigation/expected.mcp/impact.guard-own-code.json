@@ -1,0 +1,67 @@
+{
+  "target": {
+    "id": "store-web#src/app/auth.service.ts:AuthService.role",
+    "type": "method",
+    "label": "AuthService.role",
+    "loc": "src/app/auth.service.ts:12",
+    "service": "store-web",
+    "reach": "alive"
+  },
+  "entries": [
+    {
+      "id": "entry:store-web:screen:/analytics",
+      "type": "entry",
+      "label": "/analytics",
+      "loc": "src/app/app.routes.ts:19",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "by": "store-web#src/app/analytics.component.ts:AnalyticsComponent"
+    },
+    {
+      "id": "entry:store-web:screen:/analytics/matrix",
+      "type": "entry",
+      "label": "/analytics/matrix",
+      "loc": "src/app/app.routes.ts:20",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "by": "store-web#src/app/matrix.component.ts:MatrixComponent"
+    },
+    {
+      "id": "entry:store-web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "loc": "src/app/app.routes.ts:22",
+      "service": "store-web",
+      "kind": "screen",
+      "reach": "outside",
+      "by": "store-web#src/app/orders-admin.component.ts:OrdersAdminComponent"
+    }
+  ],
+  "total": 3,
+  "byKind": {
+    "screens": {
+      "store-web": [
+        "src/app/analytics.component.ts",
+        "src/app/matrix.component.ts",
+        "src/app/orders-admin.component.ts"
+      ]
+    }
+  },
+  "reached": 7,
+  "entriesByService": {
+    "store-web": 3
+  },
+  "reachedByService": {
+    "store-web": 7
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:store-web:screen:/analytics\"})",
+    "describe_for_prompt({id: \"entry:store-web:screen:/analytics\"})",
+    "impact({symbol: \"entry:store-web:screen:/analytics\"})"
+  ]
+}

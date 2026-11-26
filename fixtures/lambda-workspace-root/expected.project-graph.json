@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:27:18.590Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T19:24:05.903Z",
   "services": [
     {
       "name": "lending",
@@ -38,6 +38,15 @@
         "api": "lending-loans",
         "function": "lending-create-loan",
         "declaredAs": "aws_api_gateway_method.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "lending-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -212,7 +221,8 @@
             }
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
-        }
+        },
+        "fieldsRead": []
       }
     },
     {
@@ -609,5 +619,34 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 5,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: CheckBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/CheckBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    },
+    {
+      "file": "statemachine/loan-approval.asl.json",
+      "line": 17,
+      "reason": "workflow-function-unretried",
+      "level": "action",
+      "message": "lending-loan-approval: ScoreBorrower invokes a function and retries none of the platform's transient errors, so one fails the execution",
+      "hint": "Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.",
+      "symbol": "lending#statemachine/loan-approval.asl.json:lending-loan-approval/ScoreBorrower",
+      "adapter": "aws-lambda",
+      "meta": {
+        "retries": []
+      },
+      "service": "lending"
+    }
+  ]
 }

@@ -1,0 +1,1053 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-24T20:23:36.058Z",
+  "services": [
+    {
+      "name": "shop-api",
+      "repo": "./shop-backend",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop-web",
+      "repo": "./shop-frontend",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop-api:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/cancel",
+        "rawPath": "/orders/:orderId/cancel",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "label": "POST /orders/:param/refund",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/refund",
+        "rawPath": "/orders/:orderId/refund",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-api:http:POST:/payments",
+      "type": "entry",
+      "label": "POST /payments",
+      "repo": "shop-api",
+      "file": "src/payments/payments.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/payments",
+        "rawPath": "/payments",
+        "controller": "PaymentsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop-web:screen:/orders",
+      "type": "entry",
+      "label": "/orders",
+      "repo": "shop-web",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "kind": "screen",
+      "meta": {
+        "path": "/orders",
+        "by": "angular-routes",
+        "screens": [
+          "OrdersComponent"
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-api",
+      "type": "repo",
+      "label": "shop-api",
+      "repo": "shop-api",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop-web",
+      "type": "repo",
+      "label": "shop-web",
+      "repo": "shop-web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "templates": 1,
+          "skippedExternalCalls": {
+            "@angular/common": 3,
+            "rxjs": 3
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop-api",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "PaymentsController"
+        ],
+        "providers": [
+          "OrdersService",
+          "PaymentsService",
+          "CancellationTokens"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens",
+      "type": "provider",
+      "label": "CancellationTokens",
+      "repo": "shop-api",
+      "file": "src/common/cancellation-tokens.ts",
+      "line": 8,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens.issue",
+      "type": "method",
+      "label": "CancellationTokens.issue",
+      "repo": "shop-api",
+      "file": "src/common/cancellation-tokens.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "method",
+      "label": "OrdersController.list",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "method",
+      "label": "OrdersController.refund",
+      "repo": "shop-api",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        },
+        "fieldsRead": []
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "method",
+      "label": "OrdersService.refund",
+      "repo": "shop-api",
+      "file": "src/orders/orders.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/payments/payments.controller.ts:PaymentsController",
+      "type": "provider",
+      "label": "PaymentsController",
+      "repo": "shop-api",
+      "file": "src/payments/payments.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/payments/payments.controller.ts:PaymentsController.capture",
+      "type": "method",
+      "label": "PaymentsController.capture",
+      "repo": "shop-api",
+      "file": "src/payments/payments.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{orderId:string;amount:number}"
+            }
+          ],
+          "returns": "number"
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 11
+          },
+          {
+            "field": "orderId",
+            "line": 11
+          },
+          {
+            "field": "orderId.length",
+            "in": "shop-api#src/payments/payments.service.ts:PaymentsService.capture",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService",
+      "type": "provider",
+      "label": "PaymentsService",
+      "repo": "shop-api",
+      "file": "src/payments/payments.service.ts",
+      "line": 3,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.capture",
+      "type": "method",
+      "label": "PaymentsService.capture",
+      "repo": "shop-api",
+      "file": "src/payments/payments.service.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "type": "method",
+      "label": "PaymentsService.refund",
+      "repo": "shop-api",
+      "file": "src/payments/payments.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "shop-web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.client.ts:OrdersClient",
+      "type": "provider",
+      "label": "OrdersClient",
+      "repo": "shop-web",
+      "file": "src/app/orders.client.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+      "type": "method",
+      "label": "OrdersClient.cancel",
+      "repo": "shop-web",
+      "file": "src/app/orders.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.client.ts:OrdersClient.list",
+      "type": "method",
+      "label": "OrdersClient.list",
+      "repo": "shop-web",
+      "file": "src/app/orders.client.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "type": "ui_component",
+      "label": "OrdersComponent",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 6,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-orders",
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
+      "type": "method",
+      "label": "OrdersComponent.cancelOne",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent.load",
+      "type": "method",
+      "label": "OrdersComponent.load",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent.payOne",
+      "type": "method",
+      "label": "OrdersComponent.payOne",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop-web#src/app/payments.client.ts:PaymentsClient",
+      "type": "provider",
+      "label": "PaymentsClient",
+      "repo": "shop-web",
+      "file": "src/app/payments.client.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "shop-web#src/app/payments.client.ts:PaymentsClient.pay",
+      "type": "method",
+      "label": "PaymentsClient.pay",
+      "repo": "shop-web",
+      "file": "src/app/payments.client.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/orders.component.ts:9:108",
+      "type": "ui_action",
+      "label": "click=\"payOne('1')\"",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "payOne('1')",
+        "component": "shop-web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts",
+        "args": [
+          "'1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/orders.component.ts:9:22",
+      "type": "ui_action",
+      "label": "click=\"load()\"",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "load()",
+        "component": "shop-web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:shop-web#src/app/orders.component.ts:9:60",
+      "type": "ui_action",
+      "label": "click=\"cancelOne('1')\"",
+      "repo": "shop-web",
+      "file": "src/app/orders.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "cancelOne('1')",
+        "component": "shop-web#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts",
+        "args": [
+          "'1'"
+        ]
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders.client.ts:15:12",
+      "type": "ui_api_call",
+      "label": "POST /orders/:param/cancel",
+      "repo": "shop-web",
+      "file": "src/app/orders.client.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/orders/:param/cancel",
+        "path": "/orders/:param/cancel",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "boolean",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/orders.client.ts:19:12",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "shop-web",
+      "file": "src/app/orders.client.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "string[]",
+        "bodyType": null,
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop-web#src/app/payments.client.ts:11:12",
+      "type": "ui_api_call",
+      "label": "POST /payments",
+      "repo": "shop-web",
+      "file": "src/app/payments.client.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/payments",
+        "path": "/payments",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "number",
+        "bodyType": "{orderId:string;amount:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "amount",
+          "orderId"
+        ],
+        "answerRead": [],
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "sendsJson": true,
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop-api:http:GET:/orders",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:shop-api:http:POST:/orders/:param/cancel",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "meta": {
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:POST:/orders/:param/refund",
+      "to": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/orders/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:shop-api:http:POST:/payments",
+      "to": "shop-api#src/payments/payments.controller.ts:PaymentsController.capture",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{orderId:string;amount:number}"
+      ],
+      "returns": "number",
+      "file": "src/payments/payments.controller.ts",
+      "line": 9,
+      "meta": {
+        "body": "{orderId:string;amount:number}"
+      }
+    },
+    {
+      "from": "entry:shop-web:screen:/orders",
+      "to": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/app.routes.ts",
+      "line": 5,
+      "meta": {
+        "route": "/orders"
+      }
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
+      "file": "src/orders/orders.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.list",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/orders/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shop-api#src/orders/orders.controller.ts:OrdersController.refund",
+      "to": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/orders/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "to": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 9
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService",
+      "to": "shop-api#src/payments/payments.service.ts:PaymentsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.service.ts",
+      "line": 8
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "to": "shop-api#src/common/cancellation-tokens.ts:CancellationTokens.issue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/orders/orders.service.ts",
+      "line": 17
+    },
+    {
+      "from": "shop-api#src/orders/orders.service.ts:OrdersService.refund",
+      "to": "shop-api#src/payments/payments.service.ts:PaymentsService.refund",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/orders/orders.service.ts",
+      "line": 21
+    },
+    {
+      "from": "shop-api#src/payments/payments.controller.ts:PaymentsController",
+      "to": "shop-api#src/payments/payments.service.ts:PaymentsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/payments/payments.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop-api#src/payments/payments.controller.ts:PaymentsController.capture",
+      "to": "shop-api#src/payments/payments.service.ts:PaymentsService.capture",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "number",
+      "file": "src/payments/payments.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "shop-web#src/app/orders.client.ts:OrdersClient",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 12
+    },
+    {
+      "from": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+      "to": "ui_api_call:shop-web#src/app/orders.client.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 15
+    },
+    {
+      "from": "shop-web#src/app/orders.client.ts:OrdersClient.list",
+      "to": "ui_api_call:shop-web#src/app/orders.client.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 19
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "to": "shop-web#src/app/orders.client.ts:OrdersClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 13
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent",
+      "to": "shop-web#src/app/payments.client.ts:PaymentsClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 14
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
+      "to": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
+      "file": "src/app/orders.component.ts",
+      "line": 22
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent.load",
+      "to": "shop-web#src/app/orders.client.ts:OrdersClient.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/app/orders.component.ts",
+      "line": 18
+    },
+    {
+      "from": "shop-web#src/app/orders.component.ts:OrdersComponent.payOne",
+      "to": "shop-web#src/app/payments.client.ts:PaymentsClient.pay",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "number",
+      "file": "src/app/orders.component.ts",
+      "line": 26
+    },
+    {
+      "from": "shop-web#src/app/payments.client.ts:PaymentsClient",
+      "to": "shop-web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/payments.client.ts",
+      "line": 8
+    },
+    {
+      "from": "shop-web#src/app/payments.client.ts:PaymentsClient.pay",
+      "to": "ui_api_call:shop-web#src/app/payments.client.ts:11:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/payments.client.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_action:shop-web#src/app/orders.component.ts:9:108",
+      "to": "shop-web#src/app/orders.component.ts:OrdersComponent.payOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:shop-web#src/app/orders.component.ts:9:22",
+      "to": "shop-web#src/app/orders.component.ts:OrdersComponent.load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:shop-web#src/app/orders.component.ts:9:60",
+      "to": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders.client.ts:15:12",
+      "to": "entry:shop-api:http:POST:/orders/:param/cancel",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 15,
+      "params": [
+        "object"
+      ],
+      "returns": "boolean",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/orders.client.ts:19:12",
+      "to": "entry:shop-api:http:GET:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.client.ts",
+      "line": 19,
+      "returns": "string[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop-web#src/app/payments.client.ts:11:12",
+      "to": "entry:shop-api:http:POST:/payments",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/payments.client.ts",
+      "line": 11,
+      "params": [
+        "{orderId:string;amount:number}"
+      ],
+      "returns": "number",
+      "meta": {
+        "via": "api-target",
+        "targetService": "shop-api"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

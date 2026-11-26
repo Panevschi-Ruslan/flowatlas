@@ -23,6 +23,7 @@ import { requiredInput } from './input.js';
 import { functionReference, workflowReference } from './references.js';
 import { classifyTask, type ChannelTarget, type Task, type TaskTargetKind } from './tasks.js';
 import { NO_TEMPLATE_VALUES, type Reading, type TemplateValues, type UnreadCause } from './values.js';
+import { taskSettingRows } from './settings.js';
 
 /**
  * A state machine drawn as a graph: a pure function from a definition to the
@@ -651,6 +652,8 @@ export const emitWorkflow = (machine: StateMachine, options: EmitOptions): Workf
       edges.push(...effects.edges);
       rows.push(...effects.rows);
     }
+    // What the task's settings leave unsaid that the service needs said (P389).
+    if (task !== undefined) rows.push(...taskSettingRows(machine, state, task, { file, line, id, workflow: name }));
   }
 
   return { nodes, edges, rows };

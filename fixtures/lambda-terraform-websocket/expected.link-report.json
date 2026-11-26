@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:28:22.614Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:37:45.579Z",
   "configHash": "81e46563e880",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 467,
+      "durationMs": 843,
       "packages": {
         "name": "lending-library-reading-room",
         "runtime": [],

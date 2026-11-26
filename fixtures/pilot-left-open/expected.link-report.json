@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-25T21:18:34.515Z",
+  "configHash": "17be6f3fb8ec",
+  "services": [
+    {
+      "name": "desk-api",
+      "repo": "./desk-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 51,
+      "edges": 49,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 993,
+      "packages": {
+        "name": "desk-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "push-worker",
+      "repo": "./push-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 40,
+      "edges": 39,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 1021,
+      "packages": {
+        "name": "push-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "staff-web",
+      "repo": "./staff-web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 20,
+      "edges": 21,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 825,
+      "packages": {
+        "name": "staff-web",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 5,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 2,
+    "uncalled": [
+      "entry:desk-api:http:GET:/api/admin/:param/kits/auto-stopped",
+      "entry:desk-api:http:POST:/api/:param/orders/:param/move",
+      "entry:desk-api:http:POST:/api/:param/orders/:param/steps/:param/ready",
+      "entry:desk-api:http:POST:/api/:param/resync",
+      "entry:desk-api:http:POST:/api/:param/rooms/:param/call",
+      "entry:desk-api:http:POST:/api/:param/tables/:param/merge",
+      "entry:desk-api:http:POST:/api/:param/tables/:param/move",
+      "entry:desk-api:http:POST:/api/admin/:param/kits/:param/restart"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 116,
+    "edges": 135,
+    "types": 2,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

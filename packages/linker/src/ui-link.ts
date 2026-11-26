@@ -1,13 +1,20 @@
-import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
-import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
+import { gluedHostUnmeant, normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
+import { chooseAmongSettings, claimantsOfSetting, howChosen, settingCandidates, settingsAfter, type BaseUrlAnswer, type FoundValue, type ChoiceOrder } from './base-url-value.js';
+import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
+import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
+import { defaultPortOf, forwardedAgain, proxiedOutFinding, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
 import { cmp } from './order.js';
+import { servesRequest, type ServesRequest } from './request-served.js';
+import { apiServedAt, servedAmbiguousFinding, type ServedApi } from './served-at-link.js';
 import {
   behindUnread,
   callingApplication,
+  catchAllBehind,
   isMatch,
   matchRoute,
   verbsAnswering,
+  type RouteChoice,
   type RouteResult,
 } from './route-match.js';
 
@@ -33,6 +40,19 @@ export interface UiIndex {
   serviceOf?(name: string): string | undefined;
   /** Every alias configured, for the row that says a name answers to none. */
   aliases?(): readonly string[];
+  /**
+   * The one configured service a host is reached at, and whether the
+   * configuration says so (its name, an alias, `services[].hosts`) or only the
+   * services' own setting files do (P239). A port only a framework's assumed
+   * default answers places a request only where that service serves it (P300).
+   */
+  serviceAtHost?(host: string, defaultPort?: number, serves?: ServesRequest): PortAnswer | undefined;
+  /** How a service's server forwards a path to another server, where its proxy does (P257). */
+  forwardOf?(service: string, path: string): Forward | undefined;
+  /** How a cluster's way in forwards a request to a public host, where one does (P260). */
+  ingressOf?(host: string, path: string): Forward | undefined;
+  /** The public hosts a cluster's ways in serve a service's pages at (P260). */
+  publicHostsOf?(service: string): readonly string[];
 }
 
 /**
@@ -46,7 +66,10 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'same-service' | 'unique-route';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route' | 'graphql-path' | 'served-at' | 'same-call';
+
+/** The ways a browser's request is joined that the configuration wrote for it, which no other reading overrules. */
+export const CONFIGURED_UI_VIAS: ReadonlySet<UiVia> = new Set(['marker', 'api-target']);
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -55,18 +78,56 @@ interface Details {
     entry: GraphNode;
     targetService: string;
     runnersUp: readonly string[];
+    /** How the route was chosen among others answering too (P385). */
+    choice?: RouteChoice;
     /** The settings whose part of the route's address was taken as empty (R144). */
     mountAssumed?: readonly string[];
     /** The value the base address was taken from, where a setting's value decided it (P77). */
     baseUrl?: FoundValue;
+    /** The host was found only in the services' own setting files, not in the configuration (P239). */
+    hostFromFiles?: true;
+    /** Where the service's server is started on the port an address on this machine names (P250). */
+    listening?: Listening;
+    /** The proxy rule the request was forwarded by, and how (P257). */
+    proxied?: Forward;
+    /** The API taken as the one served where the address is written, its id not read (P284). */
+    servedAt?: ServedApi;
+    /**
+     * Where the request's other half, read as one between services, was
+     * joined and how sure that join is: the one call goes where it went (P292).
+     */
+    twin?: { via: string; confidence: Confidence };
+    /**
+     * The settings of the condition's branches the service was chosen among
+     * by serving the request, as `ORDERS_URL (orders)` (P309): a guess.
+     */
+    branches?: readonly string[];
   };
+  /** Several APIs of the project are served where the address is written, its id not read (P284). */
+  apiAmbiguous: { method: string; path: string; host: string; apis: readonly string[] };
+  /** Two or more services listen on the port an address on this machine names (P250). */
+  portShared: { port: number; said: readonly string[]; services: readonly string[] };
+  /** A host on a network names the service at a port it is not reached at there (P257). */
+  portClosed: { host: string; closed: ClosedPort };
+  /** A service's proxy forwards the request to a host no service of the project is reached at (P257). */
+  proxiedOut: { service: string; forward: Forward };
+  /** The request is forwarded through more servers than are followed, or in a circle (P260). */
+  proxyChain: { services: readonly string[]; loop: boolean };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
+  /**
+   * The address writes a number straight after `localhost` or an address of
+   * numbers with no colon, `localhost4600` (P330): a host no service is
+   * reached at, joined by no path; the extractor said so.
+   */
+  hostUnmeant: { host: string };
   /** No route answers. `targetService` is null when nothing named one to ask. */
   noRoute: {
     targetService: string | null;
     method: string;
     path: string;
+    /** The proxy rule that forwarded the request to the service, where one did (P257). */
+    proxied?: Forward;
     verbs: readonly string[];
     /**
      * Routes that would answer if the part of their own address nobody read
@@ -76,6 +137,10 @@ interface Details {
     unread: readonly string[];
     /** The service was the one an annotation named, so it is the annotation that is wrong (P127). */
     named?: true;
+    /** The root fields an operation asks for that the GraphQL endpoint at the path neither declares nor resolves (P281). */
+    unserved?: readonly string[];
+    /** The API the address was taken as, which serves no such route (P284). */
+    servedAt?: ServedApi;
   };
   /** An annotation names a service nothing configured answers to, by name or alias (P127). */
   serviceUnknown: { service: string; aliases: readonly string[] };
@@ -92,6 +157,10 @@ interface Details {
     path: string;
     candidates: readonly string[];
     applications?: readonly string[];
+    /** The settings of a condition's branches nobody settles, or of a chain, the candidates claim, as `ORDERS_URL (orders)` (P309, P313). */
+    branches?: readonly string[];
+    /** How the base is read from those settings (P313). */
+    order?: ChoiceOrder;
   };
 }
 
@@ -122,14 +191,21 @@ const missingRoute = ({ targetService, method, path, verbs }: Details['noRoute']
 const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null } = {
   linked: null,
   dynamic: null,
+  hostUnmeant: null,
   noRoute: (detail) => {
+    if (detail.unserved !== undefined && detail.targetService !== null) return unservedFinding(detail.targetService, detail.method, detail.path, detail.unserved);
     if (detail.named === true && detail.targetService !== null) {
       return MARKER_FINDINGS.routeNotFound({ ...detail, service: detail.targetService }, '@flowatlas-calls');
     }
     return detail.unread.length === 0 ? missingRoute(detail) : unreadRouteFinding(detail);
   },
   serviceUnknown: (detail) => MARKER_FINDINGS.serviceUnknown(detail, detail.aliases, '@flowatlas-calls'),
-  ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
+  portShared: ({ port, said }) => portSharedFinding(port, said),
+  portClosed: ({ host, closed }) => portClosedFinding(host, closed),
+  proxiedOut: ({ service, forward }) => proxiedOutFinding(service, forward),
+  proxyChain: ({ services, loop }) => proxyChainFinding(services, loop),
+  ambiguous: (detail) => AMBIGUITY[detail.branches !== undefined ? 'branches' : detail.applications === undefined ? 'target' : 'application'](detail),
+  apiAmbiguous: ({ method, path, host, apis }) => servedAmbiguousFinding(method, path, host, apis),
 };
 
 /**
@@ -144,13 +220,19 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
  * word for.
  */
 const AMBIGUITY: Record<
-  'target' | 'application',
+  'target' | 'application' | 'branches',
   (detail: Details['ambiguous']) => Finding
 > = {
   target: ({ method, path, candidates }) => ({
     reason: 'ambiguous-route-target',
     message: `${candidates.join(' and ')} both answer ${method} ${path}`,
     hint: 'Set services[].apiTarget on the frontend to say which service its settings key names.',
+  }),
+  // A condition nobody settles, or a chain, reads settings different services claim, and more than one serves the request (P309, P313).
+  branches: ({ method, path, candidates, branches = [], order = 'either' }) => ({
+    reason: 'ambiguous-route-target',
+    message: `the request's base is one of ${branches.join(' and ')}, ${howChosen(order)}, and ${candidates.join(' and ')} each serve ${method} ${path}`,
+    hint: 'Read the base from one setting, or set services[].apiTarget on the frontend to say which service its settings key names.',
   }),
   application: ({ method, path, applications = [] }) => ({
     reason: 'ambiguous-route-application',
@@ -167,7 +249,7 @@ export const uiFindingFor = (outcome: UiOutcome): Finding | undefined => {
 
 /** The reason a request counts under, whether or not it produced a row. */
 export const uiReasonOf = (outcome: UiOutcome): string | undefined =>
-  outcome.kind === 'dynamic' ? outcome.reason : uiFindingFor(outcome)?.reason;
+  outcome.kind === 'dynamic' ? outcome.reason : outcome.kind === 'hostUnmeant' ? 'address-port-without-colon' : uiFindingFor(outcome)?.reason;
 
 /**
  * The same call, once per value a closed segment of its address can take.
@@ -215,6 +297,10 @@ interface Ask {
   index: UiIndex;
 }
 
+/** Whether a service serves the request at a path, for a port only a framework assumes (P300). */
+const servesAsked = (ask: Ask, path: string): ServesRequest =>
+  servesRequest((service) => ask.index.routesOf(service), { method: ask.method, paths: [path], operation: sendsOperation(ask.call), call: ask.call });
+
 /**
  * The service an annotation names, `@flowatlas-calls catalog GET /items`, by
  * its name or an alias (P127).
@@ -243,12 +329,61 @@ const byApiTarget = (ask: Ask): UiOutcome | undefined => {
   return named === undefined ? undefined : within(ask, named, 'api-target');
 };
 
-/** Exactly one service declaring the same settings key as its own base. */
+/**
+ * Who claims the key, or else the first setting a chain of `||` reads after
+ * it that somebody claims (P296), a key built from a variable claimed by
+ * whoever claims the variable (P313).
+ */
+const claimingOf = (ask: Ask, env: string): readonly string[] => {
+  const claimantsOf = (setting: string): readonly string[] => claimantsOfSetting(ask.call, setting, (each) => ask.index.claimantsOf(each));
+  const own = claimantsOf(env);
+  return own.length > 0 ? own : (settingsAfter(ask.call).map(claimantsOf).find((each) => each.length > 0) ?? own);
+};
+
+/**
+ * The settings of a condition's branches nobody settles, each the request's
+ * base (P309), a chain's later settings where the first claimant does
+ * not serve it (P313), and every claimant of a setting several services
+ * claim (P319): the one serving the request is the answer, a guess,
+ * and several serving it are a row; where none does, nothing, and the first
+ * claimant is asked as before.
+ */
+const byBranches = (ask: Ask): UiOutcome | undefined => {
+  const candidates = settingCandidates(ask.call, (setting) => ask.index.claimantsOf(setting));
+  if (candidates === undefined) return undefined;
+  const chosen = chooseAmongSettings(candidates, (service) => {
+    const found = within(ask, service, 'base-url-env');
+    return found.kind === 'linked' || found.kind === 'ambiguous' ? found : undefined;
+  });
+  if (chosen?.kind === 'one') return chosen.found.kind === 'linked' ? { ...chosen.found, branches: chosen.said } : chosen.found;
+  if (chosen?.kind === 'several') {
+    return { kind: 'ambiguous', method: ask.method, path: ask.path, candidates: chosen.serving.map(({ claim }) => claim.service), branches: chosen.said, order: chosen.order };
+  }
+  return undefined;
+};
+
 const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
-  const { env, index } = ask;
+  const { env } = ask;
   if (env === undefined) return undefined;
-  const claiming = index.claimantsOf(env);
+  const branched = byBranches(ask);
+  if (branched !== undefined) return branched;
+  const claiming = claimingOf(ask, env);
   return claiming.length === 1 ? within(ask, claiming[0] as string, 'base-url-env') : undefined;
+};
+
+/**
+ * A GraphQL operation sent to a setting whose values name no configured
+ * service (P281): the endpoint at the path its values for this machine agree
+ * on, where it declares a root field the operation asks for
+ * (`localGraphqlEndpoint`).
+ */
+const byLocalGraphqlValue = (ask: Ask, answer: BaseUrlAnswer | undefined): UiOutcome | undefined => {
+  const found = localGraphqlEndpoint(ask.call, ask.path, answer, ask.index.services(), (service) => ask.index.routesOf(service));
+  if (found === undefined) return undefined;
+  if (found.kind === 'unserved') return { kind: 'noRoute', targetService: found.service, method: 'POST', path: found.path, verbs: [], unread: [], unserved: found.fields };
+  // A public host several endpoints serve the operation under (P296): the services that answer, and no join.
+  if (found.kind === 'undecided') return { kind: 'ambiguous', method: 'POST', path: ask.path, candidates: found.endpoints.map((each) => `${each.service} (POST ${each.path})`) };
+  return { kind: 'linked', via: 'graphql-path', entry: found.entry, targetService: found.service, runnersUp: [], baseUrl: found.found };
 };
 
 /**
@@ -258,9 +393,12 @@ const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
  */
 const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
   const { env, index } = ask;
-  if (env === undefined || index.claimantsOf(env).length > 0) return undefined;
+  if (env === undefined || claimingOf(ask, env).length > 0) return undefined;
   const answer = index.baseUrlOf?.(ask.call);
-  if (answer?.kind !== 'service') return undefined;
+  // An operation is asked of the endpoints at the value's path first, a
+  // service's included (P281, P292).
+  const operation = byLocalGraphqlValue(ask, answer);
+  if (operation !== undefined || answer?.kind !== 'service') return operation;
   // A value with a path of its own is where the request goes, path included
   // (P91); where that answers nothing and the path alone does, the value's
   // path is a mount and the join without it stands.
@@ -269,6 +407,128 @@ const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
   const found = whole?.kind === 'linked' ? whole : within(ask, answer.service, 'base-url-value');
   if (found.kind === 'linked') return { ...found, baseUrl: answer.found };
   return whole ?? found;
+};
+
+/**
+ * The service a host the address names outright is reached at (P239).
+ *
+ * `axios.create({ baseURL: 'https://orders.example.test' })` writes where every
+ * request through it goes, and until the base was read the address had no host
+ * at all. Once it has one, the configuration may say whose it is - a service's
+ * name, an alias, `services[].hosts` - and that is as much somebody writing down
+ * which service is meant as `apiTarget` is: terminal, and `static`. A host only
+ * a service's own setting files name is the evidence P77 treats as a guess, and
+ * the edge says so.
+ */
+const byHost = (ask: Ask): UiOutcome | undefined => {
+  const { call, index } = ask;
+  const host = call.meta?.['host'];
+  if (typeof host !== 'string') return undefined;
+  // A public host a cluster's way in matches the path on sends it to the
+  // service behind it, whoever else the host names (P260).
+  const way = index.ingressOf?.(host, ask.path);
+  if (way !== undefined) return forwarded(ask, host, way);
+  const found = index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url']), servesAsked(ask, ask.path));
+  if (found === undefined) return undefined;
+  // Two services listen on the port this machine's address names (P250): no
+  // way below may pick one of them by its route.
+  if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
+  // A port the network does not reach the service at: it will not connect (P257).
+  if (found.kind === 'closed') return { kind: 'portClosed', host: found.host, closed: found.closed };
+  // A server whose proxy forwards the path hands it on, before its own routes
+  // or after them as its framework does (P257).
+  const forward = index.forwardOf?.(found.service, ask.path);
+  if (forward !== undefined && forward.rule.after === undefined) return forwarded(ask, found.service, forward);
+  const outcome = within(ask, found.service, 'host');
+  if (outcome.kind === 'noRoute' && forward !== undefined) return forwarded(ask, found.service, forward);
+  // A front end's dev server forwards what its own routes do not serve
+  // (P254), by a proxy not read: which service answers is the next way's to say.
+  if (outcome.kind === 'noRoute' && found.listening?.devServer === true) return undefined;
+  if (outcome.kind !== 'linked') return outcome;
+  return {
+    ...outcome,
+    ...(found.sure ? {} : { hostFromFiles: true as const }),
+    ...(found.listening === undefined ? {} : { listening: found.listening }),
+  };
+};
+
+/**
+ * The API a host no service is reached at serves the request at, where the
+ * address names it by an id no file holds and the project serves exactly one
+ * API there (P284): the path after its stage, asked of that API's routes.
+ */
+const byServedAt = (ask: Ask): UiOutcome | undefined => {
+  const { call, method, path, index } = ask;
+  const host = call.meta?.['host'];
+  const url = call.meta?.['url'];
+  if (typeof host !== 'string') return undefined;
+  const answer = apiServedAt(method, host, path, typeof url === 'string' ? url : `${host}${path}`, index.services(), (service) => index.routesOf(service));
+  if (answer === undefined) return undefined;
+  if (answer.kind === 'several') return { kind: 'apiAmbiguous', method, path, host, apis: answer.apis };
+  const { found } = answer;
+  const outcome = within({ ...ask, path: found.path }, found.service, 'served-at', found.routes);
+  return outcome.kind === 'linked' || outcome.kind === 'noRoute' ? { ...outcome, servedAt: found } : outcome;
+};
+
+/**
+ * The request a server's proxy makes for a request it forwards (P257): the
+ * service at the target's host, asked for the rewritten path, the join a
+ * guess that names the rule. A host no service is reached at is a third
+ * party, said as one.
+ */
+const forwarded = (ask: Ask, service: string, forward: Forward, passed: readonly string[] = [service]): UiOutcome => {
+  const found = ask.index.serviceAtHost?.(forward.host, forward.defaultPort, servesAsked(ask, forward.path));
+  if (found === undefined) return { kind: 'proxiedOut', service, forward };
+  if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
+  if (found.kind === 'closed') return { kind: 'portClosed', host: found.host, closed: found.closed };
+  const via = forward.via ?? 'proxy';
+  // A server forwarded to may forward the request again, by its own rules (P260).
+  const next = ask.index.forwardOf?.(found.service, forward.path);
+  if (next !== undefined && (next.rule.after === undefined || within({ ...ask, path: forward.path }, found.service, via).kind === 'noRoute')) {
+    const services = [...passed, found.service];
+    if (passed.includes(found.service)) return { kind: 'proxyChain', services, loop: true };
+    if (passed.length >= PROXY_HOPS) return { kind: 'proxyChain', services, loop: false };
+    return forwarded(ask, found.service, forwardedAgain(forward, service, next), services);
+  }
+  const outcome = within({ ...ask, path: forward.path }, found.service, via);
+  if (outcome.kind === 'noRoute') return { ...outcome, proxied: forward };
+  if (outcome.kind !== 'linked') return outcome;
+  return { ...outcome, proxied: forward, ...(found.listening === undefined ? {} : { listening: found.listening }) };
+};
+
+/**
+ * A request written with no host, which the server its page is served from
+ * forwards by its proxy (P257): a dev server's `/api` handed to the service
+ * behind it. Before the caller's own routes are asked, unless the framework
+ * applies the rule only to what its own routes do not serve.
+ */
+const byProxy = (ask: Ask): UiOutcome | undefined => {
+  const { call, env, index } = ask;
+  if (typeof call.meta?.['host'] === 'string' || env !== undefined) return undefined;
+  const forward = index.forwardOf?.(call.repo, ask.path);
+  if (forward === undefined) return undefined;
+  if (forward.rule.after !== undefined && within(ask, call.repo, 'same-service').kind !== 'noRoute') return undefined;
+  return forwarded(ask, call.repo, forward);
+};
+
+/**
+ * A request written with no host from a service whose pages a cluster's way
+ * in serves at a public host (P260): a request to that host, forwarded by the
+ * way in as any request to it is. Where the service is served at several
+ * hosts, only a path every one of them forwards alike is followed.
+ */
+const byIngress = (ask: Ask): UiOutcome | undefined => {
+  const { call, env, index } = ask;
+  if (typeof call.meta?.['host'] === 'string' || env !== undefined) return undefined;
+  const hosts = index.publicHostsOf?.(call.repo) ?? [];
+  const ways = hosts.flatMap((host) => {
+    const way = index.ingressOf?.(host, ask.path);
+    return way === undefined ? [] : [{ host, way }];
+  });
+  const first = ways[0];
+  if (first === undefined || ways.length !== hosts.length) return undefined;
+  if (ways.some(({ way }) => way.host !== first.way.host || way.path !== first.way.path)) return undefined;
+  return forwarded(ask, first.host, first.way);
 };
 
 /**
@@ -286,6 +546,7 @@ const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
  * not serving an address is no reason to stop looking for one that does.
  */
 const bySameService = (ask: Ask): UiOutcome | undefined => {
+  if (hostUnmeant(ask.call) !== undefined) return undefined;
   const own = within(ask, ask.call.repo, 'same-service');
   return own.kind === 'noRoute' ? undefined : own;
 };
@@ -305,6 +566,18 @@ const answers = (result: RouteResult): boolean =>
   isMatch(result) || result.reason === 'ambiguous';
 
 /**
+ * The host a request's address names where it writes a number straight after
+ * `localhost` or an address of numbers with no colon (P324, P330): the
+ * address as spelled, `localhost4600`, which no service is reached at.
+ */
+const hostUnmeant = (call: GraphNode): string | undefined => {
+  const glued = call.meta?.['portWithoutColon'] as { number?: unknown; host?: unknown } | undefined;
+  const host = call.meta?.['host'];
+  if (typeof glued?.host !== 'string' || typeof glued.number !== 'string' || typeof host !== 'string') return undefined;
+  return gluedHostUnmeant(glued.host) ? host : undefined;
+};
+
+/**
  * Whoever happens to serve that route, when nothing said who should.
  *
  * A guess, and it comes back as one: the same address may be served by two
@@ -312,6 +585,26 @@ const answers = (result: RouteResult): boolean =>
  * and several is a question only the configuration can settle.
  */
 const byUniqueRoute = (ask: Ask): UiOutcome | undefined => {
+  // A host no service is reached at, `localhost4600` (P330): the server's
+  // reader joins it to nothing, and neither does a guess by its path.
+  const unmeant = hostUnmeant(ask.call);
+  if (unmeant !== undefined) return { kind: 'hostUnmeant', host: unmeant };
+  // A setting whose value is a host no service is reached at, with a path
+  // after it (`https://api.example.test/api`), puts that path in front of
+  // every address written under it (P280): asked first, as the value is.
+  // Only where the setting's values agree on that path: values that put two
+  // paths in front leave the address to the route alone (P281).
+  const answer = ask.env === undefined ? undefined : ask.index.baseUrlOf?.(ask.call);
+  const starts = answer?.kind === 'external' ? new Set((answer.values ?? [answer.found]).map((found) => pathOfValue(found) ?? '')) : undefined;
+  const start = answer?.kind === 'external' && starts?.size === 1 ? pathOfValue(answer.found) : undefined;
+  if (start !== undefined) {
+    const whole = uniqueRoute({ ...ask, path: normalizePath(`${start}/${ask.path}`) });
+    if (whole?.kind === 'linked') return whole;
+  }
+  return uniqueRoute(ask);
+};
+
+const uniqueRoute = (ask: Ask): UiOutcome | undefined => {
   const { method, path, index } = ask;
   const answering = index
     .services()
@@ -343,9 +636,69 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byApiTarget,
   byBaseUrlEnv,
   byBaseUrlValue,
+  byHost,
+  byServedAt,
+  byProxy,
+  byIngress,
   bySameService,
   byUniqueRoute,
 ];
+
+
+/** An address whose opening was not read and whose rest was: `/${…}/settings`. */
+const UNREAD_BASE = /^\/\$\{…\}((?:\/[^/]+)+)$/;
+
+/**
+ * A GraphQL operation sent under a base nothing read (P266).
+ *
+ * `${SERVER_URL}/settings`, where the server's address is decided where the
+ * page is served, is a request the address alone cannot join. What it sends
+ * says more: it is an operation, and only a GraphQL endpoint answers one. So
+ * the read rest of the address is asked of every endpoint of every service -
+ * of the one its settings key names, where it names one - and the one whose
+ * path ends with it answers; two are a row naming both, and none leaves the
+ * address partly read. Never a route that is not an endpoint, and never an
+ * address with a hole after its opening.
+ */
+const byGraphqlPath = (call: GraphNode, path: string, index: UiIndex): UiOutcome | undefined => {
+  // An operation: one whose document was read, or one a GraphQL client sends whatever its document.
+  const operation = sendsOperation(call);
+  if (!operation || call.meta?.['method'] !== 'POST') return undefined;
+  const tail = UNREAD_BASE.exec(path)?.[1];
+  if (tail === undefined || !wasRead(tail)) return undefined;
+  const env = call.meta?.['baseUrlEnv'];
+  const named = typeof env === 'string' ? index.targetOf(call.repo, env) : undefined;
+  const services = named === undefined ? index.services() : [named];
+  const found = services.flatMap((service) =>
+    (index.routesOf(service) ?? [])
+      .filter((route) => {
+        const served = route.meta?.['graphql'] as { endpoint?: boolean } | undefined;
+        const at = route.meta?.['path'];
+        return served?.endpoint === true && route.meta?.['method'] === 'POST' && typeof at === 'string' && (at === tail || at.endsWith(tail));
+      })
+      .map((entry) => ({ service, entry })),
+  );
+  const [only] = found;
+  if (found.length === 1 && only !== undefined) return { kind: 'linked', via: 'graphql-path', entry: only.entry, targetService: only.service, runnersUp: [] };
+  if (found.length > 1) return { kind: 'ambiguous', method: 'POST', path, candidates: found.map(({ service, entry }) => `${service} at ${String(entry.meta?.['path'])}`).sort(cmp) };
+  return undefined;
+};
+
+/**
+ * A request read in part that a catch-all answers whatever the unread part
+ * holds (P279): of the caller's own service where the address names no host
+ * and no setting, as a relative address means; of the one service its
+ * setting names otherwise. See {@link catchAllBehind}.
+ */
+const byCatchAll = (call: GraphNode, method: unknown, path: string, env: unknown, index: UiIndex): UiOutcome | undefined => {
+  if (typeof method !== 'string' || typeof call.meta?.['host'] === 'string') return undefined;
+  const service = typeof env === 'string' ? index.targetOf(call.repo, env) : call.repo;
+  if (service === undefined) return undefined;
+  const from = service === call.repo ? callingApplication(call) : undefined;
+  const entry = catchAllBehind(method, path, index.routesOf(service) ?? [], from);
+  if (entry === undefined) return undefined;
+  return { kind: 'linked', via: typeof env === 'string' ? 'base-url-env' : 'same-service', entry, targetService: service, runnersUp: [] };
+};
 
 /**
  * Decides which route a request made in the browser reaches.
@@ -364,7 +717,7 @@ export const resolveUiCall = (call: GraphNode, index: UiIndex): UiOutcome => {
   // follow became an edge marked `static`. It is counted apart from an address
   // that was wholly unreadable, because this one is often a helper the tool
   // could learn to follow, and that is worth being able to measure.
-  if (!wasRead(path)) return { kind: 'dynamic', reason: 'api-path-partly-read' };
+  if (!wasRead(path)) return byGraphqlPath(call, path, index) ?? byCatchAll(call, method, path, env, index) ?? { kind: 'dynamic', reason: 'api-path-partly-read' };
   if (typeof method !== 'string') return { kind: 'dynamic', reason: 'api-method-dynamic' };
 
   const ask: Ask = { call, method, path, env: typeof env === 'string' ? env : undefined, index };
@@ -428,9 +781,10 @@ const callerApplicationIn = (ask: Ask, service: string): string | undefined =>
   service === ask.call.repo ? callingApplication(ask.call) : undefined;
 
 /** The route one named service answers with, or why it does not. */
-const within = (ask: Ask, targetService: string, via: UiVia): UiOutcome => {
+const within = (ask: Ask, targetService: string, via: UiVia, among?: readonly GraphNode[]): UiOutcome => {
   const { method, path, index } = ask;
-  const routes = index.routesOf(targetService) ?? [];
+  // Only the routes of one of its APIs, where the address names which (P284).
+  const routes = among ?? index.routesOf(targetService) ?? [];
   const from = callerApplicationIn(ask, targetService);
   let found = matchRoute(method, path, routes, from);
   if (!isMatch(found) && found.reason === 'not-found') {
@@ -444,6 +798,7 @@ const within = (ask: Ask, targetService: string, via: UiVia): UiOutcome => {
       entry: found.entry,
       targetService,
       runnersUp: found.runnersUp ?? [],
+      ...(found.choice === undefined ? {} : { choice: found.choice }),
       ...(found.mountAssumed === undefined ? {} : { mountAssumed: found.mountAssumed }),
     };
   }

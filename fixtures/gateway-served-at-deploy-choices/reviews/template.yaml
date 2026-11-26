@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: The shop's reviews, deployed as a nested application handed the stage.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: qa
+
+Resources:
+  # The application is handed this template's own Stage, which any
+  # `sam deploy --parameter-overrides Stage=...` changes.
+  ReviewsApi:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: api/template.yaml
+      Parameters:
+        Stage: !Ref Stage

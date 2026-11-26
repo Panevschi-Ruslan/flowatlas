@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-10-07T18:29:38.133Z",
+  "generatedAt": "2026-11-23T14:44:27.899Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",
@@ -229,7 +229,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "orderId",
+            "line": 27
+          }
+        ]
       }
     },
     {
@@ -248,7 +254,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "amount",
+            "line": 39
+          }
+        ]
       }
     },
     {
@@ -279,7 +291,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "fieldsRead": [
+          {
+            "field": "reason",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -459,7 +477,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 13
+          }
+        ]
       }
     }
   ],

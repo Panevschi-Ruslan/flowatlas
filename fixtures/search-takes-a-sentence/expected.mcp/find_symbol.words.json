@@ -1,0 +1,89 @@
+{
+  "matches": [
+    {
+      "id": "entry:shop-api:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:14",
+      "service": "shop-api",
+      "kind": "http",
+      "reach": "alive",
+      "matched": [
+        "order",
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.service.ts:OrdersService.cancel",
+      "type": "method",
+      "label": "OrdersService.cancel",
+      "loc": "src/orders/orders.service.ts:16",
+      "service": "shop-api",
+      "endLine": 18,
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "order",
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "label": "OrdersController.cancel",
+      "loc": "src/orders/orders.controller.ts:14",
+      "service": "shop-api",
+      "endLine": 17,
+      "reach": "alive",
+      "from": "POST /orders/:param/cancel",
+      "matched": [
+        "order",
+        "cancel"
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.client.ts:OrdersClient.cancel",
+      "type": "method",
+      "label": "OrdersClient.cancel",
+      "loc": "src/app/orders.client.ts:14",
+      "service": "shop-web",
+      "endLine": 16,
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "order",
+        "cancel"
+      ],
+      "requests": [
+        {
+          "route": "entry:shop-api:http:POST:/orders/:param/cancel",
+          "by": "shop-api#src/orders/orders.controller.ts:OrdersController.cancel"
+        }
+      ]
+    },
+    {
+      "id": "shop-web#src/app/orders.component.ts:OrdersComponent.cancelOne",
+      "type": "method",
+      "label": "OrdersComponent.cancelOne",
+      "loc": "src/app/orders.component.ts:21",
+      "service": "shop-web",
+      "endLine": 23,
+      "reach": "alive",
+      "from": "screen /orders",
+      "matched": [
+        "order",
+        "cancel"
+      ]
+    }
+  ],
+  "total": 5,
+  "complete": false,
+  "left": [
+    "fuzzy: ranked by the words order, cancel; 16 hold fewer"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:shop-api:http:POST:/orders/:param/cancel\"})",
+    "describe_for_prompt({id: \"entry:shop-api:http:POST:/orders/:param/cancel\"})",
+    "impact({symbol: \"entry:shop-api:http:POST:/orders/:param/cancel\"})"
+  ]
+}

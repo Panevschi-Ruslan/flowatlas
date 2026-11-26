@@ -1,0 +1,980 @@
+{
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:53:49.187Z",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "console#src/App.tsx:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 21,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/App.tsx:Nav",
+      "type": "ui_component",
+      "label": "Nav",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Chart",
+      "type": "ui_component",
+      "label": "Chart",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/widgets/chart"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:DockMain",
+      "type": "ui_component",
+      "label": "DockMain",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/dock/main"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Export",
+      "type": "ui_component",
+      "label": "Export",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/tools/export"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Faq",
+      "type": "ui_component",
+      "label": "Faq",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/pages/faq"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Gauge",
+      "type": "ui_component",
+      "label": "Gauge",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/gadgets/gauge"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Hidden",
+      "type": "ui_component",
+      "label": "Hidden",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Inbox",
+      "type": "ui_component",
+      "label": "Inbox",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/inbox"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Intro",
+      "type": "ui_component",
+      "label": "Intro",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/pages/intro"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Members",
+      "type": "ui_component",
+      "label": "Members",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/teams/members"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:Reports",
+      "type": "ui_component",
+      "label": "Reports",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/reports"
+      }
+    },
+    {
+      "id": "console#src/features/screens.tsx:ShelfHome",
+      "type": "ui_component",
+      "label": "ShelfHome",
+      "repo": "console",
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/shelf/home"
+      }
+    },
+    {
+      "id": "console#src/lib/shelves.ts:getDock",
+      "type": "function",
+      "label": "getDock",
+      "repo": "console",
+      "file": "src/lib/shelves.ts",
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#DockRegistry"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/shelves.ts:makeBin",
+      "type": "function",
+      "label": "makeBin",
+      "repo": "console",
+      "file": "src/lib/shelves.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#BinRegistry"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/shelves.ts:makeShelf",
+      "type": "function",
+      "label": "makeShelf",
+      "repo": "console",
+      "file": "src/lib/shelves.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#ShelfRegistry"
+        }
+      }
+    },
+    {
+      "id": "console#src/lib/shelves.ts:other",
+      "type": "function",
+      "label": "other",
+      "repo": "console",
+      "file": "src/lib/shelves.ts",
+      "line": 21
+    },
+    {
+      "id": "console#src/lib/tables.ts:listTeams",
+      "type": "function",
+      "label": "listTeams",
+      "repo": "console",
+      "file": "src/lib/tables.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:console#Team[]"
+        }
+      }
+    },
+    {
+      "id": "console#src/routes/WidgetRoutes.tsx:WidgetRoutes",
+      "type": "ui_component",
+      "label": "WidgetRoutes",
+      "repo": "console",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ registry }",
+              "type": "{registry:type:console#WidgetRegistry}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "entry:console:screen:/dock/main",
+      "type": "entry",
+      "label": "/dock/main",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 58,
+      "kind": "screen",
+      "meta": {
+        "path": "/dock/main",
+        "by": "route-table",
+        "screens": [
+          "DockMain"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/gadgets/gauge",
+      "type": "entry",
+      "label": "/gadgets/gauge",
+      "repo": "console",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/gadgets/gauge",
+        "by": "route-table",
+        "screens": [
+          "Gauge"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/inbox",
+      "type": "entry",
+      "label": "/inbox",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 34,
+      "kind": "screen",
+      "meta": {
+        "path": "/inbox",
+        "by": "route-table",
+        "screens": [
+          "Inbox"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/pages/faq",
+      "type": "entry",
+      "label": "/pages/faq",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 40,
+      "kind": "screen",
+      "meta": {
+        "path": "/pages/faq",
+        "by": "route-table",
+        "screens": [
+          "Faq"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/pages/intro",
+      "type": "entry",
+      "label": "/pages/intro",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 40,
+      "kind": "screen",
+      "meta": {
+        "path": "/pages/intro",
+        "by": "route-table",
+        "screens": [
+          "Intro"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 34,
+      "kind": "screen",
+      "meta": {
+        "path": "/reports",
+        "by": "route-table",
+        "screens": [
+          "Reports"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/shelf/home",
+      "type": "entry",
+      "label": "/shelf/home",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 48,
+      "kind": "screen",
+      "meta": {
+        "path": "/shelf/home",
+        "by": "route-table",
+        "screens": [
+          "ShelfHome"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/teams/members",
+      "type": "entry",
+      "label": "/teams/members",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 43,
+      "kind": "screen",
+      "meta": {
+        "path": "/teams/members",
+        "by": "route-table",
+        "screens": [
+          "Members"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/tools/export",
+      "type": "entry",
+      "label": "/tools/export",
+      "repo": "console",
+      "file": "src/App.tsx",
+      "line": 37,
+      "kind": "screen",
+      "meta": {
+        "path": "/tools/export",
+        "by": "route-table",
+        "screens": [
+          "Export"
+        ]
+      }
+    },
+    {
+      "id": "entry:console:screen:/widgets/chart",
+      "type": "entry",
+      "label": "/widgets/chart",
+      "repo": "console",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "kind": "screen",
+      "meta": {
+        "path": "/widgets/chart",
+        "by": "route-table",
+        "screens": [
+          "Chart"
+        ]
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "functions": 20,
+          "components": 14,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/App.tsx:Nav",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 31,
+      "meta": {
+        "renders": "Nav"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/shelves.ts:getDock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#DockRegistry",
+      "file": "src/App.tsx",
+      "line": 55
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/shelves.ts:makeBin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#BinRegistry",
+      "file": "src/App.tsx",
+      "line": 50
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/shelves.ts:makeShelf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#ShelfRegistry",
+      "file": "src/App.tsx",
+      "line": 45
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/lib/tables.ts:listTeams",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#Team[]",
+      "file": "src/App.tsx",
+      "line": 25
+    },
+    {
+      "from": "console#src/App.tsx:App",
+      "to": "console#src/routes/WidgetRoutes.tsx:WidgetRoutes",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{registry:type:console#WidgetRegistry}"
+      ],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 61,
+      "meta": {
+        "renders": "WidgetRoutes"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:Nav",
+      "to": "console#src/features/screens.tsx:Inbox",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 12,
+      "meta": {
+        "navigates": "/inbox",
+        "route": "/inbox",
+        "page": "src/features/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "console#src/App.tsx:Nav",
+      "to": "console#src/features/screens.tsx:Reports",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/App.tsx",
+      "line": 12,
+      "meta": {
+        "navigates": "/reports",
+        "route": "/reports",
+        "page": "src/features/screens.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "console#src/lib/shelves.ts:other",
+      "to": "console#src/lib/shelves.ts:makeShelf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:console#ShelfRegistry",
+      "file": "src/lib/shelves.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:console:screen:/dock/main",
+      "to": "console#src/features/screens.tsx:DockMain",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 58,
+      "meta": {
+        "route": "/dock/main"
+      }
+    },
+    {
+      "from": "entry:console:screen:/gadgets/gauge",
+      "to": "console#src/features/screens.tsx:Gauge",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/gadgets/gauge"
+      }
+    },
+    {
+      "from": "entry:console:screen:/inbox",
+      "to": "console#src/features/screens.tsx:Inbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 34,
+      "meta": {
+        "route": "/inbox"
+      }
+    },
+    {
+      "from": "entry:console:screen:/pages/faq",
+      "to": "console#src/features/screens.tsx:Faq",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 40,
+      "meta": {
+        "route": "/pages/faq"
+      }
+    },
+    {
+      "from": "entry:console:screen:/pages/intro",
+      "to": "console#src/features/screens.tsx:Intro",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 40,
+      "meta": {
+        "route": "/pages/intro"
+      }
+    },
+    {
+      "from": "entry:console:screen:/reports",
+      "to": "console#src/features/screens.tsx:Reports",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 34,
+      "meta": {
+        "route": "/reports"
+      }
+    },
+    {
+      "from": "entry:console:screen:/shelf/home",
+      "to": "console#src/features/screens.tsx:ShelfHome",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 48,
+      "meta": {
+        "route": "/shelf/home"
+      }
+    },
+    {
+      "from": "entry:console:screen:/teams/members",
+      "to": "console#src/features/screens.tsx:Members",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 43,
+      "meta": {
+        "route": "/teams/members"
+      }
+    },
+    {
+      "from": "entry:console:screen:/tools/export",
+      "to": "console#src/features/screens.tsx:Export",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/App.tsx",
+      "line": 37,
+      "meta": {
+        "route": "/tools/export"
+      }
+    },
+    {
+      "from": "entry:console:screen:/widgets/chart",
+      "to": "console#src/features/screens.tsx:Chart",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 9,
+      "meta": {
+        "route": "/widgets/chart"
+      }
+    }
+  ],
+  "types": {
+    "type:console#BinRegistry": {
+      "name": "BinRegistry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/shelves.ts",
+      "structuralHash": "89a612c1081a9984",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:console#Entry[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:console#DockRegistry": {
+      "name": "DockRegistry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/shelves.ts",
+      "structuralHash": "89a612c1081a9984",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:console#Entry[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:console#Entry": {
+      "name": "Entry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/tables.ts",
+      "structuralHash": "42dddeeb16fddd2a",
+      "fields": [
+        {
+          "name": "path",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#ShelfRegistry": {
+      "name": "ShelfRegistry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/shelves.ts",
+      "structuralHash": "89a612c1081a9984",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:console#Entry[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:console#Team": {
+      "name": "Team",
+      "kind": "object",
+      "declaredIn": "console#src/lib/tables.ts",
+      "structuralHash": "8abb760b8f97be45",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "Screen",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:console#WidgetRegistry": {
+      "name": "WidgetRegistry",
+      "kind": "object",
+      "declaredIn": "console#src/lib/widgets.ts",
+      "structuralHash": "89a612c1081a9984",
+      "fields": [
+        {
+          "name": "items",
+          "type": "type:console#Entry[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/App.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 53,
+      "reason": "route-entries-unread",
+      "level": "info",
+      "message": "makeBin() .routes(), which a route of src/App.tsx is written over, holds no entry this reading places: the registry is read on an instance made afresh where it is read (makeBin()), which nothing outside its class or factory adds to: only the entries they write are read",
+      "hint": "Read the list off the instance the application adds its entries to - one a `const` holds, or one handed in - rather than one made where it is read.",
+      "symbol": "routes over makeBin() .routes()",
+      "meta": {
+        "cause": "route-entries-unread",
+        "list": "makeBin() .routes()",
+        "unread": 0,
+        "read": 0,
+        "why": [],
+        "notes": [
+          "the registry is read on an instance made afresh where it is read (makeBin()), which nothing outside its class or factory adds to: only the entries they write are read"
+        ]
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/features/screens.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    },
+    {
+      "file": "src/lib/tables.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/lib/tables.ts",
+      "line": 30,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "ComponentType",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "react"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/routes/WidgetRoutes.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "console"
+    }
+  ]
+}

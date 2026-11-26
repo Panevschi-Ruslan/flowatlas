@@ -6,6 +6,4032 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.7.0][] - 2026-11-26
+
+`@flowatlas/cli` only; `@flowatlas/markers` stays at 0.2.0. Assistants are told
+when to ask the graph (`agents install` writes each assistant's guide, and its
+`--hook` adds three Claude Code hooks: what a search could not see, who uses a
+name an edit took out, and prompt cards, the graph's answer for what a prompt
+names before the first turn). A team shares one graph (`publish`, `pull`,
+`remote`). New readers: GraphQL and federation, Vue, Nuxt and Svelte, oRPC,
+Serverless, CDK and SAM. `flowatlas findings` ranks what looks broken between
+the services with its precision, as SARIF too, and `check-change` says what an
+edit breaks before it is committed. Answers settle their question in the
+first call where they can (`settled`, requests at the top, handlers reached
+through tables, framework lifecycle hooks, fields read through casts and per
+case, presence checks in templates, a switch's default, the parts a request
+sends), and the MCP server has 27 tools.
+
+### Migrating from 0.6.0
+
+- **Rebuild once.** The graph's `SCHEMA_VERSION` moved from 6 to 8 and
+  `graph.db`'s layout from 2 to 3, so run `flowatlas build` again after
+  upgrading; a graph built by 0.6.0 is read again from the repositories. A
+  pulled team graph needs the same: push one built by 0.7.0.
+- **Upgrade a team together.** The configuration schema is strict, so 0.6.0
+  refuses a configuration that uses a key added since, among them `log`
+  (`log.questions`), `remote` (`url`, `tokenEnv`), `mcp.alwaysLoad`,
+  `mcp.upfront`, `mcp.rebuild`, `mcp.pull` and a service's `infra.options`.
+- **`adapters.auto: false` now means what it says.** It detects no adapter
+  and reads with only those `adapters.force` names; before, it dropped
+  `force` and detected anyway. A configuration that set it should name its
+  adapters under `force`.
+
+### Added
+
+- **What the public pilot spent turns on (P406).** `impact` and `who_calls`
+  say `components`, the files writing a component on the walk to the target
+  that no row names, so "which screens break" is one call where no router
+  shows them, and `settled` says how many; an address built on a property of
+  an imported `const` settings object (`settings.shippingBase`) is rooted at
+  the setting it reads, with its fallback; `find_symbol` rows say the tables
+  a method `writes`; `dead`'s route rows name the path as declared
+  (`DELETE /prices/:id`); and `check_contract` takes the method sending a
+  request as the call's `from`.
+- **What the pilot left open (P405).** `who_consumes` and `who_emits` rank
+  `alsoOn` by the code reading (or sending) the field asked about, then by
+  the handlers (or publishes) of the type, never cut a channel with any, name
+  each reader with its line, and count the rest in `alsoOnRest`; with a field,
+  `settled` says how many read it and where else code does. A message parsed
+  from text is read as the message; a consumer chosen by another's dispatch
+  whose handler holds the choice (`const evt = raw as {…}; switch
+  (evt.type)`) is read on its own, each read under its case; a message
+  handler's reads say `guarded` and `whenAbsent` (`returns`, `throws`), so
+  `check_contract` says `missing: roomId` with `guarded: true, effect:
+  "returns early"` and `findings` says the handler checks first. A set built
+  by spreading other sets, `as const` lists, enum members and imported
+  constants across files is read as their strings. `list_entries` rows say
+  `rawPath` at detail 1, a compact row its label with the parameter names.
+  A handler chosen for a type that takes no parameter is drawn
+  `readsNothing`, settled for field questions.
+- **Answers that settle themselves (P404).** The build records where each
+  type of message's name is written in the code it read (sent or built, the
+  enum member or constant defining it and that member's uses, every other
+  place, and every prefix, pattern or assembled name that may take it), so
+  "no code selects ROW_CLAIMED" past consumers that take every type and hand
+  it on is settled where the name is written only where it is sent:
+  `who_consumes` says `settled: "no code compares ROW_CLAIMED: its name is
+  written only where it is sent, at …"`, `complete: true`, and `dead` and
+  `message-type-unselected` agree; what the name cannot rule out stays
+  unsure, each place named (`selectionUnread` verbose only, with the function
+  it is in and the consumer that hands it there; compact counts them in
+  `left`). A `case` that is code of its own is handled by the function
+  holding the switch, not by the lookup it makes first; a subscription's
+  callback that chooses before handing the message on is read with the
+  argument it hands it in, and a consumer's field reads start at its first
+  parameter that can hold a message (`dispatch(venueId: string, raw:
+  unknown)`). `check_contract({channel, type})` lists only the
+  consumers choosing the type (and those not read), counting the rest
+  (`takeEveryType`). `who_consumes` and `who_emits` with a type name the other
+  channels carrying it (`alsoOn`), with a field the handlers there reading
+  it. `get_flow` says `requests` first, `settled` where every request lands,
+  each unread step by name and whether it lies on a request's way, and cuts
+  its deepest rows first past the answer's size, the requests kept.
+- **What clients already check is read (P402).** An Angular template's reads
+  are `guarded` where the template checks a field on their path first (`?.`,
+  `@if`, `*ngIf`, `??`, `||`, `&&`, `!`, a ternary, `== null`), so
+  `answer-field-never-returned` and `check_contract` hold back what the page
+  copes without; a read handed on through a ternary's branch or a fallback
+  (`'k' in o ? o.k : ''`) is judged at the field. An answer gathered by
+  `Promise.all`, `allSettled`, `forkJoin` (a list or an object),
+  `combineLatest` or `zip` is the element at its own index or key, read
+  through a destructured tuple, `results[1]`, or a callback's `([a, b])` or
+  `({ item })`, where it was said unread. A request through a ky or axios
+  instance made with a base of its own had its answer not read at all; it is
+  read as the client's. A field a `switch` (or an Angular `@switch`) is over
+  records `switched` (`has: none | default | never`, the cases, the line), and
+  `spec diff` weighs a type that gains a literal value by it: an error where no
+  case names it and there is no `default` or the default proves `never`, a
+  warning where a `default` takes it, an info where a case names it. A query
+  key or a header now required is an error where a caller's browser request
+  does not send it (its `params`, `HttpParams`, `URLSearchParams`, headers,
+  and what its client's instance, interceptors and hooks give every request),
+  an info where every caller does. `what_changed` lists the spec diff's
+  errors and warnings under `api` in the words `diff --spec` prints, counts
+  every change under `counts.api`, and an API change a consumer feels makes the verdict
+  `unsafe`; `check_change` compares the API documents too. ky's instances
+  (`ky.create`, `extend`) and ofetch's (`ofetch.create`, `$fetch.create`) give
+  every request their `credentials`, `headers` and the headers their hooks
+  set, as axios's did.
+
+- **The benchmark measures finding a defect, a change across repositories and
+- **`findings` names the three bugs the benchmark's planted project hid, and
+  drops the false row it showed (P401).** A setting read in a module's own
+  statements (`export const settings = { region: process.env.LEDGER_REGION }`)
+  is a read: the key is recorded (`meta.moduleLevel`), so a setting renamed
+  where it is set is `config-not-set`, and where a name set and read nowhere
+  shares a word with it (`LEDGER_ZONE`), that name is given as the setting
+  likely renamed, with `nearest` (never two roles of one thing, a host and a
+  password). `process.env['NAME']` names its key as `process.env.NAME` does.
+  A key read and set nowhere is held back, with which, where an `env_file` a
+  compose file names or an env file the code loads (`dotenv`,
+  `process.loadEnvFile`, `ConfigModule.forRoot` without `ignoreEnvFile`) is
+  not in the checkout and has no example, or where a secrets tool
+  (`doppler run`, `infisical run`, ...) or a compose service's `secrets`
+  hands settings in when it runs. The route audit names the one write (POST,
+  PUT, PATCH, DELETE) of its controller or router left open while every other
+  write there, two at least, has a guard (`route-unguarded-among-guarded`,
+  listed as `unguarded-among-guarded`, now `high`), whether or not the data it
+  reaches was read and also where a decorator switches the guard off; never a
+  read, a route marked public, one that checks the request itself, or a router
+  with two open writes; held back where a route of its file was not read. It
+  takes the place of that route's `route-unguarded` row, so the two kinds never
+  list one route twice, and `flowatlas accept route-unguarded` accepts it too.
+  A request a helper makes under a branch on what its caller hands in
+  (`method === 'GET' ? http.get(url) : http.post(url, body)`) is credited only
+  to the callers that take the branch, and to one whose argument is not read
+  with no verb, so a POST through the helper is no longer a GET to a missing
+  route (core `branchTestsOf`, `takenAlong`, `testsAVerb`). On the bench's dry
+  project `flowatlas findings` now names all six planted defects and no twin.
+  New fixture `findings-settings-guards-helper`. a change across repositories and
+  a question in words, and three more ways to hand an assistant the graph
+  (P392).** The generated project gains six planted defects, each beside a
+  twin that looks like it and is right: a route renamed on the server with its
+  old caller left, a body field renamed on one side, an event renamed on one
+  side, a literal route declared after a `:id` route that answers first, a
+  setting renamed in the deployment only, and a write route left without the
+  guard its siblings carry. The *find the bug* questions are marked as true
+  positives minus false positives over the defects planted (a twin named
+  costs as much as a defect missed), with recall by what an answer needs to
+  see (one repository, or across). *Change files* asks for every file in
+  every repository a rename of a route or an event touches, *navigation* asks
+  "where are coupons exported?". The earlier 30 questions keep their subjects
+  and answers for every seed. New arms, run when asked with `--arms`: E asks
+  the graph through the terminal only (no server, the guide spells the
+  commands), F adds prompt cards, G lists four core tools upfront; `--kinds`
+  runs only some kinds. Every session's turns are classified from its
+  transcript (`scripts/bench-agent/turns.mjs`: ToolSearch, a skill read,
+  `start_here`, a lookup before the question's call, a failed call, a second
+  graph call, a read after a complete answer), and the report says tokens per
+  fully right answer, the tool error rate, wasted calls and pass^k.
+- **`mcp.upfront` and `flowatlas mcp --upfront`: fewer core tools loaded
+  upfront (P392).** Only the core tools named are marked
+  `anthropic/alwaysLoad` (`["who_calls", "impact", "search", "get_flow"]`, say);
+  the rest load by ToolSearch. Any other name stops the server at start,
+  naming the nearest core tool. `agents install` writes into the guide which
+  tools are loaded already.
+- **`flowatlas agents install --terminal` (P392).** The guide and the hooks for
+  an assistant that asks the graph in a terminal, with no graph server: the
+  block lists each question with its command, the skill has the terminal
+  column only, and the search and edit hooks name `flowatlas impact "<id>"
+  --format json` instead of the server's tool.
+- **The answer budget holds the instructions in every variant a server can be
+  started in (P392):** from a configuration, a database alone or one that
+  turns code off, with or without the pattern tester and the change checker,
+  every tool or the project's, each under `INSTRUCTIONS_MAX`.
+- **What P381 to P391 left to each other (P393).** `spec diff` and `diff
+  --spec` weigh a response field by what each browser client reads of the
+  answer (P391): an `error` placed on the reading code where a client reads
+  it, an `info` where every caller's client was read and none reads it, a
+  `warning` where a request's client was not read (a server's request) or
+  hands the answer on; a list's element's field is matched to the reads of
+  each element. A field a client reads that the route never returns is a
+  finding, `answer-field-never-returned` (high, where the route's declared
+  answer is a shape read whole; held back with why where it is not).
+  `who_consumes` and `who_emits` take a message type as the channel, answered
+  on the channel carrying it (`carriedBy`), as `check_contract` does. A
+  `maybe` row says how to confirm it, `confirm: {grep, repo}`: the name to
+  look for as a whole word and the repository to look in. A row naming a
+  method, a function, a class, a component or a handler says where it ends,
+  `endLine` beside `loc` (compact: `line: "12-40"`), read from the checkout by
+  the brace count `get_source` uses, which no longer stops at an inline type
+  closed inside a parameter list. A method's requests are one list,
+  `requests: [{route, by} | {unjoined} | {more}]`, where `requestsUnjoined`
+  and `requestsMore` were two more keys. The `api-change-verdicts` fixture
+  gains a React dashboard and a `GET /items` route; `answer-fields-read` a
+  route whose answer is no shape read.
+
+- **Findings say where the two sides of a protocol, a setting, a status or
+  CORS disagree (P388).** Where flowatlas reads both sides, `findings` lists
+  twelve more kinds, each gated on the fact that makes it a defect, with
+  `precision`, `evidence` and the nearest `fix`, and a candidate whose fact
+  does not hold counted under `heldBack` with why: a stream's frames sent
+  under an event name no browser listener listens for (`sse-event-unhandled`:
+  `onmessage` hears only frames named no event; and `sse-event-never-sent`), a
+  bot button whose callback data no handler matches, data over the 64 bytes
+  the bot platform takes, a handler no button sends (`bot-button-unhandled`,
+  `bot-button-data-too-long`, `bot-handler-untriggered`), a setting read with
+  no default that none of its service's deployment files sets, or set under a
+  name a letter or two apart, or set and read by no code (`config-not-set`,
+  `config-name-mismatch`, `config-never-read`), a client branching on a status
+  the route it is joined to never answers (`status-never-answered`), and a
+  browser request its server's CORS refuses: credentials against `*` or
+  without `credentials: true`, a header (the JSON `Content-Type` too) or a verb
+  not allowed (`cors-credentials`, `cors-header-not-allowed`,
+  `cors-method-not-allowed`). A field a client sends that the body's class
+  does not declare, under `forbidNonWhitelisted: true`, is `whitelist-reject`
+  at `error` (a 400), where `whitelist` alone stays `whitelist-strip`. The
+  readers write what this needs beside what they drew: a stream route's
+  `streamEvents`, the `callbackButtons` of the code building a keyboard
+  (`bot-button-unplaced` where no drawn function holds one), a request's
+  `statusChecks`, and a browser request's `credentials`, `headers` and
+  `sendsJson`, a Nest service's `cors`, a setting read's `fallback`; the names
+  each service's deployment files set (never their values) are kept beside the
+  graph in the database. A new fixture, `boundary-mismatches`, plants each
+  beside a decoy.
+
+- **Answers never say they are complete when they are not (P381).** `service`
+  picks the symbol on `who_calls` and `impact` (a route said aloud is matched
+  among that service's routes alone) and cuts no caller of one it holds:
+  `who_calls({symbol: "GET /api/items", service: "market-api"})` answered
+  "nothing reaches this", complete, where three ways in in other services
+  request it, and `impact` on a route with its own service answered no entry,
+  complete, where five exist. `callersIn` keeps one service's ways in (also
+  `flowatlas impact --callers-in`); a service the symbol lies outside still
+  cuts them; whatever a filter leaves out is said in `left` (`filter: 2 ways
+  in in other services left out (callersIn: reader-web)`), `complete: false`,
+  the call without it in `next`, on `who_consumes` and `who_emits` too. A name
+  that means two or three nodes is answered for each under `answers`, the
+  liveliest first, with `ambiguous` saying so (both services' `GET
+  /orders/:param` in one call, where the candidates took a second); a name
+  nothing holds answers the nearest names with `fuzzy: true`, never complete.
+  `impact` takes `symbols`, one change (`targets`, every way in once,
+  `unresolved` for a name that resolved to none), and sums the ways in by
+  kind with the file handling each (`byKind: {screens: {web: [...]}, bots:
+  ...}`), the routes the code runs behind apart (`changing`).
+  `who_consumes` and `who_emits` take `channels`. Wherever a call passes,
+  `ids` is the tool's own list, a list in the single input is the list and one
+  string in the list the single input, so `who_calls({ids})`, which answered
+  "ask with symbol or symbols", works; an answer of several that answers one
+  with an error or candidates is not complete. Facts before verdicts: `dead`
+  says `callers: 0` beside the verdict, a class's or file's `waysIn` say
+  `callers` always and `uncalled` counts every way in no caller joins that
+  nothing outside is said to call, the one a segment off too; code called only
+  through ways in judged dead has `reach: "dead"` with `throughDead: true`
+  wherever reach is said, and on `dead`'s answer beside its `alive` verdict;
+  `list_entries({called: false})` lists the ways in no caller joins, and
+  `reach: "dead"`, which listed two of the four uncalled routes and said
+  complete, says the two judged a maybe in `left` with that call first in
+  `next`. A new fixture, `service-picks-the-symbol`, a lending back end, a
+  gateway serving one of its routes under the same path, a reader front end
+  and a desk bot, with verbose and compact snapshots, and ten answer-budget
+  questions with hand-written answers: `who_calls` with the service 1,718
+  characters, the three ways in, complete (375, none, complete); `impact` with
+  the route's own service 1,909, five ways in (832, none); `who_calls` on a
+  route two services serve 3,208 in one call (333 of candidates, then a call
+  each); `who_calls` with `ids` 2,381 (an error); `list_entries` with `called:
+  false` the four uncalled routes in 534; with `reach: "dead"` 446, not
+  complete (347, complete); `dead` on code behind a dead route says so in
+  878; impact by kind 1,389, on two symbols 1,675, with `callersIn` 766, not
+  complete. The budget re-records answers grown by `byKind` and `changing`
+  (impact 131 to 253 characters each, 1,904 to 2,136 on multi-repo), by
+  `throughDead` (18 to 54) and by `callers` (12 to 36), and the listing (core
+  5,633 to 5,679, under its 5,700 ceiling with the core descriptions trimmed;
+  default 10,321 to 10,412, all 12,904 to 12,995) for the new inputs; the
+  tool listing ceilings move to 13,000 read, 37,250 in all and 33,600
+  offered. Snapshots of code reached only through routes nothing in the
+  fixture calls now say `reach: "dead"` and `throughDead`, of impact answers
+  gain `byKind` and `changing`, of `who_calls` on `GET /orders/123` answer both
+  routes, and `who_calls` on another service's symbol with `service` says what
+  it left out.
+- **One call per question: the guidance, inputs taken as agents write them,
+  and the fixed overhead (P382).** The server's instructions name the one call
+  for each question (`who calls this: who_calls({symbol})`, …, `does each side
+  send what the other reads: check_contract({route} or {channel})`) where they
+  taught chains beginning with a lookup, say a symbol is an id, a
+  `Class.method` or a route said aloud with `service` picking among
+  same-named ones, and say "before changing a route, handler, body type or
+  message payload: impact first"; the line every answer needs (`reach`,
+  `complete`, each tool's plural key) sits in the first 2,048 characters older
+  clients kept, and every variant is held under the ceiling (2,368 from a
+  configuration, 2,428 on a database alone, where 2,384 and 2,426). The guide
+  `flowatlas agents install` writes drops "Narrow, then read" and "Begin with
+  start_here" for one call per question, names each tool's key for several
+  at once (who_calls and impact `symbols`, dead `ids`, find_symbol and search
+  `queries`, get_type `types`) where it named one `ids` who_calls refused,
+  points at no full guide, and in a `CLAUDE.md` whose repository's
+  `.mcp.json` registers the server, read beside the server's instructions,
+  writes the services and the edit habit only (366 characters where 1,054).
+  `check_contract` reads `route` or `entry` as `edge` (the server reads the
+  names agents reach for as each tool's input, unlisted: `route`/`symbol` for
+  `get_flow`, `id` for `get_source`, `route` for `who_calls` and `impact`,
+  `symbol` for `dead`'s `id`),
+  takes one end alone, answers a type of message given as the channel on the
+  channel or channels carrying it, and every input it cannot answer names the
+  exact calls to make in `next`. `get_source` and `describe_for_prompt`
+  answer compact as plain text, the code or Markdown unescaped with no
+  structured content, `verbose: true` the JSON document; a class answers its
+  skeleton, bodies folded with line numbers, `whole: true` all of it.
+  `get_flow` at detail 2 says each fact once: no edge types the step's
+  signature says, no reader meta (`adapter`, `controller`, `rawPath`,
+  `source`, `package`, `receiver`, `entityType`), no fails and guards twice.
+  The answer budget fails a text that is not
+  `JSON.stringify(structuredContent)`, measures the database-alone
+  instructions and the short `CLAUDE.md` block, and the tool tests' listing
+  ceilings measure what the model reads. A new fixture,
+  `one-call-per-question`, with verbose and compact snapshots and five
+  budget questions, each one call: the route by `route` 394 characters (an
+  error before), a type two channels carry 1,300 (an error, then 1,384 in two
+  calls), a type one carries 664, a controller's skeleton 1,322 (1,769
+  escaped), a detail-2 flow 5,186 (6,219); `get_flow.route-detail-2` 2,766 to
+  2,143 and `get_flow.inline-type` 1,933 to 1,668 for the same reason.
+
+- **Search takes a sentence (P383).** `search` and `find_symbol` answered
+  "where is the order cancelled", "what handles payments", "order cancel" and
+  `cancelOrder` with an error or an empty match marked `complete: true`, while
+  the cancel route and `OrdersClient.cancel` were in the graph: both matched
+  the query whole, as a substring. Every name is now split into its words
+  once (camel, snake and kebab case, path segments), stored with the graph in
+  an SQLite FTS5 table with a stemming tokenizer (`graph.db` layout 3; a
+  database written before is indexed in memory on its first search, by the
+  same code), and a query's words, stop words and single letters dropped, are
+  ranked: only the names holding as many of the words as the best, then by
+  how many the name holds, kind (a way in first), `reach` (code that runs
+  first) and BM25 with the name weighted five times its service and file.
+  `search` answers them as `best` (every kind, methods and functions too)
+  when no kind holds the query as a name or the query is a sentence;
+  `find_symbol` as its `matches`, ten to a page, when no name holds the query
+  as written. Each row says the words it holds (`matched`); such an answer is
+  never `complete`, and `left` says `fuzzy: ranked by the words …` with how
+  many rows hold as many and how many fewer. A route path under the wrong
+  verb is found the same way instead of "nothing matches". A new fixture,
+  `search-takes-a-sentence`, with a decoy whose name stems as "cancelled"
+  does, verbose and compact snapshots, and five answer-budget questions with
+  hand-written answers, each one call: `find_symbol` "order cancel" on
+  `multi-repo` 919 characters (no match, complete, before), `search` "where
+  is the order cancelled" 896 (an error), "what handles payments" 1,515,
+  `cancelOrder` 1,173 and "cancel OR refund" 1,774 (each an error or no
+  match). `find_symbol`'s description says words (listing core 5,633 to
+  5,637); the output schemas gained `best` and `matched`, so the tool
+  listing's whole-size ceilings move to 36,650 and 33,000. A build of 53,700
+  nodes spends about half a second on the words; a search reads them in
+  under a millisecond on the fixtures and about 0.1 s for a word held by
+  thousands of names.
+- **Findings say what looks broken between the services first (P384).**
+  `findings` opened with what is least likely a defect (unguarded routes,
+  one-ended channels) while the graph's best evidence of a bug sat among the
+  gaps: on `multi-repo` the gateway's call to `POST /orders/:param/cancel`, a
+  route renamed `archive`, and the browser's call to a missing `receipt` route
+  were in `start_here` and `cant_follow` only, and on `fields-read-and-sent` the
+  one finding was a field optional for the receiver and always sent, while
+  `deskId`, read and never sent, was none. Seven kinds now come first, each
+  gated on the fact that makes it a defect and carrying `precision` (`high`,
+  `medium`, `low`, as CodeQL's `@precision`), `evidence`, the nearest `fix` and
+  `seenBy`, the ways in that meet it: `call-to-missing-route` (a
+  `target-route-not-found` row, where every route of the target was read: no
+  route, mount or prefix of it unread, no catch-all; the nearest route one
+  segment off, under another verb or another prefix), `field-never-sent` (P368's
+  `missing` on every channel, type by type, and every request's body, where the
+  crossing was read whole, with the field it was likely renamed from:
+  `likely renamed: deskNumber is sent, deskId is read`), `type-never-published`
+  (a consumer choosing a type no publish on its channel sends, where every
+  publish says its type: the reverse of `message-type-unselected`, which the
+  graph's type nodes alone could not say, since no node is drawn for it),
+  `contract-break`, `unguarded-among-guarded` (a route nothing guards while the
+  routes beside it in its controller are guarded), `annotation-to-missing-route`
+  and `env-not-set` (where the function's deployment was read whole). A
+  candidate whose evidence does not hold is counted under `heldBack` with why,
+  never listed. An unguarded route is ranked by deviance: guarded siblings, then
+  writes (a delete now counts as one), then whether a person sends it (a
+  browser's request, a screen's or a bot's code) rather than only another
+  service, then reads; `unguarded` alone is `low`. An optionality disagreement
+  where the receiver may go without a field the sender always sends breaks
+  nothing at run time and is `info` (it was a `warning`, and a finding); the
+  sender leaving out what the receiver requires stays a warning. The
+  instructions list `findings()` as "what looks broken between the services".
+  `flowatlas findings` prints the same ranked list, `--format sarif` writes it
+  under `finding/<kind>` rules carrying their precision (`high` an error), and
+  `--fail-on high` exits 1 on the defects nearly always right; `flowatlas diff
+  --fail-on-broken-call` and the action's `fail-on: broken-call` fail on a call
+  between the services the branch breaks (a join lost, or a new request to a
+  route nothing serves, as `check` counts them). The overview's checks counted
+  unguarded routes and N+1 loops under reasons `findings` never names, so they
+  said 0; they count the kinds, and calls to missing routes beside them. A new
+  fixture, `findings-between-services`, plants each defect beside a decoy whose
+  evidence does not hold (a call to a service whose items controller computes
+  its prefix, a type a publish of unread type may send), with verbose and
+  compact snapshots and three answer-budget questions with hand-written
+  answers: `findings()` on `multi-repo` names both calls to missing routes,
+  the cancel one with `POST /orders/:param/archive` as its nearest route, in
+  3,172 characters (1,723 before, naming neither), on `fields-read-and-sent`
+  `deskId` with its rename in 573 (539, listing only the harmless warning), and
+  on the new fixture the six defects with both decoys held back in 5,019. The
+  budget re-records the instructions (2,384 to 2,424, the findings line) and the
+  listing (default 10,321 to 10,316, all 12,904 to 12,899: the findings
+  description says what comes first in fewer words); the tool listing's
+  whole-listing ceilings move to 37,100 and 33,450 for the findings output
+  schema's new fields. The contracts reports of six fixtures move a receiver's
+  optional field from `warning` to `info`; the `findings` snapshots gain
+  `precision` and, on `multi-repo`, the calls to missing routes.
+- **A request joins the route that actually answers it, in routers that try
+  routes in order (P385).** Express, Koa's router, Hono and NestJS on its
+  default Express adapter answer with the first route registered that matches,
+  so `GET /orders/:id` registered above `GET /orders/latest` takes every
+  request for `/orders/latest`; the linker joined such a request to the
+  literal route by specificity, and said on the edge that "the framework
+  decides by registration order". It now decides by that order where it is
+  read: by line within one NestJS controller or one Express, Koa or Hono
+  router in one file, and across NestJS controllers by the place each is
+  registered at, read from the module tree as the framework scans it (the root
+  module's controllers, then each import's, depth first in the order written).
+  NestJS on `FastifyAdapter`, or with `routeResolutionStrategy: 'specificity'`
+  (NestJS 12), read from the `NestFactory.create` call, ranks by specificity as
+  Fastify and the file and front-end routers do. The edge's `note` says how
+  its route was chosen and `shadows` names the routes it answers before; a new
+  finding, `route-shadowed-by-earlier`, names the route that never runs, the
+  one registered before it, both lines and the callers that asked for it, and
+  `dead` says the route and its handler are dead. Two routers whose order is
+  not read (two files or receivers mounted under one prefix, an application
+  whose adapter could not be read) keep the spelled-out route as a
+  `heuristic` join with `orderUnread` and an info `route-order-unread` note. A
+  route for every verb, under a wildcard, or with a parameter written with a
+  pattern is never put first by its order. New fixture `route-order` (a NestJS
+  service on Express with a shadowed route in one controller and one in a
+  later controller, a NestJS service on Fastify, an Express service with a
+  shadowed route and two routers in two files, and an Angular client), with
+  verbose and compact snapshots and five answer-budget questions with
+  hand-written answers, each one call: `who_calls` on the shadowed handler 567
+  characters, its reach `dead` (925, `alive`, the client's request as its
+  caller), `who_calls` on the `:id` handler listing the requests for `latest`
+  and `export` 1,352 (816, neither), `dead` on the two routes and the handler
+  1,148, all `dead` (996, all `alive`), `find_symbol` on the export client
+  naming the `:id` route and handler 476 (491, the export route), and
+  `findings` listing the three shadowed routes 2,607 (22, none). Three
+  snapshots' edge notes move from the old sentence to the new one
+  (`angular-interceptor-host`, `framework-routes-in-place-writes`,
+  `request-lands-on-route`).
+- **Prompt cards: the graph's answer before the first turn (P386).**
+  `flowatlas agents install --hook` adds, beside the search hook, a Claude Code
+  `UserPromptSubmit` hook. When a prompt names something the graph holds (a
+  route said aloud or as a path, whatever its parameters are called;
+  `Class.method`; a backticked identifier; a channel; an `UPPER_SNAKE` message
+  type; a service beside "dead", "unused" or "nothing calls"), it hands the
+  model the compact answer the tool for that thing gives, rendered by the graph
+  server's own tools: `who_calls` for a route or a deployed function, `impact`
+  for a method handling a route, `find_symbol` (where its requests land) for a
+  method sending one to another repository, `impact` for any other method only
+  where it reaches another repository, `who_emits` and `who_consumes` for a
+  channel or a message type, `dead({service})` for a service. Headed with the
+  graph's age and "call a tool only for what this does not say"; at most three
+  names and 2,000 characters, an answer too long asked again smaller and at
+  worst named by its call; each name once per session; silent unless a name is
+  spelled exactly as the graph holds it, a plain word only in backticks; a
+  service named in the prompt picks among names several services hold. A
+  prompt naming nothing costs one process start and one read of
+  `card-names.json`, which `build` now writes beside `names.json`; only a match
+  starts the graph server, read-only. The prompt is never written or logged,
+  and the cards' calls are kept out of the question log. `--no-prompt-cards`
+  leaves the hook out; the benchmark's graph arms get it with
+  `run.mjs --prompt-cards`. A new fixture, `prompt-cards`, four repositories
+  with a route under a global prefix, two services sharing a handler's name, a
+  client, a typed message on a channel and a plain-named channel, holds twelve
+  prompts' cards (`scripts/card-snapshots.mjs`, `expected.cards/`), and the
+  answer budget gains six questions asked as prompts, each answered with no
+  call: who calls a route said with another parameter spelling (1,050
+  characters), where a client method's request lands (803), which code handles
+  a message type (1,352), what breaks if a handler two services share changes,
+  the service named (978), what in a service is unused (640), and a prompt
+  naming nothing (no card).
+- **Breakage caught while editing, and the working tree checked in one call
+  (P387).** `flowatlas agents install --hook` adds a second Claude Code hook,
+  after `Edit`, `MultiEdit` and `Write`: when an edit takes out a name another
+  repository uses - a route declared in the file (verb, path or the whole
+  declaration), a channel or a type of message published or taken there, a
+  field of a message or request body sent or read there (as a key or a member,
+  so `deskNo: deskNumber` is `deskNumber` gone), a deployed function's name - it
+  adds one line per name naming who uses it and the call that lists every use,
+  at most three; silent otherwise, and for a name moved within the edit or
+  written back. It reads `edits.json`, which `build` now writes beside
+  `names.json` (each file's crossing names, how often the file spells each, who
+  uses them), and the edited file: about 120 ms, a process start. A route line
+  the file holds twice (`@Get()` in two controllers) is told apart by the lines
+  after it, and taken as edited only where the edit was. New `check_change`
+  tool (not upfront, listed under `flowatlas mcp` with a configuration) and
+  `flowatlas check-change` command: the working tree against the built graph
+  (or `--base <ref>`), reading again only the services whose files changed
+  since the build and taking the rest from the built graph, answered as
+  `what_changed({verdict: true})` answers a diff - the verdict and why, calls
+  and channel ends that lost what they joined, new contract errors, new
+  findings and gaps, the ways in the change reaches - with `read`, `ms` and
+  `complete: false` naming what was not checked; the server runs it in a
+  process of its own and stops it at `timeoutSeconds` (120, at most 600), a
+  later page reading the same check. A new fixture, `edit-breaks-other-repos`
+  (a catalog, a storefront calling three of its routes, a bot taking its stock
+  messages, and `edits/` renaming the archive route and sending `sku` under
+  another key), with snapshots of `check_change` (verbose and compact) and of
+  the hook on five edits, and two answer-budget questions with hand-written
+  answers: what an uncommitted change breaks elsewhere, 1,849 characters in one
+  call where `what_changed` answered an error (no `diff.json`, and `flowatlas
+  diff` compares commits), and a check of one unchanged service, 707. The
+  listing of every tool grows by the new tool's entry (12,904 to 13,451 read,
+  the answer budget re-recorded; the tool listing ceilings move to 13,500 and
+  37,200); the upfront listing does not move. Six `start_here` snapshots name
+  `check_change` under `hidden` where the suite's server is not handed the
+  checker.
+- **Which fields of a route's answer each client reads (P391).** The Angular
+  and React readers follow the answer from the call that makes a request to
+  where it is used, through `await`, `then`, `json()`, axios's `data`,
+  `subscribe`, `pipe` and its operators, `firstValueFrom` and `toSignal`,
+  handed back from client methods to their callers, into a component's member,
+  its template (`{{ order.total }}`, `@for`, the async pipe, `@if (…; as x)`)
+  and a child it binds the value to, into a React state's setter, a
+  component's props and a query hook's `data`, and write `meta.answerRead`
+  (and `meta.answerUnread`, every use not followed) on the request.
+  `check_contract` on a route answers `answer`: what each client reads, with
+  `field` the code that breaks if one field changes, `missing` (read, never
+  answered) and `unused` (answered, read by no client); on one request's edge,
+  the same for that request.
+- **Deployment settings that contradict the code are findings (P389).** For
+  every mapping from a queue to a function, read from Terraform, the Serverless
+  Framework, SAM, CloudFormation or the CDK: a mapping saying
+  `ReportBatchItemFailures` whose handler never returns `batchItemFailures`
+  (`batch-failures-unreported`; Powertools' batch helpers and the partial-batch
+  middleware count as returning it), the reverse (`batch-failures-ignored`), a
+  queue hiding a message for less than six times the function's timeout plus
+  the batch window (`queue-visibility-short`), no redrive policy
+  (`queue-redrive-missing`) or one under 5 receives (`queue-receives-few`); and
+  for every state machine task, one waiting on an activity, a `.sync` job or a
+  task token with no timeout of its own or of its machine
+  (`workflow-task-untimed`), a callback with no heartbeat
+  (`workflow-callback-no-heartbeat`, info) and a function task retrying none
+  of the platform's transient errors (`workflow-function-unretried`). Only
+  values the files settle, or the format's default, are compared; a check not
+  made is one `deployment-setting-unread` note naming why. The readers now
+  record a function's timeout, each queue's visibility timeout and redrive, and
+  a mapping's response types and batch window (`Deployment.queues`,
+  `DeployedFunction.timeout`, `DeployedDelivery.batch`); the shipped Lambda and
+  SQS module descriptions pass `timeout` and `visibility_timeout_seconds`
+  through, and a redrive policy written as JSON text now gives its
+  `maxReceiveCount`. New fixture `deployment-settings-terraform`.
+
+- **An API change weighed by the code that uses it (P390).** `flowatlas spec
+  diff` and `diff --spec` rated a change by its kind: on the new
+  `api-change-verdicts` fixture eight of nine changes were errors, the field a
+  caller already sends and the message field no consumer reads among them,
+  while the one change that breaks nothing in the project, a field of an
+  answer nobody requests, was the one warning. Both sides' graphs are now read
+  for what each consumer does with each change - the shape each request was
+  read to send, the fields each consumer of a message reads (P368) - and every
+  change carries `use`: a `direction` (oasdiff's model: narrowing what a route
+  accepts or widening what it answers or a message carries is `breaking`, the
+  reverse `compatible`, a field the route stops reading `unconfirmed`; a type
+  change between literal choices is read for which way it went), a `level`
+  from use (`error` when a joined consumer reads the removed or retyped field,
+  sends one now invalid, omits one now required or calls a route that is gone;
+  `info` when no consumer reads it, among the ones counted, or every caller
+  already sends it; `warning` where the value reaches a consumer whole, spread
+  or handed on, or what it reads is not known), the `verdict` (`1 of 1
+  consumer: reads \`label\`, line 16`), each consumer under `readers`, the
+  `flows` from a way in to each consumer it breaks across repositories (way in,
+  client call, route, handler, publish, consumer), a `deployOrder` (consumers
+  first for a message field they read, callers first for a newly required
+  request field) and an `anchor` on the head side: the operation's own line, or
+  for a route that went the nearest line of its file that is still there, or
+  the summary where the file went, since a pull request is annotated only on
+  lines it holds. Which fields of an answer a client reads is not read yet, so
+  a response change with callers is a warning saying so, never an error or an
+  info guessed. The report ends with a coverage line (`6 consumers in 3
+  repositories; consumers outside them unknown`). In SARIF each flow is a
+  `codeFlows` entry, the consumers are related locations with what each does,
+  the message carries the verdict and deploy order and the coverage line is a
+  notification of the run. `diff --fail-on-api-break` and the action's
+  `fail-on: api-break` fail only on an error from use; the action compares the
+  API documents by default (`api: false` leaves them out), its comment's header
+  says how many API changes a consumer feels and how many are to check, and it
+  hands `api-breaks` on. `spec-diff.json` is format 2 (`use`, `coverage`); a
+  format 1 file is still read. `flowatlas spec diff main --format sarif
+  --config x.json` printed text for the project found from the working
+  directory, the parent `spec` command taking both flags; it no longer does.
+  On the new fixture the same nine changes are 3
+  errors, 3 warnings and 3 infos (8, 1 and 0 before), each decoy an info:
+  `currency` omitted by the storefront's request, `label` read by the notifier
+  and `DELETE /items/:id` still called are the errors; `title`, already sent,
+  `legacyCode`, read by no consumer, and the archive's `reason`, requested by
+  nobody, the infos; `warehouse`, spread whole by its consumer, and the two
+  `price` fields of answers, the warnings. The `spec diff` and `diff --spec`
+  snapshots of `multi-repo-diff` gain the verdicts and the coverage line.
+- **who_calls answers stay small and finish, also on several symbols
+  (P379).** `depth` is how far the tree of callers is drawn, never a cut:
+  every way in past it is listed under `waysIn` whatever it is, one symbol or
+  several, so a depth is no longer said in `left`, `truncated` or `frontier`,
+  and `next` never names `who_calls` on an asked symbol again. Asked several
+  symbols with a depth, each answer was its tree alone, every one
+  `complete: false`, with no `waysIn` and `next` asking `who_calls` once per
+  symbol; it now draws each tree to the depth and says the ways in once, with
+  `reaches`, complete where the walk finished. In a compact answer a step of
+  a tree (`get_flow`, `who_calls`) says a long type written inline by its size,
+  `{…22 fields}` (an edge's `params` and `returns`, a signature's types, a
+  request's `bodyType`, past 48 characters), the `note` saying `verbose: true`
+  gives it whole; a screen's `loc`, a line of its routing table, goes beside
+  the `by` naming its component, in every compact `impact` and `who_calls`
+  answer. `list_entries` with `in` says on each row who calls it (`callers`
+  and the first `caller`, as `dead` on a class does) and names the `dead` call
+  judging each first in `next`. `callers-walked-to-ways-in` gains a products
+  controller of five routes, four requested by two screens' client, one body
+  typed inline with 22 fields, with snapshots and four answer-budget
+  questions with hand-written answers: `who_calls` on the five routes 2,381
+  characters (2,682 before), with `depth: 1` 2,381 and complete (2,834,
+  incomplete, no ways in), `get_flow` at detail 2 1,933 (3,808), and
+  `list_entries` with `in` naming who calls each 1,152 (835, then `who_calls`
+  on the routes: two calls, 3,517). The budget re-records the answers listing
+  a screen, 32 to 66 characters smaller each (`impact` 873 to 840 up to 2,387
+  to 2,321, `who_calls` 999 to 967 up to 2,926 to 2,862). Ten existing
+  `who_calls` snapshots asked with a depth now list the ways in; the two named
+  `depth-cut` are `depth-drawn`.
+- **No turn spent loading the core tools (P380).** Claude Code defers every
+  MCP tool by default, so a graph session's first turn went on a ToolSearch
+  call, a turn that re-sends the whole session's context. The graph server now
+  lists nine core tools with `_meta: {"anthropic/alwaysLoad": true}`, which
+  Claude Code v2.1.285 and later loads upfront: `who_calls`, `list_entries`,
+  `who_consumes`, `check_contract`, `find_symbol`, `impact`, `search`,
+  `get_flow` and `dead`, chosen from what agents asked (`check_contract` in,
+  `who_emits` out of the set the guide used to load). One list, `CORE_TOOLS`
+  in `@flowatlas/mcp`, is what the server marks and what the guide names. The
+  guide `flowatlas agents install` writes tells no ToolSearch call for them,
+  only one call for any other tool a question needs (the skill keeps the
+  `select:` line for older Claude Code), and the instructions say the same.
+  `"mcp": { "alwaysLoad": false }` in the configuration or `flowatlas mcp
+  --no-always-load` marks no tool, and the guide then writes the one
+  ToolSearch call that loads them; `agents install` also reads
+  `"alwaysLoad": false` or `--no-always-load` from a repository's
+  `.mcp.json` entry. Upfront tools are paid on every turn, so the listing is
+  leaner: a listed schema leaves out the lower bounds that say nothing
+  (`minItems: 1`, `minLength: 1`, `minimum: 0` or `1`, still checked on every
+  call), the descriptions of `search`, `list_entries`, `who_consumes`,
+  `check_contract` and `dead` are shorter, and the instructions leave out what
+  the core tools say themselves. Measured on the main fixture: the upfront
+  listing 5,633 characters (about 1,400 tokens; the nine loaded by ToolSearch
+  before were 5,870), held under `UPFRONT_LISTING_MAX` (5,700) by the tests
+  and the answer budget; the instructions 2,493 to 2,384; the guide block
+  1,205 to 1,055; every tool's listing 13,346 to 12,904. What a turn carries
+  is 9,340 characters with the core tools in it, where it was 3,966 before
+  the ToolSearch turn and 9,836 after it. The answer budget measures
+  `listingCore` on the tools the listing marks, fails when they are not
+  exactly `CORE_TOOLS` or their listing passes the ceiling, and counts them in
+  every turn.
+
+- **What lies past a channel, said once per consumer (P378).**
+  `throughChannels`, in `impact` and `who_calls` alike, is one row per
+  consumer: `{consumer, channels, consumers?, ways, sample?, walkCut?}`,
+  `channels` every channel it takes messages from on the way (a name, or
+  `{channel, type}` where it chooses a message type) and `ways` the distinct
+  ways in beyond any of them, a route publishing on two counted once. A bot on
+  three channels was three rows, each repeating the same ways in and the same
+  three samples. `impact` keeps the nearest three as `sample`; `who_calls`,
+  asked who calls the code, counts them only, and its `next` names the impact
+  call that lists them. `impact`'s `channel` input also takes a row's consumer
+  (its id or name), listing the ways in beyond every channel of its row, each
+  once, with `acrossConsumer`; `next` offers that call where the first row has
+  several channels. `flowatlas impact` prints one line per consumer under
+  `Only beyond a channel`, and `--channel` takes a consumer too. `entriesNone`
+  and `waysInNone` count the ways in beyond channels once each. The
+  `impact-guarded-navigation` fixture's bot now takes messages from three
+  channels four routes publish on, with three new answer-budget questions:
+  `impact` on the list method 2,387 characters (3,032 before, three rows),
+  `who_calls` 1,961 (2,983), and `impact` by the bot's consumer the five ways
+  in, 1,440 (it answered none). multi-repo's `who_calls` answers 1,886 where
+  it answered 2,004 (no sample) and its `impact` 1,904 from 1,901 (`channels`
+  is a list). The budget matches a `throughChannels` row by its `consumer` and
+  fails an exact list naming a row twice.
+- **"Where does this request land" in one call (P377).** `get_flow` takes any
+  symbol the way `who_calls` does (an id, `Class.method`, a short name that is
+  the only best match, the candidates when several share it), and with nothing
+  near names `find_symbol` (or a route search for a path), never an empty list
+  of suggestions; `flowatlas flow` takes the same. An answer about one method
+  says where the requests it sends land: `who_calls`' target, each
+  `find_symbol` match and `get_source`'s answer carry `requests`, each
+  `{route, by}` with `by` the code handling the route, and `requestsUnjoined`,
+  a request joined to no route as written (`POST ${apiUrl}/admin/:param/catalog/export`),
+  for the requests the method sends itself or through code of its own
+  service (a helper, a base class's verb helper, a client wrapper), never a
+  class it injects. `search` finds a route by the path a client writes,
+  whatever its parameters are called (`:orderId`, `{orderId}`, `${orderId}`)
+  and without the prefix the server adds (a global `/api`), a verb in front
+  keeping that verb's routes. Wherever a tool takes `service`, the folder of the
+  service's repository (as the configuration's `repo` writes it) names the
+  service too, and a name that is neither answers the services there are
+  (`what_changed` keeps its own answer for a service a diff names). A new
+  fixture, `request-lands-on-route`, with verbose and compact snapshots and
+  five answer-budget questions with hand-written answers, each now one call:
+  `get_flow` on a client method's short name 1,485 characters (three calls and
+  1,912 before), `who_calls` 999 (two and 2,314), `find_symbol` 536 (two and
+  1,889), the client's path 436, the folder as `service` 411 (three and
+  1,922). The budget re-records `find_symbol.several` (965 to 1,380) and
+  `find_symbol.unreferenced` (656 to 922), whose client methods now say where
+  their requests land, and the listing, 2 characters longer for `get_flow`'s
+  `entry`.
+- **who_calls reaches the ways in in one call (P376).** Asked without
+  `depth`, `who_calls` draws the nearest callers (two hops; on a class or
+  several `symbols`, each one's direct callers) and lists every way in the
+  walk reaches once, nearest first, under `waysIn`, each with `reach`, `hops`
+  and `by`, read by impact's walk: past every way in to the callers beyond it,
+  never along a navigation, the ways in only past a channel counted under
+  `throughChannels`; a chain an unread call could reach is a `maybe` row, and
+  with no way in `waysInNone` says why. On a class each way in says which
+  methods it reaches (`reaches`, the methods by name, as `calls` now names
+  them on its callers), and asked several symbols the ways in are said once
+  for all of them, `reaches` naming the ones each reaches. With `depth` the
+  tree alone, as before, and a tree cut by depth names the same call without
+  `depth` in `next` (and its `truncated` says so) instead of a deeper depth.
+  The answer budget's `who_calls` questions now finish in one call:
+  multi-repo's service method 2,004 characters where it took three calls and
+  13,531, helpdesk's 1,027 (from 838, its one way in now also in `waysIn`),
+  and three new questions on a new fixture, `callers-walked-to-ways-in`: a
+  method five calls under its route in 2,828 (three calls and 11,993 at the
+  old depth), its class with four methods sharing callers in 2,926 (three
+  calls and 20,854), and two of its methods together in 1,554, complete
+  (1,758, incomplete). The budget also fails a complete answer whose `next`
+  asks the same call further, reads a list said once beside several answers,
+  and compares a list a row must say whole.
+- **List answers stay lean at any detail, and a class's routes in one small
+  call (P375).** A row of a list (`impact`'s entries and maybe rows,
+  `list_entries`, `find_symbol`, `search`, `who_consumes`, `who_emits`, a
+  `dead` list's candidates) keeps from its `meta` only its plain facts in a
+  compact answer, whatever the `detail`: strings, numbers, booleans and lists
+  of them. Its structured facts - a route's `fails` and `access`, a method's
+  `signature`, a consumer's `selects` - are one node's, and the answer says
+  once, in `note`, which went and that `get_flow` or `impact` at detail 2
+  gives one node's, `verbose: true` every row's; the target of `impact` keeps
+  its own. `dead` on a class lists each way in it declares under `waysIn`,
+  each with its verdict and, alive, who calls it first, with `uncalled`
+  counting those no code calls; on a file, the ways in written in it or
+  handled there. `list_entries` takes `in` (a class, a method or a file: its
+  own ways in, each row with `reach`) and `reach` (one verdict). An `impact`
+  row that other listed rows reach the target through (a route the screens
+  and bots listed request) says `rowsVia`, how many, and impact's description
+  says `by` is the code handling a way in, not a way in. The
+  `rows-name-handling-code` fixture gains a cancel method refusing four ways
+  behind a second guard and a reports controller with four routes the reports
+  screen requests two of, with snapshots and four answer-budget questions:
+  `impact` at detail 2 answers 1,580 characters where it answered 2,717,
+  `list_entries` of the back end's routes at detail 2 2,288 from 4,376,
+  `search` 974 from 2,083, and `list_entries({in, reach: "dead"})` exactly
+  the two uncalled routes in 475. Every `impact` answer whose route row
+  others reach through grows by its `rowsVia` (12 characters on each of five
+  budgeted answers); the listing grows 345 characters for the two inputs and
+  the descriptions (all tools 13,312, core 5,836).
+- **What a pilot after P368-P373 got wrong (P374).** Each row of `impact`
+  (and each `throughChannels` sample, now `{id, by?}`) says `by`, the code
+  that handles its way in on the chain to the target: a screen's component, a
+  route's, a bot command's or a consumer's handler, and for a webhook whose
+  handler is written where the route is declared and hands the update to a
+  class (a worker's inline handler calling a bot's method), that class's
+  method; `flowatlas impact` says it on each row with its file and line. A
+  field read through a key the code holds is read where the reading settles
+  the key (a `const`, a parameter's default, a member of an object literal
+  written as the default behind `??` or `||`), marked `sureness: "default"`,
+  and a local assigned the value in one branch of several (`bag = req.body`)
+  holds it for every read; every `left` line of `check_contract` names the
+  method a use it could not follow is in, never only the guard's class. A
+  branch of a dispatch is handled by a call into another class only when it
+  hands that call the message itself, so a branch toasting a field is handled
+  where it is written, never by the toast; and a consumer whose subscription
+  is made by a method of a class nothing builds and nothing outside it calls
+  never runs (`dead`, `reach: dead`, its selections `unreached`), whatever
+  publishes to its channel. A subscriber to every channel of a bus draws the
+  types it selects only on the channels whose publishes send them (or a type
+  not read, as a guess), never on one whose publishes send no type. A compact
+  answer keeps a row's `field` when it is spelled as the tail of the id of the
+  method reading it. A new fixture, `rows-name-handling-code`, with verbose and
+  compact snapshots, a CLI tree and four answer-budget questions: `search` for
+  the type answers one row where it answered three (631 characters from
+  1,126), the guard's field one read in its method, complete (422 from 354,
+  unanswered), and `who_consumes` the notice service's own handler, `dead`,
+  where it named the toast, alive through every screen calling it.
+- **An answer budget in the gate (P373).** `scripts/answer-budget.mjs`, run by
+  `pnpm fixtures:check` (and alone as `pnpm answer:budget`), asks 22 agent
+  questions of seven fixtures through the graph server as an agent asks them,
+  compact: which ways in could break (`impact`, five targets), who calls,
+  which handlers take a type of message, a search on a type's name, the three
+  questions about fields, `dead` with several ids, `get_flow` at detail 1 and
+  2, `find_symbol` with several queries and a paged `list_entries`. Each
+  answer's characters (and tokens, estimated as characters / 4), the rows of
+  its main lists, whether it says `complete` and the calls it takes when an
+  agent follows the page or the deeper walk it names are recorded in
+  `scripts/answer-budget.json` beside the right answer, written by hand: the
+  ids a list must hold, the ids it must not, a list that must hold exactly
+  those, what a row must say (a verdict, a `reach`) and `complete`. The gate
+  fails when an answer grows more than 10% (or 300 characters, whichever is
+  larger) past its budget, lists an id it must not, misses one it must, says
+  `complete: false` where the right answer is complete, or takes more calls
+  than recorded; `--update` re-records the sizes, never the expectations, and
+  prints before and after. The fixed overhead of every turn is recorded and
+  held the same way: the instructions, the guide block and skill description
+  `flowatlas agents install` writes, and the listing a model reads for the
+  core tools, the tools a project is offered and all of them. A change that
+  grows an answer re-records with `--update` and says why in its commit.
+- **What P363-P367 left open (P370).** `flowatlas impact` answers as the
+  graph server's `impact` does, by the same function (`impactOf`, one walk):
+  the tree draws the chain back to each way in that could break, in any
+  service, and under it each row with whether it runs and `via`, the maybe
+  rows with their gap, the unreached count and what was left; `--format json`
+  prints the tool's answer, compact on one line, and whole with `--verbose`;
+  `--offset` pages it, and `--depth` bounds the chains drawn. A method or a
+  component whose name its repository writes nowhere but at its declaration
+  (no call, reference by name or string key, template binding or value handed
+  on; comments do not count; in a front end, not a member of a class that
+  extends or implements anything, a decorated member, an `ng…` hook, nor
+  anything in a repository whose manifest publishes an entry) is marked
+  `unreferenced`: `dead` says `likely-dead` with `evidence.unreferenced`, and
+  `reach` says `unreached` rather than `maybe` where its file holds no step the
+  reading could not follow; `impact` counts such chain ends in `unreached`
+  instead of listing them as maybe rows. Compact answers leave out
+  `truncated`, `stoppedBy` and `frontier` where `left` says each, say a tree's
+  row as its node with `edge` and `children` beside it, and an edge's
+  `confidence: "static"` goes, an edge with nothing else said as its type.
+  `SCHEMA_VERSION` is 8 for the `task` and `screen` entry kinds
+  (`schema/*.v8.schema.json`): a graph of 7 is said to be older and rebuilt
+  (a server with `mcp.rebuild: on-change` starts the rebuild), and a graph
+  newer than the reader says a newer flowatlas reads it. An Angular
+  template's elements are matched against the repository's component and
+  directive selectors into `calls` edges (`meta.renders`), as JSX tags are,
+  so a child a routed screen renders is reached through it and a component
+  nothing reaches is `likely-dead` rather than `unknown`; a click handing a
+  loop's element to a method (`(click)="go(entry)"`) is followed into the
+  method's parameter, its navigation read over the list as a bound
+  `routerLink` is; and an address that is nothing but values read at run time
+  is a `dynamic` row naming the code, not a `missing` one naming `:param`.
+  New fixture `angular-rendered-reach`.
+
+- **Consumers the reading missed, and types it could not tie to a handler
+  (P369).** A handler that chooses no type in its body is read for the types
+  it takes: the code calling it under a `case` or an `if` on the message it
+  hands it says which (`bot.handleReady(event)` under `case 'ORDER_READY'` in
+  the route that relays the channel), and failing that the declared type of
+  the parameter it is handed the message in, where its discriminator is a
+  literal (`handleReady(event: OrderReady)`, `via: parameter`); where both say
+  and differ, the caller's choice is drawn and a `message-type-differs` row
+  (info) says so. A choice that hands the message to a function of the
+  repository's own that chooses again is followed into it, two functions deep,
+  so a constant set gating a callback that hands on to a method's `switch`
+  draws each type onto the handler the `switch` runs; a callback that only
+  hands the message on chooses what the method it hands it to chooses, read in
+  the parameter it is handed in. A subscription to every channel of a
+  project's own bus at once - a call on the receiver a broker description
+  names that names no channel and whose answer is subscribed
+  (`this.bus.all().subscribe(...)`) or that is handed only functions - is a
+  consumer (`meta.everyChannelOf`), joined by the linker to every channel a
+  publish through that bus in the same service writes to (`via:
+  every-channel`), and narrowed by the types its callback and what it hands on
+  to choose; one that names a bus nothing in its service publishes through is
+  a `subscription-matches-nothing` row. A handler written in place that does
+  more than delegate - a subscription's callback, a stream listener in a hook
+  or a method - is read for its types where it is written (its position in
+  `meta.subscriptions`), no longer as the method or component it is written
+  in. On the new fixture `typed-handlers-bus-wide-subscribers`,
+  `who_consumes` with a type and `search` on a type name every handler in one
+  call where they answered `unsure` with no consumer.
+
+- **Which code reads or sends a field, in one call (P368).** The reading
+  writes, on the handler of every HTTP route and of every consumer that
+  chooses for itself, and on every guard, interceptor, pipe and middleware a
+  route runs first, the fields of the message or the body it reads
+  (`meta.fieldsRead`: the field, the function it is read in, the line, and the
+  types of message a `switch`, an `if` or an early return on the
+  discriminator reads it under), following member reads, destructuring, a
+  local that is the value again, the value handed to the repository's own
+  functions (bounded), and a body however the code reaches it (`@Body()`,
+  `@Body('x')`, `req.body`, `ctx.request.body`, `await c.req.json()`, a
+  guard's `getRequest()`); a use it cannot follow (spread, handed to a library,
+  indexed by a variable, its keys walked) is `meta.fieldsUnread`, never
+  dropped. `who_consumes` and `who_emits` take `field` and keep only the
+  handlers that read it (each with `readIn`, the function and line) or the
+  publishes that send it, a union narrowed to the type asked; at detail 2
+  each row says `reads` or `sends`. `check_contract` takes a route (said aloud
+  too) and answers `reads`, every body field the handler, guards, pipes,
+  interceptors and middleware read, with `layer`; takes `channel` and `type`
+  and answers `missing` (read, not sent) and `unused` (sent, never read) with
+  where, a channel of several types compared type by type; and on a request
+  edge says the same for its body. `search` finds a field by its name under
+  `fields`. The instructions' channel, shape and search lines say `field`
+  (2,488 characters), and the guide `flowatlas agents install` writes says a
+  field question is one call. On the new fixture, `fields-read-and-sent`,
+  each of the three field questions takes one call.
+
+
+- **Reach that never hides a maybe, and impact that answers "what could
+  break" in one call (P367).** `reach` is `alive`, `maybe`, `unreached`,
+  `dead` or `outside`, and no longer `unknown`: `maybe` is `dead`'s
+  `likely-dead`, or code nothing read reaches whose chain ends where an unread
+  call could reach it (code judged `likely-dead`, a component a template may
+  render by its tag, or a file with a step the reading could not follow and
+  says why), naming it with `gap` (that step's gap id) and `behind` (the code
+  the chain stops at), and `from` the nearest way in beyond the unread call
+  where its code is known, `behind` otherwise; `unreached` now means no way in
+  reaches it and no unread call could; `outside` is a way in something outside
+  the project calls (a webhook, a bot update or command, a cron, a screen, a
+  public route) or a class from a library, so a webhook way in no longer reads
+  as doubtful. `dead({id})` carries `gap` and `behind` too. `impact` walks back
+  past every way in to the callers beyond it, with the hops `from` walks (a
+  screen showing the component whose method requests the route, a bot command
+  whose handler does, a consumer of a channel the chain publishes to), and
+  lists every way in that could break, in any service, in `entries`, each on
+  the calling side with `via`, the crossing it came through
+  (`PATCH /orders/status (shop-api)`, `channel <name>`), and a chain that stops
+  at an unread call before any way in as a `maybe` row with its gap, counted
+  in `maybe` and said in `left`; a link or a navigation onto a screen is no
+  call into it and is not walked back along. Its description says detail 1 is
+  enough. A compact answer leaves out any field below the answer's own whose
+  value is the answer's target id (a failure's `at` thrown in the method impact
+  was asked about) and a `file` an id beside it holds. The server's
+  instructions and the guide `flowatlas agents install` writes say the five
+  words and to keep `maybe` rows when asked what could break or what calls
+  something. Core gains `recordsFollowCause`.
+- **Answers that finish in one call (P364).** Each row naming code in
+  `who_calls`, `who_consumes`, `who_emits`, `impact`, `search` and
+  `find_symbol` says whether it runs, `reach` (`alive`, `unreached`, `dead`,
+  `unknown`: the verdict `dead` gives, by the same functions, `unreached` for
+  `likely-dead` or for code something calls that no way in reaches), and where
+  it is reached from, `from`: the nearest way in (`screen /queue`,
+  `GET /orders/:param`, `cron nightly`, `consumer tenant:*:events`, or `none`),
+  its own service first, with `ways` counting several - walked back through
+  the handler a consumer runs, the component a method or a handler's file
+  belongs to and the class an injection builds, through only the types a
+  consumer selects, bounded per row and per answer and saying where it was cut.
+  So a handler's row says the screen it is shown on, and needs no `dead`,
+  `who_calls` or `search` after it; `dead({id})` names its way in too. `dead`
+  takes `ids`, `find_symbol` and `search` `queries`, `get_type` `types` and
+  `who_calls` `symbols`, beside the single form: several inputs answered in
+  one call, each under `answers` with what it `asked`. Every list answer
+  (those, `list_entries`, `dead`'s rows, `get_flow`, `get_type`) says
+  `complete: true`, or `complete: false` with `left` naming what was cut or
+  left unread - a page, a depth or node cut, gaps where a caller may hide, a
+  publish whose type was not read, steps not followed. `next` no longer
+  suggests `dead` on a row that shows `reach`, nor `who_calls` or `search` on
+  one that shows `from`. The linker's `deadJudge` judges many nodes of one
+  graph with what every verdict reads of it read once.
+
+- **A screen the router registers is a way in, and a link rendered over a
+  constant list reaches every screen the list names (P363).** Each route of a
+  front end's configuration that shows a component of the repository - an
+  Angular route named, loaded lazily, nested in `children` or in a module a
+  `loadChildren` mounts; a React Router table or `<Route>`; a Vue Router route;
+  a page a file router places - is an `entry` of the new kind `screen`,
+  `entry:<service>:screen:<path>` at the full address it is mounted at, the
+  component behind it by a `handles` edge, the guards and resolvers the router
+  runs first listed on it. So `who_calls`, `impact` and `describe_for_prompt` on
+  a routed component name the address it is shown at, linked or not; `dead`
+  answers a component (now judged, as a function is) alive, `routed at
+  /star-map`, saying whether a link to it was read; `search` with
+  `kinds: ["routes"]` finds a screen by its address and by the component it
+  shows. A screen is opened by whoever types its address, so it is triggered
+  from outside the graph, as a schedule is, and never listed as a route nobody
+  calls; server routes' counts and reports are as they were. In an Angular
+  template, `[routerLink]="item.route"`, `routerLink="{{ item.route }}"`,
+  `router.navigate([item.route])` and `navigateByUrl(item.route)` inside
+  `@for` or `*ngFor` are read over the list the loop walks: a member of the
+  component - a field, a getter, a method, a `computed(() => …)` or a
+  `signal(…)` - followed to the constant array of objects it is made of,
+  through `filter`, `slice`, `sort`, `concat`, a `map` to objects spreading or
+  naming the element's members, `flatMap`, `Object.values`, an import and a
+  nested loop over an element's member; each entry's address is a `triggers`
+  edge to the screen at it (`meta.listed`), an address no route answers is a
+  `route-target-unresolved` row naming it, and what of the list is not read is
+  a `route-link-dynamic` row saying why. `routerLink="/x/{{ id }}"` now keeps
+  the text around the hole.
+
+- **A channel published through a project's own bus reaches the screens a
+  per-scope hub feeds, and the screens that subscribe through an rxjs wrapper
+  choose its types (P362).** A hub fed by name - the publish helper posts
+  `{ channel, message }` to the object's stub, from `getWorkerEnv().X`,
+  `env.X`, `(env as …).X`, `this.env.X` or any member the worker's
+  configuration binds - relays every channel the helper is handed: the write's
+  parameter is followed out to every call that names a channel, and a test of
+  the channel on the way (`startsWith`, `===`, a pattern, a constant list and
+  `some`, an early return) narrows which; the channel is consumed by each route
+  the hub's stream branch answers. A route's handler that is a member of the
+  object a factory returns (`sse.boardEvents`, `{ boardEvents, stream:
+  boardEvents }`) is the function the member names, for every route reader,
+  and a handler registered on several streamed routes is one relay per route.
+  On the screen, the function an `EventSource`'s frames arrive at that pushes
+  them into a subject (`this._event$.next(data)`) is followed to what exposes
+  the subject (a field made of it, a getter, the subject itself) and to every
+  `subscribe` on that in the repository, past `pipe` and `asObservable`, in an
+  Angular, React or plain-script reader alike: each function a `subscribe` is
+  written in is a consumer of the stream (`meta.subscriptions`), and its types
+  are read in the `filter`s before it (`via: filter`) and in its callback, now
+  also `SET.has(x.type)` and `LIST.includes(x.type)` over a constant or a
+  field. A wrapper nothing injects or makes says so (`meta.unreached`), and a
+  choice made through it is no selection. Whether a type is selected no longer
+  counts a route that relays to screens or a wrapper that hands on to
+  subscribers as passing every type on, so `channels.unselectedTypes` and
+  `message-type-unselected` are sure where every screen was read. The helper
+  may also hand the channel on through a record of handlers looked up by a key
+  (`this.transportHandlers[t](channel, message)` over `t` of
+  `resolveTransports(channel)`): the routing table the key is drawn from (a
+  constant `Map` or object of channel family to a list or set of keys, with
+  its `??` default) decides which channels reach the hub's member, `static`
+  for a listed family and a guess for the default or a table not read. What
+  reaches a subject is followed through other classes too - a field, getter or
+  parameterless method made of it, past casts - and a subscription through one
+  instance of a generic stream class (`new LiveStream<T>()` held by a feature
+  service that hands it its address) is fed by that service's requests alone;
+  `event['type']` is read as `event.type`. A hub's own channel carries no type
+  nodes where nothing written to it says one. Only the value the hub reads as
+  the channel (the `channel` member of what is posted to it) is followed out,
+  through the names it is held in; it is read where it is worked out, a
+  parameter also written as a message's type is never followed, and an object
+  or a name shaped like a type of message is never a channel. A hub that picks
+  the streams it writes to by a test (`inScope(sub, channel)`) relays each
+  channel to its routes as a guess, saying the test in `meta.filteredBy`. A
+  type a consumer selects is drawn on a channel only where the channel's
+  publishes carry it, as a guess where one of them has a type not read, and on
+  a channel none of whose publishes were read for a type as before. A call to
+  a function of the project's own whose channel the walk reads - out from a
+  hub write, a publish the broker reader drew whose channel is a parameter, or
+  a method marked `@CallsService` that is handed a channel - is itself a
+  publish of that channel, drawn as a producer named for the function
+  (`channelVia: helper`) with its payload's type read, unless the broker
+  reader already drew that call; and the broker reader reads a channel held in
+  a `const` (`const channel = \`board:${id}:events\`; publish(channel, …)`) as
+  one written in place.
+- **A stream answered by a per-scope object relays the channel the object
+  subscribes to (P361).** A route that hands its request to a Durable Object's
+  stub - `env.ROOMS.get(env.ROOMS.idFromName(…))`, `getByName`, a stub a
+  helper of the project's own hands back - is followed to the class the
+  namespace is made of, said by its type (`DurableObjectNamespace<Room>`) or by
+  the worker's `wrangler.jsonc`/`wrangler.json`/`wrangler.toml`
+  (`durable_objects.bindings`, the class the entry exports), into the class's
+  `fetch` or the method called on the stub. A `fetch` that tells paths apart
+  (`=== '/x'`, `startsWith`, `endsWith`, a `switch`, a pattern tested against
+  the path) is read for the branch the request's path takes. The stream and
+  the subscriptions are then read there as in the route's own code, with a
+  subscription the object opens in its constructor or alarm counted where it
+  feeds the streams the object holds; the route records the class in
+  `meta.servedBy`. An object that holds the streams open and is written to
+  through its stub - a method of it, or a branch of its `fetch` that holds no
+  stream - is the hub of a channel of its own, `durable-object:<Class>`: each
+  such call is a producer of it and the route a consumer, so the walk runs from
+  the call to the screen with no broker between. A plain worker's own `fetch`
+  (`export default { fetch }`) whose branch hands a stream to an object is read
+  as a `GET` route of the path the branch's test names (`meta.adapter:
+  "worker-fetch"`), or a `route-path-dynamic` row where the test names none. A
+  class not followed - bound and declared nowhere, declared by another worker,
+  bound nowhere - is said in `meta.handedTo` and in the route's
+  `stream-relay-unread` row. The worker's configuration is now read by one
+  parser shared with the settings reader, which also reads an array written
+  over several lines and a dotted key in TOML.
+
+- **A channel relayed onto a stream of server-sent events reaches the screens
+  holding it open (P359).** A route whose handler streams server-sent events
+  (Nest's `@Sse`, which alone now declares a `GET` route; Hono's `streamSSE`
+  and `writeSSE`; a `text/event-stream` answer; frames written as `data: …`)
+  is read for the subscriptions in the code behind it, a few calls deep, with
+  the broker descriptions consumers are read with; a channel handed to a
+  helper of the project's own is read at the call that hands it. Each channel
+  makes the route a consumer of it (`meta.relay` on the consumer,
+  `meta.stream` and `meta.relays` on the route). A screen's `EventSource` is
+  read by the React, Vue, Svelte and plain-script reader as the Angular one
+  reads it, and in both the function its frames arrive at - named, called by
+  a listener written in place, or handed into a hook by its caller - is a
+  `consumer` of kind `sse` the request `triggers`. The linker joins the two:
+  the channel `consumes` into each screen's consumer, with the route and the
+  request on the edge, so `who_consumes`, `get_flow`, `impact` and `dead` walk
+  from publisher to screen. A stream whose relayed channel is not read is a
+  `stream-relay-unread` row, a stream with no handler found a
+  `stream-handler-unread` row.
+- **Types of message on a channel, read at both ends (P358).** One channel
+  often carries many kinds of message told apart by a string field, and one
+  consumer takes them all and chooses by it. The type a publish writes is
+  read - a literal, a typed constant, an enum member, a constant object's
+  member, a helper's answer, a member of the union the payload is typed by -
+  and so are the choices any consumer's handler makes on it: a `switch`, an
+  `if` and its `else if`s, a guard returning early, a record or map of
+  handlers looked up by the type, a decorator naming the type on a method a
+  registry finds, each with the handler it runs, one call deep. Each type is
+  a node of its own, `channel:<name>#<value>` of kind `message_type`, so
+  `who_consumes` and `who_emits` take a `type`, `search` finds a type by its
+  value under `messages` with its publishes and handlers, and `dead` and
+  `impact` answer per type. A type no code that runs selects is answered as
+  such, with which consumers choose other types, which pass every type on and
+  which were not read, and how sure that is; one published where consumers
+  choose by type and chosen by none is the finding `message-type-unselected`.
+  A selection in a class nothing builds carries why it never runs. A type not
+  read is a `message-type-unread` row, never dropped. No schema change: a type
+  is a channel node with a kind. The choice is read in whatever function a
+  consumer runs, found by its node or by where it is written, in a server's,
+  an Angular and a React reading alike; `dead` now judges a consumer too
+  (dead where nothing builds its class, otherwise as what it consumes).
+
+- **A narrower root bounds a reading inside its checkout too, and what a
+  tsconfig names above it is said (P357).** A configuration kept beside or
+  below its services reads no higher in its checkout than its own directory
+  and each service's, each widened to the workspace declaring it; an install
+  at the checkout's top still resolves a package, as Node resolves it, and a
+  gRPC contract or Prisma schema is searched for from the top everything the
+  run reads in the checkout shares. Every
+  command loading a configuration (the MCP server, `extract` and the commands
+  asking about a repository) bounds its walks so, and a project a library
+  opens with none set is bounded at its root. A tsconfig `extends` naming a
+  package resolves from an install inside the bound wherever a tsconfig is
+  read, and one installed only above is a `tsconfig-extends-installed-above`
+  row; a relative `extends` or a `references` above the bound is read and
+  said (`tsconfig-read-above-root`, info), an `include` or `files` above it
+  is a `tsconfig-not-read-above-root` row. In a linter plugin's `configs`, a
+  key written before a spread of another module's object is the one taken
+  where that module writes no such key - the module is read to see - and a
+  spread that cannot be read is said beside the reading.
+
+- **A port a framework only assumes places only the requests its service
+  serves (P300, P307).** Where every server heard at a port of this machine
+  is there by its framework's default, a merge, an example environment file
+  or a written fallback (`process.env.PORT ?? 3000`), a request is placed at
+  the one serving its verb and path, operation or procedure; several serving
+  it are a `local-port-shared` row, and a written, published or loaded port
+  still wins outright.
+- **Ports read through merges, callers, held configuration and loaded
+  `.env` files (P305, P315).** A port a repository's own merge helper lays
+  over its defaults, a module variable a setter fills before the read, each
+  caller's argument to a port parameter, and the `PORT` a loaded `.env`
+  sets (Nuxt/Nitro, classic Remix, dotenv, NestJS `ConfigModule`,
+  `--env-file`, Bun, Create React App) are read; an example file is only a
+  candidate. Defaults loaded from a computed path are a `listen-port-unread`
+  row. Astro's `server` written as a function is read per command. A tRPC or
+  gRPC link at a port only a default answers is placed where the procedure
+  is served.
+- **Ports P315 left open: framework commands, loaders' order, example
+  fallbacks, held writes and computed paths (P321).** `gatsby develop` and
+  `gatsby serve` (`-p`, `PORT=`, else 8000 and 9000 as defaults; a `PORT` in
+  the site's `.env.development` is not loaded before the port is chosen, so
+  the default stays a guess with an info `listen-port-guessed` row),
+  `fastify start` (`-p`, then `FASTIFY_PORT` or `PORT` from its command or
+  the `.env` fastify-cli loads, else 3000) and Strapi's `config/server.*`
+  (`env.int('PORT', 1337)`, moved by the `.env` or `ENV_PATH` Strapi loads,
+  1337 where none is written; read by a new `strapi-server` adapter that
+  reads no route yet). Several loaded files are ordered as each loader
+  does: a script's or the runtime's files over the code's, the last of
+  Node's and Deno's repeated `--env-file`, dotenv's `override`, dotenv-cli's
+  `-c` cascade, and Bun's `.env.local` over `.env.<NODE_ENV>` over `.env`;
+  dotenv's paths and `ConfigModule`'s `envFilePath` stay first-wins. A code
+  fallback is offered the port an example environment file gives its
+  setting, as a guess. A setter's write inside a callback, a write through
+  `this` or an object's key (a field or key merged by a setter, a
+  constructor's write read at each `new`, `{ ...this.values, ...given }`),
+  and a variable of a function written again (`config = await
+  applyPlugins(config)`) are followed to the write before the read; a write
+  whose value is not read (`port = await getPort({ port })`) keeps the value
+  from before it as a guess (`rewritten`, a `listen-port-guessed` row).
+  Defaults loaded by `require`/`import` of a path built from the file's own
+  directory (`path.join(__dirname, 'defaults')`, `path.resolve(__dirname,
+  '../config')`, `` `${__dirname}/x` ``) or written relative to it are read.
+- **Strapi's routes, Gatsby's functions, ports written in place and per
+  instance (P327).** A Strapi application (new type `strapi`, which `init`
+  suggests for `@strapi/strapi`) is read for its ways in: each API's
+  `createCoreRouter` routes, named by the content type's `schema.json`
+  (`only`, `except`, `prefix`), and custom `routes: [{ method, path,
+  handler }]`, under `/api` or `config/api`'s `rest.prefix`, each handler
+  the controller's action where it is written and Strapi's own core action
+  where a core controller writes none; its port reads
+  `config/env/production/server.*` over `config/server.*`, another
+  environment's port an info `framework-environment-differs` row. A Gatsby
+  site (new type `gatsby`) is read by the server reader, each `.js`/`.ts`
+  file under `src/api` a function at `/api/<path>`. A held configuration
+  changed in place - `Object.assign(config, { port })`,
+  `Object.assign(config.server, ...)`, `Object.assign(this, options)`,
+  `config.server.port = 4000` - is read where it is changed, the last write
+  of the read's own block standing for those before it; a class's field is
+  read per instance (each instance's setter calls, its own `new`, each call
+  of the method reading it). Repeated `process.loadEnvFile` calls, and
+  `loadEnvFile` imported from `node:process`, keep the first file's value, as
+  Node sets only what is unset.
+- **Strapi plugins, policies and start environments, Gatsby plugin
+  functions, `fastify start --config`, writes through getters and per
+  instance through parameters (P329).** A Strapi local plugin
+  `config/plugins` enables with a `resolve` path is read for its server's
+  `routes`, as Strapi mounts them: a list at `/<plugin>` on the admin API,
+  routers by name on the API their `type` names (`content-api` under
+  `/api`), under their `prefix` or `/<plugin>`, each handler the plugin's
+  own controller's action; Strapi's built-in admin routes are not the
+  repository's and are not read. A routes file exporting a function, a
+  factory's result or a variable is read. A route's `config.policies` are
+  drawn as guards and its `config.middlewares` as middleware in front of
+  its handler, resolved by uid (`global::`, `api::`, `plugin::`, or a bare
+  name in the route's own API or plugin) to the file that runs; a route an
+  extension pushes into an installed plugin's router is a
+  `route-mount-unread` row. `NODE_ENV` set on the script that runs `strapi
+  start` picks the `config/env/<env>` read. A Gatsby local plugin's
+  `src/api/<plugin name>` functions are ways in at `/api/<plugin
+  name>/...`, the site's own winning at one address, and `gatsby serve
+  --prefix-paths` serves every function under the `pathPrefix` too. `fastify
+  start --config <file>` gives the port its JSON or `module.exports` file
+  writes, after `-p` and `FASTIFY_PORT` and before `PORT`. `Object.assign`
+  into a held configuration reached through a getter's return or a
+  parameter is followed, and a key the literal does not declare, or declares
+  under a type its name resolves to (`const config: Config = {};
+  config.port = 4000`), is held. An instance a parameter, a field or a
+  parameter property holds is resolved to its own `new`, a method called on
+  a parameter read once per caller, so a field is read for that instance.
+- **Strapi routes registered in code, installed plugins and extensions;
+  Gatsby plugins by path and installed; `fastify start --config` packages
+  and ES modules; writes and instances through parameters (P335).** Routes
+  code registers on Strapi's server - `strapi.server.routes(...)`,
+  `strapi.server.api('<api>').routes(...)` and
+  `strapi.server.router.<verb>(path, fn)` - are read as `server.routes`
+  mounts them, their handlers by full uid. The plugins an application
+  enables are read as `getEnabledPlugins` takes them: a key of
+  `config/plugins` (and `config/env/<NODE_ENV>/plugins`) resolving a
+  directory enables it only with `enabled: true`, and a dependency whose
+  package says `strapi.kind: 'plugin'` is a plugin by its `strapi.name`; an
+  installed one is read from its package - the source its `exports` ships
+  for `strapi-server`, else the file `require` loads - its routes ways in
+  whose code is the package's (`handlerVia: 'package'`), and
+  `createContentApiRoutesFactory` and lists spread into a list of routes
+  are read. An extension's `plugin.routes['<router>'].routes.push(...)`
+  adds the route to that router of a local or installed plugin and its
+  `plugin.controllers.<controller>.<action> = fn` answers the action; what it
+  does otherwise, or to a plugin not read, is a `route-mount-unread` row, a
+  plugin a key enables that is not installed a `route-registry-unread`
+  row, and a plugin's server no key enables an info `plugin-not-enabled`
+  row. A Gatsby plugin listed by a path (`require.resolve('./x')`,
+  `path.resolve(__dirname, 'x')`, `'./x'`) or resolved as a workspace
+  package serves its functions as a local one does; one installed under
+  `node_modules` serves them as ways in of the package's code, and plugins
+  installed nowhere here are one info row. `fastify start --config` naming
+  a package reads the file its `exports` or `main` gives, and an ES module
+  or TypeScript file's `export const port` (or `export { port }`, or
+  CommonJS `exports.port`) is its port; a port only under `export default`
+  is a `listen-port-unread` row, as `require` hands it under `default`. A
+  key written through a parameter (`apply(config)` writing `target.port`) is
+  cut at the call before the read that makes it, through calls each made in
+  their function's body, and an instance is told per caller through any
+  number of parameter levels, out to eight functions and 256 calls.
+- **Jinja, kustomize, sceptre and CDK items (P306).** Namespaces are shared
+  back out of macros, set and filter blocks and recursive loops, and
+  `loop.changed` compares as Jinja does; kustomize name references for
+  storage, priority and ingress classes and persistent volumes; sceptre
+  projects anywhere in the repository and through `../` paths; CDK
+  `SecretValue.unsafePlainText` is followed to what it wraps, and a role
+  imported by ARN carries a row for the policies its account attaches.
+- **Settings offered as candidates (P309, P313).** The settings of a
+  condition nobody settles (`baseUrlEither`) and of an `A || B` chain are
+  each asked in turn: the request joins the service that serves its route,
+  as a guess, several serving it an `ambiguous-route-target` row, and a key
+  built from a variable is looked up for every one of them.
+- **A setting several services claim, and a chain after a condition
+  (P319).** A request rooted at a setting two services claim, alone or first
+  in a chain, asks each claimant whether it serves the route: the one that
+  does is the join, a guess naming each claim in `chosenAmong`; several are
+  an `ambiguous-route-target` row; none, and the `unknown-base-url-env` row
+  naming them stays. `(isProd ? A : B) || C` reads `C` as a later tier
+  after both branches, as a plain chain does. A port the code writes as a
+  setting's fallback, `process.env.API_PORT ?? 3000`, where the service's
+  own environment file gives the setting (`API_PORT=4000` in
+  `.env.development`), is heard at the file's port, firm, and no longer at
+  the fallback; an example file's value is offered beside the fallback.
+- **A condition later in a chain, and a container's port from its env
+  files and its image (P325).** `A || (isProd ? B : C)` reads `B` and `C`
+  as one tier after `A`, each claimant asked alike: one serving the request
+  is the join, a guess; both serving it is an `ambiguous-route-target` row
+  ("a condition nobody settles choosing among the later ones") where `B`'s
+  service used to win for being written first. Readers write the grouping
+  as `baseUrlAlsoTiers` beside `baseUrlAlso` wherever a tier holds more than
+  one setting; branches that each run on to a chain read their later
+  settings side by side. A container's environment is its image's
+  Dockerfile (`ENV` of the stage built - compose's `build.target`, else the
+  last - and the stages it is built from, with `ARG` defaults and
+  `build.args` or `--build-arg` put in), under each `env_file:` in order, a
+  later file over an earlier, under `environment:`; a `docker run`'s is the
+  image a project command builds with `docker build -t`, under each
+  `--env-file`, under `-e`. A port a non-secret setting is given in an env
+  file the container is started with is read whatever the file is called,
+  `.env` included, though nothing else of such a file is. So a code fallback,
+  `process.env.PORT ?? 3000`, inside a container is where those files put
+  it, firm, `listensAt` naming the file (`inventory/.env (inventory)`); the
+  service's own files on the machine stay the machine's. A `${PORT}` a
+  compose file writes is filled from the `.env` beside it, as compose does,
+  for ports only.
+- **Plain scripts (P310, P311).** An object's methods, a prototype's
+  members, members inside a wrapper run at once, `window.x`,
+  `module.exports` and `exports.m`, and getters and setters are functions of
+  their own, their requests drawn and calls joined. A client a page loads by
+  a script tag - axios, jQuery (`$.ajax`, `$.get`, `$.getJSON`, `$.post`),
+  superagent, ky - is the installed client where a page loads it, a
+  `/* global */` comment or an ESLint configuration declares it. Astro's dev
+  and preview servers listen on 4321 by default.
+- **Plain scripts' handlers, required clients and query data (P317).** A
+  handler the page runs once it has loaded - `DOMContentLoaded`, `load`,
+  `window.onload`, jQuery's `$(fn)`, `$(document).ready(fn)` and
+  `$(window).on('load', fn)` - is a function of its own (`onDOMContentLoaded`,
+  `onload`, `onready`) whose requests are drawn from it, and its inner
+  functions and members are kept as a wrapper run at once keeps them, `$` in
+  `jQuery(function ($) {})` the jQuery the page loads. `const axios =
+  require('axios')` (and jQuery, superagent, ky) is that client's import.
+  superagent called as a function, `request('POST', url)` or `request(url)`,
+  is read, `.query(...)` along its chain is the query, and jQuery's `data`
+  on a `GET` or `HEAD` - `$.get(url, data)`, `$.getJSON(url, data)`,
+  `$.ajax({ type: 'GET', data })` - is the query rather than the body, a
+  callback in its place neither. A module's exports naming a function, `{
+  list }` or `{ list: list }`, join `list` in every reading and in the
+  server's, wherever the importer is read. ESLint's `root: true` and a flat
+  configuration stop the walk up the directories, the first cascading file
+  of a directory is its configuration, and an `overrides` entry's or a flat
+  configuration object's `globals` count only for the files its `files`
+  (less `excludedFiles` or `ignores`) name.
+- **Plain scripts' wrappers, load events, superagent's sent query, shared
+  linter configurations and undeclared client globals (P323).** A wrapper
+  run at once is a function of its own (its own name, the name it is kept
+  under, else `wrapper`), so a request or a call written at its top, outside
+  any function in it, is drawn from it as from a ready handler. `pageshow`
+  and `readystatechange` listened for, `window.onpageshow = fn`,
+  `document.onreadystatechange = fn` and jQuery 1's `$(window).load(fn)` and
+  `.bind('load', fn)` are handlers the page runs once it has loaded
+  (`onpageshow`, `onreadystatechange`, `onload`). What superagent's `.send`
+  hands a `GET` or a `HEAD` is its query, beside `.query`'s. ESLint's
+  `extends` is followed to the globals it declares - a file by its path, or
+  a shareable configuration installed under `node_modules` by its short
+  name (`shop` is `eslint-config-shop`) - and so is a module a flat
+  configuration takes in by a name it imports or requires (`...shared`,
+  `[base, { … }]`, `tseslint.config(base, …)`), each under the `files` it
+  is named in; a flat object writing `ignores` alone leaves the files it
+  names unlinted, declaring nothing, and one writing `ignores` beside
+  `globals` declares them for every file but those. A client's browser
+  global called with nothing declaring it (`ky.post(url)`, `axios.get(url)`
+  with no import, script tag, `/* global */` comment or linter global) is a new
+  `api-client-global-undeclared` row rather than silence.
+- **The top of a plain script, linter plugins' configurations and named
+  imports, and every client global asking for a declaration (P334).** A
+  plain script that writes a call at its very top, outside every function,
+  wrapper and handler, is a function of its own named after its file
+  (`boot.js:top`), so a request written there is drawn from it and a call
+  there joins the function it calls; a handler written there is drawn from
+  it as one written at a wrapper's top is. A client's browser global called
+  directly (`ky(url)`) needs the import, script tag, `/* global */` comment
+  or linter global its member calls (`ky.get(url)`) need, else it is an
+  `api-client-global-undeclared` row - as is a wrapper's parameter called as
+  a function when what the wrapper is handed is a client global nothing
+  declares (`(function (load) { load(url); })(unfetch)`). ESLint's
+  `plugin:x/y` in a cascading `extends` reads `configs.y` of the plugin
+  installed as `eslint-plugin-x` (`@acme/eslint-plugin` for `@acme`), and a
+  flat object's `extends: ['x/y']` reads the configuration of the plugin its
+  `plugins` hands under `x`, else of that package; a plugin, a parser or a
+  processor merely handed over is no configuration. A name a flat
+  configuration imports by name (`import { base } from './shared.js'`, `const
+  { base } = require(…)`, `require(…).base`) reads that export alone,
+  followed through a re-export and a local name.
+- **Plugins' configurations built from others, configurations named by
+  members, and script tops that only build (P341).** A plugin's `configs`
+  spread from another object (`configs: { ...base.configs, … }`), built by
+  `Object.assign` (into `plugin.configs` or from several objects) or
+  written after the plugin is (`plugin.configs.browser = { … }`, the last
+  write winning) are read with the globals they declare. A flat
+  configuration's entry or `extends` naming a configuration by members
+  taken off a module (`lib.configs.browser`, `require('x').configs['browser']`,
+  `const { configs } = require('x')`, `await import('x')`, a namespace
+  import) reads those members alone, wherever the root is imported or
+  required. What a linter configuration names and could not follow - not
+  installed inside the repository, a name nothing imports, a plugin keeping
+  no such configuration, members written in a way not read - is said in the
+  `api-client-global-undeclared` row of a script under it
+  (`meta.unfollowedConfigs`). The top of a plain script that only `new`s a
+  constructor or builds an object holding a handler nothing keeps as a
+  function of its own (`new Router({ '/items': function () { … } })`) is a
+  function of its own too, and the handler's requests are drawn from it.
+- **Receivers handed on, bases per caller and values after a host (P312).**
+  A request object handed through functions is followed one call at a time
+  to where each sends it; instances with different bases handed to one
+  receiver are one request per caller with its own base; and in
+  `https://host${x}/rest` the value is a port or a host's rest where it is
+  followed to one, otherwise the opening of a path followed to the callers.
+- **Ports handed by each caller, bases along an address followed out, and
+  callers held by a `const` (P318).** `` fetch(`http://localhost:${port}/x`) ``
+  called as `health(3000)` and `health(4000)`, or with `':3000'` straight
+  after the host, is one request per caller at `localhost:3000` and
+  `localhost:4000`, each joined to the service listening there, in both the
+  browser and the server reader; a caller that hands no port it reads leaves
+  the request where it is written. A host a method answers and a port a
+  class keeps as a constant (`this.origin()`, `Ports.stock`) are read where a
+  value after the host is told apart, as the address itself reads them. A
+  receiver handed instances with different bases whose address is read at
+  a caller takes the base of what that caller hands. On the server a caller
+  written as an arrow or a function expression held by a `const`,
+  `export const productsV1 = () => readProducts('/v1')`, is a caller a
+  request is followed out to.
+- **Ports a class keeps as numbers, bases held in fields and objects, and a
+  port written with no colon (P324).** A number in a host's port place is
+  read where a module or a class keeps it - `const PORT = 4700`,
+  `static port = 4700`, a getter or a method answering one, a field the
+  constructor writes - handed by a caller or written in place, in both the
+  browser and the server reader; a number in the path's place stays a
+  value of the path's. Instances with different bases held in a field the
+  constructor fills (`this.api = api`) or in a member of an object handed in
+  (`readOn({ client: stockApi }, '/levels')`) are read along the calls the
+  address came out through, from each `new` and each object to the instance
+  it was given, and a request in a method of the receiver's class is
+  followed to each caller of the method under the base of the instance it
+  calls it on; each request at its caller under its own base, where an
+  `api-client-base-unread` row stood before. A number written straight
+  after a host with no colon, `` `http://localhost${port}/health` `` handed
+  4600, is read as the code spells it, `localhost4600`, with a new finding
+  `address-port-without-colon` saying it is no port (info after a name
+  that may end in digits).
+- **Typed client fields, instances handed further out, and no path join for
+  a host with a glued port (P330).** A field or a parameter whose type names
+  the client, `constructor(private api: AxiosInstance)`, is read for the
+  instances it is handed before its type: one base where they agree, each
+  caller under its own where they differ, the type alone (no base) where a
+  value is not an instance that is read. A request in a method is placed at
+  the callers of that method rather than at whoever makes an instance, and
+  a caller that calls it on an instance it was itself handed - a parameter,
+  `check(reader: Reader) { return reader.health(); }`, or a field of its own
+  `this` - is followed out, a few callers at most, to the `new` that gives
+  it, each request there under that instance's base. A browser's request to
+  `localhost4600` or an address of numbers with digits glued to it is no
+  longer joined by its path alone: the server's reader joins it to nothing,
+  and the browser's now counts it under `address-port-without-colon`, the
+  reader's finding the one row.
+- **Route registries reached across modules and read through views, and
+  link props followed through what each use hands (P314).** A store a
+  module exports and others add to is found by every reference; a reader
+  that filters, sorts or maps the store over the entry's path is read as
+  that view, any other view its entries unread; a link prop of another name
+  is followed through the values each use hands, and a link rendered over a
+  list lands once per entry.
+- **Registries kept by a class's field or added to by another module's
+  class, views the caller makes, and a row for a route list's entries not
+  read (P320).** A class's static field is followed wherever a module names
+  it (`Registry.items.push(...)` outside the class, in a function or
+  outside any), an instance's off the `const` holding it, and a static
+  field read by name is a store as a module's variable is; a registry's
+  adding function may be a method of another module's class, called on the
+  class or on an instance. A view the caller makes before the route list
+  (`listPages().filter(...).map((page) => ({ ...page, path }))`) is read as
+  a reader's own view is. A link of the application's own handing its `to`
+  or `href` prop after a segment written out whole (`` `/app${to}` ``),
+  every use's value unread, is an address under that segment: each use
+  says so in a `navigation-unresolved` row with the text in front as its
+  `prefix`, and the wrapper draws no navigation of its own. A new info
+  `route-entries-unread` row says, at the route, how many entries of the
+  list it is written over are not read and why.
+- **Views made by flatMap, Array.from or reduce, an instance reached
+  however it is handed, and a wrapper's prop of any name (P326).** A view
+  of a list's or a registry's entries made with `flatMap` (an object, a list
+  of objects, either side of a condition), `Array.from(list, fn)` or a
+  `reduce` from an empty list gathering objects (`[...all, { ... }]`,
+  `all.concat({ ... })`, `all.push({ ... })`) is read as a `map` to an
+  object over each item is, a report flat-mapped to two objects placing two
+  routes and an item handed on as it is (`page.hidden ? [] : [page]`) kept
+  as it is; one made otherwise is counted in `route-entries-unread` with
+  why.
+  An instance's registry field is followed through an import, a parameter
+  it is handed (`installPanel(panels, panel)`) and a field of another class
+  given it when made (`new PanelBook(panels)`, then
+  `this.registry.items.push(...)`), each call adding only where what it is
+  handed, or the instance it is made on, holds that instance. A link of the
+  application's own putting a prop of any name after a segment written out
+  whole (`` `/area${path}` ``), directly or through a `const` of its own
+  body, every use's value unread, is an address under that segment as a
+  `to` or `href` prop is.
+- **Steps one over another, objects a reduce gathers, registries handed
+  through props and factories, and a query glued to a wrapper's segment
+  (P333).** A step over a view mapped already (`list.map(f).flatMap(g)`,
+  `map(f).map(g)`) is read step after step, in a caller's view and a
+  registry reader's; a `reduce` from an empty object writing objects under
+  keys (`{ ...all, [key]: { ... } }`, `all[key] = { ... }`,
+  `Object.assign(all, ...)`) and an object written in place are read
+  through `Object.values`, and through `Object.entries` where a step takes
+  each pair apart (`([, entry]) => ...`); pairs read otherwise are counted
+  in `route-entries-unread` with why. A registry's receiver is followed
+  through a destructured parameter or a component's props (`function
+  Routes({ registry })`, `props.registry`, `<Routes registry={panels} />`,
+  `install({ registry: panels }, ...)`) and through a factory function's
+  call (`const panels = makeRegistry()`), whether it hands back a `new` or
+  an object written in place keeping its store in a field or a variable of
+  its own, each instance read on its own. A value a link of the
+  application's own glues to a segment it writes out whole, with no `/`
+  between (`` `/search${query}` ``), lands on that segment's page firmly
+  where a use hands a query or a hash (`?q=shoes`); where no use's value is
+  read it lands there as a guess (`query: 'guess'`, heuristic) beside the
+  row naming the address under it; after a `/` (`` `/portal/${href}` ``)
+  it is the row alone.
+- **Methods called on untyped receivers, requests in methods a framework
+  calls, fields written from outside the class or through super, and
+  resource names from unset context (P336).** In plain JavaScript a method
+  called on a receiver the checker types as nothing (`function
+  check(reader) { return reader.health(); }`) is now a call of the method
+  wherever what the receiver may hold - followed through names, what each
+  caller hands a parameter and what a class writes into a field of `this`,
+  a bounded walk - is an instance of its class or the object it is written
+  in; it runs the method where every value is one, so the address and the
+  instance are followed out through it as the TypeScript shape is. A
+  request on instances with different bases in a method no code read calls
+  but a framework does - a method a package's decorator marks, a lifecycle
+  method of a React, Preact, Lit, Angular or NestJS class, a custom
+  element's `connectedCallback` - is placed at the instance handed to what
+  registers it (`document.body.appendChild(feed)`, `app.register(new
+  Poller(api))`, a provider's `useValue`), not at every function that makes
+  one; where none is read, each maker keeps it, with an
+  `api-client-base-unread` row saying the framework calls the method.
+  `mailer.queue = ...` and `Object.assign(mailer, { queue })` on an
+  instance outside its class now count as values the field may hold, and a
+  constructor's `Object.assign(this, options)` in a class others extend is
+  followed down each `super(options)` to what that class's own `new` hands
+  it. A `tryGetContext` value no file sets written in a record handed to a
+  library construct (`new sqs.Queue(this, 'Q', { queueName: ctx })`) is a
+  name chosen when the app is synthesized, unread with the reason
+  `context`, rather than a generated name; a stage name and a stack's
+  region keep P298's reading.
+- **Instances a framework makes, receivers read through parts, and
+  untyped parameters written over (P342).** An element written with a
+  component as its tag (`<Feed client={api} />`) is that component's
+  instance, its attributes the props: a request a function component makes
+  through a destructured `client` or `props.client`, or a class component
+  through `this.props.client` in `componentDidMount`, is placed at the
+  function rendering each element under the base of the client it hands.
+  A class a NestJS module lists as a provider (`providers: [Poller]`, `{
+  provide: Reader, useClass: StockReader }`) is the instance the injector
+  makes, each constructor parameter handed what the module provides for its
+  `@Inject(token)` or its type (`useValue`, what `useFactory` returns, a
+  class listed or `useClass`), a parameter handed on to `super(...)`
+  followed up to the field it fills. An untyped receiver is followed
+  through a member of an object (`options.reader.health()`,
+  `this.deps.client.get()`), a value a function returns (`make().health()`,
+  `const r = readerOf(api); r.health()`) and an element of a list
+  (`readers[0]`, `for (const r of readers)`, `readers.forEach((r) => ...)`,
+  one `push`ed), as a call of the method and as the instance a request is
+  placed at, bounded in parts as in values. `function setup(m) {
+  Object.assign(m, { queue }) }` and `m.queue = ...` on a parameter typed as
+  nothing count for the field where a caller hands it an instance of the
+  class.
+- **Wrapped components, props handed through a spread, providers built and
+  aliased, bases written outside a client, and what a script's top makes
+  (P349).** A component a module keeps unexported under a capitalised name,
+  wrapped in calls (`memo(...)`, `React.memo(...)`, `forwardRef(...)`,
+  `memo(forwardRef(...))`), is a component, its props what each element
+  hands. A prop handed through a spread is followed where what is spread is
+  read - a rest of the props (`{ title, ...rest }`), the props whole (an
+  attribute written after the spread winning), an object written in place;
+  one not read is an `api-client-base-unread` row at the request
+  (`meta.spread`). Core's search for a method's calls reads the instance the
+  NestJS injector hands a parameter typed as nothing (`useValue: new X()`,
+  `useClass`, a class listed, `useExisting` followed, `@Dependencies(...)`
+  in plain JavaScript), in provider lists spread in, held by a `const` or
+  returned by a function, and the Nest reader draws a call on a
+  `useValue: new X()` token to `X` and reads a provider list a function
+  answers with. A local client's `this.base` is read with the writes on its
+  instances outside the class (`client.base = …`, `Object.assign(client, …)`,
+  over a value typed as nothing), a field the class only sets to nothing
+  taking theirs; several bases are an `api-client-base-unread` row. A `new`
+  in a plain script draws a call to the constructor function or the class's
+  constructor (`Pulse.constructor`) it runs. A linter plugin's `configs`
+  built by a function it declares, and a configuration written through
+  `module.exports.configs.x` or `exports.configs.x`, are read.
+- **A local client's base per instance, a rest of props less its siblings,
+  components after a wrapper's options, providers built through an object
+  (P353).** A client class of the repository's own whose instances are given
+  different bases outside it is read per instance, as an installed client's
+  are: each request on an instance is under the base the writes made on it
+  give it (`client.base = …`, `configure(client)`, `Object.assign(client, …)`),
+  a receiver handed several instances is each caller's that hands one, and a
+  receiver whose instance is not read, or an instance whose base is not, is
+  an `api-client-base-unread` row. A rest of a component's props
+  (`({ client, ...rest })`) is the props less the members named beside it,
+  so `rest.client`, a `client` taken out of it and what `<Feed {...rest} />`
+  hands `client` are nothing. A component written in place after a
+  wrapper's options (`withOptions({ name }, (props) => …)`) is a component;
+  a function written after it, as `memo`'s comparator, is not. A provider
+  list a function reached through an object builds - `Providers.all()`, a
+  static method, an object's method or a function it holds - is read by
+  core's search for a method's calls and by the Nest reader.
+- **A pair's key, an entry handed beside its store, a receiver of several
+  instances, and an instance made where it is read (P338).** The key of a
+  `[key, entry]` pair is bound to the key its entry is kept under - a
+  property's name, a literal, or the expression a computed key or a
+  `reduce` writes it under - in a step (`` ([slug, page]) => ({ ...page,
+  path: `/pages/${slug}` }) ``) and in a route or a link written straight
+  over the pairs (`Object.entries(SCREENS).map(([path, Screen]) => <Route
+  path={path} element={<Screen />} />)`), an entry written as a component
+  rather than an object read as the screen, `([path, { Screen }])` as a key
+  of the entry. An adding function handed its entry in the object it is
+  handed the store in (`install({ registry, widget })`) adds that entry. A
+  receiver that may hold several instances of one class or one factory's
+  object - a prop handed `widgets` at one use and `gadgets` at another - is
+  read as each in turn, the entries of each counted. An instance made where
+  it is read (`makeShelf().routes()`) holds only what its class or factory
+  writes - a field's array written in place, a constructor's writes - and
+  where that is nothing the `route-entries-unread` row says so in
+  `meta.notes`; a singleton a function makes on first use (`dock ??= new
+  DockRegistry()`, a static field written the same way) is the one
+  instance every call hands back. A folded row's own `meta` keeps only what
+  every row folded into it says: two navigations under different prefixes
+  no longer show the first one's prefix for both, each place listed in
+  `meta.causes` carrying its own (`samples[i].meta`).
+- **A registry's keyed store, entries taken apart by a pattern, a list's
+  places, every value a fold drops, and receivers of many instances
+  (P344).** An entry an adding function writes straight under a key
+  (`this.pages[name] = entry`, `this.panels.set(path, Screen)`, a key the
+  function writes itself or a key of the entry) is kept under the key each
+  call hands, and a store written as an object in place starts with its
+  entries under their keys; read back through `Object.entries`, a `Map`'s
+  `entries()`, or `Object.keys` and a `keys()` with the entry looked up by
+  its key (`this.tools[name]`), each step's key name spells its path, and a
+  reader looking a list up by a parameter (`this.areas[area]`) finds the
+  one written under it. A step taking a pair's entry or a list's item apart
+  with an object pattern - nested, with defaults - reads each name as the
+  entry's own value. `Object.entries` and `Object.keys` over a list written
+  in place bind each item's place (`0`, `1`). A folded row lists, per cause,
+  each value the places past its three samples write that none of them
+  does, with how many write it and the first (`differing`). A receiver that
+  may hold more than twelve instances reads the first twelve and counts the
+  others in its `route-entries-unread` row.
+- **Routes over keys, deeper patterns, places of lists put together,
+  objects written per call, webpack-built Strapi plugins (P351).** A route
+  or a link written straight over `Object.keys(...)` (`path={path}`,
+  `` path={`/tools/${name}`} ``, `element={PAGES[path]}`) is one per key;
+  a route-level pattern nested deeper than one key of a pair's entry or a
+  list's item (`([slug, { meta: { Screen } }])`) is read, and a template or
+  a sum reading a mapped item's key or member is read per entry.
+  `Object.entries` over a list a spread, a `concat`, a `map` or a function
+  of the repository puts together from lists whose order is known keeps
+  each item under its place; past a list read otherwise the places are
+  said not known in the `route-entries-unread` row. An object an adding
+  function writes into its store from its parameters (`this.pages[name] =
+  { Screen }`) is one entry per call, read with that call's arguments under
+  the key it hands. An installed Strapi plugin shipped as a webpack bundle
+  is read through its table of modules (`__webpack_modules__`, webpack 4's
+  bootstrap array, `__webpack_require__.d` and `.n`); a dependency not
+  installed that a key of `config/plugins` names otherwise - resolving its
+  package, a `file:` directory, a name spelled alike - is one row under the
+  key, and a key naming no package says which dependencies not installed it
+  may be. An extension writing `plugin.controllers` itself (a fresh object,
+  one spreading the plugin's, `Object.assign`) answers with the controllers
+  it writes, the plugin's where it keeps them, and a `route-handler-unread`
+  row for each route whose controller it drops.
+- **Strapi plugins shipped as bundles, plugins a fresh clone has not
+  installed, and controllers an extension writes whole (P345).** An
+  installed Strapi plugin shipped only as a bundled build is read through
+  the bundler's wrappers - rollup's `requireX()` functions and chunk exports,
+  esbuild's and rolldown's `__commonJS` factories, `__esm` initializers and
+  `__export`, interop helpers and a `default` taken as Strapi takes it - and
+  what is still not read is a `route-registry-unread` row naming where the
+  follow stopped. A dependency not installed that the repository says is a
+  Strapi plugin, by its name (`strapi-plugin-*`, `@strapi/plugin-*`,
+  `@<scope>/strapi-plugin-*`) or its lockfile entry, is a
+  `route-registry-unread` row at `package.json` unless a key of
+  `config/plugins` turns it off. A controller an extension writes whole
+  answers the actions its object or factory writes, the plugin's own beside
+  them where it spreads them, and each route on an action it drops is a
+  `route-handler-unread` row. A write cut at a call several functions out
+  binds each function on the way, so an outer parameter its value names is
+  that call's argument.
+- **Minified bundles, the order modules add in, and adding functions handing
+  on their parameters (P355).** A bundler's helpers are told by what their
+  bodies do, not their names, so a minified build renaming them is read as
+  one that keeps them: a CommonJS wrapper (esbuild's, rolldown's) makes `{
+  exports: {} }` and calls the factory it is handed, webpack's loader
+  indexes its table of factories by its one parameter - and is the third
+  parameter each factory is handed - an export helper defines each key of
+  its second argument as a getter on its first, an interop helper speaks of
+  `__esModule`; statements a minifier joins by commas are read one by one,
+  and a bundle whose helpers are of no shape known stays the
+  `route-registry-unread` row it was. A list added to across modules and
+  read as `[place, item]` pairs - a registry's (`[...this.items.entries()]`)
+  or a module's own list `push`ed onto from other modules
+  (`Object.entries(panels)`) - keeps each item under its place: those it is
+  written with first, then those added outside any function in the order
+  the modules are evaluated from the one entry point reaching them all (each
+  module's static imports first, in the order written). Where a module adding
+  to it is loaded only by `import()`, the modules are reached from several
+  entry points, or an item is added inside a function or by `unshift`, the
+  `route-entries-unread` row says so; what other modules push onto a
+  module's list is now read at all. An object an adding function writes per
+  call is read at the calls of an adding function handing it its own
+  parameters (`addHome(Screen) { this.add('home', Screen) }`), through as
+  many such functions as are written.
+- **Settings chosen by a branch, and read inside a function handed nothing
+  (P302).** A condition nobody settles whose branches read different
+  settings, `isProd ? process.env.API_URL : process.env.DEV_API_URL`, written
+  in place, held in a constant or returned by a helper, is rooted at the
+  first branch's setting with the others where it may go instead
+  (`baseUrlAlso`), the address a guess; a helper's returns that nothing
+  chooses between are read together as the branches of a condition in place
+  are, on one setting the path they agree on with the rest a hole. A
+  function of the repository called with nothing, `apiBase()` returning
+  `process.env.API_URL ?? 'http://localhost:4000'`, is the setting it
+  returns, a parameter it is not handed at its default.
+- **Registries, link props and Vite ports P296 and P297 left open (P303).**
+  A route table read off a registry whose store no class keeps is followed
+  as the class one is: a function of the repository, or a method an object
+  holds, reading a module's `Map`, array or object, a field of the object
+  holding it, or a store handed in, every entry handed to the functions
+  beside it that add to that store (a handed store only where both calls
+  name it), kept by the key it is filed by or a `filter` / `find` test reads
+  (`store.filter((entry) => entry.group === group)`), with the entries
+  written into the store itself. A link of the application's own whose
+  address prop is named apart from the link's attribute (`NavLink({ to })`
+  rendering `` <Link href={`/${locale}${to}`}> ``) is read through to the
+  link it renders where the prop starts no segment of its own and its uses
+  write addresses. Remix's `remix vite:dev`, React Router's `react-router
+  dev` and SvelteKit's `vite dev` listen on Vite's 5173 where neither the
+  configuration nor the script writes a port, as a default that places a
+  request only where the application serves it.
+- **Requests on receivers the compiler knows nothing of, and a public
+  address whose path serves nothing (P301).** A request opened on a receiver
+  with no type - a parameter, a field declared `null` and filled in later, a
+  field the constructor is handed, a parameter property whose type is not
+  installed - is read by what the receiver is given: each caller's argument
+  (each `new` for a constructor's), a field's initializer and every
+  `this.<field> = ...` its class writes, a variable's assignments. Where every
+  value known for anything is an `XMLHttpRequest`, one instance of an
+  installed client, or one client class of the repository's own, and one is,
+  the call is that request; a value known for something else (an object with
+  an `open` of its own) makes it none. An `XMLHttpRequest` handed in is sent
+  where each caller sends it after handing it, and a field of an object
+  written in place where its other methods send it. A server's request under
+  a public address whose path no service serves the request under falls back
+  to its own path, as a browser's does: the one service serving it joined as
+  a guess (`externalValuePath`), several an `ambiguous-route-target` row, as
+  are several serving it under the path.
+- **The queue and AWS items P298 left open (P304).** A worker's processor
+  written at its construction (`new Worker('receipts', async (job) => ...)`)
+  that does more than hand the job on is a handler of its own with the calls
+  its body makes, named by the class constructed. What a `catch` is handed is
+  each value its try block throws in the repository, a method of another
+  instance included; where a call on a package's value may throw out of it, a
+  job or queue read off the error has a row naming that call rather than
+  nothing, and the values the repository throws are read beside it. A CDK
+  context value stays one the deployment chooses when handed to a function or
+  class of the app as an argument, defaulted by a parameter, kept in a field
+  or destructured out of a record. A stage `terraform.workspace` names is open
+  with its name in the `default` workspace and in each workspace a map it is
+  looked up in is keyed by (`lookup(var.m, terraform.workspace)`,
+  `local.env[terraform.workspace].stage`), through locals and module inputs.
+
+- **The rest of the deployment templating and grants P289 and P295 left open
+  (P299).** A command keeping releases with a selector and `--include-needs`
+  keeps what they need from any sub-helmfile of the state (transitively with
+  `--include-transitive-needs`). A kept release whose chart a chart
+  repository or a registry holds (`<repository>/<chart>`, `oci://`), or whose
+  chart path holds no chart, is a `manifest-unread` row saying so, about the
+  releases needing it too; `.Release` in an action of a helmfile's own text is
+  a row saying helmfile refuses it unescaped. kustomize's
+  `ValueAddTransformer` (`fieldPath`, `filePathPosition`, `targetFilePath`),
+  `PrefixTransformer`, `SuffixTransformer` and `IAMPolicyGenerator` are read;
+  a folder under `transformers:` or `generators:` is built as a kustomization,
+  its own patches, prefixes and labels over its configurations; kustomize's
+  default name references (config maps, secrets, services, service accounts,
+  claims, roles, autoscaler targets) are renamed with what they name, a
+  reference that writes its `kind` naming only that kind; and a selector
+  reads `namespace`, `labelSelector` and `annotationSelector`. sceptre's Jinja
+  runs `namespace()` and `{% set ns.x %}`, the tests (`is`, `select`,
+  `reject`, `selectattr`, `rejectattr`), `groupby`, a macro reading a name its
+  file binds after it, `loop.changed`, `for ... if` and recursive loops; a
+  command beside another sceptre project launching this one is read, and a
+  stack's hooks are a row. An AWS write through a repository is read where
+  `Object.assign` puts a parameter after the literal that no caller hands the
+  key, where the v2 client is a field the constructor assigns with `aws-sdk`
+  not installed, and where the table is a static field set from the
+  environment; the data reader's `db-layer-unread` row is withdrawn for a
+  class a producer was read through; and a producer whose variable every
+  function of its service is given the same value is joined (heuristic). A
+  CDK role's managed policies (AWS ones by their access, a policy the app
+  writes by its statements, one looked up named), a user's groups and a
+  `CompositePrincipal`'s members carry their grants.
+- **Ports, settings and requests left open (P296).** A full-stack
+  framework's own server - Next, Nuxt and Nitro, Remix's `remix-serve` and
+  React Router's `react-router-serve` - listens on its documented 3000, as
+  `PORT`'s fallback, where no configuration, script or workspace target says
+  (`default: true`), and on the port a script's own environment gives it
+  (`PORT=3020 next start`, `-p ${PORT:-3020}`); a script handing the port in
+  unread (`-p $PORT`) assumes nothing. A default is the weakest word for a
+  port: it yields to any service the code or the files place there, and two
+  defaults on one port are no answer. A chain of `||` or `??` is read as one
+  step however long it is; the settings it reads after the first
+  (`baseUrlAlso`) are where it goes next, their values and claimants its own,
+  and its fallback is said in the module it is written in
+  (`baseUrlDefaultFrom`). A helper is read per branch its arguments settle
+  (`!x` included), a function an object holds as a plain one, and a request
+  between services keeps the path a constant writes after its setting. A
+  server's request under a public host with no path joins the one service
+  serving its path as a guess (`externalValuePath`), as a browser's does,
+  several an `ambiguous-route-target` row; a GraphQL operation under public
+  hosts none of whose paths an endpoint serves joins the one endpoint serving
+  it (`graphql-path`), several a row. An `XMLHttpRequest` opened in one
+  function is sent where its receiver goes: another method sending the field,
+  a field it is kept in, the function it is handed to, the caller it is
+  returned to, the module holding it.
+- **Front-end, SDK and gRPC items P291 and P293 left open (P297).** A link
+  component of the application's own is read through to the link it renders:
+  its address prop handed on as it is, inside text (`` to={`/help${to}`} ``),
+  or to a function with the locale (`href={withLang(locale, href)}`, which
+  lands under the top `[locale]` segment even where no middleware declares
+  it), a component rendering such a link (`<Button href>`) or styled from one
+  (`styled(LangLink)`) included; the link inside it says nothing of its
+  own. A route table's list follows a registry of the repository's own (a
+  class whose method reads a field its other methods add to, the entries
+  handed to those methods anywhere in the repository, filtered by the key the
+  store is looked up by), and an entry written over another list's elements
+  is one per element, read off it through spreads and a JSON module. A first
+  segment is a locale only if the application declares it (its Next `i18n`,
+  next-intl's `defineRouting`, the `[locale]` segment's
+  `generateStaticParams`), by its shape only where none is declared. An
+  Angular route's `canDeactivate`, its own then its parents', is drawn from
+  its screen with `meta.leaving` and an order of its own. A request written in
+  a method of a class that is not a client of the repository's own is drawn
+  from `Class.method`. typescript-apollo-angular's `sdkClass` (named by
+  `serviceName`) and per-operation services are read from a module nobody
+  committed, and a committed service extending `Apollo.Query` is read. Remeda
+  composes (`piped`, `createPipe`), and `export default flow(...)` is called
+  where it is imported. A gRPC handler's reads of `call.request` (or a NestJS
+  method's message) that its message does not declare under the loader's
+  names are `grpc-field-undeclared` findings (info), and an answer read under
+  a loader keeping the case is compared under the server's names.
+- **Queue and AWS items P286, P290 and P294 left open (P298).** A job record a
+  queue layer plans, splits and hands back is read along that way: a name a
+  `const` destructures out of what a function answers is that key of each
+  record it may answer, a field of an instance written out is what its
+  constructor keeps, `map.get(key)` of a `Map` a `const` holds each value it
+  is given, an element at a place a spread or a `push` may move one of the
+  list's elements, a value that is one of several - some waiting on a caller -
+  each followed out on its own, and what a `catch` is handed each value its
+  try block throws in the repository's own functions; two of a layer's calls
+  drawn at one caller are one producer naming every job either names. A
+  scheduler's template with no `name` names its job by the scheduler's id
+  (the `argument-property` locator's new `otherwise`). A worker's processor a
+  caller writes in place that does more than hand the job on is a handler of
+  its own, with the calls its body makes. An API Terraform maps onto a custom
+  domain records `servedAt` at the domain and at its own address with the
+  base path it does not write (`under`); a stage reached through a `local` or
+  a child module's input is open where a root variable or the workspace
+  decides it; a module's provider is the one its call's `providers` map
+  hands it. A Serverless region from the file is the default of any region
+  `--region` names (`chosenHost`), as a CDK stage or region from
+  `tryGetContext` is of any `-c` names, and a SAM parameter a parent template
+  hands down from its own parameter is open; the served-at join asks the API
+  deployed to by default at the host a request writes before the rest
+  (`fixtures/job-batches-planned-by-a-layer`,
+  `fixtures/gateway-served-at-deploy-choices`).
+
+- **Kustomize transformer and generator files, labels, and what P289 left of
+  helmfile and charts (P295).** A kustomization's `transformers:` and
+  `generators:` are read from the files (or the folder, or the inline text)
+  they name: kustomize's built-in `PrefixSuffixTransformer`,
+  `LabelTransformer`, `AnnotationsTransformer`, `NamespaceTransformer`,
+  `ImageTagTransformer`, `PatchTransformer`, `PatchJson6902Transformer`,
+  `PatchStrategicMergeTransformer` and `ReplacementTransformer` each over the
+  fields its `fieldSpecs` name, and `ConfigMapGenerator`, `SecretGenerator`
+  and `HelmChartInflationGenerator` as the fields they stand for; an exec or
+  Go plugin or a KRM function is a `manifest-unread` row saying kustomize runs
+  it. `commonLabels`, `labels:` (`includeSelectors`, `includeTemplates`,
+  `fields`) and `commonAnnotations` are written where kustomize writes them,
+  a service's selector and a pod template's labels among them, and a
+  configuration's `commonLabels`, `commonAnnotations`, `namespace`,
+  `namePrefix`, `nameSuffix` and `images` field specs add to those. A field
+  naming a resource is renamed from any name the resource had, a base's
+  included, so an overlay's route naming a base's gateway reaches it under its
+  prefix. A sub-helmfile writing no selectors keeps every release of its own
+  where a command runs helmfile with explicit selector inheritance
+  (`HELMFILE_EXPERIMENTAL`), only `selectorsInherited` taking the command's,
+  and one writing both is a row; a release's need is answered by any helmfile
+  of the state, so a need on a sibling sub-helmfile's release is installed
+  after it rather than `release-need-undefined`. A chart's dependency settles
+  what its own dependencies import before it hands values up. Rows say why
+  what stays unread is: a release's or a helmfile's hooks (programs, run and
+  not read), a remote sub-helmfile (fetched when helmfile runs), and a chart
+  dependency only a chart repository has (no repository is read).
+- **Route tables over a list, pages under a condition, a locale prefix, and
+  an Angular route's guards (P291).** A `<Route path={config.path}
+  component={config.component} />` written over a list's items places one page
+  per entry of the list a hook, a `const` or a function of the repository
+  hands back. Pages each placed under its own side of a condition nothing
+  written decides (`env.X ? <Switch>a</Switch> : <Switch>b</Switch>`) are
+  branches: a navigation to their address lands on each, `heuristic` with
+  `meta.branch`, where it was `ambiguous`. In a Next application whose pages
+  sit under a top `[locale]` segment and which declares a middleware or
+  routing configuration that adds it, an address written without the prefix
+  lands on the page under it, `heuristic` with `meta.localePrefix` and a
+  `navigation-locale-prefixed` note, and next-intl's own `Link`, `useRouter`
+  and `redirect` are navigations. Two navigations from one function to one
+  page keep every address (`meta.alsoNavigates`), the one written outright
+  before a guess. An Angular route's `canMatch`, `canActivate`,
+  `canActivateChild` and `resolve`, its own and its parents', are `calls`
+  edges from its screen (`meta.guard`, `meta.order`), whether or not they
+  navigate, with a functional guard's calls on `inject(Service)`.
+- **Settings and full-stack requests left open (P292).** An address rooted
+  at a constant that is a chain of `||` over settings
+  (`withScheme(process.env.APP_URL) || PREVIEW_URL || 'http://localhost:3000'`)
+  is rooted at the first setting, read through a function of the repository
+  that only reshapes what it is handed (every return the parameter, the
+  parameter after a scheme or with a path after it, or no value), with the
+  text the chain ends in as its fallback; a browser's request carries that
+  fallback too. A value at a port of this machine is placed at the service
+  whose code listens there, where no compose file or env file says so. A
+  browser's request is placed by its setting's name as one between services
+  is, and the two halves of one call read by both halves of a full-stack
+  application go to one target: the browser's half follows the server's join
+  (`via: same-call`), save a join the configuration wrote for the browser,
+  which the server's half then follows. A GraphQL operation whose setting's
+  only values are public hosts is asked of the endpoints at the path they
+  agree on, under the rule a value for this machine has (one endpoint, a root
+  field it declares); a request between services is tried under an external
+  value's path only where the values agree on it. The coverage harness counts
+  a call read by both halves once, in a row of its own, and a hand label on
+  it is right where either half joined the right way in.
+- **gRPC messages as payload types, a package's health and reflection
+  services, and what a server and its contract disagree on (P287).** A
+  `.proto` file's messages and enums are read (nested ones, `repeated`,
+  `map`, `optional`, `oneof`, proto2 and editions) and registered as types:
+  fields named as JavaScript reads them (`user_id` as `userId`), the 32-bit
+  numbers as `number`, the 64-bit ones as `number | string`, an enum as its
+  names or a number, a `oneof` as one shape per member chosen, the well-known
+  types other than `Empty` claiming nothing. Every gRPC way in - a server's,
+  a NestJS controller's, a service declared by its contract (following the
+  files it imports) - carries its request and response as a procedure's
+  input and output, and a call carries the request it writes, its keys, and
+  the answer its callback or its promise reads, so `flowatlas contracts`
+  compares a caller's request object with the message: a field the message
+  does not declare, a value of the wrong kind. A field of a message may always
+  be left out by its sender (a new wire rule, `proto-presence`), so no gRPC
+  field is ever an optionality finding. A health service a package hands the
+  server (`addService(health.service, ...)`, `new
+  HealthImplementation(...).addToServer(server)`) is drawn as
+  `grpc.health.v1.Health/Check` and `/Watch`, and a reflection service as
+  `ServerReflectionInfo` of both versions; a package's service of any other
+  contract is a `grpc-package-service` row. A method the contract declares
+  that the server registering the service does not implement is a
+  `grpc-method-unimplemented` finding, and a member an implementation object
+  or a NestJS decorator names that the contract does not declare a
+  `grpc-method-undeclared` finding, both informational. The coverage harness
+  lets a target declare services by a document (`documents`), passed into the
+  configuration it generates.
+- **Routes and navigations written through helpers, lazy screens and
+  templates (P288).** A route's path and a navigation's address are read
+  through a function of the repository that hands back text, its arguments
+  bound (a rest parameter's `join` and `length` included), a `const` in a
+  template, and an optional parameter both ways; a condition nothing decides
+  is one address per branch, the edge `heuristic` with `meta.branch`, a
+  route so placed named in `meta.routeGuessed`. A route's screen is read
+  through any lazy loader handed `() => import(...)`, a module handing on
+  another's default export, and a member of the object a loader hands back
+  (`Screens.Home.Component`). `createBrowserHistory()` navigates. In a service
+  of several applications a navigation's candidates are its own
+  application's pages, and a page file that hands out another file's
+  component places it at its address. A navigation in a template's handler
+  (Vue, Nuxt, Svelte), a SvelteKit application's plain `<a href>`, Angular's
+  `(click)="router.navigate(...)"` (a `triggers` edge) and a functional
+  guard's `createUrlTree` / `parseUrl` (a `function` node, `meta.redirects`)
+  are read. A call in a member of an object a factory hands back, where the
+  factory does more, is held by the member alone.
+- **Deployment templating P273 and P272 left open (P289).** A helmfile's
+  sub-helmfiles (`helmfiles:`, a path or a `*` pattern, with the `values` and
+  `selectors` an entry gives, the command's selectors where it gives none) are
+  read in its environment; a release takes the release templates it inherits
+  (`templates:` and `inherit:`, `except` honoured) and the mapping a YAML merge
+  key names (`<<: *default`, now merged by every YAML reader), its fields
+  written as templates of the release rendered with it; `-l` selects by any
+  label. A chart's packed dependencies (`charts/<name>-<version>.tgz`) are
+  rendered in its release, their files said inside the archive, and what a
+  dependency hands up through `import-values` is in the parent's values. A
+  kustomization's `configurations:` rename the fields their `nameReference`s
+  name (an `HTTPRoute`'s `backendRefs`, say) with the name prefix and add
+  `varReference` fields vars are substituted in; a generator's `files` are
+  keys of the config map. sceptre's Jinja runs `loop.cycle`, `revindex`,
+  `previtem` / `nextitem`, tuple `set`, a macro's `varargs` / `kwargs`,
+  `range`, `dict`, the methods of a text and a mapping and the rest of the
+  common filters; a command launches the stacks the stacks it names depend on
+  (`dependencies`, and every `!stack_output` read); `command_path` is the path
+  launched; `!ssm` is said by the parameter it names. A table or a queue
+  written through a repository base class is decided by the class extending
+  it - what its constructor hands `super(...)`, what builds it, or what it
+  initialises a field the base only declares to - and drawn where that is
+  decided, `dynamodb/<table>` as readily as a one-part address. A CDK function
+  handed a role (`role:`) carries the role's grants, statements, inline
+  policies and attached `Policy`s, and `Grant.addToPrincipal` adds to the
+  grantee's.
+- **Where every AWS API is served, and what `XMLHttpRequest` sends (P294).**
+  The routes of an API a SAM or CloudFormation template, a CDK app or
+  Terraform creates record where it is served (`meta.servedAt`), as a
+  Serverless API's do: the gateway host of the region the samconfig, the
+  stack's `env` or the `aws` provider states, any region where none does, once
+  per stage, the root for an HTTP API's `$default` stage, and any stage where
+  it is left to deploy time - a parameter, a root module's variable or
+  `terraform.workspace`, with the value it has where nothing overrides it - so
+  an address written out with the API's id joins them too. A Serverless
+  service's written stage (`stage: prod`) is now its default and any stage,
+  since `--stage` overrides it, and of APIs whose stage is open, one deployed
+  by default at the stage an address writes is asked first. The body an
+  `XMLHttpRequest` is handed by `send()` after `open(verb, address)` is read
+  as `fetch`'s is: `JSON.stringify(x)`, a `FormData`, a const.
+- **Plain browser code, and an API's address written out with its id (P284).**
+  A directory with no manifest that holds a page and the scripts it loads, and
+  nothing that builds them, is the type `browser`: `link` and `init` offer it,
+  and the browser reader reads the requests its scripts send - `fetch`, and
+  `XMLHttpRequest`'s `open(verb, address)` - with the classic scripts of one
+  page sharing their globals. Every route of a Serverless service's own API
+  records where the API is served (`meta.servedAt`): the gateway host of its
+  region with the id left open, under its stage, or any stage where the file
+  leaves it to the command line. A request written anywhere in the project to
+  `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>` is joined to
+  the one API served there, the path after the stage asked of its routes,
+  `heuristic`, with a `base-url-from-files` note; several APIs there are an
+  `ambiguous-route-target` row naming them.
+
+- **The coverage harness measures whether a join is right, and reads a
+  system split across repositories (P278).** A target may carry hand labels,
+  `scripts/coverage/labels/<target>.json` (gitignored; the format is
+  `labels.example.json`): call sites written from the source with the way in
+  each reaches, `none` for a call that leaves the system, or `unread-ok` where
+  a row is the right answer. Its report gains *Against the hand labels* - per
+  kind, right, right and also elsewhere, wrong, missed, falsely joined and
+  sites not found, with precision and recall, and every label that was not
+  right listed by file and line with what was expected and what was got; a
+  label whose text moved is followed and says so, one whose file or text is
+  gone is reported, never dropped. A target may also be several repositories
+  (`repositories`, each with its `repository`, `commit`, `read` and `types`
+  and the directory it is cloned to), cloned side by side and linked as one
+  project, with the counting rule's extent, the read gate, I14 and `--pin`
+  working per repository and a report section *Across repositories* counting
+  the requests and messages each one sends that land in another. A report of
+  one repository without labels is unchanged. The harness is not part of the
+  published packages.
+
+- **Deployment templating P263 and P264 left out (P273).** A helmfile's
+  `bases` are layered under it as helmfile layers them - each base's parts,
+  environments' values and releases before the helmfile's own, its paths
+  written from the helmfile's folder - and a release's `needs` is kept as the
+  releases it is installed after; a command keeping releases by name with
+  `--include-needs` (or `--include-transitive-needs`) keeps what they need, and
+  a need no release of the helmfile is, is the new finding
+  `release-need-undefined`, as helmfile refuses to apply it. `helmfile -f`
+  naming a folder reads every helmfile in it. kustomize's deprecated `vars`
+  are substituted, each the value at its `fieldref` of the resource its
+  `objref` names once the build is named and prefixed, in containers'
+  `command`, `args` and `env`, an `Ingress`'s hosts and a `ConfigMap`'s data;
+  a var whose resource or field is not there stays `manifest-unread`. In
+  sceptre's Jinja, macros (with defaults, keywords and `{% call %}`), `include`,
+  `import`, `from ... import`, `extends` with `block` and `super()`, `raw`,
+  `with`, `filter` and `set` blocks are run, the files named read beside the
+  file rendered, every way an undecided condition goes; a template a stack
+  names is read whatever its own text declares, a `.j2` file only another names
+  is a part and not a template, and a template its undecided conditions render
+  differently is not read. `fixtures/cluster-templating-joins` and
+  `fixtures/multi-repo-jinja-files` show each case.
+- **Codegen documents nobody commits, operations sent through helpers, and a
+  schema a library patch chooses (P275).** A `…Document` imported from a
+  module the repository does not commit - one its GraphQL Code Generator
+  configuration generates, or one named like a codegen output - is the
+  operation of that name (PascalCase, with or without its type after it) in
+  the documents the configuration lists, or in every `.graphql` file of the
+  package, with the fragments of all of them; a name none holds is still
+  `graphql-document-dynamic`, naming where it looked. A call whose document
+  is a parameter of the repository's own helper, or a member of one
+  (`runQuery({ query })` over urql's `createRequest`, `runMutation(doc)` over
+  `client.mutation`, through Vue's `reactive`), is the operation each caller
+  hands, drawn at the caller with `through`; a caller handing an unreadable
+  document is a row at that caller. A client a helper is handed is the one
+  its callers agree on, and a client whose whole address is a setting is
+  rooted at that key. `window._env_?.X` (and `window.__ENV__`,
+  `globalThis.env`, `__RUNTIME_CONFIG__`) is a settings root, read through a
+  constant imported from another module. A resolver with no scope is served
+  by the schema a committed patch of the GraphQL library gives it, where a
+  line the patch adds reads `Reflect.getMetadata(KEY, …) || 'scope'`
+  (`fixtures/graphql-codegen-helpers`).
+- **Workers made by a construction, a job named further out than its queue,
+  and a job no handler takes (P271).** BullMQ's `new Worker(name, processor)`
+  is a consumer wherever it is written, and the older library's
+  `queue.process('job', handler)` one that names its job. A worker made with a
+  name the code hands in is read once per queue the name stands for: out to
+  each caller of the function it is a parameter of, and through each loop it
+  is a variable of - `for…of` / `for…in`, `forEach` / `map`, over a record's
+  keys, values or entries, an enum, a list written out and its spreads - so a
+  worker per key of a record of handlers is a consumer per key, its handler
+  the member of the record the processor looks it up in by that name
+  (`handlers[name](job)`, in the processor or a function it runs); a list the
+  code does not write out is a `channel-dynamic` row saying so. A job name a
+  caller further out than the queue decides is followed out the way the queue
+  is, and so is one whose queue is read where the broker is called; the
+  entries of `addBulk` name their jobs, a list the layer maps
+  (`jobs.map((data) => ({ name, data }))`) included, several names kept as
+  `jobNames`. Once every repository is merged, a job added to a queue whose
+  every handler names another job is the finding `job-no-handler` (info); a
+  queue with a handler that takes every job is not asked about, and neither is
+  a handler of a job nothing adds.
+- **Queues kept by a base class, job records built further in, and BullMQ
+  flows (P286).** A queue or a worker made from a field its class keeps from
+  the constructor - `super(Topic.Mail, …)` in each class extending it - is
+  read once per class: a worker made with `this.topic` is a consumer of every
+  topic the classes extending its class hand `super(...)` (or a `new` of it
+  hands its constructor), and a publish on a queue a client opened in another
+  method (`this.queue = new Queue(topic)` in `open(topic)`, `this.queue.add`
+  in `add`) is drawn where the caller holds the instance, with the topic that
+  instance was built with - through `super(...)` where the instance is of a
+  class extending the one that keeps it. A class chosen by a condition,
+  `const Made = paid ? PaidWorker : Worker`, is the transport's where either
+  branch is. A job record handed to a layer is read where it is built: a
+  `const`, a record spread into another, each record a function may answer
+  (an `async` one awaited; a `return` of nothing is no record) with its
+  parameters bound to what the call hands, a name taken out of an options
+  object, and each branch of a condition, one queue per value. BullMQ's
+  `FlowProducer.add` and `addBulk` add a job to the queue of every node of the
+  tree, the parent's and each child's, `name` and `data` read per node. A
+  registry typed `{ [kind in JobKind]?: Queue }` states its entries are
+  queues (`fixtures/job-queue-layers`).
+- **A worker's processor handed in by each class extending its base, flows
+  built from what callers hand in, and a way out of any length (P290).** A
+  worker a base class makes from the topic each class extending it hands
+  `super(...)` runs, for that topic, the processor handed to it on instances
+  of that class - followed along the calls the topic was handed through, then
+  out to each call on such an instance (`this.init(this.processor())` in the
+  class's constructor, `worker.init(handle)` outside it) - so it is one
+  consumer per queue with its own handler, where it was one consumer at the
+  construction for every queue with `consumer-handler-unresolved`; a method
+  that answers the processor it writes is the handler. A `let` is each value
+  it is given, so a flow built in a loop that makes each job the parent of
+  the one before (`last = { ...node(job), children: last ? [last] : [] }`) is
+  read node by node, each node once. An element of a list not written where
+  it is named - a `for (const job of jobs)` variable, a `map` or `forEach`
+  callback's parameter - is each element of that list as its caller writes
+  it: a rest parameter is each argument from its place on and the elements of
+  a list spread into it, a list is the elements it is written with and those
+  `push` and `unshift` add to it, `jobs[0]` the element at that place, and
+  each branch of a condition is read on its own; an element that cannot be
+  read is a `channel-dynamic` row beside the queues of those that can. The
+  walk out from a publish to the callers that decide it is no longer cut
+  after five calls, which drew a queue a layer hands through its own fallback
+  inside the layer: it reads as far out as the queue goes, stops a recursion
+  where it meets a function a second time, and stops after reading 5000
+  calls for one publish, which a row says (`fixtures/job-flows-from-callers`).
+- **An MCP client joined to the server's tools, MCP names read as far as the
+  source states them, a server function reached through a client the
+  repository builds, and a written return type read for a method call
+  (P277).** An MCP client - `new Client(...)` from the SDK, connected with
+  `client.connect(transport)` to a `StreamableHTTPClientTransport` or
+  `SSEClientTransport` handed its URL - asking with
+  `client.callTool({ name, arguments })`, `client.getPrompt({ name })` or
+  `client.readResource({ uri })` is a request joined by the procedure join to
+  the `mcp:tool:`, `mcp:prompt:` or `mcp:resource:` way in of its own service,
+  of the service its transport's URL names, or of the one `apiTarget` names;
+  a name worked out at run time is `procedure-path-dynamic`, a name nothing
+  declares `procedure-not-found`, and a tool asked for as a prompt is
+  refused. A resource is now keyed by the URI a client reads it with, a
+  `ResourceTemplate`'s URI a pattern every URI it matches reaches. A name
+  written in part, `` `find${collection}` ``, is a pattern named by its
+  written text, joined `heuristic`, with an info `mcp-name-dynamic` row naming
+  the part the run decides; a name a record carries, `registerTool(item.wireName,
+  ...)` in a loop, is read from the records the repository writes with that
+  member as text beside the definition the registration dispatches to
+  (`{ wireName: 'countOrders', tool: countOrdersTool }`), each tool drawn where
+  its builder defines it (`defineTool({...}).handler(fn)`), its handler behind
+  it as sure as the guess that the configuration serves it. A server function
+  or server action handed to a function of the repository that calls it,
+  `createOrdersClient({ runOnServer })`, is called from that function, `static`
+  where every call of it hands the same way in. A method of the repository
+  that writes its return type, `this.factory.client()` or
+  `await Registry.get().db()`, states the client's type for a call written in
+  place and for a name holding its value, as a function called by name did.
+- **gRPC services and the calls made to them (P274).** The repository's
+  `.proto` files - every one from the service's directory up to the top of
+  its repository or project, a shared `proto/` directory included - are read
+  by a small tolerant parser for their package, services and methods, and
+  each method a server implements is an `rpc` way in keyed
+  `grpc:<package>.<Service>/<Method>`, with how it is called (unary, a stream
+  either way or both) and the function behind it: `server.addService(...)`
+  on `@grpc/grpc-js` or `grpc` with a service of a loaded contract
+  (`loadPackageDefinition(loadSync('shop.proto')).shop.CartService.service`),
+  a generated definition, or a generated name nobody committed that a
+  contract declares, implemented by an object of functions or an instance of
+  a class; and a NestJS controller's `@GrpcMethod`, `@GrpcStreamMethod` and
+  `@GrpcStreamCall`, its package from `transport: Transport.GRPC` options. A
+  server's calls - `new CartServiceClient(address, credentials)` generated
+  or taken from a loaded contract, through `promisify`, and NestJS's
+  `getService('CartService')` - are requests between services of kind `rpc`
+  joined to the method of the service their address names (`CART_ADDR`, a
+  host, the client options' `url`). A service written in another language is
+  declared by its contract, `document: { kind: "protobuf", path, services }`
+  (the new `services` narrows a file every service shares), and its methods
+  are ways in callers join to. New rows: `grpc-service-unread` (a service
+  registered, or a client made, that cannot be named), `grpc-contract-unread`
+  (a service no contract here declares, its methods named as written) and
+  `grpc-method-unserved` (methods a contract declares that nothing configured
+  implements, one row per caller and service). `@grpc/grpc-js` and `grpc`
+  make a repository's type `grpc`, and a service with no TypeScript among its
+  sources reads its JavaScript (`.js`, `.jsx`, `.mjs`, `.cjs`), so a plain
+  Node server is read rather than skipped. The counting rule counts
+  `addService(definition, implementation)` and the NestJS decorators.
+- **Where a send goes that does not say, from what its function is granted;
+  an address of a template's own API; a service's parameter with no value;
+  and lists of several elements (P272).** A send whose address is not read -
+  a queue's URL looked up in a cache the code fills by listing the account, a
+  topic handed in - is drawn, `heuristic` with `via: "grant"`, to each queue,
+  topic, bus, table, stream or bucket every function that runs it is granted
+  by name, and a start reaches each function or workflow granted; a
+  `channel-from-grant` note (new reason) replaces the row that said the
+  address was not read, quoting it. A grant on every one of the kind - `*`, an
+  ARN ending in a wildcard, a managed full-access policy - draws nothing, and
+  the row that stays says which grant bounds nothing. Grants are read from
+  SAM's policy templates and statements and the role a function's `Role`
+  names, CloudFormation's `AWS::IAM::Role`, `AWS::IAM::Policy` and
+  `AWS::IAM::ManagedPolicy`, a service file's `provider.iam.role`,
+  `iamRoleStatements` and a function's own, Terraform's role, its
+  `inline_policy`, `aws_iam_role_policy` (a policy document data source,
+  `jsonencode` or JSON) and attachments, and a CDK construct's `grant*` calls
+  and `addToRolePolicy` statements; a function carries them as `grants`. A
+  SAM or CloudFormation function deployed with `!Sub https://${Api}.execute-api...`
+  of its own API, or an HTTP API's `ApiEndpoint`, is handed that API, and a
+  request rooted at it joins the route after the stage. A Serverless
+  resource or value named by `${param:<name>}` with no value is named by the
+  parameter (`${…}@params.<name>`, `deployed-name-from-parameter`). A list of
+  several elements, and a `Map` or `Set` made with or given several values,
+  is one address per element where the walk used to stop.
+- **Every router's navigations, a client's default headers, an answer handed
+  back, a wrapper's body and an object of functions a factory hands back
+  (P276).** `push` and `replace` on a router however it was got
+  (`useRouter()` of Vue Router or Next, `createRouter`, React Router's data
+  routers, Next's `Router`, `this.$router`, `push` taken out of
+  `useRouter()`), React Router's `navigate` from `useNavigate()`, SvelteKit's
+  `goto`, a `redirect(...)` of Next, React Router, Remix or SvelteKit,
+  `<RouterLink to>` outside Nuxt, and `<Link to>`, `<NavLink to>` and Next's
+  `<Link href>` in JSX are `calls` edges to the page shown, with the
+  `navigation-external` and `navigation-unresolved` rows, as Nuxt's are, and
+  left out of `cycles`; an Angular class's `router.navigate([...])` and
+  `navigateByUrl(...)` too. A Next page of the older router under `pages/`
+  is a screen with its `route`; two pages that fit as well in two
+  applications of one service are told apart by the navigating file. A header
+  written to a client's defaults (`api.defaults.headers.common['X'] = v`) is
+  carried by its requests in the browser and on the server, unread only where
+  written as code, under a condition, removed or for one verb. A response
+  handed back from the function the request is made in - an Angular service
+  returning `http.get(url, { observe: 'response' })` - is read for the headers
+  where each caller holds it. A wrapper drawn in front of a way in that names
+  a function of the repository has its body walked, its node calling the
+  function. A member of an object a factory writes whole and hands back
+  (`export default Gateway()`, `Gateway.listOrders(id)`), and `this.member()` in
+  another member, land on the member, a function and a scope of its own.
+
+- **A handler behind its wrapper, a request handed in as one object, and a
+  GraphQL server made into a Lambda (P269).** A `pages/api` default export
+  that is a call of wrappers - the repository's own or a package's -
+  handed a function, `export default withTracing(handler)`, is read as that
+  function with the wrappers drawn in front of it as middleware, and answers
+  the verbs the function compares the request's method to (`switch (method)`,
+  `req.method !== 'POST'`) instead of `ALL`; one written in place inside the
+  wrapper is pointed at where it is written, a factory of the repository is
+  the handler as for a verb export, and a package's handler built from values
+  is the `route-handler-unread` row that says so. The app router, Remix,
+  SvelteKit and Medusa readers land a verb export built by wrappers round a
+  declared function on that function the same way, and a landing through a
+  wrapper nobody installed is `heuristic` with `wrapperUnread`. A wrapper that
+  takes its request as one object and takes its members out where the
+  parameter is written, `({ url = '', method = 'GET' }) => fetch(url, {
+  method })`, has each caller's request read at the caller, its address and
+  its verb the members the caller writes or the defaults the pattern writes,
+  in the browser and server readers alike, and a caller written in a method
+  of an object a function hands back is attributed to that function on the
+  server side too. A name taken out of the environment where it is declared,
+  `const { SHIPPING_URL = '' } = process.env` (or `import.meta.env`, or a
+  settings root), is that setting read, with its default. A Lambda whose
+  handler is a GraphQL server made into a function -
+  `new ApolloServer({ resolvers, typeDefs }).createHandler()`, or a server
+  handed to `startServerAndCreateLambdaHandler` - is read as that server
+  (`handlerVia: graphql`), the route in front of it is its endpoint with its
+  schema and no `/graphql` is invented, Apollo Server's Lambda, Azure
+  Functions, Cloud Functions and micro packages are read for resolvers, and
+  a resolver map put together from another map's members
+  (`...orderResolvers.Query`) or handed a resolver by its name (`{ author }`)
+  is read.
+- **A queue a service runs through a layer of its own is read where each
+  caller names it (P267).** A server that wraps BullMQ in a queue service of
+  its own - `@InjectJobQueue(Queues.mail) mailQueue: JobQueueService`, then
+  `this.mailQueue.add(SendMailJob.name, data)`, into a driver interface, into
+  `this.queues[queueName].add(jobName, data)` - had every queue's consumers
+  and not one producer. The broker's call is now followed out to the calls
+  that decide its queue: a parameter becomes what each caller passes (a
+  destructured one too), a field becomes what the instance was built with,
+  read at the `new` that built it or at the decorator a caller asked the
+  container with, through a decorator of the repository's own that wraps
+  `Inject(token(name))`, to the provider that builds the instance under that
+  token. Each enqueue is drawn at its caller with its job and its message
+  (`meta.through` names the functions it came through; `heuristic` where a
+  call on the way may run another implementation), and the broker's call
+  draws nothing of its own once every call of it is attributed. A client kept
+  in a registry by queue - `this.queues[name] = new Queue(name)` - is that
+  queue (the `receiver-registry-key` locator), and is known to be a BullMQ
+  queue from the registry's annotation with nothing installed; `new
+  Queue('reports').add(...)` is read too, as is a repeated job registered
+  with `upsertJobScheduler`. `SomeJob.name` reads as the class's name, so a
+  job named after its handler is one job at both ends. An instance whose
+  queue cannot be read is a `channel-dynamic` row at the caller naming it.
+- **Every way a cluster is installed and a server asks itself (P263).** A
+- **Ways in reached by a name, and ways in nothing serves (P270).** A
+  TanStack Start server function - `export const placeOrder =
+  createServerFn({ method: 'POST' }).middleware([...]).handler(fn)` from
+  `@tanstack/react-start`, `solid-start` or `start` - is an `rpc` way in keyed
+  `serverfn:<file>#<name>`, sent with the verb its options write (`GET` where
+  they write none), its middleware in front of it, and reached by import: each
+  call of the export is a `calls` edge to it, as a Next server action's is. A
+  chain nothing names is a `server-action-unread` row. An MCP server's tools,
+  prompts and resources - `registerTool`, `tool`, `registerPrompt`, `prompt`,
+  `registerResource`, `resource` on an `McpServer` of
+  `@modelcontextprotocol/sdk` or `@modelcontextprotocol/server`, recognised by
+  its type or by `new McpServer(...)` and the annotation where nothing is
+  installed - are `rpc` ways in keyed `mcp:<kind>:<name>`, handled by the
+  function each is handed; one registered under a name decided at run time is
+  the new `mcp-name-dynamic` row. koa-router's `router.register(path, ['get',
+  'post'], [middleware, handler])` declares a route per verb, the last handler
+  answering and the ones before it in front (a route description's new
+  `verbList` field says where such a method keeps the three); verbs decided at
+  run time are `route-verb-unread`. A tRPC or oRPC tree a workspace package
+  assembles that no tree holds, no mount serves and nothing names, and a way
+  in declared on its own (`export const stats = authed.query(...)`) that no
+  tree holds and nothing names, are the finding `procedure-unmounted` (info),
+  one row per service with the files of each in its causes, where before both
+  were set aside without a word. A
+  `helmfile.yaml` installs its releases in each environment it declares (or
+  the one `helmfile -e` names), rendered over the environment's values; a
+  chart renders its dependencies (`file://` charts and `charts/`) inside its
+  release with its values' subtree, a false `condition` leaving one out; a
+  kustomization inflates its `helmCharts`, generates its `configMapGenerator`
+  and `secretGenerator` config maps and applies its `replacements`, and a
+  pod's `envFrom` and `configMapKeyRef` read the values they hold. An
+  `Ingress` rule with no `host` serves the front ends behind it, and each path
+  is a way in at its own rule's host only. `helm`, `helmfile`, `kubectl apply
+  -k` and `kubectl port-forward` in GitHub workflows and GitLab jobs are read,
+  by the one command reader the deployment readers share (moved to
+  `@flowatlas/serverless`), and the overlay a pipeline applies is the one
+  read. A Next or Nitro server's own `fetch('/api/x')` with no host is the
+  finding `server-request-without-origin` (it throws as written), while
+  Nitro's `$fetch('/api/x')` joins its own route in process, `static`.
+  `proxiedTo` is now a list naming every hop's setting.
+- **Failure destinations of every mapping, Jinja statements, sceptre's
+  resolvers and Terraform directives (P264).** A CloudFormation or SAM
+  `AWS::Lambda::EventSourceMapping`'s `DestinationConfig.OnFailure`, a SAM
+  stream event's destination of the kind its `Type` says, a Serverless stream
+  event's `destinations.onFailure` and the CDK's `onFailure` (`SqsDlq`,
+  `SnsDlq`, `S3OnFailureDestination`) hand what a mapping gives up on to its
+  destination, as Terraform's do; where both the source and the destination
+  are imports, the destination is a choice inside each of the mapping's
+  readings, which the linker settles. sceptre's files are rendered with
+  `{% if %}`, `{% for %}` and `{% set %}`, the common filters (`default`,
+  `lower`, `upper`, `replace`, `join`, `int`, `string`, `trim`, `tojson`, ...),
+  `stack_group_config` and `--merge-vars`; a condition the files do not decide
+  is rendered every way, and only what every way agrees on is read. Its
+  resolvers `!file`, `!stack_attr`, `!join`, `!split`, `!select`, `!sub` and
+  `!no_value` are read, `!rcmd` and `!cmd` said as values not known.
+  Terraform's `%{ if }` and `%{ for }` in a string template or a
+  `templatefile` are read part by part around imports, a condition nothing
+  decides read both ways. A NestJS module imported from a package that is not
+  installed is read by its import and said as `module-import-not-installed`
+  (new reason), where it was `module-import-dynamic`. New fixture
+  `multi-repo-failure-values`.
+- **Navigations, the headers a client's hooks add, and the headers an answer
+  is read for (P265).** `navigateTo(...)` and `<NuxtLink to>` are `calls`
+  edges to the page each shows (`meta.navigates`, `meta.route`,
+  `meta.page`), matched by path - a template's `${…}` as a parameter - or by
+  the name Nuxt gives a page's file or its `definePageMeta({ name })`; a
+  middleware's `return navigateTo(...)` is `meta.redirects`; an address with
+  a host or `{ external: true }` is a `navigation-external` note, and one no
+  page shows, two fit or written as code a `navigation-unresolved` row;
+  `abortNavigation()` is `meta.abortsNavigation` on the function that calls
+  it; `cycles` (and the overview's count) leaves navigations out, so two pages
+  linking to each other are no cycle. An `addRouteMiddleware` inside `onMounted` (or `onBeforeMount`) in
+  `app.vue`'s setup is in every page's order as one at the top of the setup is,
+  `meta.mounted: true`. What an axios interceptor, ofetch's `onRequest` and
+  ky's `beforeRequest` do to the headers is read - names set unconditionally
+  are the request's, anything else `meta.headersUnread`, and one that does
+  nothing to them adds none - in the browser and on the server, where an axios
+  instance's own headers and interceptors, the module's, and NestJS's
+  `HttpModule.register({ headers })` and `axiosRef` interceptors are read too.
+  An Angular interceptor's `req.clone({ headers: req.headers.set(...) })` and
+  `headers: new HttpHeaders({...})` are read as `setHeaders` is. The three
+  readers record the headers a caller reads off the answer
+  (`meta.responseHeaderKeys`), and a detailed oRPC output's `headers` are
+  compared with them from the caller's end: a capital read as a key is an
+  error, a name the output does not declare a warning (`header-not-declared`),
+  one the HTTP layer writes not compared. New fixture `nuxt-navigation`;
+  `rpc-shared-types` extended.
+- **Several GraphQL endpoints, and the client each operation is sent with
+  (P266).** A NestJS server's every `GraphQLModule.forRoot*` is an endpoint of
+  its own, its options read in place, from a `useFactory` or from a
+  `useClass`'s `createGqlOptions()`, and its `path` as any string (a template,
+  a constant, an enum member; one not read keeps `/graphql` with a
+  `graphql-endpoint-unread` row). Which resolvers each serves is the scope its
+  options name that the repository's resolver decorator tags them with
+  (`SetMetadata`), or else the modules its `include` names with what they
+  import; where endpoints serve different resolvers each field is keyed by its
+  path (`Query.me@/settings`), each endpoint carries only its root fields
+  (`meta.graphql.fieldsAt`), and an operation joins only its endpoint's. A
+  plugin of the repository's that answers a request itself makes a missing
+  root field a `graphql-field-no-resolver` note, not `graphql-field-unknown`
+  (`meta.graphql.open`). An Apollo operation is sent with the client it names
+  (`{ client }`, the client it is a method of), followed through
+  `new ApolloClient({ uri | link })`, a factory handed `{ uri }` or the
+  default it writes, and `useContext` to its provider's `value`, and otherwise
+  with the one `<ApolloProvider client>` is handed (`graphql-client-unread`
+  where a named client is not followed). An operation whose address's opening
+  was not read joins the one endpoint whose path ends with the rest,
+  `heuristic` (`via: graphql-path`); two are `ambiguous-route-target`. A
+  helper posting `JSON.stringify({ query })` is read with the document each
+  caller hands it, and a value inside a string of a document is a value. New
+  fixture `graphql-endpoints`.
+- **Events built by factories, elements of lists, and names a parameter
+  with no value gives (P268).** A send's address is read through what the
+  value it walks is made by: a member of a record of values or factories a
+  lookup chooses (`events[name](data)`, `events.Placed(data)`), a function
+  called by its name and the record it answers, its parameters bound to the
+  call's arguments, an element of a list a loop or a callback takes (`for
+  (const r of list.filter(...).map(...))`, `list.forEach((r) => ...)`), and
+  the one value a `Map` or `Set` is given and read back through `values()`.
+  Where a member is chosen by a parameter of the function the send is
+  written in, or the record is that parameter, the send is drawn at each
+  caller with the parameter bound to what it hands, wherever every caller
+  writes it; otherwise the send stays where it is and its row names the
+  parameter and the callers that hand something unread. A name read out of a
+  collection by a key worked out when the code runs (`cache.get(key)`) is a
+  `channel-dynamic` row naming the collection and the key. A SAM or
+  CloudFormation resource named by a parameter with no value is named by the
+  parameter's declaration (`${…}@Parameters.<name>`), and a value of the
+  environment that is that parameter names that resource: a table, a stream
+  or a queue joins its writers and readers within the deployment, and a
+  function so named is deployed under the stand-in rather than being
+  `function-name-unread`, said by
+  `deployed-name-from-parameter` (new reason, a note). An
+  `AWS::Kinesis::StreamConsumer`'s `ConsumerARN` is the stream it is
+  registered on. A Serverless function's environment value that is an API
+  Gateway address in the service's region and at its stage
+  (`https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`) is the
+  service's own REST API - an HTTP API's where no stage is written - and a
+  request rooted at it joins the route at `<path>`, `heuristic`, with a
+  `base-url-from-files` note saying the id is written out. New fixtures
+  `serverless-event-factories` and `sam-parameter-names`.
+
+- **The front end's and the RPC readers' last open names (P262).** An
+  `addRouteMiddleware` at the top of `app.vue`'s setup, or of a composable
+  that setup calls, is a route middleware in every page's order after the
+  plugins' (`meta.setup`, `meta.addedIn`, `meta.firstNavigation: false`); one
+  a component, a handler or a callback adds is a `route-middleware-unresolved`
+  row (`why: scoped`) at the call and at a page that names it. Nuxt UI (`U`)
+  joins the table of component libraries, a prefix the application sets is
+  read (PrimeVue's `primevue.components.prefix` or its resolver's `prefix`,
+  Nuxt UI's `ui.prefix` or its Vite plugin's), and a library a layer's
+  `modules` installs is installed; the libraries' Nuxt modules are known
+  modules. A query key held in a constant (`params.set(PAGE, v)`, an `as
+  const` member, an enum, `{ [PAGE]: v }`) is that key, and `{ [key]: v }`
+  with a key of no single value is no longer read as a key named
+  `__computed`; an address built with `+` after its `?` is read in the
+  browser, Angular and the server readers. Where Nitro's
+  `experimental.tasks` is off (before Nitro 3), every task and schedule is
+  `meta.enabled: false` and a `framework-feature-off` note says the build
+  registers none; Nitro 3's `nitro` package is detected. A detailed oRPC
+  input's headers are compared from the procedure's end: only its declared
+  names, lower-cased, with a name it spells with a capital said; a client
+  instance's own headers and an Angular interceptor's `setHeaders` are the
+  request's; headers written in a way not read, or that a hook or an
+  interceptor may add to, are `meta.headersUnread` and not compared; a
+  header the procedure does not declare is no longer an `extra_field`. A
+  coverage probe `sveltekit-server-load`. New fixture `nuxt-startup-names`;
+  `rpc-shared-types` extended.
+
+- **Every way a cluster or a proxy routes a request (P260).** A chart's
+  templates are rendered with its `values.yaml` and the values files, `--set`s,
+  release and namespace of the `helm install`/`upgrade`/`template` a script or
+  a Makefile runs (value lookups, pipelines, `include`, `if`, `with`, `range`);
+  a condition nothing decides is rendered every way, read where the ways agree
+  and the row `manifest-unread` where they do not. A kustomization is built
+  over the folders it lists, with its strategic merge and JSON 6902 patches,
+  `images`, namespace and name prefix; where overlays nothing chooses differ,
+  the base is read alone and the row `manifest-overlay-unchosen` says so, and
+  `settingFiles.environment` or the new `settingFiles.overlays` /
+  `settingFiles.chartValues` choose. An `Ingress` (with `rewrite-target`) and
+  an `HTTPRoute` (with `URLRewrite`, hosts from its `Gateway`) send a public
+  host's request to the service behind them at the rewritten path
+  (`via: ingress`, `heuristic`, `wayIn`), a front end the way in serves
+  included; a `nodePort` and a `kubectl port-forward` make a port of this
+  machine reach the service. A Vite proxy key written as a regular
+  expression, any regular-expression rewrite replaced by a literal, an
+  http-proxy-middleware `router` table and a target read from a setting the
+  service's files fill (`proxiedTo`) are read; a request a proxy forwards to
+  another proxy is followed through up to four servers (`proxiedThen`), a
+  longer or circular chain the row `proxy-chain-unfollowed`. A Next server's
+  own request with no host joins its own route or its rewrites
+  (`via: ownOrigin`). Coverage probes `ingress-route`, `chart-value`,
+  `kustomize-patch` and `port-forward`. New fixtures `cluster-route-joins` and
+  `proxy-chain-joins`.
+- **The last deployment values and injection tokens no reader followed
+  (P261).** A CDK template literal, `+`, `Fn.sub` or `Fn.join` with
+  `Fn.importValue` or `valueForStringParameter` among its parts, and a
+  Terraform interpolation over parameters of the account and outputs of
+  another configuration's state, are read part by part as CloudFormation's
+  `!Sub` is; a Terraform output of a root whose backend is written is published
+  under `state:<backend>#<output>`, and `terraform_remote_state` outputs are
+  values another deployment publishes. A mapping's failure destination that is
+  itself an import is drawn as a choice inside each of the mapping's readings,
+  and the linker keeps the one under the reading kept, where it was a row. A
+  sceptre stack inherits its groups' `parameters` and `sceptre_user_data`; its
+  files are rendered with `{{ var.x }}` and `{{ environment_variable.X }}` from
+  the commands that launch it (`--var`, `--var-file`, their environment) and
+  the var files `services[].infra.vars` names; `!stack_output` and
+  `!stack_output_external` are joined as exports, `!environment_variable` read
+  from the launch's environment; a `.j2` template is rendered with plain
+  `sceptre_user_data`. sceptre and rain commands are read in shell scripts,
+  GitHub Actions workflows and GitLab CI files too, a shell's `cd` followed;
+  every `rain deploy` option is known, so an option's value is never taken for
+  the stack. NestJS: an alias (`useExisting`) the provider index finds is
+  followed to what it names; `@Inject(appConfig.KEY)` and
+  `@Inject(getConfigToken('app'))` are provided by the `registerAs` that
+  `ConfigModule.forRoot({ load })` or `forFeature` loads; a module import chosen
+  by a literal condition, a `const` or a function of the repository is
+  followed. `@requiresScopes` and `@policy` requirements are compared by which
+  implies which, not as written. New fixtures `multi-repo-deploy-values`,
+  `nest-followed-tokens` and `graphql-requires-scopes`.
+- **The last values deployments share not joined, and tokens and addresses a
+  configured module builds (P259).** A parameter file written as YAML is read
+  as the JSON one is. A template a sceptre stack configuration names
+  (`config/<group>/<stack>.yaml`) is read with its `parameters`, its stack name
+  and its region; one a `rain deploy` command in a `package.json` script or a
+  Makefile deploys, with its `--params` and `--config`; a resolver, a Jinja
+  expression or a shell variable is a value not known, and two stacks or
+  commands nothing chose between (`services[].infra.vars`,
+  `infra.options.config_env`) are a `parameter-file-ambiguous` row. A rule's
+  or a schedule's target of an import is read as each kind it may be and the
+  linker keeps the publisher's, as P253 does for a mapping; a subscription's
+  endpoint, a bucket notification's target and a dead-letter queue of an import
+  are read as the kind their protocol or property says, where each was a
+  `subscription-target-unread` row. A Terraform mapping read as alternatives
+  draws its failure destination. A string with two imports or more is read
+  part by part: an import outside the name is aside, and a name built of
+  imports and text is written where every part is joined. NestJS's injection
+  reader finds a token a configuring method (`forRoot`, `forRootAsync`,
+  `register`) provides where the application calls it, in the repository or a
+  workspace package, by the provider index the procedure reader uses (now in
+  the core), so `di-token-unknown` goes for such tokens. A link's URL built
+  over a parameter (`` `${options.base}/trpc` ``, `base + '/rpc'`) is read
+  piece by piece to the setting or URL each piece is handed. New fixtures
+  `multi-repo-shared-values` and `nest-configured-clients`.
+- **Where a request is forwarded and where a container listens (P257).** A
+  server's proxy is read and kept on its repository node (`meta.proxy`):
+  Vite's `server.proxy` / `preview.proxy` (a `rewrite` read where it replaces
+  the prefix with a literal), the proxy configuration an Angular dev server or
+  a workspace tool's webpack dev server is started with (`proxyConfig`,
+  `ng serve --proxy-config`, `pathRewrite`), Nitro's and Nuxt's `devProxy` and
+  route rules' `proxy`, Next's `rewrites()` to an address outside the
+  application (after its own files unless `beforeFiles`), and Create React
+  App's `"proxy"`. A browser request with no host, or any request to such a
+  server's own port, joins the service at the target's host at the rewritten
+  path (`via: proxy`, `heuristic`, `proxiedBy`, `proxiedAs`), and the dev
+  server's host is no longer drawn as a third party; a target no service is
+  reached at is drawn as a third party with the note `proxied-to-third-party`,
+  and a rule not written in literals is the row `proxy-rule-unread`. A
+  cluster's manifests are read (plain YAML, several documents to a file, Helm
+  templates where literal, a kustomization's namespace and name prefix): a
+  `Service` routing `port` to a `targetPort` (named ports resolved through the
+  pods it selects) is a host of the service it selects (`orders`,
+  `orders.shop.svc.cluster.local`), joined with
+  `listensAt: …, behind orders:80 (k8s/orders.yaml)`, the pods' environment
+  outranking the code's fallback; a `targetPort` nothing listens on is
+  `published-port-unheard`. A request with no port reaches the port its scheme
+  defaults to. A request on a container's or a cluster's network to a port the
+  service is not reached at there (a published port, or the pods' own port
+  behind a `Service`) is the finding `network-port-unreachable` and is not
+  joined. `docker run -p` in a `Makefile` or a shell script, the `port` of a
+  workspace tool's serve target in `project.json` (Next, Vite, webpack,
+  Angular; never `@nx/js:node`'s debugger port), and a NestJS settings object
+  handed in by its token (`@Inject(appConfig.KEY) config: ConfigType<typeof
+  appConfig>`, `app.get(appConfig.KEY)`) say where a service listens too.
+  Coverage probes `dev-proxy` and `cluster-target-port` (family `listens`). New
+  fixtures `dev-proxy-joins` and `cluster-port-joins`.
+- **The front end's last unread names and query strings (P258).** A
+  SvelteKit page goes through every layout up its route tree, root first, as
+  ordered `calls` edges: each layout's `+layout.server` and `+layout` `load`
+  (every server load, then every universal one, the page's own after its
+  layouts'), then each `+layout.svelte`, a `@` reset (`+page@(app).svelte`,
+  `+layout@.svelte`) cutting the chain where SvelteKit does; a reset naming no
+  directory above is `layout-unresolved`. A component library a Vue plugin
+  installs is read by a small table (Vuetify `V*`, PrimeVue's own names,
+  Element Plus `El*`, Naive UI `N*`, Quasar `Q*`, Ant Design Vue `A*`): a tag
+  of an installed one, or one `app.component` registers from a package, is
+  the library's, with no edge and no row; a tag nothing registers says which
+  `app.use(...)` of an unknown package may register it.
+  `defineAsyncComponent(() => import('./X.vue'))` and `({ loader })`, held in a
+  name, in `components: {}` or registered for every template, is the child it
+  loads. `addRouteMiddleware('name', fn, { global })` in a plugin - a part's
+  `plugins/`, or one a module's `addPlugin` adds - is a route middleware in
+  the page's order: global ones after the build's, a named one in place of a
+  file's. Nitro's `plugins/` (and a module's `addServerPlugin`) put each
+  `nitroApp.hooks.hook('request', fn)` in front of every route, before its
+  middleware, and `beforeResponse` / `afterResponse` behind it as
+  interceptors; each file of a server's `tasks/` is a way in of the new kind
+  `task`, named by its path (`db:migrate`), whose handler is `defineTask`'s
+  `run`; `runTask('name')` reaches it by name, and each `scheduledTasks`
+  expression is a `cron` way in that reaches the tasks it lists. In a Nuxt
+  module's condition `nuxt.options.dev` and `nuxt.options._prepare` are false,
+  as the production build is the one read, and a call only development makes
+  is a `framework-module-skipped` note saying so. A query built in code is
+  read into `meta.queryKeys` as P256 reads one written as an object:
+  `new URLSearchParams({...})` and its `append` / `set`, Angular's
+  `new HttpParams().set(...)` chains, `params = params.set(...)` and
+  `{ fromObject }`, a query built into the address (`?${params}`,
+  `meta.queryInAddress`), and a server wrapper's own `query` option beside
+  what its caller hands it; a key written as code is `queryUnread`. The
+  headers a request writes in place are `meta.headerKeys`, and a detailed
+  oRPC input's `headers` is compared with them. New fixtures
+  `sveltekit-layouts`, `vue-plugins` and `nuxt-plugins-tasks`; a coverage
+  probe `nitro-task-file`.
+
+- **Child components, layouts and route middleware by name, and the last of
+  what a Nuxt module adds (P255).** A tag in a Vue or Svelte template, or in
+  JSX, that names a component of the repository is a `calls` edge from the
+  component that writes it to the one it names (`meta.renders`), so a screen's
+  flow reaches what its children request: by an import (`<script setup>`, the
+  Options API's `components`), by `app.component('Name', X)` for every
+  template, in kebab-case as Vue resolves it, through `<component :is>`,
+  `memo`, `forwardRef` and `lazy`, and in Nuxt by the path of a file of every
+  part's components directories - `prefix`, `pathPrefix: false`, `Lazy`,
+  `.client`/`.server`, the higher layer's where two give a name - and of what
+  a module adds (`addComponentsDir`, `addComponent`). A PascalCase tag that
+  names nothing is `component-unresolved`. A Nuxt page goes through its route
+  middleware - the global ones in Nuxt's order, then those
+  `definePageMeta({ middleware })` names, a module's `addRouteMiddleware` among
+  them - and its layout (`definePageMeta({ layout })`, `default`,
+  `<NuxtLayout name>`), each a `calls` edge with its `meta.order`; a name no
+  file gives is `route-middleware-unresolved` or `layout-unresolved`. A module's
+  `addServerScanDir` is read as `server/` (routes, middleware, `utils/`); a
+  condition of a module's options is decided where its `modules` entry, its
+  `configKey` setting and its `defaults` are literals, and a call it rules out
+  is not read and is said; a workspace module whose manifest names only
+  `dist/` is read from its source map, a `source` condition or the file of
+  `src/` in its place. The coverage harness counts a layer `extends` writes as
+  `fileURLToPath(new URL(...))` or `resolve(__dirname, ...)`, and a folded row
+  keeps every other file its sites are in (`meta.causes[].files`), which the
+  read gate reads. New fixtures `nuxt-components` and `vue-components`.
+
+- **Values shared through parameters of the account, an app's own stacks,
+  parameter files, and imports whose kind the use does not say (P253).** A
+  parameter one deployment writes (`AWS::SSM::Parameter`, CDK
+  `StringParameter`, Terraform `aws_ssm_parameter`) is joined by its name to
+  every place another reads it (`{{resolve:ssm:...}}`, a template parameter
+  typed `AWS::SSM::Parameter::Value`, `${ssm:...}`,
+  `StringParameter.valueForStringParameter` / `valueFromLookup` /
+  `fromStringParameterName(...).stringValue`, Terraform's
+  `data "aws_ssm_parameter"`), under the `parameter:` key Terraform's shared
+  roots use; one nobody configured writes is an `export-not-found` row naming
+  it. A CDK app's `Fn.importValue` of its own export, `Stack.exportValue` and a
+  parameter it writes and reads are the value itself. A template's parameter
+  file is read where `services[].infra.vars` or its `samconfig`
+  (`parameter_overrides = "file://..."`) names it, or one sits beside it under
+  its name; two beside it are a new `parameter-file-ambiguous` row. A mapping
+  or a destination whose import does not say what it is is read once per kind
+  it may be, and the linker keeps the reading the publisher's value is; an
+  address built around an imported name names the imported thing. A value
+  published under a generated name is joined to the producer's own channel,
+  named by its repository. A Serverless service hangs its routes on a shared
+  REST API from `restApiRootResourceId` where it names one. New fixture
+  `multi-repo-parameters`.
+- **What an RPC or GraphQL caller is compared with, everywhere it calls from
+  (P256).** A plain request to an oRPC procedure's REST route is compared both
+  ways: its path parameters, the query of a `GET` (from the address and from
+  the client's query option - axios `params`, ky/got `searchParams`, ofetch
+  `query`, Angular `params`, recorded as `meta.queryKeys` / `meta.queryType`)
+  or its body, assembled as the OpenAPI handler assembles the input
+  (`compact`, or `{ params, query, body }` for `inputStructure: 'detailed'`),
+  against the procedure's input, a key in the address by name alone; and its
+  own answer type against the procedure's output (its `body` for
+  `outputStructure: 'detailed'`). A query nothing reads is
+  `procedure-input-by-name` (query). A tree a workspace package holds is read
+  as the ways in of the service that mounts it, not of every service that
+  imports its `AppRouter` type, so a client typed from it joins the server and
+  is compared through it. Fastify's `fastifyTRPCPlugin` (by the `register`
+  call it is handed to, its `prefix`) and Hono's `trpcServer` (`endpoint`) are
+  described mounts; a description's mount can say `plugin: { method, at }` and
+  a dotted `treeKey`. A client built in a provider of a module's `forRoot` /
+  `forRootAsync`, here or in another workspace package, is followed to its
+  address through the method's one call and the factory's `inject`, and a
+  configuring method nothing calls provides nothing. `doctor`'s desync table
+  names an rpc request's procedure and protocol (`procedure`, `protocol` in
+  `doctor.json`). The procedure adapters state Vite's `resolve.alias`, so a
+  lazy branch under `@lib/...` in a server Vite builds is read. The router's
+  checks are not drawn on a step it fetches only for a `@requires`, and a
+  field using `@requires` that does not carry its required fields' checks is
+  `graphql-requires-auth-not-carried` (a finding, auth). New fixtures
+  `rpc-shared-types` and `graphql-requires-auth`.
+
+- **Every way a port is decided, read (P254).** A front end's dev and preview
+  server says where it listens: `server.port` / `preview.port` in
+  `vite.config.*` (SvelteKit, Remix, React Router, Vue, React), `--port` on a
+  `vite`, `vite preview`, `svelte-kit dev`, `remix vite:dev` or
+  `react-router dev` script, Astro's `server.port`, Angular's `angular.json`
+  `serve` port and `ng serve --port` (the Angular repository node now carries
+  `meta.listen`); Vite's 5173 / 4173 only where `strictPort` keeps it there.
+  A dev server's port is marked `devServer`, and a request to it that its
+  service serves no route for is decided as before (its proxy forwards it). A
+  port handed to the function that starts the server (`start(3001)`,
+  `bootstrap({ port })`), a property of a literal settings object
+  (`config.port`), NestJS's `registerAs` / `load` factories and convict's
+  schema defaults are read, and a port read from a setting alone
+  (`app.listen(process.env.AUDIT_PORT)`) is kept with the setting and filled
+  from the service's example environment file. A compose service's `ports`
+  are read with both sides and its environment's ports, a `docker run -p` in
+  a `package.json` script is a container of the service, and a mapping is
+  reconciled with the code: `localhost:3001` and `orders:3000` join the one
+  service, `listensAt` saying `published as 3001 by docker-compose.yml` or
+  `in the container orders`; a mapping whose container side the code does not
+  listen on is the note `published-port-unheard`. Coverage probe
+  `dev-server-port`. New fixture `port-sources-joins`.
+- **The router's check on a field no resolver of its own answers, and an
+  entity interface nobody can type (P252).** A field the router's
+  `@authenticated`, `@requiresScopes` or `@policy` guards and no resolver of
+  its own answers (`Book.price`, read off what `Query.book` returns) is
+  guarded on the entries that do answer it - the resolvers of the fields that
+  return its type, followed up through fields with no resolver either, and the
+  reference resolvers of an entity call for it - for that field only:
+  `meta.for` on the `guarded_by` edge and on the check in `meta.access`,
+  `meta.answers` on the plan edge of a request that asks for it, and `flow`
+  shows `@authenticated for Book.price` on that step and on no other. A field
+  the router does not serve (`@inaccessible`) has no check drawn and is not
+  named by `graphql-auth-not-checked`. An entity interface whose owning
+  subgraph writes no `__resolveReference`, no `__resolveType` and no
+  `__isTypeOf` on one of its types is `graphql-entity-type-unsaid` (a finding,
+  wiring), and the plan edges of an entity call into it say `hop.untyped`; a
+  subgraph's endpoint carries the types its code says the type of
+  (`meta.graphql.subgraph.typeResolvers`), and a NestJS schema-first
+  `@ResolveField() __resolveType` is no longer read as a field.
+  `@requires`, `@provides` and `@external` were already planned (P241). New
+  fixture `graphql-federation-gaps`.
+- **A request to a port on this machine joins the service listening there
+  (P250).** The port a server is started on is read for every server the tool
+  reads - `<server>.listen(port)` for express, koa, fastify, NestJS and Node's
+  own server, Hono's `serve({ fetch, port })`, `Bun.serve`, `Deno.serve` and
+  `export default { port, fetch }`, GraphQL's standalone server, Nuxt's
+  `devServer.port`, and `--port` / `-p` on a `next`, `nuxi` or `nitro` script -
+  and kept on the service's repository node (`meta.listen`). A request to
+  `localhost`, `127.0.0.1`, `0.0.0.0` or `[::1]` at that port, from a browser,
+  a server, a procedure client or a gateway naming a subgraph, joins it
+  `via: host` with `meta.listensAt` on the edge: `static` where the code writes
+  the port as a number, `heuristic` where it is a setting's fallback, a
+  library's default or a setting file's value. A host the configuration names
+  still decides; two services on one port is the new row `local-port-shared`
+  naming each and where it listens, and the third-party node a reader drew for
+  the host goes. A hook written on one call (`useFetch(url, { onRequest })`,
+  `$fetch(url, { onRequest })`, a ky call's `hooks.beforeRequest`) is read for
+  that call only (`baseFrom: "call-hook"`), and a ky hook answering
+  `new Request(request.url.replace(location.origin, X), request)` or
+  `new Request(new URL(url.pathname, X), request)` is read as a new origin in
+  front of the old path. The coverage counting rule gains the family `listens`
+  (`fixtures/listen-port-joins`).
+
+- **Lambdas declared in a plain CloudFormation template (P248).** A template
+  with no SAM transform - any `.yaml`, `.yml`, `.json` or `.template` file
+  that says it is one (an `AWSTemplateFormatVersion`, or `Resources` of `AWS::`
+  types), wherever the repository keeps it - is read by the SAM reader's code
+  as a reader of its own, `cloudformation`: functions with their code in a
+  local `Code` directory, mappings from queues and streams, URLs, permissions,
+  APIs written as `AWS::ApiGateway` and `AWS::ApiGatewayV2` resources or as an
+  OpenAPI `Body` / `BodyS3Location`, rules, schedules, subscriptions, bucket
+  notifications and state machines from a `DefinitionS3Location` file. The
+  deployment of `terraform-orders` written as two such stacks reads as the
+  same graph as the other four formats (`fixtures/cloudformation-orders`).
+  Not read as templates of their own: a template another nests, the copy
+  `aws cloudformation package` or `sam package` writes of one, a file a
+  Serverless service loads into its `resources`, and a `cdk.out` beside the
+  `cdk.json` of an app the CDK reader reads. A template is deployed with the
+  `samconfig.toml` that names it, else `services[].infra.options`.
+- **`Fn::ImportValue` across the stacks of one repository (P248).** An
+  output's `Export.Name` in one template, SAM or plain, is what
+  `Fn::ImportValue` of that name is in another, settled however the templates
+  are ordered; one no template exports, or two do, is the row it was and says
+  which (`fixtures/cloudformation-shapes`).
+- **An HTTP API made in one resource (P248).** `AWS::ApiGatewayV2::Api` with
+  `Target` is a route - `$default`, or its `RouteKey` - onto that function, in
+  a SAM template and a plain one. An `AWS::Lambda::Permission` for a principal
+  no reader follows is an `invoker-not-read` note, as Terraform's is; a REST
+  method's `ApiKeyRequired` and an HTTP route's `AuthorizationType` are guards;
+  an API written as resources records the one stage it is deployed to.
+- **A procedure call's input and answer are compared with the procedure's
+  (P247).** A call through an oRPC or tRPC client, in a browser, an Angular
+  application or a server, records the type of the input it hands (the type
+  the client declares for the argument, or the argument's own where the client
+  is `any`) and, where the call returns the answer, the type it reads back;
+  the joined edge carries both as a request's carries its body. `contracts`
+  compares them with the procedure's input (the schema's input side) and its
+  output or resolver's return, by the rules and at the severities a request
+  body and a response are compared by. What cannot be compared is a row:
+  `procedure-input-undeclared`, `procedure-input-unread` (the schema's library
+  is not installed), `procedure-input-not-at-call` (an input handed later or not
+  written), `procedure-output-inferred` (an answer handed to a hook or a query's
+  options), `no-type-on-sender` / `no-type-on-receiver` for a client typed
+  `any`. oRPC's `mutationOptions(…)` is now read as options, its input handed
+  later. tRPC mounts say where they serve the tree - the path of the `use` call
+  `createExpressMiddleware` is handed to, `fetchRequestHandler`'s `endpoint`,
+  the standalone server's `basePath`, a Next.js handler's file - into
+  `meta.mounted` (protocol `trpc`), so a tRPC link sent elsewhere is
+  `procedure-link-unserved`; the mount description gains `prefixKey`,
+  `prefixDefault`, `handedTo` and `fileRoute`. A class member injected by a
+  token (`@Inject(TOKEN)`, Angular's `inject(TOKEN)`) is followed to the client
+  the repository's one `{ provide: TOKEN, useFactory | useValue }` builds, and
+  the `call-through-token` row at such a call goes. The Angular reader runs the
+  shared procedure reader. A server's request rooted at a setting nothing
+  places keeps the values it was found with, so `doctor`'s *Probably missing*
+  counts the hosts they name. New fixture `rpc-contracts`.
+- **Values shared between CloudFormation deployments, and
+  `serverless-compose.yml` (P249).** An output a Serverless service, a SAM
+  template or a CDK app publishes - by its `Export.Name` / `exportName`, and by
+  its stack's name and its own - is joined to every place another repository
+  reads it (`Fn::ImportValue`, `!ImportValue`, `Fn.importValue`,
+  `${cf:<stack>.<output>}`). Routes on an API another repository creates
+  (`provider.apiGateway.restApiId`, `provider.httpApi.id`,
+  `RestApi.fromRestApiAttributes`, `HttpApi.fromHttpApiAttributes`, an
+  `AWS::ApiGateway::Resource` whose `ParentId` or an `AWS::ApiGatewayV2::Route`
+  whose `ApiId` is imported) hang from the point the publisher exports, get its
+  full path, and are routes of the publishing service too, so a client of that
+  API - by `baseUrlEnv`, by host, or by an imported API address in its
+  environment - lands on the handler in the repository that holds it. A queue,
+  a topic, a bus or a table's stream an event, a CDK lookup or a value of the
+  environment imports is renamed, before the repositories are merged, to what
+  the publisher names, so the two are one channel. The framework's own
+  `ServiceEndpoint`, `HttpApiId` and `HttpApiUrl` outputs are published. A
+  `serverless-compose.yml` is read as one deployment: its services with its
+  `params` ahead of their own, a `${<service>.<Output>}` param the import of
+  that service's output, and a service it cannot read a
+  `compose-service-unread` row. Four new reasons: `export-not-found`,
+  `export-ambiguous`, `export-mismatched`, `compose-service-unread`.
+  `serverless-shapes`, `sam-shapes` and `cdk-shapes` now draw what they import
+  under its stand-in, with an `export-not-found` row where they drew a
+  `subscription-source-unread` one (`fixtures/multi-repo-exports`,
+  `fixtures/serverless-compose`).
+- **What Nuxt and its layers still decide at build time, read (P251).** A
+  Nuxt module of the repository - a file of `modules/`, a path a part's
+  `modules` lists, a package of the workspace by its name - is read as syntax
+  for what it adds when the application builds: `addImportsDir`,
+  `addServerImportsDir`, `addImports` and `addServerImports` give names used
+  with no import, `addServerHandler` serves a route declared at the call (or
+  stands in front of every route), `extendPages` adds a screen,
+  `nuxt.options.alias[...]` an alias, `installModule` another module, each
+  where its argument is a literal or a path built from the module's own file.
+  An addition written as code is the row `framework-module-unread`; which
+  modules were read is the note `framework-module-read`; a module installed
+  from a registry is named in the note `framework-module-installed`, with what
+  a few popular ones add. `dir.pages`, `dir.layouts`, `dir.middleware`,
+  `dir.shared` and `dir.modules` are read in the application and in each
+  layer. Every configuration is read for the production build, `$production`
+  and `$env.production` laid over the rest, and how development and each
+  `$env` name differ is the note `framework-environment-differs`. SvelteKit's
+  routes and pages are read under `kit.files.routes`. The coverage harness's
+  extent counts a layer or module a Nuxt configuration names beside the
+  application, read from the configuration as text; the read gate reads every
+  site a folded row's samples name; a new probe counts a route a module adds
+  (`fixtures/nuxt-modules`, `fixtures/sveltekit-routes-dir`).
+- **A function run before every request carries its base into each one
+  (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
+  instance or on `axios` itself) that writes `config.baseURL`, answers
+  `{ ...config, baseURL }`, calls `Object.assign(config, { baseURL })` or
+  rewrites `config.url = base + config.url`; an ofetch or `$fetch` `onRequest`
+  hook writing `options.baseURL` or `ctx.request`; and a ky
+  `hooks.beforeRequest` answering a new `Request` at a prefixed address are
+  read where they are written, and every request through that instance is
+  recorded under the base, `baseFrom: "interceptor"`. A base set outright wins
+  over the call's own option; `??=`, `||=` and `if (!config.baseURL)` set it
+  only where none is set. A base chosen by a branch, a rewrite behind any other
+  condition, one that cannot be read and two that disagree are
+  `api-client-base-unread` at the line, and the requests keep the base the
+  instance is made with. axios handed one config object (`api({ url, method,
+  data })`, `axios({ ... })`, `request({ ... })`) is read too. A server's
+  request with a literal host joins the service the configuration says is
+  reached there (its name, an alias, `services[].hosts`, a name only the
+  project's network resolves), `static`, `via: host`, and the third-party node
+  for that host goes; a host only setting files name joins `heuristic`. The
+  coverage counting rule has two new families, `requests` (held to strength 1
+  by the read gate) and `bases` (client instances and request interceptors),
+  and the condition and prefix readers Angular's interceptor base used moved to
+  the core so both front-end readers share them
+  (`fixtures/client-interceptor-base`).
+- **A server's own oRPC or tRPC client joins the procedure it calls (P242).** A
+  NestJS, Express, Hono or plain Node service, or a worker, that builds an oRPC
+  client (`createORPCClient(new RPCLink({ url }))`, `OpenAPILink`) or a tRPC
+  client (`createTRPCClient`, `createTRPCProxyClient`, the untyped
+  `createTRPCUntypedClient` whose path is text) and calls a procedure through
+  it gets an `http_out` of kind `rpc`, joined to the procedure of the service
+  its link's address names by the address reading every request between
+  services gets: a setting's claimant, the values it is given (`heuristic`,
+  with `base-url-from-files`), the hosts services are reached at, a third
+  party. A client kept on a class member, set in place or in the constructor,
+  is read. The browser reader and the server's pass share one description and
+  one reader (now in the entry adapters), so tRPC's `links: [...]` chains are
+  read in a browser too: the last link sends, `splitLink` sends where its
+  branches agree, and a hook proxy handed no link sends where the repository's
+  chains all send. New row `procedure-link-socket` for a request sent over a
+  `wsLink`; a link whose address cannot be read stays `procedure-link-dynamic`.
+- **Nuxt layers read as part of the application (P243).** Each local layer -
+  a directory of `layers/`, an `extends` entry written as a path in the
+  repository or its workspace (`'../ui-layer'`, `['./theme', { meta }]`), or a
+  package of the workspace by its name - and the layers it extends in turn,
+  cycle-safe, is read under the application's version: its `pages/` are
+  screens, its `server/api` and `server/routes` routes, its `composables/`,
+  `utils/`, `stores/`, `imports.dirs` and `shared/` the names the application
+  uses unimported, its `alias` entries the application's, and `#layers/<name>`
+  a directory of `layers/`. A layer beside the application is part of the
+  service, as a workspace package it declares is, so a click in the
+  application reaching a layer's composable reaches the route the layer serves.
+  A page, route or name two parts give follows Nuxt's order (the application,
+  `layers/` from Z to A, then `extends` in order) and the lower one is a note,
+  `framework-layer-overridden` or `implicit-import-overridden`; which layers
+  were read is the note `framework-layer-read`. An import a layer writes with
+  `~` or `@` for a file only the layer has is the row `framework-layer-alias`,
+  since Nuxt resolves both against the application. `framework-layer-unread`
+  now says why a layer is not read (`meta.why`: `remote`, `dynamic`,
+  `installed`, `not-installed`, `missing`, `outside`).
+- **Lambdas declared in an AWS SAM template (P246).** A `template.yaml`
+  (`.yml`, `.json`) written for the SAM transform is read into the functions,
+  routes, subscribers, streams and workflows the Terraform, Serverless
+  Framework and CDK readers give - one deployment written all four ways reads
+  as one graph (`fixtures/sam-orders`). It is read with what `samconfig.toml`
+  gives it (the environment `services[].infra.options.config_env` names; any
+  other option is a parameter's value): parameters, conditions, `Fn::If`,
+  `Fn::FindInMap`, `Fn::ForEach` and `Globals` are settled before anything is
+  read, and what they leave unsettled is a row that names it. Every event type
+  a function or a state machine has is read or said; APIs are read from their
+  events, their OpenAPI bodies (in place, included, or a file), and
+  `AWS::ApiGatewayV2` and `AWS::ApiGateway` resources; state machines from a
+  `Definition` or a `DefinitionUri` file with its substitutions; a nested
+  application of the repository is read under the parameters it is handed, its
+  outputs answering the parent. The CloudFormation the Serverless Framework's
+  `resources` is read as now also reads `AWS::Scheduler::Schedule`,
+  `AWS::Lambda::EventInvokeConfig`, `AWS::Lambda::Url` and a user pool's
+  `LambdaConfig`, and a function URL handed to code (`!GetAtt ...Url.FunctionUrl`)
+  names its function in both readers, so a `fetch` of it joins (P54). New rows:
+  `nested-deployment-unread`, and `layer-not-followed` (a note). A coverage
+  probe counts the functions a template declares (`sam-function-resource`).
+  `deployment-unread` now names SST and Architect.
+
+- **Federation's entity interfaces, `@interfaceObject` and the router's own
+  directives (P245).** An entity interface and the `@interfaceObject` that adds
+  fields to it are composed - from the subgraphs or from a supergraph
+  (`isInterfaceObject`, `@join__implements`) - so a field it adds is planned
+  into that subgraph as the interface's, after its reference resolver, and a
+  fragment on a concrete type it cannot tell is an entity hop to the
+  interface's owner. An argument `@fromContext` fills plans the fields it
+  needs from the nearest type above that sets the `@context`, and is left out
+  of the composed schema; where nothing above sets it, the new
+  `graphql-context-not-reached` says so. The router's `@authenticated`,
+  `@requiresScopes` and `@policy` are `guard` nodes of the router in front of
+  the subgraph entries that resolve the field (`guarded_by`, `meta.access`,
+  shown by `flow` on a step through that router only), and an Apollo Gateway
+  that composes them unchecked is the new `graphql-auth-not-checked`.
+  `@composeDirective` is read, with a conflict for a directive never defined
+  or taken from two specifications. A gateway's `http://localhost:4001/graphql`
+  joins the service whose server listens on 4001 (`startStandaloneServer`'s
+  `listen`, `app.listen(...)`, a setting's fallback), `static`; two services
+  on one port is a row. Plan edges now carry `meta.through` (the gateway), and
+  subgraph endpoints `meta.graphql.listen`.
+- **GraphQL federation, one graph across subgraphs (P241).** A request to a
+  federation gateway is planned the way the router plans it, statically: each
+  selected field goes to the subgraph that resolves it, and a field of an
+  entity another subgraph owns is an entity hop to that subgraph's reference
+  resolver (`__resolveReference`, `@ResolveReference()`, now entries). The
+  composition is read from a supergraph file (`@join__type`, `@join__field`)
+  or composed from the subgraphs `IntrospectAndCompose` or `serviceList`
+  names, by their federation directives (`@key`, `@external`, `@requires`,
+  `@provides`, `@shareable`, `@override`, `@inaccessible`, federation 1's
+  `extend type`). An Apollo Router is declared by its supergraph or rover's
+  `supergraph.yaml`, with `router.yaml` read beside it. Subgraph addresses are
+  joined to services as requests are, never by name. A shareable field the
+  router chooses at run time is drawn to each owner, `heuristic`. `contracts`
+  compares a selection through the gateway with the composed schema
+  (`graphql-field-unknown`, the new `graphql-field-inaccessible`); new rows
+  `graphql-subgraph-not-joined`, `graphql-composition-conflict`,
+  `graphql-supergraph-drift`, `graphql-shareable-choice`; and
+  `graphql-federation-not-read` now says what could not be read: managed
+  federation, a supergraph built at start or not committed, a registry schema,
+  a subgraph no gateway names.
+- **Lambdas declared with the Serverless Framework or the AWS CDK (P57).** A
+  `serverless.yml` (`.yaml`, `.json`, `.ts`, `.js`) and a CDK app in TypeScript
+  are read into the functions, routes, subscribers, streams and workflows the
+  Terraform reader gives, through the same `DeploymentReader` shape, so the
+  linker, `flow`, `impact`, `dead` and the page read them unchanged; one
+  deployment written all three ways reads as one graph
+  (`scripts/deployments-agree.mjs`). The framework's variables (`self`, `opt`,
+  `sls`, `env` with `.env`, `file()`, `param`, `aws:region`) are resolved where
+  the files settle them, `resources.Resources` is read as CloudFormation with
+  its intrinsic functions, and the step-functions plugin's state machines are
+  workflows. The CDK app is followed from the entry `cdk.json` names - its
+  constructs, helpers, loops over settled lists and settled conditions -
+  without being run or installed, and a chain of states is written out as the
+  States Language. A queue or a function the platform names when it is
+  deployed is named by its declaration (`generatedName`), so what points at it
+  in the same deployment joins. `services[].infra.options` gives what a
+  command line would (`stage`, a context value). New rows:
+  `deployed-name-generated`, `construct-conditional` and `construct-unreached`
+  (notes), `construct-repeated-unread`, `deployment-app-unread` and
+  `deployment-plugin-unread`. `deployment-unread` now names only AWS SAM.
+- **`flowatlas path <from> <to>` (P229).** How one node reaches another, by
+  the shortest ways: directed along the edges `flow` walks, or `--undirected`
+  for "are these joined at all". It looks 6, then 12, then 24 steps unless
+  `--depth` says, prints every node on a shortest path once as a tree, and
+  says when nothing was found how far it looked and whether the other way
+  round holds. Exit 1 when there is no path. The search is the page's path
+  finder's, moved into core (`shortestWays`), so the page and the command find
+  the same paths.
+- **`flowatlas explain <name>` (P229).** Everything the graph knows about one
+  name, printed as the graph server's `describe_for_prompt` writes it,
+  character for character; `--scope`, `--max-steps`, `--max-chars`,
+  `--with-spec`, `--format json` for the tool's whole answer.
+- **GraphQL, both halves (P232).** A field a resolver answers is an entry of
+  the new kind `graphql` (`Query.orders`, `Order.customer`), read from NestJS
+  and type-graphql resolvers, code-first and schema-first, from resolver maps
+  handed to Apollo Server, graphql-yoga or mercurius, and from the schema. A
+  client's operation - Apollo Client, urql, graphql-request, apollo-angular,
+  `fetch` - joins the endpoint by its address and then each field it selects,
+  nested field resolvers included, with the request's confidence, at the line
+  of the selection. `contracts` checks selections against the schema
+  (`graphql-field-unknown`, `graphql-arg-unknown`, `graphql-arg-required`),
+  `dead` lists root fields nothing selects, and a service can be declared by its
+  SDL or an introspection result (`document.kind: "graphql"`). A federated
+  subgraph is said, not joined across. The language is read by a parser of the
+  tool's own (`@flowatlas/graphql`), so nothing is installed. Schema version 7.
+- **oRPC procedures and their callers (P58).** An oRPC router - a plain
+  object, `os.router(…)` with the guards and prefix its chain installs, a
+  `lazy(() => import(…))` branch, or a contract-first `implement(contract)` -
+  is read by the tRPC walk as one `rpc` entry per procedure, keyed by its path,
+  with its input and output schemas, its guards, the failures `.errors(…)`
+  declares (`meta.errors`) and where it is mounted (`meta.mounted`). Under an
+  `OpenAPIHandler` each procedure is also a REST route at the `handle` prefix
+  plus its `.route(…)`, which REST callers join. `client.orders.list(input)`,
+  `orpc.orders.list.queryOptions(…)`, `createRouterClient(router)` and
+  `call(procedure, input)` are requests joined by path in the service the
+  link's URL names (`via: link-url`), or by declaration in process. `fails`
+  reads `ORPCError`, `errors.X()`, `TRPCError` and an input's 400. New rows
+  `procedure-link-dynamic`, `procedure-link-unserved`, `procedure-prefix-unread`,
+  `procedure-contract-unread`; a `procedure-handler` coverage probe. The
+  description `adapters.entry.procedures` gains `plainTrees`, `implementedBy`,
+  `lazyBy`, `outputMethod`, `errorsMethod`, `routeMethod`, `prefixMethod`, and
+  mounts `constructed`, `routes`, `prefixFrom`, `protocol`.
+- **Vue, Nuxt and Svelte (P233).** The three frameworks `init` used to name
+  and leave out are read. A `.vue` or `.svelte` component's scripts are read by
+  the checker as TypeScript, every position naming the component file at its
+  own line; its markup's event bindings are clicks that reach the script's
+  functions, the Options API's methods and Pinia or Vuex actions; Vue Router's
+  routes, lazy ones included, and Nuxt's and SvelteKit's pages make components
+  screens; `$fetch`, `ofetch` and `useFetch` are requests. Nuxt's Nitro server
+  is a row of the file-system routers, its verbs from file names, its request
+  read off h3's helpers whether imported or global, `throw createError` a
+  failure, and a Nuxt application is both halves of one service. New types
+  `vue`, `svelte` and `nuxt`; nothing needs to be installed. Astro and Solid
+  are now the frameworks `init` names as unread.
+- **Aliases and imports a framework generates, read without its build
+  (P240).** A fresh clone has no `.nuxt/` or `.svelte-kit/`, so Nuxt's `~`,
+  `@`, `~~`, `@@`, `#shared` and SvelteKit's `$lib` resolved to nothing and
+  every call through them was lost. They are now read as each framework
+  documents them - Nuxt 3's root and Nuxt 4's `app/`, `srcDir`, `alias`,
+  `kit.files.lib` and `kit.alias` where written as literals - and the
+  generated tsconfig, where it is there, wins. Names Nuxt imports for a file
+  that does not import them (`composables/`, `utils/`, `stores/`,
+  `imports.dirs`, `server/utils/`, Nuxt 4's `shared/utils`) are read as
+  imports of their files, a template's handler included, and `#imports` is a
+  module of them. Nuxt 4's pages are read under `app/pages`. A solution
+  tsconfig lends the aliases of the projects it refers to, and Vite's
+  `resolve.alias` is read for any alias no tsconfig names. Each is said once
+  per repository as a note (`aliases-from-convention`, `aliases-from-config`,
+  `implicit-imports-from-convention`); a name two files give, a Nuxt layer and
+  a setting written as code are rows.
+- **A request through a client instance carries its base (P239).** The base an
+  instance is made with - `axios.create({ baseURL })`, `ofetch.create` or
+  `$fetch.create`, `ky.create({ prefixUrl })` or `ky.extend`, or
+  `api.defaults.baseURL = …` set afterwards - is read where it is written and
+  put in front of the address each call writes, so the request joins the
+  service at that base `static` instead of by its route alone, in React,
+  Next.js client code, Vue, Nuxt and Svelte. The instance is followed through
+  imports, default exports, object keys, class fields and factories of your
+  own, and is recognised by its import with nothing installed; ky is a client
+  now, and ofetch and axios instances are read when called as functions. An
+  Angular interceptor writing `req.clone({ url: base + req.url })` puts its
+  base in front of every request of the framework's client. A browser request
+  whose address names a host a configured service is reached at (its name, an
+  alias, `services[].hosts`) joins it `via: "host"`. A base nobody can read is
+  the new row `api-client-base-unread`, and the request keeps today's join. On
+  `fixtures/vue-spa` the two requests through its instance now join `static`.
+- **Does it help an assistant, measured (P238).** `scripts/bench-agent/`
+  generates an eight-repository TypeScript project from a seed, with traps and
+  an answer key written from the generator's own model, asks Claude Code 30
+  fixed questions about it in four arms (one repository or all of them, with
+  the graph or without), and marks the answers against the key. A pilot of 32
+  sessions estimates a full run, which starts only after it; a run stopped by a
+  usage limit resumes. The expectations are committed before any run and the
+  report (`docs/benchmark.md`) checks every one, and lists each question where
+  the graph did worse. `run.mjs --dry` - the generator, the key, the scorers and
+  the graph held to the key, with no assistant - is part of `pnpm check`.
+- **What assistants asked, kept on this machine (P235).** With `"log":
+  { "questions": true }` or `FLOWATLAS_LOG_QUESTIONS=1`, every MCP tool call and
+  every `flow`, `impact`, `channel`, `path` and `explain` adds a line to
+  `<output>/questions.jsonl`: the ids asked about, whether they resolved, how
+  big the answer was and what cut it, and the gaps on it. Off by default; ids
+  and counts, not prompts; nothing is sent anywhere. `flowatlas stats
+  --questions [--since 7d]` summarises it by tool, with the names that matched
+  nothing and the gaps the most questions ran into, and `doctor --unresolved`
+  puts the causes asked about first.
+- **The graph in open formats, and JSON Schemas (P237).** `flowatlas export
+  dot | graphml | cypher | csv` writes the graph for Graphviz, Gephi and yEd,
+  Neo4j and Memgraph, or any loader, at the service, class or node level, from
+  every node or only what some ways in reach, walked as deep as `flow` walks
+  them (`--depth`, `--max-nodes`) with the nodes either bound left out counted;
+  every edge carries how sure the graph is. `schema/` holds JSON Schemas of `project-graph.json`, a service's
+  `graph.json`, `diff.json`, `docs.json` and `freshness.json`, generated from
+  the readers' own schemas and checked by the gates; `docs/formats.md` lists
+  every file the tool writes.
+- **Pages and comments that say why (P234).** A page that names a node in
+  code is linked to it with no block written: `docs` on `get_flow`,
+  `describe_for_prompt` and `impact` lists it (`kind: "mention"`, with the
+  heading above), and the page's "Described in" too. A name that is clearly
+  the graph's and names nothing - a renamed route, a removed method - is
+  counted by `flowatlas docs`, and `--check --mentions` fails on it. A
+  comment above a declaration tagged `WHY:`, `NOTE:`, `DECISION:`, `HACK:` or
+  `SEE:` is kept on the node and written under **Why** by `explain` and
+  `describe_for_prompt`. Exact names only; prose is never read. `docs.json`
+  is format 2.
+- **One graph for the team (P236).** `flowatlas publish` writes the graph just
+  built as one checked bundle, never source; `flowatlas pull` fetches it from a
+  CI artifact (`gh:owner/repo/name`), an `https://` address or a file, checks
+  every file and the schema, and installs it, a conditional request when
+  nothing is new. With a `remote` in the configuration, a repository not
+  checked out is allowed, and every question reads the pulled graph and says
+  so. `build --on-pulled` reads what is checked out and takes the rest from
+  the team's; `diff --pulled` compares a branch with main as CI built it. The
+  action's `publish: true` uploads the bundle, and `mcp.pull: on-start` pulls
+  when the server starts. A token is never sent to another origin nor down to
+  plain http, and `gh:` takes only an artifact from a successful push to the
+  default branch, never one a fork's pull request made.
+- **A GitHub Action, and `diff --format comment` (P231).** The action in
+  `action/` fetches the other repositories a configuration names, caches the
+  base graphs under the base commit, and keeps one pull request comment up to
+  date: three lines first (what the change reaches, its new breaks and stale
+  docs, the verdict), the report under them, found again by a marker that
+  names the configuration and written by the action's own token, never a
+  comment somebody else pasted the marker into. A fork's pull request gets the
+  job summary. It can fail the check on new breaks, and on doc blocks the
+  branch makes stale with `fail-on: stale-docs`, and upload SARIF. Its docs
+  check reads the branch's graph that `diff --head-db` keeps, and the tokens
+  it clones with never reach a clone's `.git/config`. `flowatlas diff --format
+  comment` writes the same comment for any workflow, with its figures in
+  `diff-comment.json`.
+- **`flowatlas report` (P228).** The page a person reads first, from the
+  graph: each service and what it is, what crosses between them (drawn as a
+  Mermaid flowchart), what most of the project depends on by reach, what is
+  worth a second look (a single thread between two services, a store two
+  services write, a best guess on a busy path), what was not read by cause,
+  the checks with the command for each, and questions to ask. `--output .`
+  writes ARCHITECTURE.md. An `overview` doc block keeps a committed one true:
+  `docs --check` fails when the structure changed, not when a count moved. The
+  graph server serves it as `flowatlas://overview`, and `doctor` notes a store
+  two services write (`store-shared`).
+- **`flowatlas agents install | status | remove` (P227).** Tells each
+  assistant when to ask the graph rather than search the files: a Claude Code
+  skill and a Cursor rule by default, a marked block in `AGENTS.md`,
+  `CLAUDE.md` and Copilot's instructions with `--instructions`. One list of
+  questions behind them all, which the graph server's instructions now name
+  too. `--hook` adds a Claude Code hook that, after a search naming a route,
+  channel or handler another repository calls, publishes or handles, says
+  which and the call that lists them; it never refuses a search and is silent
+  otherwise. `build` writes the `names.json` it reads. `init --agents`.
+- **Answers say when the code moved since the build (P230).** Every build
+  writes `freshness.json`: each service's checkout and every file it read. An
+  answer citing a file that changed since says so, `stale` on the graph
+  server's answers and the commands' JSON and one line on stderr; a `touch` is
+  not a change. `start_here` says `moved` and `doctor` an info row
+  (`checkout-moved`) for a checkout on another commit or branch.
+- **One build at a time (P230).** A build holds `<output>/build.lock`, put in
+  place whole, so of builds started at the same moment only one takes it; a
+  second says which one is running and exits 2, or waits with
+  `--wait <seconds>`, and a lock a crashed build left is taken over by one
+  build only. `build --background` returns at once and coalesces requests into
+  one more build.
+- **`flowatlas hook install | status | remove` (P230).** Git hooks that rebuild
+  in the background after a checkout, a merge or a rebase, written as a marked
+  block beside what a hook already holds; a repository whose hooks another tool
+  keeps gets the line to add instead. `init --git-hooks` installs them.
+- **`mcp.rebuild: "on-change"` (P230).** The graph server starts a background
+  build when an answer finds its files changed. Off by default.
+- **`get_flow` takes `to` (P229).** The flow cut down to the shortest ways to
+  a node, from a way in or from any node, with `searched` and `reverse` when
+  there is none. No new tool: the list grew by one clause.
+
+### Changed
+
+- **Answers that end the question (P403).** A pilot's costly sessions took a
+  call the answer suggested, or doubted an answer that was right. A compact
+  answer that settles its question says so in `settled`, first, with no
+  `next`: `impact` and `who_calls` with `complete: true` (where a request
+  lands, and that every way in is listed), `check_contract` on a call whose
+  ends were compared or a channel with nothing unread, `who_consumes` and
+  `who_emits` with `complete: true`; `flowatlas impact --format json` too.
+  `impact` and `who_calls` suggest the impact across a channel only where
+  `throughChannels` could not count the ways in beyond it, and a compact
+  `next` drops `describe_for_prompt` on a flow `get_flow` drew or names.
+  `who_consumes` of a type no code that runs selects names, under
+  `selectionUnread`, each consumer whose choice was not read with its
+  handler's line and why, where it said "not read (A.f, B.g)" and agents
+  grepped. Every answer, compact or verbose, is held to 12,000 characters
+  (`MAX_ANSWER_CHARS`): its longest list keeps the rows that fit and the
+  answer says the cut in `left` and the call for the rest (the next `offset`
+  where the tool pages). A `maybe` row's `confirm` searches a method whose
+  name its repository shares by its call, `.start(`. The instructions and the
+  guide say `settled` is the whole answer, at no more characters. The answer
+  budget's 98 questions of the base run to 141,101 characters (145,173), the
+  text every turn carries to 9,380 (9,385).
+- **Fewer turns per question (P396).** A pilot after P381 to P394 kept its
+  right answers and spent more turns and characters on them; each cause is
+  fixed. The instructions, the guide and the skill's description say text in
+  code (a constant, a log line, a string) is a grep, where a plain-text
+  question went to the graph first and to grep a turn later. `dead` on one
+  node says `maybe`, with the same `gap` impact's row names, where it said
+  `likely-dead` beside impact's `maybe` (traffic's verdict stays its own; the
+  lists keep the linker's words). Compact answers leave out `confirm` (only
+  `verbose` says it), the facts check_contract and findings read
+  (`answerRead`, `answerUnread`, `headers`, `sendsJson`, `credentials`,
+  `statusChecks`, `streamEvents`, `fallback`) on every row and step, a list
+  row's relations by id (`routes`, `handsOnTo`), and line ranges outside
+  `get_flow` and `impact`; `get_source` answers at most 6,000 characters of
+  code and names the `fromLine` call for the rest. The answer budget's
+  questions of the base run to 135,451 characters (135,854), the text every
+  turn carries to 9,388 (9,397).
+- **impact counts every way in by what it is (P396).** `byKind` named only
+  some: a bot's webhook sat in `changing` beside the API, and a maybe row was
+  in no kind. A route whose chain to the changed code runs through a bot's
+  code is a bot, named by the bot's file; a route whose address or name says
+  it receives a provider's posts is under `webhooks`; a `maybe` row is listed
+  under its file's kind, marked `(maybe)`. `changing` holds only the routes
+  of the changed code's own service that other rows request it through; a
+  route no row requests is under `routes`.
+
+- **The finding of a state machine task that retries no transient error is
+  `workflow-function-unretried` (P394).** It was `workflow-lambda-unretried`;
+  a `--kind`, a `.flowatlas` filter or a SARIF rule that names the old reason
+  needs the new one. The finding is unchanged.
+- **Less said on every turn, and a guide that saves turns (P366).** The
+  graph server's instructions, which a client sends again with every
+  request, are about 2,100 characters instead of 6,400: the tool to begin
+  with, the id chains, the inputs every tool shares and which tools are
+  listed when, with what one tool's answer needs moved into that tool's
+  description. The tool list gives the shared inputs (`detail`, `maxNodes`,
+  `offset`, `service`) by type alone, their meaning said once in the
+  instructions, and drops the `$schema` header on each input schema: about
+  10,100 characters of names, descriptions and inputs for all 26
+  tools instead of 12,200, every call still checked against the full bounds.
+  `flowatlas agents install` writes a shorter block into `AGENTS.md`,
+  `CLAUDE.md` and Copilot's file (about 1,100 characters instead of 2,000:
+  the services, the questions in a few words and where the full guide is),
+  and the block and the guide now say to load the core tools in one
+  ToolSearch call (the `select:` line written out under the name the server
+  is registered as in `.mcp.json`), to take an answer that says
+  `complete: true` as the whole answer, to pass several ids in one call and
+  send independent calls together, and to ask `verbose: true` only when a
+  field is missing. The search hook's note names the call and no longer the
+  terminal command.
+- **The graph server's answers are compact by default, and `verbose: true`
+  answers as before (P365).** An assistant pays for every character of an
+  answer on every later turn, and most of a row said again what its `id`
+  already says. Every answer now passes, once, where answers are serialised,
+  through one compaction whatever tool wrote it. On a row with an `id` (or a
+  gap's `gapId`): `type` goes when the id starts with it (and `method` on a
+  symbol whose id ends `Class.member`), `service` when the id names it, `label`
+  when it is the id's tail as written or said aloud (`GET /orders` beside its
+  way in's id), `kind` when a way in's id says it, the file of `loc` when the id
+  holds it (`loc` becomes `line`, or goes when the id holds the line too), and
+  any other field that is a part of the id, the tail of an id its `meta` says
+  in full (`selectedIn` beside `meta.selectedBy`) or the id of the row it is
+  under; a `meta` key goes when it repeats the row's own field, a part of its
+  id or a word of its label. Below the answer's own fields, null, `false` and
+  empty fields go; `next` keeps at most two calls, or the paging call alone
+  when the list was cut. A field it does not know is kept, and `detail` means
+  what it did. Every tool takes `verbose` (default `false`) for the whole
+  answer; `get_source` and the Markdown of `describe_for_prompt` are never
+  compacted, and the page, the exported graph and the reports are unchanged.
+  The `outputSchema` each tool lists now requires no field, and a row that may
+  say `loc` may say `line`. On seven fixtures' graphs the answers of the tools
+  an agent calls most are 0.74 of their whole size in all, from 0.54
+  (`list_entries`) to 0.87 (`dead`); what is left is ids, edges and `next`
+  (docs/mcp.md, *Answers*).
+  `flowatlas explain --format json` prints the compact answer on one line, and
+  `--verbose` the whole one as before. The MCP snapshots are asked
+  `verbose: true` and did not move; `expected.mcp.compact` beside three
+  fixtures holds the compact answers.
+
+- **A route on an application the framework's own maker made is as sure as
+  a typed one (P346).** With nothing installed, a call or `new` of a
+  dialect's maker imported or required from the package itself
+  (`express()`, `Router()`, `new Koa()`, `Fastify()`, `new Hono()`), through
+  a chain that answers with the application, held by a `const` or a `let`
+  nothing assigns again, is the value rather than an account of it, so its
+  routes and the joins on them are no longer `heuristic`. An annotation, a
+  destructured member, a class of the repository, a function's answer, a
+  parameter and a property stay `heuristic`, and so does a route placed
+  through a mount written on one (`express-not-installed` and the fixtures
+  whose uninstalled Express services make their applications directly lose
+  the ceiling; `express-maker-direct-and-stated` shows both kinds).
+- **A plain request to a procedure's REST route is told where its answer's
+  type comes from (P252).** `contracts` said every caller of an oRPC or tRPC
+  procedure gets an answer "inferred from the server's own tree", which is
+  true of a client typed from the router and not of a `fetch`: a plain
+  request that types the answer itself keeps `procedure-output-inferred` with
+  a message naming its own type, which nothing ties to the tree, and one that
+  types nothing is `no-type-on-receiver`, as any request is
+  (`orpc-next`, `orpc-contract` snapshots).
+- **A lazy oRPC branch the checker cannot resolve is followed by its path
+  (P252).** `lazy(() => import('@/routers/reports'))` with no `paths` behind
+  the alias is followed into the one file of the service its path names
+  (relative, or after `@/`, `~/`, `~~/`, `#`, with a bundler's endings and
+  `index`); one that cannot be is `procedure-branch-unread` saying it is a
+  lazy branch, and the module it names is no longer read as a root of its
+  own, with its procedures at addresses nobody calls.
+- **A subgraph whose port is only a setting's fallback joins `heuristic`
+  (P250).** P245 joined a gateway's `localhost:<port>` subgraph `static`
+  whatever the port was read from; it now follows the rule every request to
+  this machine does, so `process.env.PORT ?? 4003` and Apollo's default 4000
+  are a guess. A GraphQL endpoint's `meta.graphql.listen` says `default: true`
+  for a library's default.
+
+- **SAM templates are found by what they say (P248).** A file naming the SAM
+  transform is read wherever it is kept, not only as `template.yaml` or the
+  file a `samconfig.toml` names, and a `samconfig.toml` gives its parameters
+  only to the template it deploys - the one beside it, or the one its
+  `template_file` names from a directory above.
+- **A queue, a topic or a bucket Terraform gives no name is named by its
+  declaration (P246)**, as the Serverless Framework and CDK readers name one:
+  `sqs/${…}@aws_sqs_queue.inbox`, joined by what the configuration points at it
+  with, with a `deployed-name-generated` note, where it was a name not read.
+- A text built with `Fn::Sub` or `Fn::Join` around a value that is not read
+  now says which variable or parameter it waits on.
+- **One resolution for names (P229).** The command line's `impact` resolved a
+  name its own way, so `impact "POST /orders"` was refused while the
+  `impact` tool took it; it now resolves as every tool does, and `--service`
+  narrows a name for both. `event:`, `cron:`, `rpc:` and `workflow:` names,
+  which only the command line took, are taken by every tool too.
+- **`contracts` shows a GraphQL finding with no typed boundary beside it
+  (P241).** A project whose only comparisons were GraphQL selections against a
+  schema printed "no boundary between services" over its errors; the findings
+  table is printed now. A federated subgraph is no longer one
+  `graphql-federation-not-read` row each: it is said only when no gateway in
+  the project names it.
+
+### Fixed
+
+- **The package installs.** `@flowatlas/graphql`, a private package of this
+  repository, was among the command's `dependencies`, so the packed command
+  imported it from npm, which has none; it is bundled with the others, and
+  the bundle refuses a `@flowatlas/` dependency.
+- **Three switches that did not do what the docs say.** `adapters.auto:
+  false` detects no adapter and reads with only those `adapters.force` names
+  (it dropped `force` and detected anyway); a team bundle carries the prompt
+  cards' and the edit hook's indexes (`card-names.json`, `edits.json`), so a
+  pulled graph serves both hooks; and `init --hook`'s help names the three
+  hooks it installs.
+- **Findings and verdicts that agree with each other (P400).** Six places
+  where one answer said one thing and another, or the code, said otherwise:
+  - "No code selects T on C" (`message-type-unselected`) is held back, with
+    why, where a consumer choosing T receives channels not all read (a stream
+    route relaying a channel not read, a hub written to with one), any of
+    which may be C: the mirror of P395's hold on `type-never-published`,
+    asked by the same code (linker `receivedOf`, `carriesOf`,
+    `channelsUnknown`). The row says so and is `unsure`; `dead` on the type
+    says `unknown`.
+  - `describe_for_prompt`'s service scope and the page's *Copy as prompt*
+    counted every contract break at warning as a finding row; they now say
+    them on a line of their own with the call that lists them
+    (`findings({kind: "contract-break", severity: "warning", service})`), as
+    `findings` counts them.
+  - A `POST`, `PUT` or `PATCH` route nothing in the project calls, whose
+    handler hands the request to a bot's code within three calls, was `dead`
+    while `impact` counted it a bot; `dead`, `list_entries` and `impact` now
+    agree it is the bot's webhook (class `infrastructure`, role `bot`,
+    verdict `unknown`, `why: hands its request to ChatBot.handleUpdate`).
+  - The handler of the `else` that ends an `if`, `else if` chain on a
+    message's type, or of a `switch`'s `default`, takes the types the channel
+    carries that the branches before it do not choose (`via: else`), where
+    every channel it receives is known whole and every publish on each says
+    its type; elsewhere it chooses none, as before. The reader records the
+    choice (`meta.selectsRest`), the linker draws the types; where the
+    handler's parameter already says a type and the remaining ones differ,
+    `selectionDiffers` says so. A handler taking every other type was compared
+    under every type, a field it reads named under a type it never gets.
+  - The spec diff's `response-property-became-optional` is an `info` where
+    every client read of the field checks it is there first (`guarded`,
+    P395), and a `warning` naming the read where one does not; it was an
+    `error` for any read.
+  - An answer reshaped on the way out: the Nest reader reads what the
+    interceptors around a route do to its answer (`meta.answerWraps`): a
+    `map` building an envelope around it (`{ success, data }`), the
+    framework's `ClassSerializerInterceptor` leaving out the fields the
+    answer's class marks `@Exclude()`, or why that is not read (an operator
+    putting another value in its place, a `map` whose result a call works
+    out, an interceptor from a package). `check_contract` and
+    `answer-field-never-returned` compare a client's reads against the wire
+    (`answer.wire`; a missing row `excluded` or `wrapped`), and hold the rows
+    back where an interceptor's reshaping is not read (`unsure`).
+
+  New fixture `findings-that-agree`; `findings-that-hold` holds its
+  `ALERT_RAISED` row back; `api-change-verdicts` gains a field that became
+  optional read behind `??` and one read as it is. The answer budget's
+  questions that were there before go to 145,158 characters (145,174):
+  `findings.that-hold` 4,083 to 3,912 (a row held back), and
+  `findings.handler-types` 1,349 to 1,504 (the same fixture's `heldBack` says
+  it on every `findings` answer); three new questions (4,627). The text every
+  turn carries is unchanged (9,385).
+
+- **A table of handlers is followed (P398).** `route.handler(ctx, data)`,
+  where `route` is an element of a table the code writes out (an array of
+  object literals or a record of them, in a field, a `const`, a static, or
+  returned by a method or a getter; picked by `find`, `filter(...)[i]`,
+  `table[i]`, `for...of`, `forEach` and the like, or destructured), was a
+  `call-dynamic-receiver` gap, so the handlers were `maybe` in who_calls,
+  impact and dead; on a real project nearly every costly session began at
+  such a row. It is now an edge to what each element's member runs (a
+  method, `this.h.bind(this)`, a function declared or imported, or the calls
+  of an arrow written in the element), `meta.via: "table"`, with
+  `meta.selectedBy` where the selection names a key (`prefix set_status_`,
+  `equals stock`, `pattern /re/`). Elements not written out keep the gap,
+  cause `table-rows-unread`, saying how many; a `.bind` in a table the file
+  dispatches is no longer a row of its own. A bot registering a table in a
+  loop (`bot.action(route.pattern, (ctx) => route.handler(ctx))`) opens one
+  way in per element, handled by its handler (`handlerVia: "table"`), where
+  it opened none. A table call inside a function a way in names as its
+  handler is drawn from that function, not again from the method it is
+  written in, which nothing but the framework may call. Read in Nest's and
+  Angular's call walks and by the telegraf reader.
+- **Message types off the grep line (P398).** The instructions, the guide
+  and the skill's description said "text in code is a grep"; an agent read a
+  message type's name as text and grepped for its handlers. They now say a
+  constant's value or a log line is a grep, and who sends, handles or calls
+  is not. The text every turn carries goes to 9,385 characters (9,388); the
+  answer budget's questions that were there before go to 143,383 (143,729),
+  with two new ones on a table of handlers (1,791).
+- **A way in per button of a prefix table (P399).** A bot's listener of
+  every callback (`bot.on('callback_query', ...)`, or a method decorated
+  `@On('callback_query')`; `text`, `message` and `inline_query` alike) that
+  hands each update to the element of a table its data selects
+  (`this.buttonRoutes.find((r) => data.startsWith(r.prefix))`, `===`, a
+  pattern's `test`) opened one `bot_event` way in, the prefixes only on the
+  edges. It now opens one per element, the way an explicit
+  `bot.action(/^view_order_/)` would (`bot_callback view_order_*`, its
+  `callbackData` a pattern), handled by what the element's handler runs, so
+  the buttons P388 reads are held against each prefix: a button sending
+  `view_order_${id}` is handled, one whose data no element starts is a
+  `bot-button-unhandled` finding where it was held back behind a catch-all.
+  The listener stays a way in only for what it does besides choosing
+  (`splitByTable`, `restReadsData` where that reads the data). A table with
+  an element not read is not split. The call a loop's registration over a
+  table hands each update to is no longer drawn from the method around the
+  loop either.
+- **The framework calls lifecycle hooks (P399).** A method only Nest's
+  `onModuleInit` reached (`setup()`, registering a bot) was the end of a
+  chain nothing read reaches, a `maybe` in impact, who_calls and dead. The
+  Nest reader marks `onModuleInit`, `onApplicationBootstrap`,
+  `onModuleDestroy`, `beforeApplicationShutdown` and `onApplicationShutdown`
+  on a controller or provider a module registers (`frameworkCalls`); `dead`
+  answers them alive, and their class, and reach reads each as a way in,
+  `from: "startup (onModuleInit)"`, `startup` in impact's `byKind`. Angular
+  reads all eight hooks of a component, and a directive's, as run where it is
+  shown. A call written in a function a way in names as its handler is drawn
+  from that function only, for every call (P398 did so for table calls).
+- **Tables in every call walk (P399).** The browser reader's call walk
+  (React, Vue, Svelte, plain scripts) follows a call through a table as
+  Nest's does: a function or method each element holds, or the calls of an
+  arrow written in it, `via: "table"`, unread elements a
+  `call-dynamic-receiver` row with the count. Angular's reads every form:
+  a destructured member, a function declared or imported, and every call an
+  arrow written in an element makes.
+
+- **A handler's reads are compared under the types it is chosen for (P397).**
+  `check_contract` on a channel and `field-never-sent` set every handler of a
+  channel against every type's publishes, so two handlers marked
+  `@Consumes` on one channel, each chosen by a relay's `if`/`else if`/`else`
+  and its parameter's type, were each said to read a field "sent by none of
+  its publishers" under the other's type. A handler whose every choice is its
+  own (its parameter's type, a caller's branch, a choice in its own body) is
+  now compared only under the types it is chosen for; one that hands types on
+  to other handlers, or every other type alike, is read for each type as
+  before. Where the code calling a handler under a choice and the declared
+  type of its parameter say different types, the consumer says so
+  (`meta.selectionDiffers`), `check_contract` marks a missing field read under
+  it `unsure`, and `field-never-sent` holds it back with why.
+
+- **Findings that hold (P395).** `type-never-published` checked a type a
+  screen chooses against one channel at a time, though a screen fed through a
+  stream route (or a hub) receives every channel it relays: a type published
+  on the second channel was "published by nothing" on the first, at `high`. A
+  consumer's choices are now checked against every channel it receives, and
+  held back, with why, where those channels are not known whole: a stream
+  route relaying a channel not read (the route's `meta.relaysUnread`: a
+  subscription whose channel is worked out when the code runs, an object whose
+  class is not read), a hub written to with a channel not read
+  (`meta.forwardsUnread` on its channel), nothing publishing on one of several
+  channels read. A finding over several channels names them all.
+  `answer-field-never-returned` listed reads behind a presence check (`const m
+  = v.distance; if (m == null) return v.address ?? ''`): a read checked first
+  (`?.` past it, `??`, `||`, `&&`, `if (x)`, `!x`, a ternary on it, `== null`,
+  `typeof x === 'undefined'`, `'k' in o`, through a local holding it, or
+  anywhere in the functions around the read) is marked `guarded` where P391
+  records the answer's reads, said by `check_contract` per read and per
+  missing field, and held back from findings; the held-back `why` names each
+  reason with its count. `contract-break` listed every warning (an optional
+  field one end may leave out) ahead of the kinds after it: the errors are
+  listed, the warnings counted under `warnings` with the call that lists them,
+  `findings({kind: "contract-break", severity: "warning"})`, and `flowatlas
+  findings` says them on a line of its own and takes `--severity`. A route
+  answering a type made of itself (`type CategoryTree = string |
+  CategoryTree[]`) answers end to end. New fixture `findings-that-hold`; the
+  ten types `sse-hub-subject-screens`' screens choose, each published on
+  another channel the hub relays, are no longer listed.
+- **A build that cannot write the edit hook's index says why (P396).** The
+  failure was swallowed whole: on a real five-repository project no
+  `edits.json` appeared and the hook stayed silent. A body type made of itself
+  overflowed the stack there (fixed by the depth guard on shapes); any failure
+  left is said on the build's summary and JSON notes, in `edits.json`
+  (`unwritten`, with no names), and by `doctor` as `edit-index-unwritten`
+  (info), which also says an index missing beside `names.json` or older than
+  the graph.
+
+- **`impact` never walks back along a navigation, from a guard, or across a
+  channel into a flood (P372).** A method that navigates to a screen
+  (`router.navigate([...])`, `navigateByUrl`, a guard's redirect, a login
+  screen sending to the dashboard) is stored as a `calls` edge with
+  `meta.navigates`, which the walk read as a call of the screen's component:
+  impact on a board's method listed every screen that navigates to the board,
+  and on a dashboard's method every screen a guard redirecting to the
+  dashboard is listed on. A navigation is never walked back along, however it
+  is stored, and what a router or a framework runs before a screen (a guard or
+  resolver, `meta.guard`; a route middleware, `meta.middleware`; core's new
+  `isRunsBeforeEdge`) is walked back to the screens listing it only when the
+  walk reached it through its own code - impact on a method a guard calls
+  still lists every screen it guards. A consumer on the way that no screen
+  holds (a back end's worker, a bot re-fetching on a relayed event) is no
+  longer walked onto its channel to every route publishing there and every
+  screen calling those: they call none of the code, so they are counted apart
+  in `throughChannels` (`{channel, type?, consumer, ways, sample}`, never
+  complete-blocking), and `impact({symbol, channel})` (`flowatlas impact
+  --channel <name>`) lists one channel's ways in, each `via: "channel
+  <name>"`. Rows' `reach`, `from` and `ways` walk by the same rules, crossing
+  a channel only where no way in calls the code, so `ways` no longer counts
+  screens reached by navigation or a channel's publishers. On the new
+  `impact-guarded-navigation` fixture impact on a list method answers 5 rows
+  where it answered 17 (1,437 characters compact from 2,766), the channel's 4
+  ways in counted, and on an acknowledge method 3 where it answered 6 (797
+  from 1,244); multi-repo's `POST /orders`, reached only through billing's
+  `order.created`, moves from `entries` to `throughChannels`, as does
+  multi-repo-stepfunctions' `POST /checkouts`, whose event a rule hands to
+  the workflow.
+- **`impact` lists only the ways in that call the changed code (P371).** A
+  screen's subscription to a stream is placed in the screen and no longer
+  walked back onto its channel: the routes that publish to it, and every
+  screen and bot calling those, were listed as ways in that could break, each
+  with the target's route as `via`. A consumer whose handlers run in
+  no component a way in shows (a back end's worker, run by the message) is
+  still walked onto its channel, with `via: channel <name>`. The hop from a method to its class, and from the class to what
+  injects it, is no longer taken from a method whose callers the walk
+  follows, so a screen that injects a client for its other methods is not
+  listed. A call written at the line a way in is registered at
+  (`bot.command('items', (ctx) => this.showItems(ctx))`) is the way in's, not
+  the registering method's, which had made a `maybe` row. The same walk gives
+  `reach`, `from` and `ways` on rows and `flowatlas impact`'s tree. On the new
+  `impact-shared-client` fixture impact on a list method answers 4 rows where
+  it answered 13 (959 characters compact, from 2,395), and `complete: true`;
+  on an acknowledge method 2 where it answered 10.
+
+- **`flowatlas agents` writes only into the project it was run for (P366).**
+  Run in a git repository of its own made below a project's root, `install`
+  found that project's configuration and wrote the guide, the blocks and the
+  hooks into every one of its repositories. Without `--config`, `install`,
+  `status` and `remove` now refuse inside a git repository that is neither
+  the project's root, one of its repositories nor one holding them, naming
+  the configuration found and how to write into it; from the root or a
+  repository of the project, or with `--config`, they run as before.
+
+- **A channel asked for as code writes it answers, and no answer suggests a
+  tool the server does not list (P360).** Every MCP tool that takes a channel
+  accepts it with or without `channel:` and with a placeholder in any part
+  (`tenant:<id>:events`, `{id}`, `${id}`, `${ctx.id}`, `:id`, `[id]`) or a
+  value it takes (`tenant:42:events`): the one channel it denotes answers,
+  saying which in `channelUsed`, and several are listed with the call that
+  takes each. An exact name answers as before. Every answer, prompt and the
+  server's instructions leave out a call to a tool the running server hides:
+  on a database alone, where `get_source` is not listed, a hint to read a
+  step says the file and line to read and that the code is not served from a
+  database alone. `start_here`'s `hidden` still says which tools are not
+  listed and when they appear.
+- **`get_source` and `explain` return a decorated declaration whole.** Where a
+  declaration ends is found by counting braces from where it starts, and a
+  decorated method's or class's recorded start is its first decorator - one
+  that closes the braces of its own options (`@Guard({ roles: ['a'] })`, a
+  component's `@Component({ ... })`) on its own lines. The answer stopped
+  there, the decorator alone. A decorator's lines are now read as part of the
+  declaration rather than the whole of it.
+- **A server `Bun.serve` starts reads the files its script makes Bun load,
+  and the CDK's version is looked for in the workspace (P348).** Bun's own
+  files were taken as development's whatever the script running the server
+  said; they are now Bun's order for the mode the command's `BUN_ENV`, else
+  `NODE_ENV`, gives - `.env.<mode>.local`, `.env.local` (not for `test`),
+  `.env.<mode>`, `.env` - or only the files `--env-file` names (the last
+  first, of `a,b` too), none with `--no-env-file`, development's only where
+  no script runs it. The CDK's version is looked for up to the outermost
+  workspace that declares the repository a member, so a member reads the
+  root's lockfile. A `Schedule.cron(...)` naming both a `day` and a
+  `weekDay` is left unread, as the CDK refuses it.
+- **No look up the directories leaves the repository being read (P334).**
+  Looking for an ESLint shareable configuration or plugin under
+  `node_modules`, or a Nuxt layer or module by its package name, went on to
+  the file system's root as Node does, so a package installed above the
+  repository - in the home directory, say - was read into its globals; and a
+  configuration's `extends` by a path climbing out was followed. Each now
+  stops at the root the service was given, widened to the workspace that
+  declares it as a member. A walk given no root - the workspace roots above
+  a package, the package a file is in, a relative tsconfig `extends`, a
+  workspace application's manifest, a Prisma schema, the top a gRPC
+  contract is searched from, the checkout a build is stamped with - stops at
+  the top of the checkout it starts in, and none reads in the home
+  directory.
+- **TypeScript resolves no import from an install above the repository, and
+  a walk outside a checkout stops at what the run reads (P340).** The
+  compiler looked for `node_modules` and `@types` in every directory up to
+  the file system's root, so a package installed above the repository could
+  resolve an import and lend its types. An install whose directory is above
+  the top of the checkout a service is in - outside any checkout, above the
+  directories the build was asked to read, else above the service's root
+  widened to its workspace - now does not exist for the compiler; installs
+  inside the repository resolve as before. The same applies to the
+  programs a CDK app and a `serverless.ts` are read with. A walk in a
+  directory of no checkout - the workspace roots above a package, the
+  package a file is in, a Prisma schema, the top a gRPC contract is searched
+  from - stops at the outermost directory the build was asked to read (the
+  configuration's, a service's, each widened to the workspace that declares
+  it) instead of the home directory; inside a checkout it still stops at the
+  checkout's top, where a shared contract or schema is kept.
+- **fastify-cli's port order, checked against its source (P327).** `fastify
+  start` loads `.env` with dotenv up to fastify-cli 7 and with Node's
+  `process.loadEnvFile()` from 8, neither over a set variable, so a
+  `FASTIFY_PORT` its `.env` gives now wins over a `PORT` its command gives
+  (it reads `FASTIFY_PORT` first); P321 had it loaded with dotenv,
+  true only up to version 7.
+- **Fields read through an alias and written by a key, workspace names with
+  dots, and a bus grant's unread statement id (P328).** A static field read
+  through what stands for its class under `any` - `const R: any = Registry;
+  R.queue.add(...)`, `(Registry as any).queue`, a parameter each caller
+  hands the class, an alias of any of these - is now read as the field,
+  every write to it counted, and a call on it (`R.queue.add`) is the
+  library's call by the field's declared class where the library is not
+  installed; so is a class held under a typed alias. A
+  field written or read by a key, `this['queue']`, `this[KEY]` or
+  `Registry[KEY]` where `KEY` is a constant holding the name, counts as the
+  field; a write by a key not read (`this[key] = value`) may be to any
+  field, so a field a class writes so is no longer read as its declared
+  value. A Terraform workspace's name may hold dots (Terraform takes any
+  name URL path escaping leaves as it is), so a domain the workspace is
+  written into is now the pattern `**.api.example.com`, `**` one label or
+  several, and `eu.prod.api.example.com` is joined to it. A bus's
+  `grantPutEventsTo` handed a statement id the files do not read
+  (`process.env.SID`) is an unread grant saying the bus's policy takes it
+  only with an id; `null` is none, and a value another stack exports is one.
+- **Fields `Object.assign` writes, a field of either of two classes, and a
+  context value no file sets (P332).** `Object.assign(this, options)`,
+  `Object.assign(this, { queue })`, `Object.assign(Registry, { ... })` and
+  `Object.assign(this, ...)` in a static member now count as writes of each
+  field their sources give: a record written out gives its keys (the last
+  source that surely writes one hiding those before it), a parameter what
+  each caller hands it - each `new` of the class for a constructor's - and a
+  source not read (`JSON.parse(raw)`) may write any field, as a write by a
+  key not read may; a field so written was read as its declared value. A
+  read through a name that may stand for two classes, each declaring its
+  own static field of that name (`target.mail` of a function handed
+  `Queues` by one caller and `Archive` by another), is read as either
+  field, each value a candidate, the producer's `heldIn` naming the class's
+  field each channel came from, and the call is the library's where both
+  fields state its class; it was not read. A `tryGetContext` value no file
+  sets (cdk.json, cdk.context.json, the configured options), handed as an
+  argument to a library call - a bus's `grantPutEventsTo` statement id,
+  `addEnvironment` - or written in a function's environment, is a value
+  chosen when the app is synthesized (`-c key=...`) rather than nothing:
+  the bus grant is an unread grant saying it is written where the context
+  gives an id and dropped where none is, and the variable an unread setting
+  saying the same.
+- **A guess no longer shares a port with a firm one (P319).** Where one
+  service is firmly at a port of this machine - the code writes the number,
+  a loaded file or a setting file gives it, a container publishes it - and
+  another is there only by a guess (a default, a merge, an example's offer,
+  a written fallback such as `process.env.PORT ?? 3100`), the firm one is
+  the port's service outright; a request to it was a `local-port-shared`
+  row naming both.
+- **An image read wherever the project builds it, compose run with
+  `--env-file`, and a cluster's workload under its image (P331).** A
+  compose service's `image:` with no `build:` and a `docker run`'s image are
+  read with the Dockerfile a build of the project tags that image from - a
+  `docker build -t`, another compose service's `build:` under that
+  `image:`, a Skaffold artifact (`build.artifacts` and each profile's, with
+  its context, Dockerfile, target and build arguments). An image nothing of
+  the project builds is pulled as it is and never fetched: where the setting
+  the code reads its port from hangs on it, a new info row,
+  `container-image-unread`, says the image's environment is not read and
+  where the port is taken to be, rather than silence; so does a Dockerfile
+  that is not found. A `docker compose --env-file <f>` in a script, Makefile
+  or shell script of the project fills the compose file's placeholders from
+  those files, in order, in place of the `.env` beside it; where several
+  commands run one file only what they all agree on is read, and a file the
+  shell names settles nothing. What fills a placeholder is a port, an
+  address or a host's name under a name that is no secret's - nothing else
+  of a names-only file - and it now fills a port mapping, a container's
+  name and aliases, an `env_file:`, a build's context, the image and the
+  `environment:` values the graph keeps (`CATALOG_URL:
+  http://${CATALOG_HOST}:3000`), not only a port. A cluster workload's
+  containers (behind a service object, a node port or a port-forward) are
+  read with the Dockerfile of the image they run, where the project builds
+  it, under the manifest's `env`, `listensAt` naming the Dockerfile.
+- **A file nothing loads offers a fallback port rather than moving it
+  (P325).** P319 moved a written fallback, `process.env.API_PORT ?? 3000`,
+  firmly to the value any committed environment file of the service gives,
+  while P321 said a file nothing loads moves nothing; the two disagreed.
+  Now a file the code is read loading (dotenv, `--env-file`, a framework's
+  loader, a container's env file or image) places the port firmly, as it
+  did; a file nothing is read loading offers its value as a guess beside
+  the fallback, which stays a guess too, each asked whether it serves the
+  request (`listensAt` says "a file nothing is read loading"), as an
+  example file's offer is. A `PORT=` such a file gives no longer places the
+  service firmly where its code reads the setting with a fallback
+  (`claimants-nested-chain-env-port` snapshot: `localhost:3000/items`
+  joins `api` at its fallback, `localhost:4000/items` as an offer).
+- **A file nothing loads offers a port whatever the code reads (P331).** The
+  rule P325 made for a written fallback now holds for a setting the code
+  reads alone (`app.listen(process.env.PORT)`) and for a service whose
+  server is not read listening at all: a `PORT=` in a committed
+  environment file that is no example (`.env.development`) is offered as a
+  guess where nothing the code reader follows loads the file, and firm
+  where the code is read loading it (dotenv, `--env-file`, a framework's
+  loader). A service the code places at the port firmly is then its
+  service outright, where the two used to be a `local-port-shared` row. A
+  names-only file such as `.env` still gives no port on the machine.
+- **Compose's own variables, `include:` and `extends:`, a script's exported
+  variables, and a workload's config maps and secrets (P337).** A compose
+  file is interpolated from the files `COMPOSE_ENV_FILES` names - written
+  before the command, exported earlier in its script, or set in the `.env`
+  beside the file - where the command passes no `--env-file`, and
+  `COMPOSE_FILE` names the files a command runs where it passes no `-f`; what
+  the command's own shell gives (`export BILLING_PORT=8102` then `docker
+  compose up`, in that order, in that script) is written over every file, a
+  port, an address or a host name under a name that is no secret's. A
+  script's variable also fills `$NAME` in the `docker compose`, `docker
+  run` and `docker build` it runs, and `docker run -e PORT` passes it on. A
+  file `include:`d by another is read as part of it, interpolated from its
+  `env_file` or the `.env` of its project directory under the including
+  file's variables, its relative paths its own; a service that `extends:`
+  another, in the same file or another of the project, is read with the
+  other's environment, ports and environment files under its own, their
+  paths rebased. A command that starts a server - `node`, `tsx`, `npm
+  start`, `next start` and the like - in a service's directory with a port
+  its shell gives a setting (`cd stock; export PORT=4600; npm start`, or
+  `PORT=4600 node dist/app.js` in a script) places the setting the code
+  reads at that port, firmly, `listensAt` naming the script. A cluster
+  workload's config-map settings are each said at their own file, over the
+  image's `ENV`; a setting a `Secret` gives (`envFrom.secretRef`,
+  `secretKeyRef`) is now read by name only, its value never, so where the
+  code reads its port from it nothing is taken from the code's fallback and
+  `published-port-unheard` says why; and a workload whose image name a
+  template value the chart's values do not settle is a
+  `container-image-unread` row, as a pulled image is. A request to a port
+  one service writes as a number joined `heuristic` in a fixture whose
+  framework was not installed: the route itself was read from what the
+  source states (R142), and the edge is no surer than its route; the port
+  was firm all along (`unloaded-env-image-environment` now ships the
+  framework's stub, as other port fixtures do, and joins `static`).
+- **A container's or a script's environment, as far as P337 left it
+  (P343).** A compose `environment:` entry written with no value (`- PORT`,
+  `PORT:`, a `build.args` entry alike) takes what compose's own variables
+  give that name - the shell, the `.env`, the `--env-file`s or
+  `COMPOSE_ENV_FILES` - and stays unset where nothing does. An `include:` is
+  resolved as compose-go resolves it: its path, `project_directory` and
+  `env_file` from the including project's directory, its project directory
+  the first path's directory, and its own `env_file` or `.env` giving only
+  what the including project's environment does not (the documented
+  precedence: the local project's environment wins). A Makefile's own
+  `export PORT := 4700`, `PORT = 4700` with `export PORT`, a bare `export`,
+  `.EXPORT_ALL_VARIABLES`, `unexport`, `include`d files and a target's
+  `ledger: export PORT = 4710` are the environment of its recipes, and make
+  fills its own `$(VAR)` into a recipe line before the shell reads it. A
+  script's export now reaches a program of the project's own: a `bin` of a
+  service's `package.json`, a path such as `./bin/server` (a shell script
+  followed into its commands), a `package.json` script the start list does
+  not know (`npm run api`), and the file a runtime is handed (`node
+  ./scripts/serve.js`), each read as started where the file - or a module
+  it imports by a relative path - listens, at the service that holds that
+  file; a `bin` pointing at what a build writes, started with a port, is an
+  info `server-start-unread` row. A port a `Secret` gives is still never
+  read, but `published-port-unheard` now names the Secret, its key and the
+  manifest that writes it, and a Secret's values are no longer decoded or
+  kept at all (a kustomize `secretGenerator` keeps its keys only).
+- **An included Makefile, a script run in another package, Bun's mode
+  however it is given, and an application held by a field (P350).** A
+  `*.mk` another Makefile `include`s (a wildcard too) is read as part of
+  that Makefile, its recipes with the includer's variables and run from the
+  includer's directory, and no longer again on its own; a target's variables
+  are in effect for its prerequisites, as make documents (`make dev`
+  building `serve` with `dev`'s `PORT`), a nearer target's over a farther's,
+  a `private` one kept. `pnpm --filter <pkg> <script>` and `-F`, `pnpm -C
+  <dir>`, `npm run x -w <pkg>` / `--workspace`, `yarn workspace <pkg>
+  <script>` and `bun --filter` are followed to that package's script, so the
+  port a script exports before them reaches the server there; `env X=v` and
+  `cross-env X=v` before a command are its environment. Bun's mode is read
+  from the command's environment however it is given: exported earlier in
+  the script (`export NODE_ENV=production && bun ...`), after `cross-env` or
+  `env`, handed down by the script that runs another (`NODE_ENV=production
+  npm run serve`), or given by the container that runs it - a Dockerfile's
+  `ENV` under its `CMD`/`ENTRYPOINT`, a compose service's `environment`,
+  `command` and `entrypoint` for one built from the repository; a name set
+  with no `export` (`NODE_ENV=production; bun ...`) is the shell's own and
+  reaches no program. `bunfig.toml`'s `env = false` drops Bun's own files
+  (an `--env-file` still loads). A server several scripts or containers
+  start with different files is read once per start, a port each, where it
+  was the first script's files merged before. A field holding what the
+  framework's own maker made (`private readonly app = express()`) that
+  nothing but its own class's constructor writes, and a parameter whose
+  default is a maker and that every caller hands nothing, are lifted like a
+  `const` (P346): their routes are no longer `heuristic`.
+- **A Makefile's goal, conditionals and patterns, compose's interpolation
+  for Bun's mode, Bun run as `node`, and a listen through a workspace
+  package (P356).** A Makefile is read for each goal a recipe runs for, with
+  `$(MAKECMDGOALS)` holding that goal; `ifeq`/`ifneq` (`(a,b)` and quoted
+  forms), `ifdef`/`ifndef` and `else if...` are settled where the files
+  settle their operands - make's `strip`, `filter`, `filter-out`,
+  `findstring`, `firstword`, `lastword`, `words` and `subst` read - and one
+  that hangs on a variable only the environment or the command line gives,
+  or on `$(shell ...)`, has each branch read, a port read under it an info
+  `make-conditional-unsettled` row; a pattern's variables (`%-dev: PORT =
+  4000`) apply to every target it matches, a target's own and a shorter
+  stem's winning, and pass to prerequisites as a target's do; each target
+  of `a b:` runs its recipe. A compose value Bun's mode is read from is
+  interpolated as the Compose specification has it (`${VAR}`, `${VAR:-x}`,
+  `${VAR-x}`, `${VAR:+x}`, `$$`) from the project's `.env`, a name written
+  with no value takes the `.env`'s, and a service's `env_file` gives its
+  mode; one only the shell running compose gives is read as Bun's
+  development mode and said in an info `run-mode-unsettled` row. A `node`
+  that is Bun - under `bun --bun run`, or in an image that links or copies
+  Bun to `node` - loads Bun's files; one in an image built on Bun's own,
+  which is not read, is read as Node and said in a `run-mode-unsettled` row.
+  A program whose listen is reached through a package's name
+  (`require('@shop/server')`) is followed to that workspace package's
+  entry, its build mapped to its `src` as an uninstalled import is.
+- **An application held by a property, handed as a parameter or given by a
+  constructor is as sure as the maker's value it holds (P354).** A property,
+  whether a field (`this.app`, `server.app`, a static one, a parameter
+  property), a member of an object written in place (`const catalog = {
+  router: Router() }`) or the property a JavaScript class declares by writing
+  `this.app = express()`, is lifted where every write of it the repository
+  makes is placed by the checker, made inside its class or its object's
+  module, and a direct value, and nothing writes the object whole
+  (`Object.assign(this, …)`). A parameter is lifted where every caller of
+  its function hands it a direct value or a name holding one, or hands
+  nothing to a maker default; callers are found by name, through imports,
+  destructuring, aliases and object members, through receivers typed as
+  nothing, and through every `import()` or `require()` of the function's
+  module - a service's default started by name through a map of lazy
+  imports (`const { default: init } = await services[name](); init(app)`)
+  included. An application arriving as a parameter is served where every
+  value its callers hand it is, and a field declared with no value
+  (`app;`, `private app: Application;`) where every value written to it is;
+  with nothing installed such a field is recognised from what the
+  constructor writes. A write or a caller the reading cannot place keeps
+  the application `heuristic`, with every route mounted under it
+  (`maker-held-by-property-parameter-constructor`).
+- **Fields written through an alias or in a subclass, domains a workspace
+  names, and grants of a bus, table or stream by the CDK's version (P322).**
+  A static field written through the class under `any` - `const R: any =
+  Registry; R.queue = ...`, `(Registry as any).queue`, a parameter handed
+  the class, `R['queue']` - now counts as one of its values, so a field
+  given another queue that way no longer reads as its declared one; a field
+  read in a class is also what each class extending it sets, unless that
+  class declares the reading method again without calling `super`. A
+  Terraform API mapping whose domain the workspace names is read per
+  workspace: each name a map gives (another workspace's said to be its), a
+  lookup's fallback as any other workspace's, and a domain the workspace is
+  written into (`"${terraform.workspace}.api.example.com"`) as the pattern
+  `**.api.example.com` (P328), the default workspace's beside it - taken only for a
+  request with a route there - also through the domain resource's own
+  `domain_name`. A CDK grant of a table, a stream or a bus to a role that
+  takes nothing is read on the resource's own policy where the
+  `aws-cdk-lib` the repository pins (installed, locked, or a range every
+  version of which agrees) writes it there: a stream from 2.180.0, a table
+  from 2.222.0 (2.144.0 with a `resourcePolicy`), a bus's
+  `grantPutEventsTo` with a statement id from 2.186.0 under
+  `@aws-cdk/aws-events:requireEventBusPolicySid` for a role imported with
+  `addGrantsToResources: true`; a version left open is an unread grant
+  saying so. Such a role's grants of a queue, topic, bucket or function go
+  on the resource in its own account too, and a role imported from another
+  account than its stack's written one takes nothing, as the CDK has it.
+- **Fields written elsewhere, jobs caught at the queue's call, mapped stages
+  and grants on a resource's own policy (P316).** A static field another
+  module writes once (`Queues.mail = new Queue('mail')` in a setup file) is
+  now the queue it is given wherever it is read, its writes found by every
+  reference the checker knows; a field a base class declares, sets in its
+  constructor or keeps from `super(new Queue('x'))` is read in a class
+  extending it. `queue.add(error.jobName)` written in the catch itself is
+  walked into the catch as a value followed out to a caller is, with the
+  `channel-dynamic` row where a package's error may be the one caught; a
+  package is also named from its installed types where nothing written
+  names it. A Terraform API mapping whose stage the workspace names lists
+  each workspace's stage under `stages`. A CDK grant of a queue, topic,
+  bucket or function to a role imported `mutable: false` from another
+  account is read as the grant the CDK writes into the resource's own
+  policy.
+- **A queue a field is declared with, a path handed in after a host, and a
+  Terraform workspace's stage (P308).** A queue kept in a field set where it
+  is declared - `private readonly queue = new Queue('emails')`, a field with
+  no modifiers, a static one read through the class - was
+  `channel-const-unresolved` at `this.queue.add(...)`; it is now the queue
+  the field is made with, wherever it is given its one value, and a job a
+  layer is handed is walked out to its callers. `'https://host' + path` and
+  `` `https://host${path}` `` with `path` a parameter were read as the
+  host's root and could join a `/` route; the path is now followed to each
+  caller (a `+` chain split as the template it spells, the host kept), and
+  where nobody hands a read path it stays unread with an `api-path-dynamic`
+  or `dynamic-http-url` row. A stage a Terraform workspace other than the
+  default names is said to be that workspace's (`live in the workspace
+  production`), only the default's being the stage where none is given, and
+  an unmapped API's `stages` list every workspace's.
+- **A service's package declared by another service gives it types, not
+  ways in (P282).** A front end that declares its API's workspace package to
+  import the API's types read the API's resolvers, controllers and consumers
+  as ways in of its own: two services answered every one of them, each request
+  to them was `ambiguous-route-target`, the front end's own requests joined its
+  copy, and the copies stood at addresses the API never serves (read without
+  its bootstrap, they lost its global prefix). What is written in another
+  configured service's directory, or in a library the declaring service
+  reaches only through that service's package, is now that service's way in
+  alone; the declaring service still reads the files, for their types and for
+  the code it calls. A library a service declares itself is unchanged.
+- **An API Gateway address is no queue (P268).** A queue's URL is read by
+  its shape - a host and two segments - so an environment value
+  `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`, or a
+  function URL with two segments, was read as the queue `<path>`: a request
+  rooted at it said no service declared its setting. Neither is read as a
+  queue now.
+- **A queue named in a worker's options object is that queue, and a queue is
+  never named by a record (R181).** A repository's own worker decorator over
+  BullMQ written `@Processor({ queueName: Queues.cron, scope: Scope.REQUEST })`
+  was read as the queue named by its whole argument: where the options could
+  be read the channel was `{"queueName":"cron-queue"}`, a node beside the
+  `cron-queue` its string form landed on and one no producer can reach, and
+  where the scope could not be read every such worker was `channel-dynamic`.
+  `queueName` is now read as BullMQ's own `name` is; and a record read where a
+  queue is named is refused as `channel-dynamic` rather than drawn, while a
+  transport that matches records - `@MessagePattern({ cmd: 'sum' })` - keeps
+  them as patterns.
+- **A Prisma client generated where the tsconfig's `baseUrl` or `paths` place
+  it is read with nothing installed (P270).** `import { PrismaClient } from
+  'src/generated/prisma/client'` under `baseUrl: "./"`, with the schema's
+  generator writing there, was taken for a package called `src`, so a NestJS
+  service whose `PrismaService extends PrismaClient` read none of its queries
+  and none of its models. A bare specifier the project's compiler options
+  place inside the repository is now asked of the schema before it is taken
+  for a package. A value held from a call of the repository's own function
+  that writes its return type - `const prisma = sharedPrisma()`, `function
+  sharedPrisma(): PrismaService` - is read as that type, awaited `Promise<T>`
+  as `T`.
+- **The coverage harness's counting rule no longer counts a middleware factory
+  under `server/routes` as a Nitro route file (P270).** The `nitro-route-file`
+  probe counts a file there that default-exports an event handler (h3's
+  factories, or a function written in place that takes the event) rather than
+  anything at all, so a Koa server keeping its routes and their middleware
+  under that directory is no longer measured against routes it does not have;
+  `registered-route-call` counts koa-router's `register(path, [verbs], ...)`.
+- **A tRPC root a workspace package holds is read where the service serves
+  the trees under it (R179).** Since P256 a root kept in a package beside the
+  service was read only where the service mounted that root itself, so an
+  application that serves the root a feature at a time - a handler file per
+  feature, `createNextApiHandler(ordersRouter)`, and nothing mounting the
+  root - lost every procedure as a tree imported only for its type, and every
+  call to one read `procedure-not-found`. A service now reads a package's root
+  where it mounts the root or any tree the root holds; a client that only
+  imports the type still reads none.
+- **A verb read out of the options a wrapper is handed is read at each caller
+  (R179).** `const method = options?.method || 'POST'` into `fetch(url, {
+  method, ...options })` was read as `GET` before P91 and as unread since; the
+  browser and server readers now credit each caller with the default where it
+  hands no options or options without `method`, and with the verb its options
+  write where they write one.
+- **`build --watch` hears a change made the moment it says it is watching
+  (R178).** On macOS a directory watch is not listening when it starts: every
+  watch a process holds is one stream of events, and starting one restarts the
+  stream a moment later, so a change made in between reached no watch at all.
+  A busy machine made the moment long enough to lose a directory that appeared
+  right after `watching ...` was printed, and nothing rebuilt until the next
+  save. The watch now waits until the platform reports a write into a
+  directory of its own, started after every other watch, before it says it is
+  watching, and does the same before a rebuild that started watching a new
+  place counts as finished. Elsewhere the first write is heard at once.
+- **One edge to nothing no longer costs a whole service, and the React reader
+  no longer draws one (R180).** `export const [OrderProvider, useOrder] =
+  createRequired()` is two exports of one declaration, and the React reader
+  looked each up by that declaration: the second overwrote the first, the
+  first's `calls` edge left from an id nothing wrote, and the graph refused the
+  service - a large front end was `extract-failed` for a handful of
+  such edges. Each name is now found as itself, and a call of either name -
+  `useOrder()` - is joined to it. The graph itself no longer refuses a service for an
+  edge to a node never written: it leaves the edge out and writes an
+  `edge-end-missing` row at `action` naming it, and no fixture may carry one
+  (invariant I15). An incremental build still reads the repository whole when
+  a splice leaves such an edge.
+- **A workspace package whose `exports` name only its build is read from its
+  source (R180).** In a fresh clone `./dist/types/index.d.ts` is not there, and
+  every import of such a member resolved to nothing; a server whose controllers
+  take their prefix from an enum of one read almost none of its routes.
+  The member is now read where its build is made from (`src/types/index.ts`),
+  as a package mounted from outside already was; a subpath its map does not
+  name stays unimportable, and a built member is still read at its build.
+- **A GraphQL resolver declared by a decorator of the repository's own is read
+  (R180).** `@StaffResolver(() => Order)`, where `StaffResolver` applies
+  `Resolver` through `applyDecorators`, declared no resolver, so its fields were
+  no ways in; the decorator is followed into its body, three levels deep, and
+  the type it was handed is the resolver's.
+- **`link` and `init` take an application of a workspace that keeps one
+  manifest (R180).** `apps/orders` with a tsconfig that extends the root's and
+  no `package.json` was "not a repository". It is taken when the workspace's
+  own description names it as an application (`nest-cli.json`, `angular.json`,
+  `workspace.json`, a `project.json`) or the root's manifest declares a
+  framework, named as the description names it and typed by the root; `init`
+  proposes such a workspace's applications rather than its root. `build` reads
+  it with the root's manifest and the libraries its code imports through the
+  tsconfig's `paths`, as part of the service
+  (`fixtures/workspace-one-manifest`).
+
 ## [0.6.0][] - 2026-10-25
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.
@@ -3634,7 +7660,8 @@ called unused were being called through wrappers it could not read.
 
 The first published version of both `@flowatlas/cli` and `@flowatlas/markers`.
 
-[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.1...v0.5.0

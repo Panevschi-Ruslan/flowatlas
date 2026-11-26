@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:32.293Z",
+  "schemaVersion": 8,
+  "builtAt": "2026-11-23T14:46:29.606Z",
   "configHash": "fe6ade849f35",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 41,
-      "edges": 50,
+      "nodes": 44,
+      "edges": 57,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 539,
+      "durationMs": 2060,
       "packages": {
         "name": "react-next-shop",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./web",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 17,
-      "edges": 14,
+      "nodes": 19,
+      "edges": 16,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 511,
+      "durationMs": 1935,
       "packages": {
         "name": "react-next-web",
         "runtime": [
@@ -85,15 +85,25 @@
     "total": 4,
     "sharedPackage": 0
   },
-  "unresolved": [],
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/hooks/use-resource.ts",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/hooks/use-resource.ts:14:26"
+    }
+  ],
   "totals": {
-    "nodes": 58,
-    "edges": 67,
+    "nodes": 63,
+    "edges": 76,
     "types": 4,
-    "missed": 4,
-    "sites": 4,
+    "missed": 5,
+    "sites": 5,
     "notes": 0,
     "findings": 0,
-    "unresolved": 4
+    "unresolved": 5
   }
 }

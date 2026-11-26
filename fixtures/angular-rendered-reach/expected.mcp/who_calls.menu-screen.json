@@ -1,0 +1,64 @@
+{
+  "target": {
+    "id": "catalog-web#src/app/reports-page.component.ts:ReportsPageComponent",
+    "type": "ui_component",
+    "label": "ReportsPageComponent",
+    "loc": "src/app/reports-page.component.ts:4",
+    "service": "catalog-web",
+    "kind": "standalone",
+    "reach": "alive",
+    "from": "screen /reports"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "entry:catalog-web:screen:/reports",
+        "type": "entry",
+        "label": "/reports",
+        "loc": "src/app/app.routes.ts:10",
+        "kind": "screen",
+        "reach": "outside"
+      },
+      "edge": {
+        "type": "handles",
+        "confidence": "static"
+      },
+      "children": []
+    },
+    {
+      "node": {
+        "id": "ui_action:catalog-web#src/app/app.component.ts:26:17",
+        "type": "ui_action",
+        "label": "click=\"go(entry)\"",
+        "loc": "src/app/app.component.ts:26",
+        "kind": "click"
+      },
+      "edge": {
+        "type": "triggers",
+        "confidence": "static"
+      },
+      "topOfChain": true,
+      "gapsInFile": 2,
+      "children": []
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:catalog-web:screen:/reports",
+      "type": "entry",
+      "label": "/reports",
+      "loc": "src/app/app.routes.ts:10",
+      "service": "catalog-web",
+      "kind": "screen",
+      "reach": "outside",
+      "hops": 1,
+      "by": "catalog-web#src/app/reports-page.component.ts:ReportsPageComponent"
+    }
+  ],
+  "complete": true,
+  "next": [
+    "get_flow({entry: \"entry:catalog-web:screen:/reports\"})",
+    "describe_for_prompt({id: \"entry:catalog-web:screen:/reports\"})",
+    "impact({symbol: \"entry:catalog-web:screen:/reports\"})"
+  ]
+}

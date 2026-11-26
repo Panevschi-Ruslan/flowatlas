@@ -1,0 +1,14 @@
+{
+  "services": [
+    { "name": "jobs", "repo": "./jobs", "type": "express" },
+    { "name": "orders", "repo": "./orders", "type": "express", "baseUrlEnv": ["ORDERS_URL"] },
+    { "name": "legacy", "repo": "./legacy", "type": "express", "baseUrlEnv": ["ORDERS_URL"] },
+    { "name": "catalog", "repo": "./catalog", "type": "express", "baseUrlEnv": ["CATALOG_URL"] },
+    { "name": "stock", "repo": "./stock", "type": "express", "baseUrlEnv": ["STOCK_URL"] },
+    { "name": "archive", "repo": "./archive", "type": "express", "baseUrlEnv": ["ARCHIVE_URL"] },
+    { "name": "api", "repo": "./api", "type": "express" },
+    { "name": "audit", "repo": "./audit", "type": "express" },
+    { "name": "reports", "repo": "./reports", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

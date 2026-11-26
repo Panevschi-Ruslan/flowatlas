@@ -92,6 +92,7 @@ describe('a repository that serves routes from two frameworks', () => {
       'entry:api:http:GET:/api/depots/:param/orders',
       'entry:api:http:GET:/api/depots/:param/stock-stream',
       'entry:api:http:GET:/api/depots/:param/stream',
+      'entry:api:http:GET:/daily',
       'entry:api:http:GET:/health',
       'entry:api:http:POST:/api/admin/notes',
       'entry:api:http:POST:/api/depots/:param/orders/:param/cancel',
@@ -191,16 +192,18 @@ describe('a repository that serves routes from two frameworks', () => {
     );
   });
 
-  it('refuses a route whose address depends on a caller, and says which', () => {
+  it('places a route on an application a caller hands in where that caller serves it (P354)', () => {
     const files = (reason: string): string[] =>
       project.unresolved
         .filter((row: Unresolved) => row.reason === reason)
         .map((row) => row.file)
         .sort();
-    // Two facts, two reasons: the worker's own path is computed, and the
-    // reports application's route was read under a mount whose path was not.
+    // The worker's own path is computed, and says so. The reports application
+    // arrives as a parameter, and its one caller hands it the worker's root
+    // application, so `/daily` is served at the root rather than refused.
     expect(files('route-path-dynamic')).toEqual(['src/worker.ts']);
-    expect(files('route-mount-unread')).toEqual(['src/admin/reports.routes.ts']);
+    expect(files('route-mount-unread')).toEqual([]);
+    expect(edge('entry:api:http:GET:/daily', 'handles', 'api#src/admin/reports.routes.ts:GET /daily@12')).toBe(true);
   });
 
   it('points each route answered by a function written in place at that function', () => {
@@ -208,7 +211,7 @@ describe('a repository that serves routes from two frameworks', () => {
     const inline = project.nodes.filter(
       (node) => node.type === 'entry' && node.repo === 'api' && node.meta?.['handlerVia'] === 'inline',
     );
-    expect(inline.length).toBe(6);
+    expect(inline.length).toBe(7);
     for (const entry of inline) expect(goesTo(entry.id, 'handles')).toHaveLength(1);
   });
 });

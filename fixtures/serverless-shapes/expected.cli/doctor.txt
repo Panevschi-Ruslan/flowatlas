@@ -1,0 +1,62 @@
+unresolved: total=6 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 6 to act on · missed: 6 · notes: 2 · findings: 3
+  3 missed places static reading cannot see, folded into 3 rows
+  3 findings: 1 queue read with no redrive, 1 queue hiding a message too briefly, 1 function task retrying no transient error
+  ways in: 17 found, 14 with a handler that was read, 3 without
+  deployment-plugin-unread: 1 row
+    Declare them under functions and resources, or expect them missing from the map.
+      members/services/notices/serverless.yml:104  constructs
+  export-not-found: 1 row
+    Add the repository whose deployment declares that output to the configuration, or check the name on both sides.
+      members/services/notices/serverless.yml:68  import:export:shared-audit-queue-arn
+  function-name-unread: 1 row
+    Give ${ssm:/club/audit-function-name} a value the files settle.
+      members/services/notices/serverless.yml:64  the name of functions.audit is not read: the value is the parameter /club/audit-function-name, which another deployment writes
+  queue-redrive-missing (finding): 1 row
+    Give resources.Resources.NoticesQueue a dead-letter queue, with a maxReceiveCount of at least 5.
+      members/services/notices/serverless.yml:113  ${…}@resources.Resources.NoticesQueue is read by a function and has no redrive policy: a message that always fails is received again and again until it expires, and is then lost
+  queue-visibility-short (finding): 1 row
+    Raise the visibility timeout of ${…}@resources.Resources.NoticesQueue to at least 36s, or lower the function's timeout.
+      members/services/notices/serverless.yml:34  ${…}@resources.Resources.NoticesQueue hides a message for 30s (the default), under 6 times the 6s timeout of notices-prod-send-notice (36s): a message can come back while it is still being processed, and be processed twice
+  workflow-function-unretried (finding): 1 row
+    Add a Retry naming Lambda.ServiceException, Lambda.AWSLambdaException, Lambda.SdkClientException, Lambda.ClientExecutionTimeoutException and Lambda.TooManyRequestsException.
+      members/services/notices/serverless.yml:96  stepFunctions.stateMachines.remind: Send invokes a function and retries none of the platform's transient errors, so one fails the execution
+  deployed-name-generated (note): 1 row over 2 places
+    Give it a name of its own where other repositories reach it.
+      members/services/notices/serverless.yml:34  resources.Resources.NoticesQueue
+  deployment-setting-unread (note): 1 row
+    Nothing is said about these either way. Write the values so the files settle them, or declare the queue and the function in a deployment of this repository.
+      members/services/notices/serverless.yml:68  functions.audit.events[0]: not every setting it is held to is checked: the queue ${…}@import.export.shared-audit-queue-arn is declared somewhere this repository's deployment does not hold, so its visibility timeout and redrive policy are not read
+  function-image-unread (info): 1 row
+    The function is in the graph under its name; the code it runs is not pointed at.
+      members/services/notices/serverless.yml:84  notices-prod-renderer is deployed as a container image, whose handler is set inside the image
+  function-runtime-unread (info): 1 row
+    The function is still in the graph under its name, and whatever invokes it still joins to it.
+      members/services/notices/serverless.yml:80  notices-prod-report runs on python3.12; only Node.js handlers are read, so its body is not
+  invoker-not-read (info): 1 row
+    Events of this kind run the function outside anything this reads. Nothing to fix; the function is still in the graph under its name.
+      members/services/notices/serverless.yml:74  functions.door.events[0]
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 7 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 6 now, +6)
+  no baseline at <root>/fixtures/serverless-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  deployment-plugin-unread: 0 → 1 (+1)
+  export-not-found: 0 → 1 (+1)
+  function-name-unread: 0 → 1 (+1)
+  queue-redrive-missing: 0 → 1 (+1)
+  queue-visibility-short: 0 → 1 (+1)
+  workflow-function-unretried: 0 → 1 (+1)
+  new (6):
+    members|services/notices/serverless.yml|channel:sqs/${…}@resources.Resources.NoticesQueue|queue-redrive-missing
+    members|services/notices/serverless.yml|constructs|deployment-plugin-unread
+    members|services/notices/serverless.yml|consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]|queue-visibility-short
+    members|services/notices/serverless.yml|entry:members:invoke:${…}@functions.audit|function-name-unread
+    members|services/notices/serverless.yml|import:export:shared-audit-queue-arn|export-not-found
+    members|services/notices/serverless.yml|members#services/notices/serverless.yml:stepFunctions.stateMachines.remind/Send|workflow-function-unretried

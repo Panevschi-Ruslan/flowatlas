@@ -1,0 +1,281 @@
+{
+  "settled": "6 ways in reach it, all listed; more beyond a channel, counted in throughChannels; 1 component file in web on the way, all listed in components",
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "line": 25,
+    "reach": "alive",
+    "from": "GET /orders/:param"
+  },
+  "callers": [
+    {
+      "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "line": 25,
+      "reach": "alive",
+      "from": "GET /orders/:param",
+      "edge": {
+        "type": "calls",
+        "params": [
+          "string"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "children": [
+        {
+          "id": "entry:orders:http:GET:/orders/:param",
+          "loc": "src/orders/orders.controller.ts:25",
+          "reach": "alive",
+          "edge": {
+            "type": "handles",
+            "params": [
+              "string"
+            ],
+            "returns": "type:@fx/contracts#OrderDto"
+          },
+          "children": [
+            {
+              "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+              "label": "GET /orders/:param",
+              "reach": "alive",
+              "from": "consumer invoice.requested",
+              "ways": 4,
+              "edge": {
+                "type": "http_calls",
+                "returns": "type:billing#OrderView"
+              },
+              "children": [
+                {
+                  "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+                  "line": 30,
+                  "reach": "alive",
+                  "from": "consumer invoice.requested",
+                  "ways": 4,
+                  "edge": "calls",
+                  "children": [
+                    {
+                      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+                      "line": 28,
+                      "reach": "alive",
+                      "from": "consumer invoice.requested",
+                      "ways": 2,
+                      "edge": {
+                        "type": "calls",
+                        "params": [
+                          "type:billing#CreateInvoiceDto"
+                        ],
+                        "returns": "type:billing#InvoiceDto"
+                      },
+                      "children": [
+                        {
+                          "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+                          "line": 28,
+                          "kind": "event",
+                          "reach": "dead",
+                          "from": "event invoice.requested",
+                          "edge": {
+                            "type": "handles",
+                            "params": [
+                              "type:billing#InvoiceRequestedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        },
+                        {
+                          "id": "entry:billing:event:invoice.requested",
+                          "loc": "src/invoices/invoices.consumer.ts:28",
+                          "reach": "dead",
+                          "edge": {
+                            "type": "handles",
+                            "params": [
+                              "type:billing#InvoiceRequestedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                      "line": 17,
+                      "reach": "alive",
+                      "from": "event order.created",
+                      "edge": {
+                        "type": "calls",
+                        "params": [
+                          "type:billing#CreateInvoiceDto"
+                        ],
+                        "returns": "type:billing#InvoiceDto"
+                      },
+                      "children": [
+                        {
+                          "id": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+                          "line": 17,
+                          "kind": "event",
+                          "reach": "alive",
+                          "from": "event order.created",
+                          "edge": {
+                            "type": "handles",
+                            "params": [
+                              "type:billing#OrderCreatedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        },
+                        {
+                          "id": "entry:billing:event:order.created",
+                          "loc": "src/invoices/invoices.consumer.ts:17",
+                          "reach": "alive",
+                          "edge": {
+                            "type": "handles",
+                            "params": [
+                              "type:billing#OrderCreatedEvent"
+                            ],
+                            "returns": "void"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "billing#src/invoices/invoices.controller.ts:InvoicesController.create",
+                      "line": 15,
+                      "reach": "alive",
+                      "from": "POST /invoices",
+                      "edge": {
+                        "type": "calls",
+                        "params": [
+                          "type:billing#CreateInvoiceDto"
+                        ],
+                        "returns": "type:billing#InvoiceDto"
+                      },
+                      "children": [
+                        {
+                          "id": "entry:billing:http:POST:/invoices",
+                          "loc": "src/invoices/invoices.controller.ts:15",
+                          "reach": "alive",
+                          "edge": {
+                            "type": "handles",
+                            "params": [
+                              "type:billing#CreateInvoiceDto"
+                            ],
+                            "returns": "type:billing#InvoiceDto"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+              "label": "GET /orders/:param",
+              "reach": "alive",
+              "from": "GET /orders/:param",
+              "edge": {
+                "type": "http_calls",
+                "returns": "type:@fx/contracts#OrderDto"
+              },
+              "children": [
+                {
+                  "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+                  "line": 32,
+                  "reach": "alive",
+                  "from": "GET /orders/:param",
+                  "edge": "calls",
+                  "children": [
+                    {
+                      "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+                      "line": 30,
+                      "reach": "alive",
+                      "from": "GET /orders/:param",
+                      "edge": {
+                        "type": "calls",
+                        "params": [
+                          "string"
+                        ],
+                        "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                      },
+                      "children": [
+                        {
+                          "id": "entry:gateway:http:GET:/orders/:param",
+                          "loc": "src/orders/orders.controller.ts:30",
+                          "reach": "alive",
+                          "edge": {
+                            "type": "handles",
+                            "params": [
+                              "string"
+                            ],
+                            "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "waysIn": [
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "line": 25,
+      "reach": "alive",
+      "hops": 2,
+      "by": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "line": 28,
+      "reach": "dead",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "line": 17,
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "line": 15,
+      "reach": "alive",
+      "hops": 6,
+      "by": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "line": 30,
+      "reach": "alive",
+      "hops": 6,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "line": 40,
+      "reach": "alive",
+      "hops": 10,
+      "by": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+    }
+  ],
+  "unreached": 5,
+  "throughChannels": [
+    {
+      "consumer": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "channels": [
+        "order.created"
+      ],
+      "ways": 1
+    }
+  ],
+  "components": {
+    "web": [
+      "src/app/checkout.component.ts"
+    ]
+  },
+  "complete": true
+}

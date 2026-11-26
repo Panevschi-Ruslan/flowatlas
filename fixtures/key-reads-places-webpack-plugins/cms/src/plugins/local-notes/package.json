@@ -1,0 +1,8 @@
+{
+  "name": "@shop/strapi-plugin-notes",
+  "version": "0.1.0",
+  "strapi": {
+    "kind": "plugin",
+    "name": "notes"
+  }
+}

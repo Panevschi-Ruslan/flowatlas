@@ -1,0 +1,381 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 8,
+  "generatedAt": "2026-11-23T14:46:49.963Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/readers.ts:10:12@11:12",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/readers.ts:10:12@11:12|hits|entry:stock:http:GET:/levels",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/readers.ts:Levels.onModuleInit declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/readers.ts:10:12@11:12",
+        "to": "entry:stock:http:GET:/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/readers.ts:10:12@11:12|hits|entry:stock:http:GET:/levels",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /levels@25 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/readers.ts:20:12@11:12",
+        "to": "entry:catalog:http:GET:/summary",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/readers.ts:20:12@11:12|hits|entry:catalog:http:GET:/summary",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/readers.ts:Summary.onModuleInit declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/readers.ts:20:12@11:12",
+        "to": "entry:catalog:http:GET:/summary",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/readers.ts:20:12@11:12|hits|entry:catalog:http:GET:/summary",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /summary@33 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/readers.ts:30:12@11:12",
+        "to": "entry:stock:http:GET:/mirror",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/readers.ts:30:12@11:12|hits|entry:stock:http:GET:/mirror",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/readers.ts:Mirror.onModuleInit declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:jobs#src/readers.ts:30:12@11:12",
+        "to": "entry:stock:http:GET:/mirror",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:jobs#src/readers.ts:30:12@11:12|hits|entry:stock:http:GET:/mirror",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /mirror@29 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:32:7",
+        "to": "entry:catalog:http:GET:/row",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:32:7|hits|entry:catalog:http:GET:/row",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:Row declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:32:7",
+        "to": "entry:catalog:http:GET:/row",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:32:7|hits|entry:catalog:http:GET:/row",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /row@13 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:42:5",
+        "to": "entry:catalog:http:GET:/frame",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:42:5|hits|entry:catalog:http:GET:/frame",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:Frame declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:42:5",
+        "to": "entry:catalog:http:GET:/frame",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:42:5|hits|entry:catalog:http:GET:/frame",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /frame@17 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:55:17",
+        "to": "entry:stock:http:GET:/badge",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:55:17|hits|entry:stock:http:GET:/badge",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:Badge declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:55:17",
+        "to": "entry:stock:http:GET:/badge",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:55:17|hits|entry:stock:http:GET:/badge",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /badge@13 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:63:14@13:5",
+        "to": "entry:catalog:http:GET:/board",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:63:14@13:5|hits|entry:catalog:http:GET:/board",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:CatalogPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:63:14@13:5",
+        "to": "entry:catalog:http:GET:/board",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:63:14@13:5|hits|entry:catalog:http:GET:/board",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /board@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:64:14@22:7",
+        "to": "entry:catalog:http:GET:/chart",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:64:14@22:7|hits|entry:catalog:http:GET:/chart",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:CatalogPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:64:14@22:7",
+        "to": "entry:catalog:http:GET:/chart",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:64:14@22:7|hits|entry:catalog:http:GET:/chart",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /chart@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:74:14@13:5",
+        "to": "entry:stock:http:GET:/board",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:74:14@13:5|hits|entry:stock:http:GET:/board",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:StockPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:74:14@13:5",
+        "to": "entry:stock:http:GET:/board",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:74:14@13:5|hits|entry:stock:http:GET:/board",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /board@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:75:14@22:7",
+        "to": "entry:stock:http:GET:/chart",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:75:14@22:7|hits|entry:stock:http:GET:/chart",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/pages.jsx:StockPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/pages.jsx:75:14@22:7",
+        "to": "entry:stock:http:GET:/chart",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/pages.jsx:75:14@22:7|hits|entry:stock:http:GET:/chart",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /chart@9 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:21:5@16:10",
+        "to": "entry:catalog:http:GET:/v1/summary",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:21:5@16:10|hits|entry:catalog:http:GET:/v1/summary",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/profile.jsx:CatalogSummary declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:21:5@16:10",
+        "to": "entry:catalog:http:GET:/v1/summary",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:21:5@16:10|hits|entry:catalog:http:GET:/v1/summary",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /v1/summary@25 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:28:5@16:10",
+        "to": "entry:stock:http:GET:/v2/summary",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:28:5@16:10|hits|entry:stock:http:GET:/v2/summary",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/profile.jsx:StockSummary declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:28:5@16:10",
+        "to": "entry:stock:http:GET:/v2/summary",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:28:5@16:10|hits|entry:stock:http:GET:/v2/summary",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /v2/summary@21 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:7:5",
+        "to": "entry:catalog:http:GET:/v1/profile",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:7:5|hits|entry:catalog:http:GET:/v1/profile",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/profile.jsx:Profile declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:7:5",
+        "to": "entry:catalog:http:GET:/v1/profile",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:7:5|hits|entry:catalog:http:GET:/v1/profile",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /v1/profile@21 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:8:5",
+        "to": "entry:stock:http:GET:/v2/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:8:5|hits|entry:stock:http:GET:/v2/levels",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/profile.jsx:Profile declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:8:5",
+        "to": "entry:stock:http:GET:/v2/levels",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:8:5|hits|entry:stock:http:GET:/v2/levels",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "stock#src/index.ts:GET /v2/levels@17 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:9:5",
+        "to": "entry:catalog:http:GET:/orders/recent",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:9:5|hits|entry:catalog:http:GET:/orders/recent",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/profile.jsx:Profile declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/profile.jsx:9:5",
+        "to": "entry:catalog:http:GET:/orders/recent",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/profile.jsx:9:5|hits|entry:catalog:http:GET:/orders/recent",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/index.ts:GET /orders/recent@29 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 30,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

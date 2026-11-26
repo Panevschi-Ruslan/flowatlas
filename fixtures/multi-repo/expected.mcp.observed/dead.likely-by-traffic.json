@@ -6,6 +6,7 @@
   "loc": "src/orders/orders.controller.ts:35",
   "verdict": "likely-dead",
   "reason": "no http_calls/hits from any repo (may be a public API); a request that found no route is one segment off it; never seen in 2h while 1 of its 7 neighbours was, the busiest 22 times",
+  "callers": 0,
   "class": "actionable",
   "evidence": {
     "oneOff": [
