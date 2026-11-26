@@ -1,6 +1,6 @@
 # Does flowatlas help an assistant? Measured
 
-Run `2026-11-07-pilot`: flowatlas 0.6.0 (a5a20c8a), claude-code 2.1.319 (Claude Code), model claude-sonnet-5-5, seed 1, 1 run a question an arm, 2026-11-07. **A pilot**: one run each, eight questions, for the estimate; not a result to quote.
+Run `2026-11-26-pilot`: flowatlas 0.7.0 (a23bc8b9), claude-code 2.1.331 (Claude Code), model claude-sonnet-5-5, seed 1, 1 run a question an arm, 2026-11-26. **A pilot**: one run each, eight questions, for the estimate; not a result to quote.
 
 ## How it is measured
 
@@ -92,14 +92,14 @@ Each cell: median score (range) · fully right · median tool calls · tokens ·
 
 | Kind | A | B | C | D |
 |---|---|---|---|---|
-| cross-repo-callers | 1.00 (1.00–1.00) · 1/1 · 4 calls · 69k tok · 7s | 0.00 (0.00–0.00) · 0/1 · 4 calls · 92k tok · 10s | 1.00 (1.00–1.00) · 1/1 · 3 calls · 98k tok · 8s | 1.00 (1.00–1.00) · 1/1 · 3 calls · 93k tok · 8s |
-| blast-radius | 1.00 (1.00–1.00) · 1/1 · 8 calls · 90k tok · 11s | 0.00 (0.00–0.00) · 0/1 · 5 calls · 89k tok · 11s | 1.00 (1.00–1.00) · 1/1 · 3 calls · 103k tok · 9s | 1.00 (1.00–1.00) · 1/1 · 4 calls · 124k tok · 9s |
-| event-handlers | 1.00 (1.00–1.00) · 1/1 · 4 calls · 64k tok · 7s | 0.00 (0.00–0.00) · 0/1 · 5 calls · 92k tok · 10s | 1.00 (1.00–1.00) · 1/1 · 3 calls · 72k tok · 5s | 1.00 (1.00–1.00) · 1/1 · 3 calls · 69k tok · 5s |
-| dead | 1.00 (1.00–1.00) · 1/1 · 8 calls · 169k tok · 23s | 0.62 (0.62–0.62) · 0/1 · 8 calls · 218k tok · 21s | 1.00 (1.00–1.00) · 1/1 · 4 calls · 112k tok · 12s | 1.00 (1.00–1.00) · 1/1 · 4 calls · 126k tok · 15s |
-| contract | 1.00 (1.00–1.00) · 1/1 · 3 calls · 70k tok · 7s | 1.00 (1.00–1.00) · 1/1 · 7 calls · 162k tok · 18s | 1.00 (1.00–1.00) · 1/1 · 9 calls · 206k tok · 14s | 1.00 (1.00–1.00) · 1/1 · 4 calls · 73k tok · 7s |
-| settings | 1.00 (1.00–1.00) · 1/1 · 4 calls · 109k tok · 13s | 1.00 (1.00–1.00) · 1/1 · 10 calls · 226k tok · 18s | 1.00 (1.00–1.00) · 1/1 · 6 calls · 158k tok · 13s | 1.00 (1.00–1.00) · 1/1 · 7 calls · 168k tok · 17s |
-| single-repo | 1.00 (1.00–1.00) · 1/1 · 2 calls · 63k tok · 5s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 63k tok · 6s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 71k tok · 6s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 70k tok · 6s |
-| code-text | 1.00 (1.00–1.00) · 1/1 · 1 calls · 41k tok · 4s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 41k tok · 3s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 47k tok · 3s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 45k tok · 5s |
+| cross-repo-callers | 1.00 (1.00–1.00) · 1/1 · 13 calls · 274k tok · 26s | 0.00 (0.00–0.00) · 0/1 · 7 calls · 131k tok · 14s | 1.00 (1.00–1.00) · 1/1 · 0 calls · 29k tok · 6s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 91k tok · 10s |
+| blast-radius | 1.00 (1.00–1.00) · 1/1 · 10 calls · 203k tok · 21s | 0.00 (0.00–0.00) · 0/1 · 12 calls · 184k tok · 25s | 1.00 (1.00–1.00) · 1/1 · 0 calls · 28k tok · 6s | 1.00 (1.00–1.00) · 1/1 · 0 calls · 28k tok · 6s |
+| event-handlers | 1.00 (1.00–1.00) · 1/1 · 9 calls · 212k tok · 19s | 0.00 (0.00–0.00) · 0/1 · 9 calls · 131k tok · 14s | 1.00 (1.00–1.00) · 1/1 · 0 calls · 28k tok · 5s | 1.00 (1.00–1.00) · 1/1 · 0 calls · 28k tok · 5s |
+| dead | 1.00 (1.00–1.00) · 1/1 · 10 calls · 240k tok · 25s | 0.00 (0.00–0.00) · 0/1 · 12 calls · 215k tok · 25s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 63k tok · 7s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 63k tok · 8s |
+| contract | 1.00 (1.00–1.00) · 1/1 · 8 calls · 157k tok · 13s | 1.00 (1.00–1.00) · 1/1 · 8 calls · 191k tok · 19s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 86k tok · 5s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 85k tok · 6s |
+| settings | 1.00 (1.00–1.00) · 1/1 · 4 calls · 109k tok · 10s | 1.00 (1.00–1.00) · 1/1 · 9 calls · 200k tok · 18s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 56k tok · 4s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 55k tok · 5s |
+| single-repo | 1.00 (1.00–1.00) · 1/1 · 3 calls · 72k tok · 6s | 1.00 (1.00–1.00) · 1/1 · 2 calls · 71k tok · 5s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 56k tok · 5s | 1.00 (1.00–1.00) · 1/1 · 4 calls · 142k tok · 9s |
+| code-text | 1.00 (1.00–1.00) · 1/1 · 1 calls · 46k tok · 3s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 46k tok · 3s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 55k tok · 2s | 1.00 (1.00–1.00) · 1/1 · 1 calls · 54k tok · 2s |
 
 ## What a right answer cost
 
@@ -107,22 +107,61 @@ Tokens per fully right answer are every token of an arm over its answers fully r
 
 | Arm | Tokens a question | Tokens per right answer | Extra turns | Tool errors | Wasted calls | pass^k |
 |---|---|---|---|---|---|---|
-| A | 69k | 84k | — | — | — | — |
-| B | 92k | 246k | — | — | — | — |
-| C | 98k | 108k | — | — | — | — |
-| D | 73k | 96k | — | — | — | — |
+| A | 157k | 164k | 3.5 | 0.0% | 7.2 | — |
+| B | 131k | 293k | 3.4 | 0.0% | 2.0 | — |
+| C | 55k | 50k | 0.1 | 0.0% | 0.0 | — |
+| D | 55k | 68k | 0.6 | 0.0% | 0.8 | — |
+
+## Where the turns went
+
+Calls of each class, a session's mean; extra turns are the turns beyond the one that calls and the one that answers (`scripts/bench-agent/turns.mjs`).
+
+| Arm | Kind | Sessions | Extra turns | tool-search | lookup-first | question-call | second-graph-call | read-after-complete | read | Tool errors | Wasted calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| A | blast-radius | 1 | 5 | 0 | 0 | 0 | 0 | 0 | 10 | 0.0% | 5 |
+| A | code-text | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0.0% | — |
+| A | contract | 1 | 4 | 0 | 0 | 0 | 0 | 0 | 8 | 0.0% | — |
+| A | cross-repo-callers | 1 | 6 | 0 | 0 | 0 | 0 | 0 | 13 | 0.0% | 13 |
+| A | dead | 1 | 5 | 0 | 0 | 0 | 0 | 0 | 10 | 0.0% | 6 |
+| A | event-handlers | 1 | 5 | 0 | 0 | 0 | 0 | 0 | 9 | 0.0% | 9 |
+| A | settings | 1 | 2 | 0 | 0 | 0 | 0 | 0 | 4 | 0.0% | — |
+| A | single-repo | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 3 | 0.0% | 3 |
+| B | blast-radius | 1 | 5 | 0 | 0 | 0 | 0 | 0 | 12 | 0.0% | — |
+| B | code-text | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0.0% | — |
+| B | contract | 1 | 5 | 0 | 0 | 0 | 0 | 0 | 8 | 0.0% | — |
+| B | cross-repo-callers | 1 | 3 | 0 | 0 | 0 | 0 | 0 | 7 | 0.0% | — |
+| B | dead | 1 | 5 | 1 | 0 | 0 | 0 | 0 | 11 | 0.0% | — |
+| B | event-handlers | 1 | 3 | 0 | 0 | 0 | 0 | 0 | 9 | 0.0% | — |
+| B | settings | 1 | 5 | 0 | 0 | 0 | 0 | 0 | 9 | 0.0% | — |
+| B | single-repo | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 2 | 0.0% | 2 |
+| C | blast-radius | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0% | 0 |
+| C | code-text | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0.0% | — |
+| C | contract | 1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 0.0% | — |
+| C | cross-repo-callers | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0% | 0 |
+| C | dead | 1 | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0.0% | 0 |
+| C | event-handlers | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0% | 0 |
+| C | settings | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0.0% | — |
+| C | single-repo | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0.0% | 0 |
+| D | blast-radius | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0% | 0 |
+| D | code-text | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0.0% | — |
+| D | contract | 1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 0.0% | — |
+| D | cross-repo-callers | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 2 | 0.0% | 2 |
+| D | dead | 1 | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0.0% | 0 |
+| D | event-handlers | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0% | 0 |
+| D | settings | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0.0% | — |
+| D | single-repo | 1 | 3 | 1 | 1 | 1 | 0 | 1 | 0 | 0.0% | 2 |
 
 ## What was expected
 
 - `cross-repo-callers: C > B` held: 1.00 against 0.00
 - `cross-repo-callers: D >= A` held: 1.00 against 1.00
-- `calls cross-repo-callers: D < A` held: 3 against 4
+- `calls cross-repo-callers: D < A` held: 2 against 13
 - `blast-radius: C > B` held: 1.00 against 0.00
 - `blast-radius: D >= A` held: 1.00 against 1.00
-- `tokens blast-radius: D < A` **did not hold**: 123629 against 89999
+- `tokens blast-radius: D < A` held: 28011 against 202600
 - `event-handlers: C > B` held: 1.00 against 0.00
 - `event-handlers: D >= A` held: 1.00 against 1.00
-- `dead: C > B` held: 1.00 against 0.62
+- `dead: C > B` held: 1.00 against 0.00
 - `dead: D > A` **did not hold**: 1.00 against 1.00
 - `contract: D >= A` held: 1.00 against 1.00
 - `settings: D <= A` held: 1.00 against 1.00
@@ -132,7 +171,7 @@ Tokens per fully right answer are every token of an arm over its answers fully r
 - `code-text: D = A` held: 1.00 against 1.00
 - `explain: C = B` not measured in this run
 - `explain: D = A` not measured in this run
-- `tokens single-repo: C > B` held: 71356 against 62959
+- `tokens single-repo: C > B` **did not hold**: 55799 against 70810
 - `find-the-bug: C > B` not measured in this run
 - `find-the-bug: D >= A` not measured in this run
 - `change-files: C > B` not measured in this run

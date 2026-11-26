@@ -216,6 +216,55 @@ No run has been recorded yet; the figures appear here, quoted from the report,
 after the first full run.
 <!-- benchmark:end -->
 
+#### On a private product (not reproducible)
+
+Run 2026-11-25: flowatlas 0.7.0, Claude Code with Claude Sonnet 5.5, prompt cards on (`flowatlas agents install
+--instructions --hook`). **One session per question**: 25 questions, 4 setups, 100 sessions in all.
+
+A private 5-repository product, asked 25 questions of these kinds (who calls this, what breaks if it
+changes, is it dead, which code handles this message, does a payload carry what its consumer reads, where a setting is
+used, plus plain text and single-repository lookups). Every answer was scored against a key written by hand from the code,
+not by a model. The code is private, so this run cannot be repeated by a reader; the generated project above can.
+
+##### All five repositories open
+
+| | Claude Code | Claude Code + flowatlas | Change |
+|---|---|---|---|
+| Fully correct answers | 23 / 25 | **25 / 25** | |
+| Tokens per question, average | 163k | **49k** | −70% (3.3× fewer) |
+| Tokens per question, median | 149k | **51k** | −66% |
+| Questions answered in 1–2 turns | 2 / 25 | **20 / 25** | |
+| Turns per question, average | 9.6 | **2.1** | 4.6× fewer |
+| Tool calls per question, average | 8.6 | **1.1** | 8× fewer |
+| Time per question, average | 20 s | **7 s** | 3× faster |
+| Output tokens per question, average | 2,368 | **525** | −78% |
+| Cost of the 25 questions | $3.33 | **$1.25** | −62% |
+
+##### One repository open, asked about the whole product
+
+| | Claude Code | Claude Code + flowatlas |
+|---|---|---|
+| Fully correct answers | 6 / 25 (mean score 0.31) | **25 / 25** |
+| Tokens per question, average | 161k | **42k** (−74%) |
+| Turns per question, average | 9.8 | **1.9** |
+
+##### Tokens per question by kind (five repositories open)
+
+| Kind | Claude Code | + flowatlas | Change |
+|---|---|---|---|
+| Reach: blast radius, callers, dead code | 221k | **37k** | −83% |
+| Messages and who handles them | 190k | **48k** | −75% |
+| Contracts and settings | 131k | **58k** | −56% |
+| Single-repository and text lookups | 73k | **50k** | −32% |
+
+Most of the tokens are the context the assistant sends again on every turn, read from its cache at a lower price, which
+is why the cost falls less than the tokens. Building the graph is not counted: on this product the first build took 20 s
+for all five repositories and a rebuild after a change reads only the files that changed (about 6 s), by hand, with
+`flowatlas build --watch` or with the git hooks of `flowatlas hook install`.
+
+One pass of one session per question is a pilot, not a study: a single long session moves an average by several
+thousand tokens.
+
 ---
 
 ## Install

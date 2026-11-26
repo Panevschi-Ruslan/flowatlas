@@ -1,0 +1,60 @@
+{
+  "runFormatVersion": 2,
+  "kind": "pilot",
+  "started": "2026-11-26T14:59:47.799Z",
+  "flowatlas": {
+    "version": "0.7.0",
+    "commit": "a23bc8b9"
+  },
+  "assistant": {
+    "name": "claude-code",
+    "version": "2.1.331 (Claude Code)"
+  },
+  "modelRequested": "sonnet",
+  "seed": 1,
+  "resources": 10,
+  "reps": 1,
+  "arms": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "armSetups": {
+    "A": {
+      "whole": true,
+      "graph": "none"
+    },
+    "B": {
+      "whole": false,
+      "graph": "none"
+    },
+    "C": {
+      "whole": false,
+      "graph": "mcp",
+      "variant": "graph"
+    },
+    "D": {
+      "whole": true,
+      "graph": "mcp",
+      "variant": "graph"
+    }
+  },
+  "pauseSeconds": 30,
+  "timeoutSeconds": 600,
+  "promptCards": true,
+  "guide": "skill + instructions + search hook + prompt cards (flowatlas agents install --instructions --hook)",
+  "questions": [
+    "callers-backend-1",
+    "blast-1",
+    "handlers-1",
+    "dead-nest",
+    "contract-renamed",
+    "settings-object",
+    "single-1",
+    "text-1"
+  ],
+  "model": "claude-sonnet-5-5",
+  "done": true,
+  "finished": "2026-11-26T15:21:34.425Z"
+}
