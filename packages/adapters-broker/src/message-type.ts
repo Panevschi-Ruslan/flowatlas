@@ -1,5 +1,7 @@
 import { resolve as resolvePath, sep } from 'node:path';
 import {
+  repoRelativeOf,
+  sourceFileIn,
   DISCRIMINATOR_FIELDS,
   DISCRIMINATOR_META,
   SELECTED_BY_META,
@@ -1115,7 +1117,7 @@ const subscriptionAt = (
   column: number,
 ): { readonly fn: FunctionLike } | { readonly subscribe: CallExpression } | undefined => {
   if (file === undefined) return undefined;
-  const source = host.project.getSourceFile(resolvePath(host.repoDir, file));
+  const source = sourceFileIn(host.project, host.repoDir, file);
   if (source === undefined) return undefined;
   let position: number;
   try {
@@ -1256,7 +1258,7 @@ export interface MessageTypeHost {
  */
 const declarationAt = (host: MessageTypeHost, file: string | undefined, line: number | undefined): { fn: FunctionLike; owner?: ClassDeclaration } | undefined => {
   if (file === undefined || line === undefined) return undefined;
-  const source = host.project.getSourceFile(resolvePath(host.repoDir, file));
+  const source = sourceFileIn(host.project, host.repoDir, file);
   if (source === undefined) return undefined;
   const found = source.getDescendants().find((node): node is FunctionLike => isFunctionLike(node) && node.getStartLineNumber() === line);
   if (found === undefined) return undefined;
@@ -1274,7 +1276,7 @@ const declarationById = (host: MessageTypeHost, node: GraphNode): { fn: Function
   const symbol = node.id.slice(hash + 1);
   const cut = symbol.lastIndexOf(':');
   if (hash < 0 || cut < 0) return undefined;
-  const file = host.project.getSourceFile(resolvePath(host.repoDir, symbol.slice(0, cut)));
+  const file = sourceFileIn(host.project, host.repoDir, symbol.slice(0, cut));
   if (file === undefined) return undefined;
   const name = symbol.slice(cut + 1);
   const dot = name.indexOf('.');
@@ -1334,11 +1336,7 @@ export const readMessageTypes = (host: MessageTypeHost): void => {
     into.set(edge.from, list);
   }
   let decorated: { value: string; method: ClassMethod }[] | undefined;
-  const relative = (node: TsNode): string => {
-    const path = node.getSourceFile().getFilePath();
-    const root = resolvePath(host.repoDir);
-    return path.startsWith(root + sep) ? path.slice(root.length + 1).split(sep).join('/') : path;
-  };
+  const relative = (node: TsNode): string => repoRelativeOf(host.repoDir, node.getSourceFile().getFilePath());
   /** How a function's calls are looked up, by the node it stands for. */
   const lookupOf = (id: string | undefined): SelectionLookup => ({
     repoDir: host.repoDir,

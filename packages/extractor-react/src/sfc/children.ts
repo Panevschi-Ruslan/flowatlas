@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { normalizeFilePath, startLineOf, type EmbeddedFile, type GraphEdge } from '@flowatlas/core';
+import { dirname, join } from 'node:path';
+import { normalizeFilePath, resolveFrom, startLineOf, type EmbeddedFile, type GraphEdge } from '@flowatlas/core';
 import { NUXT_BUILT_IN_COMPONENTS, type NuxtNames } from '@flowatlas/adapters-entry';
 import type { CallExpression, ImportDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -118,7 +118,7 @@ const componentFileOfImport = (ctx: ReactExtractContext, declaration: ImportDecl
   if (opened !== undefined) return normalizeFilePath(opened.getFilePath(), ctx.repoDir);
   const specifier = declaration.getModuleSpecifierValue();
   if (!specifier.startsWith('.')) return undefined;
-  return normalizeFilePath(resolve(dirname(declaration.getSourceFile().getFilePath()), specifier), ctx.repoDir);
+  return normalizeFilePath(resolveFrom(dirname(declaration.getSourceFile().getFilePath()), specifier), ctx.repoDir);
 };
 
 const propertyValue = (object: ObjectLiteralExpression, key: string): TsNode | undefined => {

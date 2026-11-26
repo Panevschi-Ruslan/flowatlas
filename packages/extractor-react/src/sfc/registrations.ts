@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { configValueAt, hasDependency, normalizeFilePath, packageOfSpecifier, parseSyntax, startLineOf, type PackageJson } from '@flowatlas/core';
+import { dirname, join } from 'node:path';
+import { configValueAt, hasDependency, normalizeFilePath, packageOfSpecifier, parseSyntax, resolveFrom, startLineOf, type PackageJson } from '@flowatlas/core';
 import { nuxtApplicationOf, VITE_CONFIGS } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind, ts } from 'ts-morph';
@@ -342,7 +342,7 @@ export const asyncComponentFile = (value: TsNode, repoDir: string, known: (file:
   if (specifierNode === undefined || !(Node.isStringLiteral(specifierNode) || Node.isNoSubstitutionTemplateLiteral(specifierNode))) return undefined;
   const specifier = specifierNode.getLiteralValue();
   const bases = specifier.startsWith('.')
-    ? [resolve(dirname(value.getSourceFile().getFilePath()), specifier)]
+    ? [resolveFrom(dirname(value.getSourceFile().getFilePath()), specifier)]
     : /^[@~]\//.test(specifier)
       ? [join(repoDir, 'src', specifier.slice(2)), join(repoDir, 'app', specifier.slice(2)), join(repoDir, specifier.slice(2))]
       : [];
