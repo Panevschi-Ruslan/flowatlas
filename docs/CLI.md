@@ -25,6 +25,92 @@ addresses. [`doctor`](#flowatlas-doctor) says why for each.
 
 ---
 
+## Switches
+
+Everything a person turns on or off, in one place: the flags that change what
+is installed or how strictly a check fails, the configuration keys that do the
+same for every run, and the environment. **On** means it happens unless you
+say otherwise; **off** means it happens only when asked. Every other flag is a
+bound or a choice of output, under its command.
+
+**Setting up and serving**
+
+| Switch | Default | Changes |
+|---|---|---|
+| `init --no-mcp`, `link --no-mcp` | on (registering) | leave the graph server out of each repository's `.mcp.json` |
+| `init --git-hooks` | off | also install the git hooks that rebuild after a checkout or a merge |
+| `init --agents` (with `--instructions`, `--hook`, `--shared`) | off | also write each assistant's guide, as `agents install` with the same flags |
+| `agents install` | off until run | the guide: `.claude/skills/flowatlas/SKILL.md` and `.cursor/rules/flowatlas.mdc` in every repository |
+| `agents install --instructions` | off | also the marked block in `AGENTS.md` (made where there is none), `CLAUDE.md` and `.github/copilot-instructions.md` (where they are) |
+| `agents install --hook` | off | also the Claude Code search hook, edit hook and prompt hook, in `.claude/settings.local.json` |
+| `agents install --hook --no-prompt-cards` | prompt cards on with `--hook` | leave the prompt hook out, and take out one written before |
+| `agents install --shared` | off | the hooks in the committed `.claude/settings.json` instead of `settings.local.json` |
+| `agents install --terminal` | off | the guide and hooks for an assistant with a shell and no graph server: each question's command with `--format json` |
+| `agents install --force` | off | replace a guide edited by hand, or a file of that name that is not flowatlas's |
+| `hook install` | off until run | rebuild in the background after `checkout`, `merge` and `rewrite`; `--on commit` adds `post-commit` |
+| `mcp --all-tools`, `"mcp": { "tools": "all" }` | off | list every tool, not only those the project can answer; `mcp.include` and `mcp.exclude` name tools to add or drop |
+| `mcp --no-always-load`, `"mcp": { "alwaysLoad": false }` | on (the nine core tools load upfront in Claude Code) | defer every tool, the core ones too |
+| `mcp --upfront <tools>`, `"mcp": { "upfront": [...] }` | all nine core tools | only these core tools load upfront |
+| `"mcp": { "rebuild": "on-change" }` | `off` | an answer that finds its files changed starts a background build, and the server reopens the new graph |
+| `"mcp": { "pull": "on-start" }` | `off` | with a `remote`, the server pulls the team's graph when it starts |
+
+**Building**
+
+| Switch | Default | Changes |
+|---|---|---|
+| `build --no-cache`, `extract --no-cache` | on (the cache) | read every file again rather than reusing what has not moved |
+| `build --watch` | off | keep the project open and rebuild after every change |
+| `build --background` | off | build in a process of its own and return at once, the log in `<output>/build.log` |
+| `build --skip-frontend` | off | leave out the services a frontend extractor reads |
+| `build --on-pulled` | off | read the repositories checked out here and take the rest from the pulled graph |
+| `extract --no-types` | on (types) | skip type collection, leaving the registry empty |
+| `"builtInShapes": false` | on | stop standing hand-written declarations in for packages that are not installed |
+| `"packageSources": false` | on | stop reading a package that is not installed from the repository that is its source |
+| `"settingFiles": { "read": false }` | on | stop reading base addresses from the repositories' own files |
+
+**Checking and failing**
+
+| Switch | Default | Changes |
+|---|---|---|
+| `findings --fail-on <precision>` | never | exit 1 when a finding at `high`, `medium` or `low` (or surer) is listed |
+| `findings --severity <level>` | errors listed, warnings counted | only the rows at `error` or `warning` (warnings listed) |
+| `--format sarif` (`findings`, `doctor`, `contracts`, `rules`, `dead`, `cycles`, `diff`, `check`, `spec diff`, `spec --against`) | off | write a SARIF 2.1.0 log for code scanning; never changes an exit code |
+| `doctor --strict` | off | exit 1 on a broken annotation, a contract error, a rule violation or growth past the baseline |
+| `doctor --strict-runtime` | off | exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered |
+| `doctor --no-baseline`, `--no-contracts`, `--no-rules` | on | skip the growth check, the contract check, the rules |
+| `doctor --accept` | off | write today's numbers as the baseline |
+| `contracts --fail-on`, `rules --fail-on` | `none` (never) | exit 1 on a finding or violation at `error`, or at `warning` and worse |
+| `spec --against … --fail-on`, `spec diff --fail-on` | `error` | the level that makes the exit 1: `none`, `error`, `warning` |
+| `contracts --no-ignore` | off | report what `@ContractIgnore` excuses as ordinary findings |
+| `"contracts": { "rules": { "disable": [...] } }`, `"contracts": { "ignoreEdges": [...] }` | none | turn contract rules off, or excuse crossings |
+| `"doctor": { "markers": { "warnAsError": true } }` | off | an annotation warning fails `--strict` as an error does |
+| `diff --fail-on-contract-break`, `--fail-on-rule-break`, `--fail-on-broken-call`, `--fail-on-api-break` | off | exit 1 when the revision introduces that kind of break |
+| `diff --no-diagrams` | on (diagrams) | list each changed flow's steps without its Mermaid diagram |
+| `diff --no-cache`, `--keep-worktrees` (also `check`, `spec diff`) | cache on, checkouts removed | read every commit again; leave the detached checkouts on disk |
+| `diff --pulled` | off | compare with the team's pulled graph instead of a base ref |
+| `spec --no-verify` | on (verifying) | do not read each document back through the reader of its kind |
+| `spec --check`, `export … --check`, `docs --check` | off | write nothing; exit 1 when a committed copy differs from what would be written |
+| `export … --include-heuristic` | off | also draw joins the linker only guessed, marked as such |
+
+**Run time, output and what is kept**
+
+| Switch | Default | Changes |
+|---|---|---|
+| `observe --listen [port]` | off | take OTLP/HTTP and `@nestjs/observe` posts on `127.0.0.1:4318` until stopped |
+| `observe --allow-remote` | off | let `--host` bind an address other machines can reach |
+| `observe --shapes` | off | read the JSON bodies a HAR or batch carries for their shape only and compare them with the declared types |
+| `observe --no-samples` | on (samples kept) | keep no sample requests, and remove the ones the file holds |
+| `observe --reset` | off | start the observed file again instead of adding to it |
+| `visualise --editor-links <editor>` | off | make each `file:line` a link that opens it in `vscode`, `cursor`, `idea` or as a `file` link |
+| `--no-color`, `NO_COLOR` | colour on a terminal | never colour the output |
+| `--ascii` | off | plain prefixes instead of icons |
+| `"log": { "questions": true }`, `FLOWATLAS_LOG_QUESTIONS=1` | off | keep the [question log](#the-question-log); `"text": true` keeps a search's words too |
+
+The environment variables the tool reads are listed under
+[Environment](#environment).
+
+---
+
 ## Setting up
 
 ### `flowatlas link <repo...>`
@@ -120,6 +206,11 @@ too (R180).
 | `--force` | off | overwrite an existing configuration |
 | `--list-unknown` | off | name every repository nothing reads, however many there are |
 | `--no-mcp` | off | skip registering the graph server |
+| `--git-hooks` | off | also install the [git hooks](#flowatlas-hook-install--status--remove) that rebuild after a checkout or a merge |
+| `--agents` | off | also write each assistant's guide to when to ask the graph, as [`agents install`](#flowatlas-agents-install--status--remove) does |
+| `--instructions` | off | with `--agents`, also the marked block in `AGENTS.md`, `CLAUDE.md` and the Copilot instructions |
+| `--hook` | off | with `--agents`, also the Claude Code hooks (search, edit and prompt) |
+| `--shared` | off | with `--hook`, in the committed `.claude/settings.json` |
 
 Each `repo` is written relative to the configuration, so the project still loads
 from another checkout — unless getting there climbs all the way to the root of
@@ -1733,6 +1824,9 @@ the repositories it reads:
   cache.json           the file hashes the next build compares against
   freshness.json       each service's checkout and every file read, for answers to say when the code moved
   stand-ins.json       the package sources and shape files worked out once for every reader
+  names.json           the names the search hook can say something about
+  card-names.json      the names a prompt card can answer for
+  edits.json           each file's names another repository uses, for the edit hook
   services/<name>/
     graph.json         one service's own graph, reused when it has not changed
     cache.json         that service's file hashes, whichever reader read it
@@ -2418,6 +2512,8 @@ The type registry, listed or compared.
 | `--drift` | off | only names two repositories declare differently |
 | `--name <glob>` | every name | only names matching, `*` and `?` allowed |
 | `--service <name>` | every service | narrow to one |
+| `--ascii` | off | plain prefixes instead of icons in the tree |
+| `--no-color` | off, or on when `NO_COLOR` is set | never colour the output |
 
 `--drift` is the one worth running on a schedule: it finds a type two services
 each declare for themselves and which have drifted apart. It compares hashes and
@@ -2547,6 +2643,8 @@ query per item and are bounded on purpose, by why (P89).
 | `--service <name>` | every service | narrow to one |
 | `--questions` | off | what the [question log](#the-question-log) says was asked, instead of what the graph holds |
 | `--since <when>` | the whole log | with `--questions`: from a date (`2026-11-01`) or a span back from now (`24h`, `7d`, `2w`) |
+| `--ascii` | off | plain prefixes instead of icons in the tree |
+| `--no-color` | off, or on when `NO_COLOR` is set | never colour the output |
 
 #### The question log
 
@@ -2633,7 +2731,32 @@ a letter or two apart), a setting set and read nowhere, a client branching on
 a status its route never answers, and a browser request its server's CORS
 settings refuse (credentials against `*` or without `credentials: true`, a
 header or a verb not allowed). The kinds, their evidence and precision are
-listed in [the graph server's guide](mcp.md).
+listed in [the graph server's guide](mcp.md#is-it-dead-and-what-to-look-at).
+
+Every kind, in the order they are listed, with its precision:
+
+| Kind | Precision | Says |
+|---|---|---|
+| `call-to-missing-route` | high | a request to a route the service it is sent to does not serve, every route of it read |
+| `field-never-sent` | high | a field the receiver reads that no sender sends, on a channel or a request's body, with the field it was likely renamed from |
+| `answer-field-never-returned` | high | a field of a route's answer a browser reads that the answer never holds (P393) |
+| `type-never-published` | high | a consumer choosing a type of message nothing publishes on any channel it receives |
+| `contract-break` | high at error, medium at warning | the contracts report's errors, listed; its warnings counted |
+| `unguarded-among-guarded` | high | the one write of a controller or router left open while every other write there, two at least, has a guard (P401) |
+| `annotation-to-missing-route` | high | an annotation naming a route its service does not serve |
+| `env-not-set` | medium | code sending to an environment value the deployment of its function does not set |
+| `sse-event-unhandled`, `sse-event-never-sent` | high, medium | a stream's frames under an event name no listener listens for; a listener for a name never sent |
+| `bot-button-unhandled`, `bot-button-data-too-long`, `bot-handler-untriggered` | high, high, medium | a button no handler matches; callback data over 64 bytes; a handler no button sends |
+| `config-name-mismatch` | high | a setting read with no default and set nowhere, while a name a letter or two apart is set and read nowhere |
+| `config-not-set` | medium | a setting read with no default that no deployment file sets; where a name set and read nowhere shares a word with it, said as the setting likely renamed, with the fix and the nearest name (P401); held back where an env file the code loads is not in the checkout, or a secrets tool hands settings in when it runs |
+| `config-never-read` | low | a name the deployment files set that no code of the service reads |
+| `status-never-answered` | high | a client branching on a status its route never answers |
+| `cors-credentials`, `cors-header-not-allowed`, `cors-method-not-allowed` | high | a browser request the server's CORS settings refuse |
+| `n-plus-one` | medium | a query, request or publish run once per item of a loop |
+| `unguarded` | low | a route with nothing in front of it that can refuse a request (internal routes often are, by design) |
+| `one-ended-channel` | medium | a channel with a publisher and no consumer, or the other way |
+| `rule` | high | a broken [architecture rule](#flowatlas-rules) |
+| a reason listed under itself | its own, else medium | any other reason a row classes as a finding, such as `message-type-unselected` (medium, P358); `route-shadowed-by-earlier` (high: a literal route an earlier parameter route answers never runs, P385); the deployment settings of P389: `batch-failures-unreported` and `queue-visibility-short` (high), `batch-failures-ignored` and `workflow-task-untimed` (medium), `queue-redrive-missing`, `queue-receives-few`, `workflow-function-unretried` and `workflow-callback-no-heartbeat` (low) |
 
 ```
 status-never-answered (1)
@@ -4369,26 +4492,29 @@ any reader writes a reason `doctor` does not know. By what they are about:
 
 | About | Reasons |
 |---|---|
-| A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info), `tsconfig-not-read-above-root`, `tsconfig-extends-installed-above`, `tsconfig-read-above-root` (info) |
+| A graph or a service that could not be read | `service-read-nothing`, `file-not-parsed`, `duplicate-node-id`, `test-directory-skipped` (info), `tsconfig-not-read-above-root`, `tsconfig-extends-installed-above`, `tsconfig-read-above-root` (info), `edge-end-missing` (a reader drew an edge to a node it never wrote: a defect of flowatlas, the edge left out), `checkout-moved` (a repository is on another commit than the graph was built from), `edit-index-unwritten` (the edit hook's `edits.json` could not be written) |
 | A package that is not installed, read in its place | `package-from-repo` (nothing), `package-version-differs` (info), `package-source-ambiguous`, `shape-file-unread`, `shape-file-unmatched` (nothing) |
 | The project's own extraction patterns | `pattern-file-unread`, `pattern-not-expressible` (a rule refused, the part named), `pattern-ambiguous` (two rules on one call, neither read), `pattern-shadowed` (info: a written description reads the call), `pattern-unmatched` (info: a rule nothing matches) |
-| Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
+| Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic`, `type-missing`, `type-kind-unsupported` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `module-import-not-installed`, `middleware-route-dynamic`, `fails-filter-unread`, `fails-interceptor-unread` |
-| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread`, `mcp-name-dynamic` (P270), `route-shadowed-by-earlier` (finding: a route a parameter route registered before it in the same router always answers first), `route-order-unread` (info: two routes of a router trying routes in order whose order was not read, P385) |
+| Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread`, `mcp-name-dynamic` (P270), `route-shadowed-by-earlier` (finding: a route a parameter route registered before it in the same router always answers first), `route-order-unread` (info: two routes of a router trying routes in order whose order was not read, P385), `ambiguous-handler` (two controllers declare one method and path), `fs-route-handler-not-read` (a file route whose default export is not a handler written in place), `framework-feature-off` (code for a feature the framework builds only behind a flag the configuration leaves off) |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread`, `procedure-unmounted` (info, P270) |
+| Comparing what one end sends with what the other reads (`contracts`) | `no-type-on-sender`, `no-type-on-receiver`, `message-undeclared`, `message-unparsed`, `body-already-serialised`, `handler-unread`, `sender-forwards` (nothing to change), `delivered-onward` (nothing to change: compared where it is handed on), `envelope-unread`, `delivery-target-unread`, `procedure-input-by-name`, `procedure-input-not-at-call`, `procedure-input-undeclared`, `procedure-input-unread`, `procedure-output-inferred` (nothing to compare: the compiler holds both ends to one type) |
 | gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements), `grpc-package-service` (info: a service a package implements whose contract is not known, its methods not drawn), `grpc-method-unimplemented` (info finding: a method the contract declares that the server registering the service does not implement), `grpc-method-undeclared` (info finding: a member a server implements for a service that its contract does not declare), `grpc-field-undeclared` (info finding: a field a handler reads off its request that the message does not declare under the loader's names, P297) |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread`, `api-client-global-undeclared` (a client's browser global called with nothing declaring it, P323) |
+| GraphQL | `graphql-document-dynamic`, `graphql-document-not-parsed`, `graphql-fragment-not-read`, `graphql-client-unread`, `graphql-endpoint-unread`, `graphql-field-no-resolver`, `graphql-field-resolved-twice`, `graphql-federation-not-read`, `graphql-subgraph-not-joined`, `graphql-supergraph-drift`, `graphql-composition-conflict`, `graphql-shareable-choice` (each owner drawn, heuristic), `graphql-entity-type-unsaid`, `graphql-context-not-reached`, `graphql-auth-not-checked`, `graphql-requires-auth-not-carried` |
 | Ports, proxies and the network a request goes over | `local-port-shared` (two services or more heard at the port a request on this machine names, none of them chosen), `listen-port-unread` (info: a server's port read from defaults a module loads by a path decided at run time, P315), `listen-port-guessed` (info: a port kept only as a guess - the value from before a write not read, or a framework default an environment file it does not load would move, P321), `published-port-unheard` (info), `server-start-unread` (info: a program of the project's own a script starts with a port - a package's `bin`, a path - whose file a build writes and is not in the repository, P343), `container-image-unread` (info: a container's image whose Dockerfile is not read - pulled, built by nothing the project holds, from a Dockerfile not found, or named by a template value a chart's values do not settle - where the setting the code reads its port from hangs on it, P331, P337), `network-port-unreachable`, `proxy-rule-unread`, `proxy-chain-unfollowed`, `proxied-to-third-party` (info), `server-request-without-origin`, `address-port-without-colon` (a number written straight after a host with no colon, read as spelled - `localhost4600` - and no port; info after a name that may end in digits, P324) |
+| Where a service is started and reached: compose files, Makefiles, cluster manifests | `compose-service-unread`, `make-conditional-unsettled`, `run-mode-unsettled`, `manifest-unread`, `manifest-overlay-unchosen`, `release-need-undefined` |
 | The gate in front of a route | `route-unguarded`, `route-unguarded-among-guarded` (finding: the one open write among guarded ones, P401), `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
 | The layers a framework builds an application from (P243) | `framework-layer-read` (info), `framework-layer-overridden` (info), `implicit-import-overridden` (info), `framework-layer-alias` |
 | What a framework still decides when it builds (P251) | `framework-module-skipped` (info, P255), `framework-module-read` (info), `framework-module-installed` (info), `framework-environment-differs` (info), `framework-module-unread`, `plugin-not-enabled` (info: a Strapi plugin's server no key of `config/plugins` enables, P335) |
 | Components, layouts and route middleware by name (P255) | `component-unresolved` (info), `layout-unresolved`, `route-middleware-unresolved` |
-| Screens and templates | `route-config-unread`, `route-entries-unread` (info: entries of a list a route is written over that are not read, P320), `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed`, `navigation-unresolved`, `navigation-external` (info), `navigation-locale-prefixed` (info, P291) |
-| The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
-| Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown`, `stream-relay-unread` (info: a route streaming server-sent events relays no channel that was read, P359), `stream-handler-unread` (info: the screen function a stream's frames arrive at was not found, P359), `message-type-unread` (info, P358: the type of a message at a send, or a consumer's choice on it, not read), `message-type-differs` (info, P369: a handler's parameter typed for one type of message, called under a choice of another; the caller's choice is drawn) |
+| Screens and templates | `route-config-unread`, `route-entries-unread` (info: entries of a list a route is written over that are not read, P320), `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed`, `navigation-unresolved`, `navigation-external` (info), `navigation-locale-prefixed` (info, P291), `template-handler-not-found` (a binding naming a function the component neither declares nor imports) |
+| The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop), `store-shared` (two services write one store) |
+| Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown`, `stream-relay-unread` (info: a route streaming server-sent events relays no channel that was read, P359), `stream-handler-unread` (info: the screen function a stream's frames arrive at was not found, P359), `message-type-unread` (info, P358: the type of a message at a send, or a consumer's choice on it, not read), `message-type-differs` (info, P369: a handler's parameter typed for one type of message, called under a choice of another; the caller's choice is drawn), `channel-without-consumer`, `channel-without-producer` (see `dead --kind channels`) |
 | Types of message on a channel | `message-type-unselected` (P358): a type published on a channel whose consumers choose by type, none choosing it |
 | Starting a workflow or a function by its deployed name | `start-from-environment`, `start-name-unread`, `starter-undescribed` |
 | Settings | `dynamic-config-key` |
@@ -4398,6 +4524,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Functions and routes declared in Terraform | `function-name-unread`, `function-name-disputed`, `function-repeated-unread`, `function-handler-unread`, `function-handler-not-found`, `function-handler-ambiguous`, `function-source-unread`, `function-runtime-unread` (info), `function-image-unread` (info), `route-path-unread`, `route-target-unread`, `route-base-path-unread`, `api-body-unread`, `deployment-unread` (info) |
 | Terraform files and modules | `infra-file-unparsed`, `infra-module-missing`, `infra-module-undescribed` (info unless its inputs name a handler, a function or a route), `infra-module-description-invalid` |
 | Joining a deployment across repositories | `route-root-not-found`, `route-root-ambiguous`, `invoke-target-not-found`, `invoke-target-ambiguous` |
+| Values shared between deployments, and what a deployment program declares | `export-not-found`, `export-ambiguous`, `export-mismatched`, `deployed-name-from-parameter`, `deployed-name-generated`, `parameter-file-ambiguous`, `nested-deployment-unread`, `deployment-app-unread`, `deployment-plugin-unread`, `deployment-copy-not-read` (a copy a packaging step wrote, read once), `construct-conditional`, `construct-repeated-unread`, `construct-unreached`, `layer-not-followed` |
 | Workflows written as state machines | `workflow-definition-unreadable`, `workflow-definition-invalid`, `workflow-definition-not-loaded`, `workflow-name-unread`, `workflow-named-by-file` (info), `workflow-name-duplicate`, `workflow-target-dynamic` (info), `workflow-template-unbound`, `workflow-target-unreadable`, `reference-not-found`, `reference-ambiguous` |
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
@@ -4405,6 +4532,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Deployment settings against the code (P389) | `batch-failures-unreported`, `batch-failures-ignored`, `queue-visibility-short`, `queue-redrive-missing`, `queue-receives-few`, `workflow-task-untimed`, `workflow-callback-no-heartbeat` (info), `workflow-function-unretried` (info where a Catch takes the errors): findings; `deployment-setting-unread` (info, a note): a check not made, and why |
 | Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files`, `channel-from-grant` (info; P272) |
 | Architecture rules (`flowatlas rules`, the `rules` section) | `rule-matches-nothing` (a side of a rule names nothing; never a pass), `rule-invalid` (a rule fails its schema; the configuration is refused), `rule-over-partial-read` (a note: the rule names a service read in part) |
+| What traffic did (`observe`) | `failure-seen-undeclared` (a status real traffic got that no failure read off the code says), `failure-declared-unseen` (one the code declares that no request answered), `seen-not-in-code` (traffic reached something no reader drew) |
 
 Three of these are worth knowing before they are met, because each is the
 tool declining to guess:
@@ -5413,8 +5541,8 @@ documents describe a node.
 
 ### `--format sarif`: findings for code scanning
 
-`contracts`, `dead`, `cycles`, `rules`, `doctor`, `diff` and `findings` write their
-findings as one SARIF 2.1.0 log, the format GitHub code scanning (and most
+`contracts`, `dead`, `cycles`, `rules`, `doctor`, `diff`, `check`, `spec diff`,
+`spec --against` and `findings` write their findings as one SARIF 2.1.0 log, the format GitHub code scanning (and most
 other code hosts) reads: each result is shown on the line it is about in a
 pull request, stays open while the finding is there, and closes when it is
 fixed. The log goes to stdout, or with `--output <file>` to the file, with one
@@ -5436,11 +5564,13 @@ report's hints:
 | `target-route-not-found`, `unknown-base-url-env`, … | `doctor`'s desync rows | `error` (said once, not again under its reason) |
 | a marker code (`marker-emits-without-emit`, …) | `doctor`'s annotations | the marker's own: `error` or `warning` |
 | `no-way-in` | `doctor`: a service nothing enters | `warning`, at the configuration line naming it |
-| `missing_required`, `type_mismatch`, `optionality_mismatch`, `extra_field` | `contracts`, `doctor`, `diff` | the finding's severity, `info` → `note` |
+| `missing_required`, `type_mismatch`, `optionality_mismatch`, `extra_field` | `contracts`, `doctor`, `diff`, `check` | the finding's severity, `info` → `note` |
 | `finding/<kind>` (`finding/call-to-missing-route`, …) | `findings` (P384); the rule's `properties.precision` is the kind's | by precision: `high` → `error`, `medium` → `warning`, `low` → `note` |
-| `rule/<name>` | `rules`, `doctor`, `diff` | the rule's severity, `info` → `note` |
+| `rule/<name>` | `rules`, `doctor`, `diff`, `check` | the rule's severity, `info` → `note` |
 | `dead-entry`, `dead-channel`, `dead-provider`, `dead-field` | `dead` | `note`; only actionable entries and `dead` / `likely-dead` verdicts |
 | `cycle` | `cycles` | `warning` |
+| `join/<kind>` (`join/target-gone`, `join/no-producer`, `join/no-target`) | `check`: a join deploying would lose, or a new request nothing deployed serves | `error` |
+| `spec/<kind>` (`spec/endpoint-removed`, …) | `spec diff` and `spec --against` (categories `flowatlas/spec-diff/`, `flowatlas/spec-against/`) | the change's level, `info` → `note` |
 
 **Where.** A path is written as the configuration's directory sees it: a row's
 file under the directory its service's repository is in (`billing/src/x.ts`),
@@ -5510,6 +5640,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |
 | `bootstrap` | string | `src/main.ts` | the application entry file, when it is elsewhere |
 | `infra.vars` | string[] | none | for a service read from Terraform: the variable files a deployment is read with, in order, relative to the service's directory (`["infra/env/dev.tfvars"]`). Without it, a name two files set differently is reported, never picked |
+| `infra.options` | object | none | the values a deployment is run with that no file holds, what a command line would pass: a stage, a region, a context value (`{ "stage": "prod" }`, read as `${opt:stage}`, `--context stage=prod` and the like). Without one, a reader takes what the deployment's own files fall back to, and otherwise says the value is not read |
 | `readTestDirectories` | string[] | `[]` | directories named like tests (`test`, `tests`, `e2e`, `fixtures`, `cypress`, `playwright`, `__tests__`, `__mocks__`, `__snapshots__`, `__fixtures__`) that hold code the application runs, relative to the service's directory: `["src/fixtures"]` |
 | `builtInShapes` | boolean | project setting | whether the reader's built-in declaration shapes stand in for packages this service has not installed; `false` turns them off for this service alone |
 | `shapes` | string[] | none | shape files this service reads beside the project's, as paths or globs relative to the configuration (the grammar under `accept`, *Globs*); added to the project's list |
@@ -5903,6 +6034,13 @@ worked example of a document that declares routes.
 | `mcp.exclude` | string[] | `[]` | tools never listed; a call of one says it is turned off. A name in either list that is no tool, or a tool in both, stops `flowatlas mcp` at start with a configuration error naming it |
 | `mcp.upfront` | string[] | the nine core tools | which core tools load upfront while `alwaysLoad` is on (P392): only these are marked, the rest load by ToolSearch. Only core tools, each once; `flowatlas mcp --upfront` says the same and comes first. `agents install` writes the list into the guide |
 | `mcp.alwaysLoad` | boolean | `true` | whether the MCP server lists its nine core tools to load upfront in Claude Code (`_meta` `anthropic/alwaysLoad`), so a session needs no ToolSearch call for them; `false` leaves every tool deferred, as `flowatlas mcp --no-always-load` does, and `agents install` then writes the ToolSearch call into the guide ([the core tools, loaded upfront](mcp.md#the-core-tools-loaded-upfront)) |
+| `mcp.rebuild` | `"off"` or `"on-change"` | `"off"` | `on-change`: an answer that finds its files changed starts a background build, says `rebuilding: true` in its `stale`, and the server reopens the new graph when it is written ([keeping it current](mcp.md#keeping-it-current)) |
+| `mcp.pull` | `"off"` or `"on-start"` | `"off"` | `on-start`: with a `remote`, the server pulls the team's graph when it starts |
+| `remote.url` | string | none | where the team's graph is pulled from: `gh:owner/repo/artifact`, an `https://` address, or a file ([team.md](team.md)); with it, a service whose repository is not checked out is allowed |
+| `remote.tokenEnv` | string | none | the environment variable holding a token for an `https://` source, sent as `Authorization: Bearer` |
+| `log.questions` | boolean | `false` | keep the [question log](#the-question-log) in `<output>/questions.jsonl`; `FLOWATLAS_LOG_QUESTIONS=1` does the same |
+| `log.text` | boolean | `false` | keep a search's words in the log too |
+| `log.maxBytes` | number | 5 MB | past it the log is moved to `questions.1.jsonl`, so at most two are kept |
 
 **A path segment written as a closed set.** A segment whose type is a union of
 string literals — `action: 'ship' | 'refund'` — is a segment that was
@@ -9626,7 +9764,26 @@ and an edge made on a coincidence would be two services that never speak. A call
 made as a mutation to a procedure declared a query joins and says so in a
 `procedure-call-mismatch` row (`fixtures/trpc-join`). `adapters.entry.procedures`
 exposes the description the shipped reader is written as, for another framework
-of the same family.
+of the same family. Every field says where something is or what something is
+called; none says how to walk the tree:
+
+| Key | Default | Says |
+|---|---|---|
+| `name` | required | how the description is named in reports and on its entries |
+| `packages` | `[]` (tried everywhere) | dependencies any one of which means it is in use |
+| `assembledBy` | required | functions that assemble a tree out of one object literal, by name |
+| `terminators` | required | the last link of a chain and the kind of way in it opens (`{ "query": "rpc", "mutation": "rpc" }`) |
+| `separator` | `.` | how the keys down the tree are joined into one address |
+| `inputMethod`, `outputMethod` | none | the chain links carrying what a caller sends and what the way in answers with |
+| `guardMethod` | none | the chain link that installs something in front of a way in, read on the chain and on what it starts from |
+| `errorsMethod` | none | the chain link declaring the failures a way in may answer with, keyed by code, each with an optional `status` |
+| `routeMethod` | none | the chain link giving a way in an HTTP route of its own, `{ method, path }` in its first argument |
+| `prefixMethod` | none | the link, on the assembling call, prefixing the HTTP route of every way in under it |
+| `context` | none | `{ method, key }`: the root call given the context's type (`context` in `initTRPC.context<T>()`) and the member it arrives under (`ctx`) |
+| `plainTrees` | `false` | an object literal whose values are ways in is a tree with no call around it |
+| `implementedBy` | `[]` | functions taking a contract and handing back a builder whose property accesses name its members |
+| `lazyBy` | `[]` | functions loading a tree from a module when first asked for (`lazy(() => import(…))`) |
+| `mounts[]` | `[]` | where a tree is hung so that requests reach it: `call` (required), the tree as argument `treeArg` (`0`) or options key `treeKey` (dotted), `constructed` (made with `new`), `routes` (each way in also at its own HTTP route), the address from `prefixKey` / `prefixDefault`, from `prefixFrom: { method, key, arg }` on what the mount made, from the path argument of the call it is handed to (`handedTo: { method, pathAt }`), or from the file's own route (`fileRoute`); `plugin: { method, at }` for a mount handed to a registering call; `protocol`, the name `meta.mounted` gives it |
 
 **oRPC** is the second row of the same description, read by the same walk
 (`fixtures/orpc-next`, `fixtures/orpc-contract`). What differs:
@@ -10329,3 +10486,12 @@ who wrote it believes the tool agreed with them.
 |---|---|
 | `FLOWATLAS_PIN_<SERVICE>` | with `check --env` and `diff --env`: the ref a service runs, over the pins file and under `--pin`; the service name upper-cased, every character that is not a letter or digit `_` |
 | `NO_COLOR` | any value turns colour off everywhere, the same as `--no-color` |
+| `FLOWATLAS_LOG_QUESTIONS` | `1` turns the [question log](#the-question-log) on, as `"log": { "questions": true }` does; any other value, or none, leaves the configuration to decide (off by default) |
+| `GITHUB_TOKEN`, then `GH_TOKEN` | the token `pull` sends for a `gh:owner/repo/artifact` source; with neither, the `gh` command's own login (`gh auth token`) |
+| the variable `remote.tokenEnv` names | the token `pull` sends to an `https://` source, as `Authorization: Bearer`, and never to another origin after a redirect ([team.md](team.md)) |
+| `NODE_OPTIONS` | a heap limit already on it (`--max-old-space-size`) wins over the share of the machine `build` asks for each repository read; `--heap` does too |
+| `CLAUDE_PROJECT_DIR` | set by Claude Code when it runs the hooks `agents install --hook` writes: where they find the index each one reads; without it, the working directory the hook call names |
+
+Nothing else in the environment changes what the tool does. The GitHub Action
+reads its inputs and the runner's own variables (`GITHUB_EVENT_PATH`,
+`GITHUB_OUTPUT` and the like); see [ci.md](ci.md).

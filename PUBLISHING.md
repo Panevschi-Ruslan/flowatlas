@@ -159,15 +159,19 @@ out="$(mktemp -d)"
 (cd packages/cli && pnpm pack --pack-destination "$out")
 ```
 
-At 0.6.0 that is forty files, about 1.1 MB packed and 4.2 MB unpacked:
+After 0.6.0 that is fifty-five files, about 2.0 MB packed and 8.3 MB
+unpacked:
 
-- `bin/flowatlas.js`, `dist/index.js`, and the eight chunks under
-  `dist/chunks/` that the bundle is split into;
+- `bin/flowatlas.js`, `dist/index.js`, the three Claude Code hooks
+  `agents install --hook` writes (`dist/search-hook.js`, `dist/edit-hook.js`,
+  `dist/prompt-hook.js`, each an entry of its own so a hook starts without
+  loading the command), and the nineteen chunks under `dist/chunks/` that the
+  bundle is split into;
 - the page `flowatlas visualise` writes, read as text from `dist/visualise/`:
   `page.html`, `page.css`, `graph.js`, `frame.js`, `map.js`, `steps.js`,
-  `prompt-text.js` and the twenty panel modules under `panels/` (copied by
-  `scripts/page-parts.mjs`, a whole folder, so a new panel ships without being
-  named anywhere);
+  `prompt-text.js`, `shortest-ways.js` and the twenty panel modules under
+  `panels/` (copied by `scripts/page-parts.mjs`, a whole folder, so a new panel
+  ships without being named anywhere);
 - the README, the licence and the manifest.
 
 No test, fixture, type declaration, roadmap or schema file is in it; the
@@ -192,7 +196,7 @@ resolved through the monorepo, and a file that was never added to `files`. On
 a copy of `fixtures/multi-repo`, also run `npx flowatlas build`, `visualise`,
 `doctor` and `observe traces/checkout.otlp.json`, and connect to
 `npx flowatlas mcp`: `initialize` answers the new version and `tools/list` the
-twenty-six tools.
+twenty-seven tools (`--all-tools`; without it, those the project can answer).
 
 **6. Land it on `main`.** Merge the release commit, and wait for the `check`
 workflow and the GitHub Pages build to go green. The package is published from

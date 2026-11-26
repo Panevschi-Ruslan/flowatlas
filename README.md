@@ -64,6 +64,52 @@ reason about all of them.
 
 ---
 
+## What it reads, answers and finds
+
+**What it reads.** Every way in: routes, procedures, GraphQL fields, gRPC
+methods, bot commands and buttons, scheduled jobs, message handlers, the
+screens a front end's router registers, and functions a deployment declares;
+the guards, pipes and interceptors in front of each, and what each can fail
+with. Then what the code behind them does: the requests it sends, with the
+parts each sends (body, query, headers, and what a client's instance and
+interceptors add to every request), the messages it publishes and the types
+of message a consumer chooses (a `switch` and its `default`, an `if` chain and
+its `else`, a table of handlers), the fields each handler reads (also through
+a cast or a message parsed from text, and whether it checks first that a
+field is there), the fields of an answer each client reads (an Angular
+template's `?.`, `@if` and `*ngIf` counted as a check), the tables it reads
+and writes, and the settings it reads. Methods the framework calls itself
+(Nest's and Angular's lifecycle hooks) are ways in too, and an answer reshaped
+on the way out by an interceptor (an envelope, fields a serializer leaves out)
+is compared as it goes over the wire. [Where it stands](#where-it-stands) lists
+every shape, each with its fixture.
+
+**What it answers.** Who calls this, across every repository and up to every
+way in; what breaks if it changes; where a request lands; who handles a
+message type, on every channel that carries it (`alsoOn`); which code reads a
+field; how A reaches B; is it dead. Each answer says whether every row runs
+(`reach`), and says `settled` or `complete: true` only when it is the whole
+answer, so one call is the end of the question. From a terminal
+([commands](#commands)) or from an assistant over MCP
+([the graph server](docs/mcp.md)), with a guide, a hook after each search and
+each edit, and *prompt cards*, the graph's answer for what a prompt names
+before the first turn ([`agents install`](docs/mcp.md#tell-the-assistant-when-to-ask)).
+
+**What it finds.** `flowatlas findings` lists what looks broken between the
+services first, each kind gated on the fact that makes it a defect and
+carrying its precision: a call to a route that does not exist, a field read
+and never sent (with the field it was likely renamed from), a field of an
+answer a client reads that the route never returns, a type of message nothing
+publishes, contract breaks, the one write route left open among guarded ones,
+a setting no deployment sets (with the setting it was likely renamed to), a
+literal route an earlier parameter route answers first, stream events and bot
+buttons nobody handles, a status a client expects and the route never
+answers, requests the server's CORS settings refuse, and queue and workflow
+settings that contradict the code. Then likely N+1 loops, unguarded routes
+and one-ended channels ([every kind](docs/CLI.md#flowatlas-findings)).
+
+---
+
 ## Measured on the demo project
 
 The demo project is [`fixtures/multi-repo`](fixtures/multi-repo), the same one
@@ -157,9 +203,13 @@ project.
 Whether an assistant answers questions about a multi-repository project better
 with flowatlas than without it is measured by a benchmark in this repository:
 a generated project with its own answer key, four arms (with and without the
-graph, from one repository and from all of them), the questions where the
-graph should not help asked beside the ones where it should, and the
-expectations written down before the first run ([docs/benchmark.md](docs/benchmark.md)).
+graph, from one repository and from all of them) and three more that each
+change one thing of the graph arm (the terminal instead of a server, prompt
+cards, fewer tools upfront), the questions where the graph should not help
+asked beside the ones where it should, and the expectations written down
+before the first run ([docs/benchmark.md](docs/benchmark.md)). Its graph arms
+are set up as `flowatlas agents install --instructions --hook` sets up a
+project.
 
 <!-- benchmark:start -->
 No run has been recorded yet; the figures appear here, quoted from the report,
@@ -239,11 +289,16 @@ place. Adding a sixth later is one more `link`.
 | `link-report.json` | what joined, what did not, and why |
 | `graph.db` | the same graph as SQLite, which every query reads |
 
-Beside them it keeps `cache.json` (what the next build may reuse) and
+Beside them it keeps `cache.json` (what the next build may reuse),
 `stand-ins.json` (what was read in place of packages that are not installed:
-their source in another repository, or a shape file), and the commands that answer add their own: `doctor.json`,
-`observed.json` after `flowatlas observe`, `accepted.json` after
-`flowatlas accept`, and `diff.json` or `check.<env>.json` after a comparison.
+their source in another repository, or a shape file), `freshness.json` (each
+service's checkout, so an answer says when the code moved since), and the
+indexes the assistant hooks read (`names.json`, `card-names.json`,
+`edits.json`). The commands that answer add their own: `doctor.json`,
+`contracts.json`, `rules.json`, `observed.json` after `flowatlas observe`,
+`accepted.json` after `flowatlas accept`, and `diff.json` or
+`check.<env>.json` after a comparison. Every file and its version is in
+[docs/formats.md](docs/formats.md).
 
 What it keeps between builds, each service's own graph and file hashes, is in the
 same directory under `services/`. Nothing is written into the repositories it
@@ -262,6 +317,9 @@ reads.
 | `flowatlas init` | find repositories beside this one and ask |
 | `flowatlas build` | read every repository and join them |
 | `flowatlas extract <repo>` | read one repository on its own |
+| `flowatlas mcp` | serve the graph to an assistant over stdio; `--install` registers it in every repository |
+| `flowatlas agents install\|status\|remove` | tell each assistant when to ask the graph: a skill, a Cursor rule, and with `--instructions` and `--hook` a block in `AGENTS.md` and `CLAUDE.md` and the Claude Code hooks |
+| `flowatlas hook install\|status\|remove` | git hooks that rebuild the graph in the background after a checkout, a merge or a rebase |
 
 `build` reads each repository in its own process, records a hash per source file,
 and skips a repository whose files have not moved. Useful flags:
@@ -306,9 +364,11 @@ read again and the others come from the cache.
 
 | Command | Answers |
 |---|---|
+| `flowatlas findings` | what looks broken between the services first, then the rest of what the reading found, ranked, each with its precision; `--fail-on high` stops a pipeline on the defects that are nearly always right |
 | `flowatlas doctor` | what could not be read, what the annotations get wrong, what has drifted |
 | `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
 | `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
+| `flowatlas check-change` | what the working tree breaks across repositories, against the built graph (or `--base`), before it is committed: lost joins, new contract errors and findings, the ways in it reaches |
 | `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks; `--env prod` compares with what an environment runs |
 | `flowatlas check --env <name>` | can this be deployed: every service read at the ref the environment runs, the one being shipped in its place, and what that would break |
 | `flowatlas deployed set\|show` | the pins file `check` reads: which ref of each service runs in each environment |
@@ -388,9 +448,9 @@ a decorator that cannot be followed goes in `doctor.skipGuardDecorators`; all of
 it is in [the command reference](docs/CLI.md). `diff` answers the other question a build
 asks: given this branch, which entry points in which repositories would notice.
 Its output is markdown because it is meant for a pull request comment, and
-`--fail-on-contract-break` turns a new disagreement into a failure. `doctor`,
-`contracts`, `rules`, `dead`, `cycles` and `diff` also write `--format sarif`, a
-SARIF 2.1.0 log GitHub code scanning shows on the lines of a pull request and
+`--fail-on-contract-break` turns a new disagreement into a failure. `findings`,
+`doctor`, `contracts`, `rules`, `dead`, `cycles`, `diff`, `check`, `spec diff`
+and `spec --against` also write `--format sarif`, a SARIF 2.1.0 log GitHub code scanning shows on the lines of a pull request and
 keeps open until the finding is fixed.
 [docs/ci.md](docs/ci.md) is the whole recipe.
 
@@ -502,9 +562,14 @@ flowatlas mcp                 # serve over stdio, which the editor does for you
 
 `flowatlas agents install` tells each assistant when to ask the graph rather
 than search: a skill for Claude Code, a rule for Cursor, and with
-`--instructions` a block in `AGENTS.md`; `--hook` adds a Claude Code hook that,
-after a search naming a route another repository calls, says which repositories
-call it ([the graph server](docs/mcp.md#tell-the-assistant-when-to-ask)).
+`--instructions` a block in `AGENTS.md`, `CLAUDE.md` and Copilot's
+instructions. `--hook` adds three Claude Code hooks: after a search, what lies
+in the repositories it could not see (who calls the route it found); after an
+edit that takes out a name another repository uses, who uses it; and before a
+prompt's first turn, the graph's answer for what the prompt names (*prompt
+cards*; `--no-prompt-cards` leaves that one out). `--shared` puts them in the
+committed `.claude/settings.json`
+([the graph server](docs/mcp.md#tell-the-assistant-when-to-ask)).
 In Claude Code the nine core tools load upfront, so a session spends no turn on
 a ToolSearch call for them; `"mcp": { "alwaysLoad": false }` or
 `flowatlas mcp --no-always-load` keeps every tool deferred, and
@@ -542,7 +607,7 @@ channel and type tools once the graph holds one, without restarting anything
 | `describe_for_prompt` | an entry, channel, symbol or gap, or a whole class, file or service, as bounded Markdown to paste into a prompt; the page's *Copy as prompt* writes the same text |
 | `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
 | `dead` | whether a node is dead, with what could make that wrong, or a service's dead rows, verdict first |
-| `findings` | likely N+1 loops, unguarded routes, contract breaks and one-ended channels, ranked by reach |
+| `findings` | what looks broken between the services first (missing routes, fields never sent or returned, types never published, contract breaks, settings not set, CORS, …), each with its precision and nearest fix, then likely N+1 loops, unguarded routes and one-ended channels |
 | `check_rules` | the architecture rules in the configuration: each violation and where it crosses |
 | `test_pattern` | a draft extraction pattern run over code by the build's own reader: what it draws, or why it is refused |
 | `hot_paths` / `slow_steps` / `trace_for` | after `flowatlas observe`: the ways in traffic used most, the steps it was slowest on, and one slow and one failing request step by step |
@@ -651,6 +716,39 @@ repositories' own files off (`read: false`) or picks one environment
 (`environment`), and names the cluster overlays (`overlays`) and the values
 files a chart is installed with (`chartValues`) where several could be read.
 Every key is in [the command reference](docs/CLI.md#configuration).
+
+---
+
+## Switches
+
+What is on unless you turn it off, and what happens only when asked. The whole
+list, with every check's failing switch, is [in the command
+reference](docs/CLI.md#switches).
+
+| On by default | Turned off with |
+|---|---|
+| registering the graph server in each repository | `init --no-mcp`, `link --no-mcp` |
+| the build cache: a repository whose files have not moved is not read again | `build --no-cache` |
+| the nine core tools load upfront in Claude Code | `mcp --no-always-load`, `"mcp": { "alwaysLoad": false }`; `--upfront` or `mcp.upfront` loads fewer |
+| a session lists only the tools the project can answer | `mcp --all-tools`, `"mcp": { "tools": "all" }` |
+| prompt cards, whenever the hooks are installed | `agents install --hook --no-prompt-cards` |
+| hand-written shapes for packages that are not installed, and a package read from the repository that is its source | `"builtInShapes": false`, `"packageSources": false` |
+| base addresses read from the repositories' own files | `"settingFiles": { "read": false }` |
+| colour on a terminal | `--no-color`, `NO_COLOR` |
+
+| Off until asked | Turned on with |
+|---|---|
+| each assistant's guide (a skill, a Cursor rule) | `agents install` (or `init --agents`) |
+| a block in `AGENTS.md`, `CLAUDE.md`, Copilot's instructions | `agents install --instructions` |
+| the Claude Code search, edit and prompt hooks; in the committed settings | `agents install --hook`; `--shared` |
+| the guide for an assistant with a shell and no graph server | `agents install --terminal` |
+| git hooks that rebuild after a checkout, a merge or a rebase | `hook install` (or `init --git-hooks`); `--on commit` adds commits |
+| rebuilding on every change; building in the background | `build --watch`; `build --background` |
+| a rebuild started by a stale answer; the team's graph pulled at start | `"mcp": { "rebuild": "on-change" }`; `"mcp": { "pull": "on-start" }` |
+| failing a pipeline on a finding, a check or a change | `findings --fail-on high`, `doctor --strict`, `contracts --fail-on error`, `diff --fail-on-contract-break` and its siblings |
+| SARIF for code scanning | `--format sarif` on `findings`, `doctor`, `contracts`, `rules`, `dead`, `cycles`, `diff`, `check` and `spec` |
+| the question log, kept on this machine | `"log": { "questions": true }` or `FLOWATLAS_LOG_QUESTIONS=1` |
+| a receiver for traces while the service runs | `observe --listen` |
 
 ---
 
@@ -1465,6 +1563,29 @@ prove, and the path is given so you can run it.
 - **Comparing** what each side of a boundary declares, field by field, with the
   rules of the JSON wire applied so a date meeting a string is not a finding
   (`fixtures/multi-repo-contracts`).
+- **Types of message, and the fields each side reads.** A consumer's choice of
+  a message type is read wherever it is made: a `switch` and its `default`, an
+  `if` chain and its `else`, a caller's branch, a parameter's declared type, a
+  table of handlers picked by a key or a prefix, a dispatch handed a message
+  parsed from text and held in a cast (`fixtures/space-message-types`,
+  `fixtures/handler-table-dispatch`, `fixtures/pilot-left-open`). The fields
+  each handler reads are recorded under the types it is chosen for, with
+  whether it checks first that a field is there; the fields of an answer each
+  browser client reads are followed into templates and props, an Angular
+  template's checks counted, and an interceptor's envelope or a serializer's
+  excluded fields put between the route and the client
+  (`fixtures/fields-read-and-sent`, `fixtures/answer-fields-read`,
+  `fixtures/findings-that-agree`). Where a type's name is written only where
+  it is sent, "no code selects it" is settled rather than unsure
+  (`fixtures/answers-that-settle`).
+- **Findings.** What looks broken between the services first, each kind gated
+  on its evidence and carrying its precision, a candidate whose evidence does
+  not hold counted under `heldBack` with why: missing routes, fields never
+  sent or never returned, types never published, the open write among
+  guarded ones, settings not set or likely renamed, routes an earlier one
+  shadows, stream events, bot buttons, statuses and CORS
+  (`fixtures/findings-between-services`, `fixtures/boundary-mismatches`,
+  `fixtures/findings-settings-guards-helper`, `fixtures/route-order`).
 - **Honesty about itself.** A graph nobody could report on — a failed build, an
   empty graph, a service that contributed nothing, a service whose ways in were
   mostly read no further than their addresses — makes `doctor` exit 2. A read

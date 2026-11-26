@@ -5,7 +5,7 @@ the whole project's graph over the Model Context Protocol, so a session in the
 frontend can answer a question about the service three repositories away without
 opening it, and without reading its source.
 
-Twenty-six tools, three prompts and three resources. Only one of the tools
+Twenty-seven tools, three prompts and four resources. Only one of the tools
 returns code, and a session is offered only the tools its project can answer
 ([which tools appear when](#which-tools-appear-when)).
 
@@ -1289,13 +1289,24 @@ pipe with `forbidNonWhitelisted: true` beside `whitelist: true`, is refused
 with 400: the contracts report says it as `whitelist-reject` at `error`
 (`contract-break`, high), where `whitelist` alone stays `whitelist-strip`.
 
+Any other reason a row classes as a finding is listed under its own name, at
+medium unless the kind says otherwise: `route-shadowed-by-earlier` (high, a
+literal route an earlier parameter route answers never runs, P385),
+`message-type-unselected` (P358), and the deployment settings read against
+the code they run (P389): `batch-failures-unreported` and
+`queue-visibility-short` at high, `batch-failures-ignored` and
+`workflow-task-untimed` at medium, `queue-redrive-missing`,
+`queue-receives-few`, `workflow-function-unretried` and
+`workflow-callback-no-heartbeat` at low. `flowatlas findings` lists every kind
+with its precision ([CLI.md](CLI.md#flowatlas-findings)).
+
 ### Finding your way in
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `in` (a class, method or file: the ways in it declares, each row with `reach` and who calls it, `callers` and the first `caller` as `dead` on a class says them, the answer with `declaredBy` and `next` the `dead` call judging each), `reach` (only the rows with that reach, `dead` for the ones no code calls), `offset` |
-| `find_symbol` | fuzzy search over every node, by substring or camel-case initials, and by the words of the query where no name holds it as written (P383) | `query` (required), `types`, `service`, `offset` |
-| `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each; a sentence, or a query no kind holds as a name, also answers `best`, the names holding its words, ranked (P383) | `query` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
+| `list_entries` | every way into the project: routes, procedures, bot commands and buttons, scheduled jobs, message handlers | `service`, `kind`, `pathPrefix`, `in` (a class, method or file: the ways in it declares, each row with `reach` and who calls it, `callers` and the first `caller` as `dead` on a class says them, the answer with `declaredBy` and `next` the `dead` call judging each), `reach` (only the rows with that reach, `dead` for the ones no code calls), `called` (`false`: every way in no caller joins, `true`: those one does), `offset` |
+| `find_symbol` | fuzzy search over every node, by substring or camel-case initials, and by the words of the query where no name holds it as written (P383) | `query` or `queries` (required), `types`, `service`, `offset` |
+| `search` | one query over routes and other ways in, channels, types of message, tables, types, gaps, what ways in can fail with, and classes, grouped by kind, with `counts` of each; a sentence, or a query no kind holds as a name, also answers `best`, the names holding its words, ranked (P383) | `query` or `queries` (required), `kinds`, `limit` (10 rows per kind), `service`, `offset` |
 
 `kind` is one of `http`, `rpc`, `event`, `cron`, `invoke`, `workflow`,
 `bot_command`, `bot_callback`, `bot_event`, `scene_step`, `task` and `screen`. An `invoke` is a
@@ -1350,8 +1361,8 @@ route matched too. A helper's choices count: `423` finds the routes whose
 | Tool | Answers | Takes |
 |---|---|---|
 | `get_flow` | one entry, or any symbol, followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node. At detail 2 each fact is said once (P382): an edge leaves out the `params` and `returns` the step's signature says, every step leaves out the reader's own meta (`adapter`, `controller`, `rawPath`, `source`, `package`, `receiver`, `entityType`), and a step with its own `fails` and `guards` leaves out the meta's `fails` and `access` | `entry` (required: a route said aloud, an id, `Class.method` or a short name, as `who_calls` takes it; `route` and `symbol` are read as it), `to`, `depth` (8, one more per workflow step), `maxChars` |
-| `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (how many hops the tree draws, 16 at most; unset, two, one on a class or several symbols; the ways in past it are listed whatever it is), `service` |
-| `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels`, one row per consumer | `symbol` (required), `channel` (list one of `throughChannels`: a channel, or a consumer for all of its), `service`, `offset` |
+| `who_calls` | everything that reaches a symbol, backwards across repositories, up to every way in: the nearest callers as a tree, then each way in once under `waysIn` | `symbol` or `symbols` (required), `depth` (how many hops the tree draws, 16 at most; unset, two, one on a class or several symbols; the ways in past it are listed whatever it is), `service` (picks the symbol), `callersIn` (keeps the ways in of one service) |
+| `impact` | every way in whose code calls a symbol, in any service: its own, those past each route on the calling side with `via`, and `maybe` rows where a chain stops at an unread call; the ways in only beyond a channel a consumer on the way takes messages from counted in `throughChannels`, one row per consumer | `symbol` or `symbols` (required; several are one change), `channel` (list one of `throughChannels`: a channel, or a consumer for all of its), `service` (picks the symbol), `callersIn` (keeps the ways in of one service), `offset` |
 
 Asked about a class, `who_calls` and `impact` answer for every method of it
 something calls (P95): calls point at methods, never at the class. Each
@@ -1681,9 +1692,9 @@ window longer than the file holds says `short: true` and every row is `weak`.
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `who_emits` | everything that publishes on a channel, across every repository; with `type`, what publishes that type of message on it; with `field`, only the publishes that send that field. A message type given as the channel (`ORDER_READY`) is answered on the channel carrying it, as with `type`, `carriedBy` naming it; on several, one answer each under `answers` (at most three) (P393) | `channel` (required), `type`, `field`, `service`, `offset` |
-| `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does; with `field`, only the handlers that read that field, each with where; a message type given as the channel, as `who_emits` takes it (P393) | `channel` (required), `type`, `field`, `service`, `offset` |
-| `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` (required), `depth` |
+| `who_emits` | everything that publishes on a channel, across every repository; with `type`, what publishes that type of message on it; with `field`, only the publishes that send that field. A message type given as the channel (`ORDER_READY`) is answered on the channel carrying it, as with `type`, `carriedBy` naming it; on several, one answer each under `answers` (at most three) (P393) | `channel` or `channels` (required), `type`, `field`, `service`, `offset` |
+| `who_consumes` | everything that handles messages from it; empty means nothing does; with `type`, the code that selects that type of message, or why nothing does; with `field`, only the handlers that read that field, each with where; a message type given as the channel, as `who_emits` takes it (P393) | `channel` or `channels` (required), `type`, `field`, `service`, `offset` |
+| `get_type` | the structure of a type, with what it refers to expanded to a depth | `type` or `types` (required), `depth` |
 | `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it | `type` (required), `service`, `offset` |
 | `check_contract` | what one side of a crossing sends against what the other expects; on an entry, the fields of the body each piece of code on its path reads, the fields of its answer each client reads (`answer`), and what traffic carried into it against its code; on a channel or one type of message, the fields read and not sent and sent and never read | `edge` (a crossing, an entry id or a route said aloud), or `from` and `to`, or `channel` and `type`; `field` |
 | `get_spec` | a service's routes as the OpenAPI 3.1 document `flowatlas spec` writes, or its channel ends as AsyncAPI 3.0, as JSON text; with `path`, one operation and only the schemas it uses (P118) | `service` (required), `kind`, `path`, `maxChars` |

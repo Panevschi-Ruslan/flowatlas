@@ -59,7 +59,10 @@ steps with a recording of each.
   included; Gatsby's functions, a plugin's included
 - tRPC and oRPC procedures - an oRPC one under an OpenAPI handler as its REST
   route too - gRPC methods named by the repository's `.proto` files, and
-  Telegraf bot commands, callbacks and events
+  Telegraf bot commands, callbacks and events, one way in per button of a
+  table of handlers
+- the screens a front end's router registers, and the methods the framework
+  calls itself (Nest's and Angular's lifecycle hooks)
 - GraphQL fields a resolver answers, and the operations a client or a
   generated SDK sends
 - what a request carries and what it answers, in every one of them: a
@@ -104,7 +107,12 @@ steps with a recording of each.
 - Kafka, RabbitMQ, BullMQ, Redis pub/sub and socket.io, from both ends, and a
   queue behind a layer of your own where each caller names it
 - an in-house bus, described in the configuration
-- the payload and the reply of a request, compared across the boundary
+- the types of message a consumer chooses (a `switch` and its `default`, an
+  `if` chain, a table of handlers, a message parsed from text and cast), and
+  the fields each handler reads under each type, with whether it checks first
+- the payload and the reply of a request, compared across the boundary, and
+  the fields of an answer each browser client reads, through an interceptor's
+  envelope
 
 **Across repositories**
 
@@ -130,7 +138,7 @@ steps with a recording of each.
 - test code left out, and every test directory named so you can see it
 
 Every shape above is held by a fixture: a small repository written to prove it,
-compared on every push. There are 325 of them, and
+compared on every push. There are 359 of them, and
 [the fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists them all, generated from their READMEs.
 
@@ -144,21 +152,24 @@ lists them all, generated from their READMEs.
 | `flowatlas impact <symbol>` | every entry point that reaches a symbol, and whose |
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas contracts` | what each service sends against what the other declares |
+| `flowatlas findings` | what looks broken between the services first - a call to a missing route, a field read and never sent or never returned, a setting nothing sets, a CORS refusal - each with its precision and the nearest fix |
 | `flowatlas dead` | routes, channels, providers and fields nothing appears to reach, each with its reason |
 | `flowatlas doctor` | what could not be read, and what has drifted; `--unresolved` groups it by cause and package |
 | `flowatlas shapes --suggest` | which packages that are not installed to describe in a shape file, with the names used of each; `--out` writes starters |
 | `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
 | `flowatlas accept` | accept a known gap, or every gap like it by rule, so checks show only new ones |
 | `flowatlas diff <base>` | what a branch changes and who would notice |
+| `flowatlas check-change` | what the working tree breaks in the other repositories, before it is committed |
 | `flowatlas check --env <name>` | can this be deployed: what shipping it would break against what an environment runs, from the pins `flowatlas deployed` records |
 | `flowatlas spec` | an OpenAPI and an AsyncAPI document of each service, written from the graph; `spec diff` and `spec --against` compare them |
 | `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue or a Structurizr workspace, relations from the joins; `--check` keeps a committed copy true |
 | `flowatlas docs` | Markdown blocks tied to a flow, a channel or a symbol, kept true with `--check` or rewritten with `--write` |
 | `flowatlas visualise` | the whole graph as one page you can open: a map of the services, a way in step by step, the crossings, what did not join, the busiest nodes, and the graph with every type |
 | `flowatlas observe <file...>` | which joins real traffic went through, from trace files you already have, or `--listen` for exporters posting to `127.0.0.1:4318` |
-| `flowatlas mcp` | serve it to an agent over stdio |
+| `flowatlas mcp` | serve it to an agent over stdio: twenty-seven tools, whose answers say when they are the whole answer |
+| `flowatlas agents install` | tell each assistant when to ask the graph; `--instructions` adds a block to `AGENTS.md` and `CLAUDE.md`, `--hook` the Claude Code hooks after a search and an edit and the prompt cards before a prompt's first turn |
 
-`flowatlas --help` lists all thirty-seven commands, and `flowatlas help <command>` the options of one.
+`flowatlas --help` lists all thirty-nine commands, and `flowatlas help <command>` the options of one.
 
 ---
 

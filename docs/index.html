@@ -357,6 +357,8 @@ flowatlas build          <span class="c"># read them all and join them</span></c
     <div>
       <h3>before a merge</h3>
       <ul>
+        <li><code>findings</code>: what looks broken between the services first &mdash; a call to a missing route, a field read and never sent, a setting nothing sets &mdash; each with its precision and the nearest fix</li>
+        <li><code>check-change</code>: what the working tree breaks in the other repositories, before it is committed</li>
         <li><code>diff</code>: a verdict, and every changed flow as a sequence diagram</li>
         <li><code>check --env</code>: can this be deployed against what an environment runs</li>
         <li><code>rules</code>: who may call, write, publish to or consume what</li>
@@ -769,15 +771,21 @@ flowatlas observe --listen      <span class="c"># OTLP on 127.0.0.1:4318</span><
     <img src="media/09-mcp.gif" alt="the registered server, its tools listed, a symbol found by its initials, and a table described for a prompt" loading="lazy">
   </figure>
   <div class="col">
-    <p>Twenty-six tools in all, and a session lists the ones its project can
-      answer: nineteen here, until traces are laid over it or rules are written
+    <p>Twenty-seven tools in all, and a session lists the ones its project can
+      answer: twenty here, until traces are laid over it or rules are written
       (<code>flowatlas mcp --all-tools</code> lists every one). Only one of them
       returns source code. A trace never drags
       in the body of every method along it; the agent asks the graph which name
       to look at, then asks for that one name.</p>
     <pre><code>flowatlas mcp --install   <span class="c"># register everywhere, merging</span>
-flowatlas mcp --install --dry-run</code></pre>
+flowatlas mcp --install --dry-run
+flowatlas agents install --instructions --hook   <span class="c"># when to ask the graph, and the hooks</span></code></pre>
     <p>After that, <code>claude mcp list</code> shows <code>flowatlas</code>.
+      <code>agents install</code> tells each assistant which questions to ask
+      the graph rather than search for, and <code>--hook</code> adds three
+      Claude Code hooks: after a search, what the other repositories hold;
+      after an edit, who uses a name it took out; and before a prompt's first
+      turn, the graph's answer for what the prompt names.
       <a href="https://github.com/Panevschi-Ruslan/flowatlas/blob/main/docs/mcp.md">docs/mcp.md</a> is the whole thing: setup
       for Claude Code, Cursor, VS Code and Claude Desktop, what each tool takes,
       the order to call them in, and what to check when a client will not list

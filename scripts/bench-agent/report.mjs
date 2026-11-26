@@ -118,6 +118,16 @@ a method does - are asked and reported like the rest. What was expected was
 written down before the first run (\`scripts/bench-agent/expectations.md\`) and
 is compared below.
 
+The guide the graph arms read is what \`flowatlas agents install
+--instructions --hook\` writes in each repository: the skill, the marked block
+in \`AGENTS.md\` (and \`CLAUDE.md\` where there is one), and the search and
+edit hooks, with
+\`--no-prompt-cards\` unless the run is started with \`--prompt-cards\` (F always
+has the prompt hook; E adds \`--terminal\`). A project of your own is set up
+the way arm D is measured with \`flowatlas build\`, \`flowatlas mcp --install\`
+and \`flowatlas agents install --instructions --hook --no-prompt-cards\`, or
+without \`--no-prompt-cards\` for F's.
+
 ## Run it yourself
 
 \`\`\`sh

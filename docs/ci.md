@@ -107,6 +107,22 @@ violations are read; then accept what is real and planned for, with a note
 edge is shown and never fails a run until `rulesSettings.failOnHeuristic` says
 so - leave it off until the guesses are rare.
 
+**Findings.** `flowatlas findings` lists what looks broken between the
+services, each row with its precision, and exits 0 unless asked. Start with
+the kinds that are nearly always a defect where their evidence holds - a call
+to a route that does not exist, a field read and never sent, a type of message
+nothing publishes, a contract error:
+
+```sh
+flowatlas findings                  # read them first
+flowatlas findings --fail-on high   # then fail on a high-precision finding
+```
+
+`--fail-on medium` adds the settings no deployment sets, likely N+1 loops and
+one-ended channels; `low` adds unguarded routes, which an internal service
+often has by design. A row whose evidence did not hold is never listed: it is
+counted under `held back` with why.
+
 ## The job
 
 ```yaml
@@ -141,6 +157,8 @@ jobs:
       # The architecture rules on their own, once they are at error; doctor
       # --strict already fails on a new violation, so this is for a report.
       - run: npx @flowatlas/cli rules --format github --fail-on error
+      # What looks broken between the services, failing on the surest kinds.
+      - run: npx @flowatlas/cli findings --fail-on high
 ```
 
 `--format github` prints one `::error file=…,line=…::` per finding, so they
@@ -207,9 +225,11 @@ One file and one `category` per command. Each log already carries its
 category (`automationDetails.id`, `flowatlas/<command>/`); the step names the
 same one. Code scanning replaces a category's alerts on each upload, so one
 category per command is what keeps the doctor's alerts open on a run that
-uploaded only contracts. `rules`, `dead`, `cycles` and `diff` take
-`--format sarif --output <file>` the same way; `dead` is notes only, worth
-uploading once its rows have been read.
+uploaded only contracts. `findings`, `rules`, `dead`, `cycles`, `diff`,
+`check`, `spec diff` and `spec --against` take `--format sarif --output <file>`
+the same way; `findings` writes each kind as a `finding/<kind>` rule whose
+level follows its precision (`high` an error, `medium` a warning, `low` a
+note), and `dead` is notes only, worth uploading once its rows have been read.
 
 The format decides no exit code: `doctor --strict` fails on what it always
 failed on, and `contracts` only with `--fail-on`. Each result's fingerprint is

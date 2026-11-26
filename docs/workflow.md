@@ -9,9 +9,10 @@ examples use the demo project in `fixtures/multi-repo` (`web`, `gateway`,
 ```
  set up once ──► before a change ──► while coding ──► before the PR ──► in CI ──► deploy ──► after it runs
    init           impact / flow       build --watch     diff             doctor     deployed    observe
-   build          who_calls (MCP)     the page          contracts        rules      check --env doctor --strict-runtime
-   doctor         channel             docs --write      rules / dead     diff                   visualise --observed-diff
-   baseline                                                              SARIF
+   build          who_calls (MCP)     check-change      findings         findings   check --env doctor --strict-runtime
+   doctor         channel             the edit hook     contracts        rules                  visualise --observed-diff
+   baseline       findings            the page          rules / dead     diff
+   agents install                     docs --write                       SARIF
 ```
 
 ## 0. Set up once
@@ -52,7 +53,14 @@ traffic or a `diff`:
 
 ```sh
 flowatlas mcp --install
+flowatlas agents install --instructions --hook   # when to ask the graph, and the search, edit and prompt hooks
 ```
+
+`agents install` writes the guide each assistant reads (a skill, a Cursor rule,
+with `--instructions` a block in `AGENTS.md` and `CLAUDE.md`), and `--hook` the
+three Claude Code hooks: after a search, what the other repositories hold;
+after an edit, who uses a name it took out; before a prompt, the graph's answer
+for what it names ([the graph server](mcp.md#tell-the-assistant-when-to-ask)).
 
 ## 1. Before a change: what does it touch
 
@@ -65,6 +73,7 @@ Ask before you edit, not after the review.
 | Who publishes and who consumes this message? | `flowatlas channel order.created` | `who_emits`, `who_consumes` |
 | Is this still used at all? | `flowatlas dead` | `dead` |
 | Does the other side still expect this shape? | `flowatlas contracts` | `check_contract` |
+| What already looks broken there? | `flowatlas findings --service orders` | `findings` |
 | Renaming something? | | the `before-rename` prompt |
 
 On the page (`flowatlas visualise`), the same questions are a search away: type a
@@ -77,6 +86,18 @@ across services.
 flowatlas build --watch        # rebuilds what changed; also sees a new folder or a config edit
 flowatlas visualise            # graph.html: reopen it after a rebuild
 ```
+
+Before you commit, ask what the working tree breaks in the repositories you
+have not opened: lost joins, new contract errors and findings, and the ways in
+the change reaches, against the built graph (or `--base main`):
+
+```sh
+flowatlas check-change         # the MCP tool check_change answers the same
+```
+
+With the hooks installed, an assistant hears it sooner: an edit that takes out
+a route, a channel, a message type or a field another repository uses is
+followed by one line naming who uses it.
 
 Without a watch running, an answer still says when it is behind: one that cites
 a file you changed since the last build says so, on stderr in a terminal and as
@@ -93,6 +114,7 @@ flowatlas docs --write         # fills the doc blocks from the flows they name
 
 ```sh
 flowatlas diff main            # a verdict, changed flows as sequence diagrams, what stopped joining
+flowatlas findings             # what looks broken between the services, each row with its precision
 flowatlas contracts            # request and response shapes across each boundary
 flowatlas rules                # the architecture rules you wrote down
 flowatlas dead                 # what nothing reaches any more
@@ -114,8 +136,10 @@ on day one:
 2. `rules`: as `warning` first, then accept what's planned, then `error`.
 3. `diff origin/main --format markdown` as a PR comment, and
    `--fail-on-contract-break` once contracts are clean.
-4. `--format sarif` to put findings on the PR's lines through code scanning.
-5. `docs --check`, if you use doc blocks.
+4. `findings --fail-on high`: fail on the findings that are nearly always
+   a defect (a call to a missing route, a field read and never sent, …).
+5. `--format sarif` to put findings on the PR's lines through code scanning.
+6. `docs --check`, if you use doc blocks.
 
 ## 5. Deploy: can this go out against what is running
 
@@ -160,10 +184,10 @@ Then read it:
 
 | When | Run |
 | --- | --- |
-| once | `init`, `build`, `doctor` until it's short, `doctor --accept`, `mcp --install` |
-| before editing | `impact`, `flow`, `channel` (or ask the agent) |
-| while editing | `build --watch`, the page |
-| before the PR | `diff main`, `contracts`, `rules` |
-| CI | `doctor --strict`, `rules`, `diff` as a comment, SARIF |
+| once | `init`, `build`, `doctor` until it's short, `doctor --accept`, `mcp --install`, `agents install --instructions --hook` |
+| before editing | `impact`, `flow`, `channel`, `findings` (or ask the agent) |
+| while editing | `build --watch`, `check-change`, the page |
+| before the PR | `diff main`, `findings`, `contracts`, `rules` |
+| CI | `doctor --strict`, `findings --fail-on high`, `rules`, `diff` as a comment, SARIF |
 | deploy | `deployed set`, `check --env` |
 | after | `observe`, `doctor --strict-runtime`, `visualise --observed-diff` |

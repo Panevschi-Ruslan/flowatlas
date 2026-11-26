@@ -11,7 +11,7 @@ shape does, and the schema's name carries the version.
 |---|---|---|---|
 | `project-graph.json` | the whole graph: nodes, edges, types, what could not be read | `schemaVersion` | [`project-graph.v8`](../schema/project-graph.v8.schema.json) |
 | `services/<name>/graph.json` | one service's own graph, before it was joined | `schemaVersion` | [`repo-graph.v8`](../schema/repo-graph.v8.schema.json) |
-| `graph.db` | the same graph as SQLite, which every question reads | `schemaVersion` | — |
+| `graph.db` | the same graph as SQLite, which every question reads | `schema_version` and `db_format_version` (3) in its `meta` table | — |
 | `link-report.json` | what joined and what did not | — | — |
 | `diff.json` | what `flowatlas diff` found | `diffFormatVersion` | [`diff.v5`](../schema/diff.v5.schema.json) |
 | `diff-comment.json` | the figures of `diff --format comment` | — | — |
@@ -19,10 +19,21 @@ shape does, and the schema's name carries the version.
 | `freshness.json` | each service's checkout and every file a build read, for answers to say when the code moved | `freshnessFormatVersion` | [`freshness.v1`](../schema/freshness.v1.schema.json) |
 | `names.json` | the names the search hook can say something about | `namesFormatVersion` | — |
 | `card-names.json` | the names a prompt card can answer for, by kind, and when the graph was built (P386) | `cardNamesFormatVersion` | — |
+| `edits.json` | each file's names another repository uses, which the edit hook reads (P387) | `editsFormatVersion` | — |
 | `cards-seen.json` | which names each recent session's prompt cards answered, by id; never a prompt | — | — |
 | `questions.jsonl` | what was asked, one line per question, when the [question log](CLI.md#the-question-log) is on; never sent anywhere | — | — |
 | `observed.json` | what traffic was seen, from `flowatlas observe` | `observedFormatVersion` | — |
 | `cache.json`, `stand-ins.json` | what the next build compares against | — | — |
+| `doctor.json` | every row of every reason and section `flowatlas doctor` found, never cut | `doctorFormatVersion` | — |
+| `accepted.json` | the gaps `flowatlas accept` accepted, with their notes | `acceptedFormatVersion` | — |
+| `contracts.json` | the whole contracts report, from `flowatlas contracts` | `contractsFormatVersion` | — |
+| `rules.json` | each architecture rule and its status, from `flowatlas rules` | `rulesFormatVersion` | — |
+| `check.<env>.json` | what deploying would break in one environment, from `flowatlas check` | `checkFormatVersion` | — |
+| `spec/` | the OpenAPI and AsyncAPI documents `flowatlas spec` writes, and `inventory.md` or `inventory.json` with `--inventory` | — | — |
+| `spec-diff.json`, `spec-against.json` | `flowatlas spec diff` and `spec --against` | `specDiffFormatVersion`, `specAgainstFormatVersion` | — |
+| `cache/` | the graphs of commits `flowatlas diff` keeps, which `flowatlas cache` lists and prunes | — | — |
+| `build.log` | what a `build --background` said (`build.1.log` the one before) | — | — |
+| `flowatlas-graph.tgz` | the graph `flowatlas publish` writes for the team to pull | the bundle's manifest | — |
 | `pulled/` | the team's graph, from `flowatlas pull` | the bundle's manifest | — |
 | `export/<kind>/` | `flowatlas export` | — | — |
 

@@ -1,6 +1,6 @@
 # Getting started
 
-From nothing to a graph you can walk, and the first four questions worth asking
+From nothing to a graph you can walk, and the first five questions worth asking
 of it.
 
 Everything below can be run. The examples use the fixtures in this repository —
@@ -264,7 +264,7 @@ settings key points at.
 What survives a configured build is no longer missing configuration. It is the
 project disagreeing with itself, which is the thing worth knowing.
 
-## 6. The first four questions
+## 6. The first five questions
 
 ### Follow one request: `flow`
 
@@ -388,6 +388,33 @@ pnpm flowatlas channel order.created --config fixtures/multi-repo/flowatlas.conf
 
 A channel with nothing at one end comes back with an empty list, which is an
 answer rather than an error.
+
+### Ask what looks broken: `findings`
+
+```sh
+pnpm flowatlas findings --config fixtures/multi-repo/flowatlas.config.json
+```
+
+```
+call-to-missing-route (2)
+  1. [high] OrdersClient.cancel sends POST /orders/:param/cancel to orders, which serves no such route (gateway src/clients/orders.client.ts:44)
+     the nearest route: POST /orders/:param/archive (one segment off: cancel for archive)
+     met through POST /orders/:param/cancel (gateway), POST /orders/:param/refund (gateway), POST /orders/:param/resume (gateway)
+  …
+one-ended-channel (2)
+  …
+unguarded (4)
+  …
+held back: 1 call-to-missing-route, the evidence not holding (the service it is sent to is not named)
+```
+
+What looks broken between the services comes first, each kind only where the
+fact that makes it a defect holds, every row with its precision (`high`,
+`medium`, `low`), the nearest fix and the ways in that meet it. A candidate
+whose evidence did not hold is said under `held back`, with why, never left
+out in silence. `--fail-on high` makes it exit 1 on the rows that are nearly
+always right, and `--format sarif` writes them for code scanning; every kind is
+in [the command reference](CLI.md#flowatlas-findings).
 
 ---
 
@@ -537,10 +564,10 @@ them gets the whole project.
 
 ![flowatlas mcp](media/09-mcp.gif)
 
-Twenty-six tools, and only one of them returns source code. A trace never drags in the
+Twenty-seven tools, and only one of them returns source code. A trace never drags in the
 body of every method along it; the agent asks the graph which name to look at,
 then asks for that one name. A session is offered only the tools your project can
-answer - nineteen on the demo - and the run-time ones appear once you have run
+answer - twenty on the demo - and the run-time ones appear once you have run
 `flowatlas observe`, without a restart; `flowatlas mcp --all-tools` lists every
 one.
 
