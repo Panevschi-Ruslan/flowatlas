@@ -6,6 +6,37 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.7.0][] - 2026-11-26
+
+`@flowatlas/cli` only; `@flowatlas/markers` stays at 0.2.0. Assistants are told
+when to ask the graph (`agents install` writes each assistant's guide, and its
+`--hook` adds three Claude Code hooks: what a search could not see, who uses a
+name an edit took out, and prompt cards, the graph's answer for what a prompt
+names before the first turn). A team shares one graph (`publish`, `pull`,
+`remote`). New readers: GraphQL and federation, Vue, Nuxt and Svelte, oRPC,
+Serverless, CDK and SAM. `flowatlas findings` ranks what looks broken between
+the services with its precision, as SARIF too, and `check-change` says what an
+edit breaks before it is committed. Answers settle their question in the
+first call where they can (`settled`, requests at the top, handlers reached
+through tables, framework lifecycle hooks, fields read through casts and per
+case, presence checks in templates, a switch's default, the parts a request
+sends), and the MCP server has 27 tools.
+
+### Migrating from 0.6.0
+
+- **Rebuild once.** The graph's `SCHEMA_VERSION` moved from 6 to 8 and
+  `graph.db`'s layout from 2 to 3, so run `flowatlas build` again after
+  upgrading; a graph built by 0.6.0 is read again from the repositories. A
+  pulled team graph needs the same: push one built by 0.7.0.
+- **Upgrade a team together.** The configuration schema is strict, so 0.6.0
+  refuses a configuration that uses a key added since, among them `log`
+  (`log.questions`), `remote` (`url`, `tokenEnv`), `mcp.alwaysLoad`,
+  `mcp.upfront`, `mcp.rebuild`, `mcp.pull` and a service's `infra.options`.
+- **`adapters.auto: false` now means what it says.** It detects no adapter
+  and reads with only those `adapters.force` names; before, it dropped
+  `force` and detected anyway. A configuration that set it should name its
+  adapters under `force`.
+
 ### Added
 
 - **What the pilot left open (P405).** `who_consumes` and `who_emits` rank
@@ -3310,6 +3341,12 @@ only one of them moved.
 
 ### Fixed
 
+- **Three switches that did not do what the docs say.** `adapters.auto:
+  false` detects no adapter and reads with only those `adapters.force` names
+  (it dropped `force` and detected anyway); a team bundle carries the prompt
+  cards' and the edit hook's indexes (`card-names.json`, `edits.json`), so a
+  pulled graph serves both hooks; and `init --hook`'s help names the three
+  hooks it installs.
 - **Findings and verdicts that agree with each other (P400).** Six places
   where one answer said one thing and another, or the code, said otherwise:
   - "No code selects T on C" (`message-type-unselected`) is held back, with
@@ -7610,7 +7647,8 @@ called unused were being called through wrappers it could not read.
 
 The first published version of both `@flowatlas/cli` and `@flowatlas/markers`.
 
-[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.1...v0.5.0
