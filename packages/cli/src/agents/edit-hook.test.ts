@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { CrossingName } from '@flowatlas/mcp';
 import { describe, expect, it } from 'vitest';
 import { editContextFor, editHookOutput, replacementsOf, runEditHook } from './edit-hook.js';
@@ -59,7 +59,8 @@ const names: CrossingName[] = [
 
 const DIR = '/work/catalog';
 const files: Record<string, string> = { [`${DIR}/src/items.controller.ts`]: CONTROLLER, [`${DIR}/src/items.service.ts`]: SERVICE };
-const index: EditIndex = editIndexOf(names, { catalog: DIR, shop: '/work/shop' }, '2026-01-01T00:00:00.000Z', (path) => files[path]);
+// The index joins with the system's separator (`\` on Windows); the files here are kept under `/`.
+const index: EditIndex = editIndexOf(names, { catalog: DIR, shop: '/work/shop' }, '2026-01-01T00:00:00.000Z', (path) => files[path.replace(/\\/g, '/')]);
 
 const edit = (file: string, old: string, now: string): { call: object; now: string } => {
   const before = files[`${DIR}/${file}`] as string;
@@ -185,7 +186,7 @@ describe('the edit hook', () => {
     const file = join(repo, 'src', 'items.controller.ts');
     writeFileSync(file, CONTROLLER.replace("@Patch(':id/archive')", "@Patch(':id/retire')"));
     const indexPath = join(root, 'edits.json');
-    writeFileSync(indexPath, JSON.stringify(editIndexOf(names, { catalog: repo }, 'x', (path) => (path === file ? CONTROLLER : undefined))));
+    writeFileSync(indexPath, JSON.stringify(editIndexOf(names, { catalog: repo }, 'x', (path) => (resolve(path) === resolve(file) ? CONTROLLER : undefined))));
     const stdin = async () => JSON.stringify({ tool_name: 'Edit', cwd: repo, tool_input: { file_path: 'src/items.controller.ts', old_string: "@Patch(':id/archive')", new_string: "@Patch(':id/retire')" } });
     const written: string[] = [];
     await runEditHook(['--edits', indexPath], { stdin, write: (text) => void written.push(text), env: {} });
